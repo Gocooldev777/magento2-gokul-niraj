@@ -5,6 +5,7 @@
 
 /*global FORM_KEY*/
 /*global bSelection*/
+/*global $H*/
 /**
  * @api
  */
@@ -185,9 +186,7 @@ define([
                                 });
                                 bSelection.gridRemoval.each(function (pair) {
                                     $optionBox.find('.col-sku').filter(function () {
-                                        let text = $(this).text();
-
-                                        return text.trim() === pair.key; // find row by SKU
+                                        return $(this).text().trim() === pair.key; // find row by SKU
                                     }).closest('tr').find('button.delete').trigger('click');
                                 });
                                 widget.refreshSortableElements();

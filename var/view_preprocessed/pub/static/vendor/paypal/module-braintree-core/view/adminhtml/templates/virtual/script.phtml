@@ -1,10 +1,9 @@
-<?php /** * Copyright © Magento, Inc. All rights reserved. * See COPYING.txt for license details. */ use PayPal\Braintree\Block\Payment; /** @var Payment $block */ $code = $block->escapeHtml($block->getCode()); ?> <script>
+<?php /** * Copyright © 2013-2017 Magento, Inc. All rights reserved. * See COPYING.txt for license details. */ use PayPal\Braintree\Block\Payment; /** @var Payment $block */ $code = $block->escapeHtml($block->getCode()); ?> <script>
     //<![CDATA[
     require(
         [
             'PayPal_Braintree/js/virtual',
             'jquery',
-            'mage/backend/validation',
             'domReady!'
         ], function(Braintree, $) {
             let config = <?= /* @noEscape */ $block->getPaymentConfig() ?>,

@@ -5,21 +5,19 @@
  */
 namespace Magento\Framework\HTTP;
 
-use Laminas\Http\Response;
-
 /**
  * A factory for an HTTP response.
  */
 class ResponseFactory
 {
     /**
-     * Creates a new Response object from a string.
+     * Creates a new \Zend_Http_Response object from a string.
      *
      * @param string $response
-     * @return Response
+     * @return \Zend_Http_Response
      */
     public function create($response)
     {
-        return Response::fromString($response);
+        return \Zend_Http_Response::fromString($response);
     }
 }

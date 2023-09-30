@@ -8,25 +8,20 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Command;
+namespace RectorPrefix20211221\Symfony\Component\Console\Command;
 
-use RectorPrefix202304\Symfony\Component\Console\Application;
-use RectorPrefix202304\Symfony\Component\Console\Completion\CompletionInput;
-use RectorPrefix202304\Symfony\Component\Console\Completion\CompletionSuggestions;
-use RectorPrefix202304\Symfony\Component\Console\Completion\Suggestion;
-use RectorPrefix202304\Symfony\Component\Console\Helper\HelperInterface;
-use RectorPrefix202304\Symfony\Component\Console\Helper\HelperSet;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202304\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Application;
+use RectorPrefix20211221\Symfony\Component\Console\Completion\CompletionInput;
+use RectorPrefix20211221\Symfony\Component\Console\Completion\CompletionSuggestions;
+use RectorPrefix20211221\Symfony\Component\Console\Helper\HelperSet;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
-final class LazyCommand extends Command
+final class LazyCommand extends \RectorPrefix20211221\Symfony\Component\Console\Command\Command
 {
-    /**
-     * @var \Closure|\Symfony\Component\Console\Command\Command
-     */
     private $command;
     /**
      * @var bool|null
@@ -42,17 +37,14 @@ final class LazyCommand extends Command
     {
         $this->getCommand()->ignoreValidationErrors();
     }
-    public function setApplication(Application $application = null) : void
+    public function setApplication(\RectorPrefix20211221\Symfony\Component\Console\Application $application = null) : void
     {
-        if (1 > \func_num_args()) {
-            \RectorPrefix202304\trigger_deprecation('symfony/console', '6.2', 'Calling "%s()" without any arguments is deprecated, pass null explicitly instead.', __METHOD__);
-        }
         if ($this->command instanceof parent) {
             $this->command->setApplication($application);
         }
         parent::setApplication($application);
     }
-    public function setHelperSet(HelperSet $helperSet) : void
+    public function setHelperSet(\RectorPrefix20211221\Symfony\Component\Console\Helper\HelperSet $helperSet) : void
     {
         if ($this->command instanceof parent) {
             $this->command->setHelperSet($helperSet);
@@ -63,11 +55,11 @@ final class LazyCommand extends Command
     {
         return $this->isEnabled ?? $this->getCommand()->isEnabled();
     }
-    public function run(InputInterface $input, OutputInterface $output) : int
+    public function run(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output) : int
     {
         return $this->getCommand()->run($input, $output);
     }
-    public function complete(CompletionInput $input, CompletionSuggestions $suggestions) : void
+    public function complete(\RectorPrefix20211221\Symfony\Component\Console\Completion\CompletionInput $input, \RectorPrefix20211221\Symfony\Component\Console\Completion\CompletionSuggestions $suggestions) : void
     {
         $this->getCommand()->complete($input, $suggestions);
     }
@@ -95,35 +87,31 @@ final class LazyCommand extends Command
         $this->getCommand()->setDefinition($definition);
         return $this;
     }
-    public function getDefinition() : InputDefinition
+    public function getDefinition() : \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition
     {
         return $this->getCommand()->getDefinition();
     }
-    public function getNativeDefinition() : InputDefinition
+    public function getNativeDefinition() : \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition
     {
         return $this->getCommand()->getNativeDefinition();
     }
     /**
-     * @param array|\Closure(CompletionInput,CompletionSuggestions):list<string|Suggestion> $suggestedValues The values used for input completion
      * @param mixed $default
      * @return $this
      */
     public function addArgument(string $name, int $mode = null, string $description = '', $default = null)
     {
-        $suggestedValues = 5 <= \func_num_args() ? \func_get_arg(4) : [];
-        $this->getCommand()->addArgument($name, $mode, $description, $default, $suggestedValues);
+        $this->getCommand()->addArgument($name, $mode, $description, $default);
         return $this;
     }
     /**
-     * @param array|\Closure(CompletionInput,CompletionSuggestions):list<string|Suggestion> $suggestedValues The values used for input completion
-     * @param string|mixed[] $shortcut
+     * @param mixed[]|string $shortcut
      * @param mixed $default
      * @return $this
      */
     public function addOption(string $name, $shortcut = null, int $mode = null, string $description = '', $default = null)
     {
-        $suggestedValues = 6 <= \func_num_args() ? \func_get_arg(5) : [];
-        $this->getCommand()->addOption($name, $shortcut, $mode, $description, $default, $suggestedValues);
+        $this->getCommand()->addOption($name, $shortcut, $mode, $description, $default);
         return $this;
     }
     /**
@@ -166,7 +154,10 @@ final class LazyCommand extends Command
     {
         return $this->getCommand()->getUsages();
     }
-    public function getHelper(string $name) : HelperInterface
+    /**
+     * @return mixed
+     */
+    public function getHelper(string $name)
     {
         return $this->getCommand()->getHelper($name);
     }

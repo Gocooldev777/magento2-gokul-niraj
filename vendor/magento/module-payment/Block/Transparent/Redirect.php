@@ -67,7 +67,7 @@ class Redirect extends Template
         $params = [];
         foreach ($this->_request->getPostValue() as $name => $value) {
             if (!empty($value) && mb_detect_encoding($value, 'UTF-8', true) === false) {
-                $value = mb_convert_encoding($value, 'UTF-8', 'ISO-8859-1');
+                $value = utf8_encode($value);
             }
             $params[$name] = $value;
         }

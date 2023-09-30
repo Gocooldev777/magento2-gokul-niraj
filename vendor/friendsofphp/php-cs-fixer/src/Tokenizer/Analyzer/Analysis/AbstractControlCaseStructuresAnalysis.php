@@ -19,11 +19,20 @@ namespace PhpCsFixer\Tokenizer\Analyzer\Analysis;
  */
 abstract class AbstractControlCaseStructuresAnalysis
 {
-    private int $index;
+    /**
+     * @var int
+     */
+    private $index;
 
-    private int $open;
+    /**
+     * @var int
+     */
+    private $open;
 
-    private int $close;
+    /**
+     * @var int
+     */
+    private $close;
 
     public function __construct(int $index, int $open, int $close)
     {

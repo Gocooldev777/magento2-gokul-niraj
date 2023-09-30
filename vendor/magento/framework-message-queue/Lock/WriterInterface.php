@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue\Lock;
 
 /**
  * Message lock writer
- * @api
  */
 interface WriterInterface
 {

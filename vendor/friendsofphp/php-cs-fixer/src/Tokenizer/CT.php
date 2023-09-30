@@ -87,9 +87,6 @@ final class CT
         return isset($tokens[$value]);
     }
 
-    /**
-     * @return array<self::T_*, string>
-     */
     private static function getMapById(): array
     {
         static $constants;

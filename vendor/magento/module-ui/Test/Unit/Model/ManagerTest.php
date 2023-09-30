@@ -253,7 +253,7 @@ class ManagerTest extends TestCase
         return [
             [
                 'test_component1',
-                $cachedData,
+                new \ArrayObject(),
                 json_encode($cachedData->getArrayCopy()),
                 [],
                 [

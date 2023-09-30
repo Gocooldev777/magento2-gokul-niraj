@@ -1,79 +1,99 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Executor\Promise\Adapter;
 
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
+use GraphQL\Utils\Utils;
 use React\Promise\Promise as ReactPromise;
 use React\Promise\PromiseInterface as ReactPromiseInterface;
-
 use function React\Promise\all;
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
 class ReactPromiseAdapter implements PromiseAdapter
 {
-    public function isThenable($value): bool
+    /**
+     * @inheritdoc
+     */
+    public function isThenable($value)
     {
         return $value instanceof ReactPromiseInterface;
     }
 
-    /** @throws InvariantViolation */
-    public function convertThenable($thenable): Promise
+    /**
+     * @inheritdoc
+     */
+    public function convertThenable($thenable)
     {
         return new Promise($thenable, $this);
     }
 
-    /** @throws InvariantViolation */
-    public function then(Promise $promise, ?callable $onFulfilled = null, ?callable $onRejected = null): Promise
+    /**
+     * @inheritdoc
+     */
+    public function then(Promise $promise, ?callable $onFulfilled = null, ?callable $onRejected = null)
     {
+        /** @var ReactPromiseInterface $adoptedPromise */
         $adoptedPromise = $promise->adoptedPromise;
-        assert($adoptedPromise instanceof ReactPromiseInterface);
 
         return new Promise($adoptedPromise->then($onFulfilled, $onRejected), $this);
     }
 
-    /** @throws InvariantViolation */
-    public function create(callable $resolver): Promise
+    /**
+     * @inheritdoc
+     */
+    public function create(callable $resolver)
     {
         $promise = new ReactPromise($resolver);
 
         return new Promise($promise, $this);
     }
 
-    /** @throws InvariantViolation */
-    public function createFulfilled($value = null): Promise
+    /**
+     * @inheritdoc
+     */
+    public function createFulfilled($value = null)
     {
         $promise = resolve($value);
 
         return new Promise($promise, $this);
     }
 
-    /** @throws InvariantViolation */
-    public function createRejected(\Throwable $reason): Promise
+    /**
+     * @inheritdoc
+     */
+    public function createRejected($reason)
     {
         $promise = reject($reason);
 
         return new Promise($promise, $this);
     }
 
-    /** @throws InvariantViolation */
-    public function all(iterable $promisesOrValues): Promise
+    /**
+     * @inheritdoc
+     */
+    public function all(array $promisesOrValues)
     {
-        foreach ($promisesOrValues as &$promiseOrValue) {
-            if ($promiseOrValue instanceof Promise) {
-                $promiseOrValue = $promiseOrValue->adoptedPromise;
+        // TODO: rework with generators when PHP minimum required version is changed to 5.5+
+        $promisesOrValues = Utils::map(
+            $promisesOrValues,
+            static function ($item) {
+                return $item instanceof Promise ? $item->adoptedPromise : $item;
             }
-        }
+        );
 
-        $promisesOrValuesArray = is_array($promisesOrValues)
-            ? $promisesOrValues
-            : iterator_to_array($promisesOrValues);
-        $promise = all($promisesOrValuesArray)->then(static fn ($values): array => array_map(
-            static fn ($key) => $values[$key],
-            array_keys($promisesOrValuesArray),
-        ));
+        $promise = all($promisesOrValues)->then(static function ($values) use ($promisesOrValues) : array {
+            $orderedResults = [];
+
+            foreach ($promisesOrValues as $key => $value) {
+                $orderedResults[$key] = $values[$key];
+            }
+
+            return $orderedResults;
+        });
 
         return new Promise($promise, $this);
     }

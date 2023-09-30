@@ -7,8 +7,6 @@ namespace Magento\Customer\CustomerData;
 
 /**
  * Section pool interface
- *
- * @api
  */
 interface SectionPoolInterface
 {

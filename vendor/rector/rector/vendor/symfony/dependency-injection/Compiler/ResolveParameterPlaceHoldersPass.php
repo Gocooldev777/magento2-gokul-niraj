@@ -8,32 +8,22 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 /**
  * Resolves all parameter placeholders "%somevalue%" to their real values.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
+class ResolveParameterPlaceHoldersPass extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AbstractRecursivePass
 {
-    /**
-     * @var \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface
-     */
     private $bag;
-    /**
-     * @var bool
-     */
-    private $resolveArrays = \true;
-    /**
-     * @var bool
-     */
-    private $throwOnResolveException = \true;
-    public function __construct(bool $resolveArrays = \true, bool $throwOnResolveException = \true)
+    private $resolveArrays;
+    private $throwOnResolveException;
+    public function __construct($resolveArrays = \true, $throwOnResolveException = \true)
     {
         $this->resolveArrays = $resolveArrays;
         $this->throwOnResolveException = $throwOnResolveException;
@@ -43,7 +33,7 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
      *
      * @throws ParameterNotFoundException
      */
-    public function process(ContainerBuilder $container)
+    public function process(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
         $this->bag = $container->getParameterBag();
         try {
@@ -54,23 +44,19 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
                 $aliases[$this->bag->resolveValue($name)] = $target;
             }
             $container->setAliases($aliases);
-        } catch (ParameterNotFoundException $e) {
+        } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException $e) {
             $e->setSourceId($this->currentId);
             throw $e;
         }
         $this->bag->resolve();
-        unset($this->bag);
+        $this->bag = null;
     }
-    /**
-     * @param mixed $value
-     * @return mixed
-     */
     protected function processValue($value, bool $isRoot = \false)
     {
         if (\is_string($value)) {
             try {
                 $v = $this->bag->resolveValue($value);
-            } catch (ParameterNotFoundException $e) {
+            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException $e) {
                 if ($this->throwOnResolveException) {
                     throw $e;
                 }
@@ -79,7 +65,7 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
             }
             return $this->resolveArrays || !$v || !\is_array($v) ? $v : $value;
         }
-        if ($value instanceof Definition) {
+        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition) {
             $value->setBindings($this->processValue($value->getBindings()));
             $changes = $value->getChanges();
             if (isset($changes['class'])) {
@@ -87,11 +73,6 @@ class ResolveParameterPlaceHoldersPass extends AbstractRecursivePass
             }
             if (isset($changes['file'])) {
                 $value->setFile($this->bag->resolveValue($value->getFile()));
-            }
-            $tags = $value->getTags();
-            if (isset($tags['proxy'])) {
-                $tags['proxy'] = $this->bag->resolveValue($tags['proxy']);
-                $value->setTags($tags);
             }
         }
         $value = parent::processValue($value, $isRoot);

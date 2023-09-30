@@ -11,7 +11,6 @@ use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Generate optimized version of media assets based on configuration for insertion to content
- * @api
  */
 interface GenerateRenditionsInterface
 {

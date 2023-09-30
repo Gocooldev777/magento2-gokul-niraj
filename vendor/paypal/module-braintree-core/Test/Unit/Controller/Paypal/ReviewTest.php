@@ -19,7 +19,6 @@ use PayPal\Braintree\Controller\Paypal\Review;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper\QuoteUpdater;
 use PayPal\Braintree\Block\Paypal\Checkout\Review as CheckoutReview;
-use Magento\Framework\Serialize\Serializer\Json;
 
 /**
  * @see \PayPal\Braintree\Controller\Paypal\Review
@@ -59,11 +58,6 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     private $messageManagerMock;
 
     /**
-     * @var Json|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $jsonMock;
-
-    /**
      * @var Review
      */
     private $review;
@@ -91,9 +85,6 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
             ->getMock();
         $this->messageManagerMock = $this->getMockBuilder(ManagerInterface::class)
             ->getMockForAbstractClass();
-        $this->jsonMock = $this->getMockBuilder(Json::class)
-            ->disableOriginalConstructor()
-            ->getMock();
 
         $contextMock->expects(self::once())
             ->method('getRequest')
@@ -109,14 +100,12 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
             $contextMock,
             $this->configMock,
             $this->checkoutSessionMock,
-            $this->quoteUpdaterMock,
-            $this->jsonMock
+            $this->quoteUpdaterMock
         );
     }
 
     public function testExecute()
     {
-        $this->markTestSkipped('Skip this test');
         $result = '{"nonce": ["test-value"], "details": ["test-value"]}';
 
         $resultPageMock = $this->getResultPageMock();

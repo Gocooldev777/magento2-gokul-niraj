@@ -7,6 +7,7 @@ use PhpParser\Node\Stmt;
 use Rector\ChangesReporting\ValueObject\RectorWithLineChange;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\ValueObject\Reporting\FileDiff;
+use Symplify\SmartFileSystem\SmartFileInfo;
 /**
  * @see \Rector\Core\ValueObjectFactory\Application\FileFactory
  */
@@ -43,22 +44,26 @@ final class File
     private $rectorWithLineChanges = [];
     /**
      * @readonly
-     * @var string
+     * @var \Symplify\SmartFileSystem\SmartFileInfo
      */
-    private $filePath;
+    private $smartFileInfo;
     /**
      * @var string
      */
     private $fileContent;
-    public function __construct(string $filePath, string $fileContent)
+    public function __construct(\Symplify\SmartFileSystem\SmartFileInfo $smartFileInfo, string $fileContent)
     {
-        $this->filePath = $filePath;
+        $this->smartFileInfo = $smartFileInfo;
         $this->fileContent = $fileContent;
         $this->originalFileContent = $fileContent;
     }
     public function getFilePath() : string
     {
-        return $this->filePath;
+        return $this->smartFileInfo->getRealPath();
+    }
+    public function getSmartFileInfo() : \Symplify\SmartFileSystem\SmartFileInfo
+    {
+        return $this->smartFileInfo;
     }
     public function getFileContent() : string
     {
@@ -72,6 +77,10 @@ final class File
         $this->fileContent = $newFileContent;
         $this->hasChanged = \true;
     }
+    public function hasContentChanged() : bool
+    {
+        return $this->fileContent !== $this->originalFileContent;
+    }
     public function getOriginalFileContent() : string
     {
         return $this->originalFileContent;
@@ -84,11 +93,11 @@ final class File
     {
         $this->hasChanged = $status;
     }
-    public function setFileDiff(FileDiff $fileDiff) : void
+    public function setFileDiff(\Rector\Core\ValueObject\Reporting\FileDiff $fileDiff) : void
     {
         $this->fileDiff = $fileDiff;
     }
-    public function getFileDiff() : ?FileDiff
+    public function getFileDiff() : ?\Rector\Core\ValueObject\Reporting\FileDiff
     {
         return $this->fileDiff;
     }
@@ -100,7 +109,7 @@ final class File
     public function hydrateStmtsAndTokens(array $newStmts, array $oldStmts, array $oldTokens) : void
     {
         if ($this->oldStmts !== []) {
-            throw new ShouldNotHappenException('Double stmts override');
+            throw new \Rector\Core\Exception\ShouldNotHappenException('Double stmts override');
         }
         $this->oldStmts = $oldStmts;
         $this->newStmts = $newStmts;
@@ -134,7 +143,7 @@ final class File
     {
         $this->newStmts = $newStmts;
     }
-    public function addRectorClassWithLine(RectorWithLineChange $rectorWithLineChange) : void
+    public function addRectorClassWithLine(\Rector\ChangesReporting\ValueObject\RectorWithLineChange $rectorWithLineChange) : void
     {
         $this->rectorWithLineChanges[] = $rectorWithLineChange;
     }
@@ -144,5 +153,9 @@ final class File
     public function getRectorWithLineChanges() : array
     {
         return $this->rectorWithLineChanges;
+    }
+    public function getRelativeFilePath() : string
+    {
+        return $this->smartFileInfo->getRelativeFilePathFromCwd();
     }
 }

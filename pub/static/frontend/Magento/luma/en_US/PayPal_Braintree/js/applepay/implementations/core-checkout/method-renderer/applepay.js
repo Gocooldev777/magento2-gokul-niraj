@@ -16,7 +16,6 @@ define([
         defaults: {
             template: 'PayPal_Braintree/applepay/core-checkout',
             paymentMethodNonce: null,
-            deviceData: null,
             grandTotalAmount: 0,
             deviceSupported: button.deviceSupported()
         },
@@ -50,9 +49,8 @@ define([
         /**
          * Apple pay place order method
          */
-        startPlaceOrder: function (nonce, event, session, device_data) {
+        startPlaceOrder: function (nonce, event, session) {
             this.setPaymentMethodNonce(nonce);
-            this.setDeviceData(device_data);
             this.placeOrder();
 
             session.completePayment(ApplePaySession.STATUS_SUCCESS);
@@ -63,13 +61,6 @@ define([
          */
         setPaymentMethodNonce: function (nonce) {
             this.paymentMethodNonce = nonce;
-        },
-
-        /**
-         * Save nonce
-         */
-        setDeviceData: function (device_data) {
-            this.deviceData = device_data;
         },
 
         /**
@@ -107,8 +98,7 @@ define([
             var data = {
                 'method': this.getCode(),
                 'additional_data': {
-                    'payment_method_nonce': this.paymentMethodNonce,
-                    'device_data': this.deviceData
+                    'payment_method_nonce': this.paymentMethodNonce
                 }
             };
             return data;

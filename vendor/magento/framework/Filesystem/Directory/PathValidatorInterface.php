@@ -12,8 +12,6 @@ use Magento\Framework\Exception\ValidatorException;
 
 /**
  * Validate paths to be used with directories.
- *
- * @api
  */
 interface PathValidatorInterface
 {

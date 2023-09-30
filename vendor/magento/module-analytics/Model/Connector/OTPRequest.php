@@ -5,10 +5,10 @@
  */
 namespace Magento\Analytics\Model\Connector;
 
-use Laminas\Http\Request;
 use Magento\Analytics\Model\AnalyticsToken;
 use Magento\Analytics\Model\Connector\Http\ResponseResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\HTTP\ZendClient;
 use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
 
@@ -91,7 +91,7 @@ class OTPRequest
 
         if ($this->analyticsToken->isTokenExist()) {
             $response = $this->httpClient->request(
-                Request::METHOD_POST,
+                ZendClient::POST,
                 $this->config->getValue($this->otpUrlConfigPath),
                 [
                     "access-token" => $this->analyticsToken->getToken(),
@@ -105,9 +105,7 @@ class OTPRequest
                     sprintf(
                         'Obtaining of an OTP from the MBI service has been failed: %s. Content-Type: %s',
                         !empty($response->getBody()) ? $response->getBody() : 'Response body is empty',
-                        $response->getHeaders()->has('Content-Type') ?
-                            $response->getHeaders()->get('Content-Type')->getFieldValue() :
-                            ''
+                        $response->getHeader('Content-Type')
                     )
                 );
             }

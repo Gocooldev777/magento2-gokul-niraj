@@ -8,38 +8,22 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\ParameterBag;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class EnvPlaceholderParameterBag extends ParameterBag
+class EnvPlaceholderParameterBag extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\ParameterBag
 {
-    /**
-     * @var string
-     */
     private $envPlaceholderUniquePrefix;
-    /**
-     * @var mixed[]
-     */
     private $envPlaceholders = [];
-    /**
-     * @var mixed[]
-     */
     private $unusedEnvPlaceholders = [];
-    /**
-     * @var mixed[]
-     */
     private $providedTypes = [];
-    /**
-     * @var int
-     */
     private static $counter = 0;
     /**
      * {@inheritdoc}
-     * @return mixed[]|bool|string|int|float|\UnitEnum|null
      */
     public function get(string $name)
     {
@@ -58,10 +42,10 @@ class EnvPlaceholderParameterBag extends ParameterBag
                 }
             }
             if (!\preg_match('/^(?:[-.\\w]*+:)*+\\w++$/', $env)) {
-                throw new InvalidArgumentException(\sprintf('Invalid %s name: only "word" characters are allowed.', $name));
+                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('Invalid %s name: only "word" characters are allowed.', $name));
             }
             if ($this->has($name) && null !== ($defaultValue = parent::get($name)) && !\is_string($defaultValue)) {
-                throw new RuntimeException(\sprintf('The default value of an env() parameter must be a string or null, but "%s" given to "%s".', \get_debug_type($defaultValue), $name));
+                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException(\sprintf('The default value of an env() parameter must be a string or null, but "%s" given to "%s".', \get_debug_type($defaultValue), $name));
             }
             $uniqueName = \md5($name . '_' . self::$counter++);
             $placeholder = \sprintf('%s_%s_%s', $this->getEnvPlaceholderUniquePrefix(), \strtr($env, ':-.', '___'), $uniqueName);
@@ -75,7 +59,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
      */
     public function getEnvPlaceholderUniquePrefix() : string
     {
-        if (!isset($this->envPlaceholderUniquePrefix)) {
+        if (null === $this->envPlaceholderUniquePrefix) {
             $reproducibleEntropy = \unserialize(\serialize($this->parameters));
             \array_walk_recursive($reproducibleEntropy, function (&$v) {
                 $v = null;
@@ -89,7 +73,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
      *
      * @return string[][] A map of env var names to their placeholders
      */
-    public function getEnvPlaceholders() : array
+    public function getEnvPlaceholders()
     {
         return $this->envPlaceholders;
     }
@@ -131,7 +115,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
      *
      * @return string[][]
      */
-    public function getProvidedTypes() : array
+    public function getProvidedTypes()
     {
         return $this->providedTypes;
     }
@@ -146,7 +130,7 @@ class EnvPlaceholderParameterBag extends ParameterBag
         parent::resolve();
         foreach ($this->envPlaceholders as $env => $placeholders) {
             if ($this->has($name = "env({$env})") && null !== ($default = $this->parameters[$name]) && !\is_string($default)) {
-                throw new RuntimeException(\sprintf('The default value of env parameter "%s" must be a string or null, "%s" given.', $env, \get_debug_type($default)));
+                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException(\sprintf('The default value of env parameter "%s" must be a string or null, "%s" given.', $env, \get_debug_type($default)));
             }
         }
     }

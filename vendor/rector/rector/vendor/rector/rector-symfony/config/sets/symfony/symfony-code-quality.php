@@ -1,23 +1,15 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
 use Rector\Symfony\Rector\BinaryOp\ResponseStatusCodeRector;
 use Rector\Symfony\Rector\Class_\EventListenerToEventSubscriberRector;
 use Rector\Symfony\Rector\Class_\MakeCommandLazyRector;
-use Rector\Symfony\Rector\ClassMethod\RemoveUnusedRequestParamRector;
-use Rector\Symfony\Rector\ClassMethod\ResponseReturnTypeControllerActionRector;
-use Rector\Symfony\Rector\MethodCall\LiteralGetToRequestClassConstantRector;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->rules([
-        MakeCommandLazyRector::class,
-        EventListenerToEventSubscriberRector::class,
-        ResponseReturnTypeControllerActionRector::class,
-        // int and string literals to const fetches
-        ResponseStatusCodeRector::class,
-        LiteralGetToRequestClassConstantRector::class,
-        RemoveUnusedRequestParamRector::class,
-    ]);
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\Symfony\Rector\BinaryOp\ResponseStatusCodeRector::class);
+    $services->set(\Rector\Symfony\Rector\Class_\MakeCommandLazyRector::class);
+    $services->set(\Rector\Symfony\Rector\Class_\EventListenerToEventSubscriberRector::class);
 };

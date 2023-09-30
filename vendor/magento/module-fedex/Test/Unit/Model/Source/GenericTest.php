@@ -55,8 +55,9 @@ class GenericTest extends TestCase
      * @return void
      * @dataProvider toOptionArrayDataProvider
      */
-    public function testToOptionArray($methods, $result): void
+    public function testToOptionArray($code, $methods, $result): void
     {
+        $this->model->code = $code;
         $this->shippingFedexMock->expects($this->once())
             ->method('getCode')
             ->willReturn($methods);
@@ -73,6 +74,7 @@ class GenericTest extends TestCase
     {
         return [
             [
+                'method',
                 [
                     'FEDEX_GROUND' => __('Ground'),
                     'FIRST_OVERNIGHT' => __('First Overnight')
@@ -83,6 +85,7 @@ class GenericTest extends TestCase
                 ]
             ],
             [
+                '',
                 false,
                 []
             ]

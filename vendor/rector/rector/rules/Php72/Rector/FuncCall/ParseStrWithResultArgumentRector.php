@@ -7,11 +7,9 @@ use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Expression;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\PhpVersionFeature;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -20,15 +18,15 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\Php72\Rector\FuncCall\ParseStrWithResultArgumentRector\ParseStrWithResultArgumentRectorTest
  */
-final class ParseStrWithResultArgumentRector extends AbstractRector implements MinPhpVersionInterface
+final class ParseStrWithResultArgumentRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
 {
     public function provideMinPhpVersion() : int
     {
-        return PhpVersionFeature::RESULT_ARG_IN_PARSE_STR;
+        return \Rector\Core\ValueObject\PhpVersionFeature::RESULT_ARG_IN_PARSE_STR;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Use $result argument in parse_str() function', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Use $result argument in parse_str() function', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 parse_str($this->query);
 $data = get_defined_vars();
 CODE_SAMPLE
@@ -43,66 +41,38 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [StmtsAwareInterface::class];
+        return [\PhpParser\Node\Expr\FuncCall::class];
     }
     /**
-     * @param StmtsAwareInterface $node
+     * @param FuncCall $node
      */
-    public function refactor(Node $node) : ?StmtsAwareInterface
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        return $this->processStrWithResult($node, \false);
-    }
-    private function processStrWithResult(StmtsAwareInterface $stmtsAware, bool $hasChanged, int $jumpToKey = 0) : ?\Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface
-    {
-        if ($stmtsAware->stmts === null) {
+        if (!$this->isName($node, 'parse_str')) {
             return null;
         }
-        \end($stmtsAware->stmts);
-        $totalKeys = \key($stmtsAware->stmts);
-        for ($key = $jumpToKey; $key < $totalKeys; ++$key) {
-            if (!isset($stmtsAware->stmts[$key], $stmtsAware->stmts[$key + 1])) {
-                break;
+        if (isset($node->args[1])) {
+            return null;
+        }
+        $resultVariable = new \PhpParser\Node\Expr\Variable('result');
+        $node->args[1] = new \PhpParser\Node\Arg($resultVariable);
+        $expression = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CURRENT_STATEMENT);
+        if ($expression === null) {
+            return null;
+        }
+        $nextExpression = $expression->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+        if ($nextExpression === null) {
+            return null;
+        }
+        $this->traverseNodesWithCallable($nextExpression, function (\PhpParser\Node $node) use($resultVariable) : ?Variable {
+            if (!$node instanceof \PhpParser\Node\Expr\FuncCall) {
+                return null;
             }
-            $stmt = $stmtsAware->stmts[$key];
-            if ($this->shouldSkip($stmt)) {
-                continue;
+            if (!$this->isName($node, 'get_defined_vars')) {
+                return null;
             }
-            /**
-             * @var Expression $stmt
-             * @var FuncCall $expr
-             */
-            $expr = $stmt->expr;
-            $resultVariable = new Variable('result');
-            $expr->args[1] = new Arg($resultVariable);
-            $nextExpression = $stmtsAware->stmts[$key + 1];
-            $this->traverseNodesWithCallable($nextExpression, function (Node $node) use($resultVariable, &$hasChanged) : ?Variable {
-                if (!$node instanceof FuncCall) {
-                    return null;
-                }
-                if (!$this->isName($node, 'get_defined_vars')) {
-                    return null;
-                }
-                $hasChanged = \true;
-                return $resultVariable;
-            });
-            return $this->processStrWithResult($stmtsAware, $hasChanged, $key + 2);
-        }
-        if ($hasChanged) {
-            return $stmtsAware;
-        }
-        return null;
-    }
-    private function shouldSkip(Stmt $stmt) : bool
-    {
-        if (!$stmt instanceof Expression) {
-            return \true;
-        }
-        if (!$stmt->expr instanceof FuncCall) {
-            return \true;
-        }
-        if (!$this->isName($stmt->expr, 'parse_str')) {
-            return \true;
-        }
-        return isset($stmt->expr->args[1]);
+            return $resultVariable;
+        });
+        return $node;
     }
 }

@@ -14,19 +14,16 @@ declare(strict_types=1);
 
 namespace PhpCsFixer\Fixer\ControlStructure;
 
-use PhpCsFixer\AbstractProxyFixer;
-use PhpCsFixer\Fixer\Basic\NoTrailingCommaInSinglelineFixer;
-use PhpCsFixer\Fixer\DeprecatedFixerInterface;
+use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
+use PhpCsFixer\Tokenizer\Tokens;
 
 /**
- * @deprecated
- *
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
  */
-final class NoTrailingCommaInListCallFixer extends AbstractProxyFixer implements DeprecatedFixerInterface
+final class NoTrailingCommaInListCallFixer extends AbstractFixer
 {
     /**
      * {@inheritdoc}
@@ -42,19 +39,39 @@ final class NoTrailingCommaInListCallFixer extends AbstractProxyFixer implements
     /**
      * {@inheritdoc}
      */
-    public function getSuccessorsNames(): array
+    public function isCandidate(Tokens $tokens): bool
     {
-        return array_keys($this->proxyFixers);
+        return $tokens->isTokenKindFound(T_LIST);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function createProxyFixers(): array
+    protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
-        $fixer = new NoTrailingCommaInSinglelineFixer();
-        $fixer->configure(['elements' => ['array_destructuring']]);
+        for ($index = $tokens->count() - 1; $index >= 0; --$index) {
+            $token = $tokens[$index];
 
-        return [$fixer];
+            if (!$token->isGivenKind(T_LIST)) {
+                continue;
+            }
+
+            $openIndex = $tokens->getNextMeaningfulToken($index);
+            $closeIndex = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openIndex);
+            $markIndex = null;
+            $prevIndex = $tokens->getPrevNonWhitespace($closeIndex);
+
+            while ($tokens[$prevIndex]->equals(',')) {
+                $markIndex = $prevIndex;
+                $prevIndex = $tokens->getPrevNonWhitespace($prevIndex);
+            }
+
+            if (null !== $markIndex) {
+                $tokens->clearRange(
+                    $tokens->getPrevNonWhitespace($markIndex) + 1,
+                    $closeIndex - 1
+                );
+            }
+        }
     }
 }

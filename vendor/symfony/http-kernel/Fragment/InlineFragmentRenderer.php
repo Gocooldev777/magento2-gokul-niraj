@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Fragment;
 
+use Symfony\Component\EventDispatcher\LegacyEventDispatcherProxy;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Controller\ControllerReference;
@@ -27,21 +28,23 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 class InlineFragmentRenderer extends RoutableFragmentRenderer
 {
-    private HttpKernelInterface $kernel;
-    private ?EventDispatcherInterface $dispatcher;
+    private $kernel;
+    private $dispatcher;
 
     public function __construct(HttpKernelInterface $kernel, EventDispatcherInterface $dispatcher = null)
     {
         $this->kernel = $kernel;
-        $this->dispatcher = $dispatcher;
+        $this->dispatcher = LegacyEventDispatcherProxy::decorate($dispatcher);
     }
 
     /**
+     * {@inheritdoc}
+     *
      * Additional available options:
      *
      *  * alt: an alternative URI to render in case of an error
      */
-    public function render(string|ControllerReference $uri, Request $request, array $options = []): Response
+    public function render($uri, Request $request, array $options = [])
     {
         $reference = null;
         if ($uri instanceof ControllerReference) {
@@ -103,7 +106,7 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
         }
     }
 
-    protected function createSubRequest(string $uri, Request $request)
+    protected function createSubRequest($uri, Request $request)
     {
         $cookies = $request->cookies->all();
         $server = $request->server->all();
@@ -118,7 +121,9 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
 
         static $setSession;
 
-        $setSession ??= \Closure::bind(static function ($subRequest, $request) { $subRequest->session = $request->session; }, null, Request::class);
+        if (null === $setSession) {
+            $setSession = \Closure::bind(static function ($subRequest, $request) { $subRequest->session = $request->session; }, null, Request::class);
+        }
         $setSession($subRequest, $request);
 
         if ($request->get('_format')) {
@@ -131,7 +136,10 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
         return $subRequest;
     }
 
-    public function getName(): string
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
     {
         return 'inline';
     }

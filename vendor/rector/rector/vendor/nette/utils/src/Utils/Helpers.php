@@ -5,9 +5,8 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Utils;
+namespace RectorPrefix20211221\Nette\Utils;
 
-use RectorPrefix202304\Nette;
 class Helpers
 {
     /**
@@ -32,7 +31,7 @@ class Helpers
     public static function getLastError() : string
     {
         $message = \error_get_last()['message'] ?? '';
-        $message = \ini_get('html_errors') ? Html::htmlToText($message) : $message;
+        $message = \ini_get('html_errors') ? \RectorPrefix20211221\Nette\Utils\Html::htmlToText($message) : $message;
         $message = \preg_replace('#^\\w+\\(.*?\\): #', '', $message);
         return $message;
     }
@@ -55,7 +54,7 @@ class Helpers
     public static function clamp($value, $min, $max)
     {
         if ($min > $max) {
-            throw new Nette\InvalidArgumentException("Minimum ({$min}) is not less than maximum ({$max}).");
+            throw new \InvalidArgumentException("Minimum ({$min}) is not less than maximum ({$max}).");
         }
         return \min(\max($value, $min), $max);
     }

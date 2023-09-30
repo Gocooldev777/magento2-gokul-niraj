@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace PhpCsFixer\Console\Report\FixReport;
 
 use Symfony\Component\Finder\Finder as SymfonyFinder;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * @author Boris Gorbylev <ekho@ekho.name>
@@ -23,19 +24,18 @@ use Symfony\Component\Finder\Finder as SymfonyFinder;
  */
 final class ReporterFactory
 {
-    /**
-     * @var array<string, ReporterInterface>
-     */
-    private array $reporters = [];
+    /** @var ReporterInterface[] */
+    private $reporters = [];
 
     public function registerBuiltInReporters(): self
     {
-        /** @var null|list<string> $builtInReporters */
+        /** @var null|string[] $builtInReporters */
         static $builtInReporters;
 
         if (null === $builtInReporters) {
             $builtInReporters = [];
 
+            /** @var SplFileInfo $file */
             foreach (SymfonyFinder::create()->files()->name('*Reporter.php')->in(__DIR__) as $file) {
                 $relativeNamespace = $file->getRelativePath();
                 $builtInReporters[] = sprintf(
@@ -71,7 +71,7 @@ final class ReporterFactory
     }
 
     /**
-     * @return list<string>
+     * @return string[]
      */
     public function getFormats(): array
     {

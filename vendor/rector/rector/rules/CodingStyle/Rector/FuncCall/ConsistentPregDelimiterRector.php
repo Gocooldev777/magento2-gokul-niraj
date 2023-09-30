@@ -3,14 +3,13 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\FuncCall;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Type\ObjectType;
-use Rector\Core\Contract\PhpParser\NodePrinterInterface;
 use Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\Util\StringUtils;
@@ -20,7 +19,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\FuncCall\ConsistentPregDelimiterRector\ConsistentPregDelimiterRectorTest
  */
-final class ConsistentPregDelimiterRector extends AbstractRector implements AllowEmptyConfigurableRectorInterface
+final class ConsistentPregDelimiterRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface
 {
     /**
      * @api
@@ -65,18 +64,9 @@ final class ConsistentPregDelimiterRector extends AbstractRector implements Allo
      * @var string
      */
     private $delimiter = '#';
-    /**
-     * @readonly
-     * @var \Rector\Core\Contract\PhpParser\NodePrinterInterface
-     */
-    private $nodePrinter;
-    public function __construct(NodePrinterInterface $nodePrinter)
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        $this->nodePrinter = $nodePrinter;
-    }
-    public function getRuleDefinition() : RuleDefinition
-    {
-        return new RuleDefinition('Replace PREG delimiter with configured one', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Replace PREG delimiter with configured one', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -103,53 +93,55 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [FuncCall::class, StaticCall::class];
+        return [\PhpParser\Node\Expr\FuncCall::class, \PhpParser\Node\Expr\StaticCall::class];
     }
     /**
      * @param FuncCall|StaticCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        if ($node instanceof FuncCall) {
+        if ($node instanceof \PhpParser\Node\Expr\FuncCall) {
             return $this->refactorFuncCall($node);
         }
         foreach (self::STATIC_METHODS_WITH_REGEX_PATTERN as $type => $methodsToPositions) {
-            if (!$this->isObjectType($node->class, new ObjectType($type))) {
+            if (!$this->isObjectType($node->class, new \PHPStan\Type\ObjectType($type))) {
                 continue;
             }
             foreach ($methodsToPositions as $method => $position) {
                 if (!$this->isName($node->name, $method)) {
                     continue;
                 }
-                if (!$node->args[$position] instanceof Arg) {
+                if (!$node->args[$position] instanceof \PhpParser\Node\Arg) {
                     continue;
                 }
-                return $this->refactorArgument($node, $node->args[$position]);
+                $this->refactorArgument($node->args[$position]);
+                return $node;
             }
         }
         return null;
     }
     public function configure(array $configuration) : void
     {
-        $this->delimiter = $configuration[self::DELIMITER] ?? (string) \current($configuration);
+        $this->delimiter = $configuration[self::DELIMITER] ?? '#';
     }
-    private function refactorFuncCall(FuncCall $funcCall) : ?FuncCall
+    private function refactorFuncCall(\PhpParser\Node\Expr\FuncCall $funcCall) : ?\PhpParser\Node\Expr\FuncCall
     {
         foreach (self::FUNCTIONS_WITH_REGEX_PATTERN as $function => $position) {
             if (!$this->isName($funcCall, $function)) {
                 continue;
             }
-            if (!$funcCall->args[$position] instanceof Arg) {
+            if (!$funcCall->args[$position] instanceof \PhpParser\Node\Arg) {
                 continue;
             }
-            return $this->refactorArgument($funcCall, $funcCall->args[$position]);
+            $this->refactorArgument($funcCall->args[$position]);
+            return $funcCall;
         }
         return null;
     }
     private function hasNewLineWithUnicodeModifier(string $string) : bool
     {
-        $matchInnerRegex = Strings::match($string, self::INNER_REGEX);
-        $matchInnerUnionRegex = Strings::match($string, self::INNER_UNICODE_REGEX);
+        $matchInnerRegex = \RectorPrefix20211221\Nette\Utils\Strings::match($string, self::INNER_REGEX);
+        $matchInnerUnionRegex = \RectorPrefix20211221\Nette\Utils\Strings::match($string, self::INNER_UNICODE_REGEX);
         if (!\is_array($matchInnerRegex)) {
             return \false;
         }
@@ -159,39 +151,22 @@ CODE_SAMPLE
         if ($matchInnerRegex === $matchInnerUnionRegex) {
             return \false;
         }
-        if (StringUtils::isMatch($matchInnerUnionRegex['content'], self::NEW_LINE_REGEX)) {
-            return \true;
-        }
-        return isset($string[0]) && $matchInnerUnionRegex['content'] === $string[0];
+        return \Rector\Core\Util\StringUtils::isMatch($matchInnerUnionRegex['content'], self::NEW_LINE_REGEX);
     }
-    private function hasEscapedQuote(String_ $string) : bool
+    private function refactorArgument(\PhpParser\Node\Arg $arg) : void
     {
-        $kind = $string->getAttribute(AttributeKey::KIND);
-        if ($kind === String_::KIND_DOUBLE_QUOTED && \strpos($string->value, '"') !== \false) {
-            return \true;
-        }
-        return $kind === String_::KIND_SINGLE_QUOTED && \strpos($string->value, "'") !== \false;
-    }
-    /**
-     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\StaticCall $node
-     */
-    private function refactorArgument($node, Arg $arg) : ?\PhpParser\Node
-    {
-        if (!$arg->value instanceof String_) {
-            return null;
+        if (!$arg->value instanceof \PhpParser\Node\Scalar\String_) {
+            return;
         }
         /** @var String_ $string */
         $string = $arg->value;
-        if ($this->hasEscapedQuote($string)) {
-            return null;
-        }
         if ($this->hasNewLineWithUnicodeModifier($string->value)) {
-            return null;
+            return;
         }
-        $string->value = Strings::replace($string->value, self::INNER_REGEX, function (array $match) use(&$string) : string {
-            $printedString = $this->nodePrinter->print($string);
-            if (StringUtils::isMatch($printedString, self::DOUBLE_QUOTED_REGEX)) {
-                $string->setAttribute(AttributeKey::IS_REGULAR_PATTERN, \true);
+        $string->value = \RectorPrefix20211221\Nette\Utils\Strings::replace($string->value, self::INNER_REGEX, function (array $match) use(&$string) : string {
+            $printedString = $this->betterStandardPrinter->print($string);
+            if (\Rector\Core\Util\StringUtils::isMatch($printedString, self::DOUBLE_QUOTED_REGEX)) {
+                $string->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::IS_REGULAR_PATTERN, \true);
             }
             $innerPattern = $match['content'];
             $positionDelimiter = \strpos($innerPattern, $this->delimiter);
@@ -205,6 +180,5 @@ CODE_SAMPLE
             }
             return $innerPattern . $match['close'];
         });
-        return $node;
     }
 }

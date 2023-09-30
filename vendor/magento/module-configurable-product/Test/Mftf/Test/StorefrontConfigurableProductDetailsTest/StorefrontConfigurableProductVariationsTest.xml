@@ -44,10 +44,9 @@
             <actionGroup ref="DeleteProductBySkuActionGroup" stepKey="deleteProduct">
                 <argument name="sku" value="{{BaseConfigurableProduct.sku}}"/>
             </actionGroup>
-            <actionGroup ref="ResetAdminDataGridToDefaultViewActionGroup" stepKey="clearFilters"/>
             <deleteData createDataKey="createFirstAttribute" stepKey="deleteFirstAttribute"/>
             <deleteData createDataKey="createSecondAttribute" stepKey="deleteSecondAttribute"/>
-            <comment userInput="BIC workaround" stepKey="clearProductsGridFilters"/>
+            <actionGroup ref="ClearFiltersAdminDataGridActionGroup" stepKey="clearProductsGridFilters"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="adminLogout"/>
 
             <!-- Reindex invalidated indices after product attribute has been created/deleted -->

@@ -10,9 +10,11 @@ namespace Magento\TestFramework\MessageQueue;
 
 use Magento\Framework\MessageQueue\PublisherInterface;
 use Magento\Framework\OsInfo;
-use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\Helper\Amqp;
 
+/**
+ * Publisher Consumer Controller
+ */
 class PublisherConsumerController
 {
     /**
@@ -51,11 +53,6 @@ class PublisherConsumerController
     private $amqpHelper;
 
     /**
-     * @var ClearQueueProcessor
-     */
-    private $clearQueueProcessor;
-
-    /**
      * PublisherConsumerController constructor.
      * @param PublisherInterface $publisher
      * @param OsInfo $osInfo
@@ -64,7 +61,6 @@ class PublisherConsumerController
      * @param array $consumers
      * @param array $appInitParams
      * @param null|int $maxMessages
-     * @param ClearQueueProcessor $clearQueueProcessor
      */
     public function __construct(
         PublisherInterface $publisher,
@@ -73,8 +69,7 @@ class PublisherConsumerController
         $logFilePath,
         $consumers,
         $appInitParams,
-        $maxMessages = null,
-        ClearQueueProcessor $clearQueueProcessor = null
+        $maxMessages = null
     ) {
         $this->consumers = $consumers;
         $this->publisher = $publisher;
@@ -83,8 +78,6 @@ class PublisherConsumerController
         $this->osInfo = $osInfo;
         $this->appInitParams = $appInitParams;
         $this->amqpHelper = $amqpHelper;
-        $this->clearQueueProcessor = $clearQueueProcessor
-            ?: Bootstrap::getObjectManager()->get(ClearQueueProcessor::class);
     }
 
     /**
@@ -97,7 +90,12 @@ class PublisherConsumerController
     {
         $this->validateEnvironmentPreconditions();
 
-        $this->clearQueueProcessor->execute("async.operations.all");
+        $connections = $this->amqpHelper->getConnections();
+        foreach (array_keys($connections) as $connectionName) {
+            $this->amqpHelper->deleteConnection($connectionName);
+        }
+        $this->amqpHelper->clearQueue("async.operations.all");
+
         $this->stopConsumers();
         $this->startConsumers();
 
@@ -123,6 +121,12 @@ class PublisherConsumerController
         if ($this->osInfo->isWindows()) {
             throw new EnvironmentPreconditionException(
                 "This test relies on *nix shell and should be skipped in Windows environment."
+            );
+        }
+
+        if (!$this->amqpHelper->isAvailable()) {
+            throw new PreconditionFailedException(
+                'This test relies on RabbitMQ Management Plugin.'
             );
         }
     }
@@ -204,9 +208,9 @@ class PublisherConsumerController
     {
         $i = 0;
         do {
-            sleep(3);
+            sleep(1);
             $assertion = call_user_func_array($condition, $params);
-        } while (!$assertion && ($i++ < 10));
+        } while (!$assertion && ($i++ < 180));
 
         if (!$assertion) {
             throw new PreconditionFailedException("No asynchronous messages were processed.");

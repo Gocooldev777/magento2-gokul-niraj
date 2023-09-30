@@ -18,7 +18,7 @@ define([
          * @return {*|String}
          */
         getFormattedPrice: function (price) {
-            return priceUtils.formatPriceLocale(price, quote.getPriceFormat());
+            return priceUtils.formatPrice(price, quote.getPriceFormat());
         },
 
         /**

@@ -1,13 +1,6 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
-
-use Laminas\View\View;
-
-use function func_get_args;
-use function is_array;
 
 /**
  * Helper for declaring default values of template variables
@@ -17,7 +10,7 @@ class DeclareVars extends AbstractHelper
     /**
      * The view object that created this helper object.
      *
-     * @var View
+     * @var \Laminas\View\View
      */
     public $view;
 
@@ -42,7 +35,6 @@ class DeclareVars extends AbstractHelper
      * );
      * </code>
      *
-     * phpcs:ignore
      * @param string|array variable number of arguments, all string names of variables to test
      * @return void
      */

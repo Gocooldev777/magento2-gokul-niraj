@@ -7,8 +7,6 @@ namespace Magento\Framework;
 
 /**
  * @todo change this interface when i18n-related logic is moved to library
- *
- * @api
  */
 interface TranslateInterface
 {

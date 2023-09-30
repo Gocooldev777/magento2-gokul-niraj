@@ -9,8 +9,6 @@ namespace Magento\Search\Model\SearchEngine;
 
 /**
  * Validate search engine configuration
- *
- * @api
  */
 interface ValidatorInterface
 {

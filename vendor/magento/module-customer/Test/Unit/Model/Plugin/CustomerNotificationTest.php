@@ -20,13 +20,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Magento\Framework\Session\StorageInterface;
 
-/**
- * Unit test for CustomerNotification plugin
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- */
 class CustomerNotificationTest extends TestCase
 {
     private const STUB_CUSTOMER_ID = 1;
@@ -71,11 +65,6 @@ class CustomerNotificationTest extends TestCase
      */
     private $plugin;
 
-    /**
-     * @var StorageInterface|MockObject
-     */
-    private $storage;
-
     protected function setUp(): void
     {
         $this->sessionMock = $this->createMock(Session::class);
@@ -98,27 +87,19 @@ class CustomerNotificationTest extends TestCase
             ->with(NotificationStorage::UPDATE_CUSTOMER_SESSION, self::STUB_CUSTOMER_ID)
             ->willReturn(true);
 
-        $this->storage = $this
-            ->getMockBuilder(StorageInterface::class)
-            ->addMethods(['getData', 'setData'])
-            ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
-
         $this->plugin = new CustomerNotification(
             $this->sessionMock,
             $this->notificationStorageMock,
             $this->appStateMock,
             $this->customerRepositoryMock,
             $this->loggerMock,
-            $this->requestMock,
-            $this->storage
+            $this->requestMock
         );
     }
 
     public function testBeforeExecute()
     {
         $customerGroupId = 1;
-        $testSessionId = [uniqid()];
 
         $customerMock = $this->getMockForAbstractClass(CustomerInterface::class);
         $customerMock->method('getGroupId')->willReturn($customerGroupId);
@@ -135,10 +116,6 @@ class CustomerNotificationTest extends TestCase
         $this->sessionMock->expects($this->once())->method('setCustomerData')->with($customerMock);
         $this->sessionMock->expects($this->once())->method('setCustomerGroupId')->with($customerGroupId);
         $this->sessionMock->expects($this->once())->method('regenerateId');
-        $this->storage->expects($this->once())->method('getData')->willReturn($testSessionId);
-        $this->storage
-            ->expects($this->once())
-            ->method('setData');
 
         $this->plugin->beforeExecute($this->actionMock);
     }

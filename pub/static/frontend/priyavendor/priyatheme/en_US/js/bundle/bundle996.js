@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Checkout/template/registration.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<!-- ko foreach: getRegion('messages') -->\n    <!-- ko template: getTemplate() --><!-- /ko -->\n<!--/ko-->\n<div>\n    <!-- ko if: isFormVisible -->\n    <p data-bind=\"i18n: 'You can track your order status by creating an account.'\"></p>\n    <p><span data-bind=\"i18n: 'Email Address'\"></span>: <span data-bind=\"text: getEmailAddress()\"></span></p>\n    <a class=\"action primary\" data-bind=\"attr: { href: getUrl() }\">\n        <span data-bind=\"i18n: 'Create an Account'\"></span>\n    </a>\n    <!--/ko-->\n</div>\n"}
+}});

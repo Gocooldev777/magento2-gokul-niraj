@@ -365,10 +365,3 @@ class HasAttributes
     #[ThirdAttribute]
     protected $propertyWithoutSpacing;
 }
-
-enum SomeEnum
-{
-    // Enum cannot have properties
-
-    case ONE = 'one';
-}

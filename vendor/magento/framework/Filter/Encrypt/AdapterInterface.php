@@ -5,11 +5,9 @@
  */
 namespace Magento\Framework\Filter\Encrypt;
 
-use Laminas\Filter\Encrypt\EncryptionAlgorithmInterface;
-
 /**
  * Encrypt adapter interface
  */
-interface AdapterInterface extends EncryptionAlgorithmInterface
+interface AdapterInterface extends \Zend_Filter_Encrypt_Interface
 {
 }

@@ -5,14 +5,12 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-
 /**
  * Translit filter
  *
  * Process string based on convertation table
  */
-class Translit implements FilterInterface
+class Translit implements \Zend_Filter_Interface
 {
     /**
      * Symbol convert table
@@ -499,9 +497,7 @@ class Translit implements FilterInterface
         '্' => 'h',
         'ং' => 'ng',
         'ৢ' => 'n',
-        'ৣ' => 'nn',
-        'ñ' => 'n',
-        'Ñ' => 'n',
+        'ৣ' => 'nn'
     ];
 
     /**

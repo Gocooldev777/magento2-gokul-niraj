@@ -48,8 +48,7 @@ define([
             tierPriceBlockSelector: '[data-role="tier-price-block"]',
             tierPriceTemplate: '',
             selectorProduct: '.product-info-main',
-            selectorProductPrice: '[data-role=priceBox]',
-            qtyInfo: '#qty'
+            selectorProductPrice: '[data-role=priceBox]'
         },
 
         /**
@@ -76,7 +75,6 @@ define([
             this._configureForValues();
 
             $(this.element).trigger('configurable.initialized');
-            $(this.options.qtyInfo).on('input', this._reloadPrice.bind(this));
         },
 
         /**
@@ -498,7 +496,7 @@ define([
                         options[i].label = options[i].initialLabel;
 
                         if (optionPriceDiff !== 0) {
-                            options[i].label += ' ' + priceUtils.formatPriceLocale(
+                            options[i].label += ' ' + priceUtils.formatPrice(
                                 optionPriceDiff,
                                 this.options.priceFormat,
                                 true

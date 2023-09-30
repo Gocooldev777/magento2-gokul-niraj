@@ -47,9 +47,6 @@ final class BlocksAnalyzer
         return $closeIndex === $tokens->findBlockEnd($blockType, $openIndex);
     }
 
-    /**
-     * @return Tokens::BLOCK_TYPE_*
-     */
     private function getBlockType(Token $token): ?int
     {
         foreach (Tokens::getBlockEdgeDefinitions() as $blockType => $definition) {

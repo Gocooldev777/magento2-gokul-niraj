@@ -118,7 +118,7 @@ echo 1;
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isMonolithicPhp();
+        return isset($tokens[0]) && $tokens[0]->isGivenKind(T_OPEN_TAG) && $tokens->isMonolithicPhp();
     }
 
     /**
@@ -141,17 +141,19 @@ echo 1;
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
         $location = $this->configuration['location'];
-        $locationIndices = [];
+        $locationIndexes = [];
 
         foreach (['after_open', 'after_declare_strict'] as $possibleLocation) {
             $locationIndex = $this->findHeaderCommentInsertionIndex($tokens, $possibleLocation);
 
-            if (!isset($locationIndices[$locationIndex]) || $possibleLocation === $location) {
-                $locationIndices[$locationIndex] = $possibleLocation;
+            if (!isset($locationIndexes[$locationIndex]) || $possibleLocation === $location) {
+                $locationIndexes[$locationIndex] = $possibleLocation;
+
+                continue;
             }
         }
 
-        foreach ($locationIndices as $possibleLocation) {
+        foreach (array_values($locationIndexes) as $possibleLocation) {
             // figure out where the comment should be placed
             $headerNewIndex = $this->findHeaderCommentInsertionIndex($tokens, $possibleLocation);
 
@@ -278,60 +280,54 @@ echo 1;
      */
     private function findHeaderCommentInsertionIndex(Tokens $tokens, string $location): int
     {
-        $openTagIndex = $tokens[0]->isGivenKind(T_OPEN_TAG) ? 0 : $tokens->getNextTokenOfKind(0, [[T_OPEN_TAG]]);
-
-        if (null === $openTagIndex) {
+        if ('after_open' === $location) {
             return 1;
         }
 
-        if ('after_open' === $location) {
-            return $openTagIndex + 1;
-        }
-
-        $index = $tokens->getNextMeaningfulToken($openTagIndex);
+        $index = $tokens->getNextMeaningfulToken(0);
 
         if (null === $index) {
-            return $openTagIndex + 1; // file without meaningful tokens but an open tag, comment should always be placed directly after the open tag
+            return 1; // file without meaningful tokens but an open tag, comment should always be placed directly after the open tag
         }
 
         if (!$tokens[$index]->isGivenKind(T_DECLARE)) {
-            return $openTagIndex + 1;
+            return 1;
         }
 
         $next = $tokens->getNextMeaningfulToken($index);
 
         if (null === $next || !$tokens[$next]->equals('(')) {
-            return $openTagIndex + 1;
+            return 1;
         }
 
         $next = $tokens->getNextMeaningfulToken($next);
 
         if (null === $next || !$tokens[$next]->equals([T_STRING, 'strict_types'], false)) {
-            return $openTagIndex + 1;
+            return 1;
         }
 
         $next = $tokens->getNextMeaningfulToken($next);
 
         if (null === $next || !$tokens[$next]->equals('=')) {
-            return $openTagIndex + 1;
+            return 1;
         }
 
         $next = $tokens->getNextMeaningfulToken($next);
 
         if (null === $next || !$tokens[$next]->isGivenKind(T_LNUMBER)) {
-            return $openTagIndex + 1;
+            return 1;
         }
 
         $next = $tokens->getNextMeaningfulToken($next);
 
         if (null === $next || !$tokens[$next]->equals(')')) {
-            return $openTagIndex + 1;
+            return 1;
         }
 
         $next = $tokens->getNextMeaningfulToken($next);
 
         if (null === $next || !$tokens[$next]->equals(';')) { // don't insert after close tag
-            return $openTagIndex + 1;
+            return 1;
         }
 
         return $next + 1;
@@ -431,7 +427,11 @@ echo 1;
 
             $content = Preg::replace('/\R?\h*$/', '', $content);
 
-            $tokens->ensureWhitespaceAtIndex($prevIndex, 0, $content);
+            if ('' === $content) {
+                $tokens->clearAt($prevIndex);
+            } else {
+                $tokens[$prevIndex] = new Token([T_WHITESPACE, $content]);
+            }
         }
 
         $nextIndex = $index + 1;
@@ -440,7 +440,11 @@ echo 1;
         if (!$newlineRemoved && null !== $nextToken && $nextToken->isWhitespace()) {
             $content = Preg::replace('/^\R/', '', $nextToken->getContent());
 
-            $tokens->ensureWhitespaceAtIndex($nextIndex, 0, $content);
+            if ('' === $content) {
+                $tokens->clearAt($nextIndex);
+            } else {
+                $tokens[$nextIndex] = new Token([T_WHITESPACE, $content]);
+            }
         }
 
         $tokens->clearTokenAndMergeSurroundingWhitespace($index);

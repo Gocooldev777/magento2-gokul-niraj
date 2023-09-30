@@ -21,7 +21,7 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
     protected $_columnGroupBy = 'period';
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      * @codeCoverageIgnore
      */
     protected function _construct()
@@ -32,7 +32,7 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getResourceCollectionName()
     {
@@ -44,7 +44,7 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     protected function _prepareColumns()
@@ -100,7 +100,9 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
             ]
         );
 
-        $this->setStoreIds($this->_getStoreIds());
+        if ($this->getFilterData()->getStoreIds()) {
+            $this->setStoreIds(explode(',', $this->getFilterData()->getStoreIds()));
+        }
         $currencyCode = $this->getCurrentCurrencyCode();
         $rate = $this->getRate($currencyCode);
 
@@ -211,11 +213,9 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
     {
         if ($filterData->getPriceRuleType()) {
             $rulesList = $filterData->getData('rules_list');
-            if (is_array($rulesList) && count($rulesList) > 0) {
-                if (count($rulesList) === 1) {
-                    $rulesList = explode(',', reset($rulesList));
-                }
-                $collection->addRuleFilter($rulesList);
+            if (isset($rulesList[0])) {
+                $rulesIds = explode(',', $rulesList[0]);
+                $collection->addRuleFilter($rulesIds);
             }
         }
 

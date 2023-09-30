@@ -25,7 +25,10 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class ErrorOutput
 {
-    private OutputInterface $output;
+    /**
+     * @var OutputInterface
+     */
+    private $output;
 
     /**
      * @var bool
@@ -86,7 +89,7 @@ final class ErrorOutput
                 $this->output->writeln('');
                 $stackTrace = $e->getTrace();
                 foreach ($stackTrace as $trace) {
-                    if (isset($trace['class']) && \Symfony\Component\Console\Command\Command::class === $trace['class'] && 'run' === $trace['function']) {
+                    if (isset($trace['class'], $trace['function']) && \Symfony\Component\Console\Command\Command::class === $trace['class'] && 'run' === $trace['function']) {
                         $this->output->writeln('      [ ... ]');
 
                         break;
@@ -117,17 +120,6 @@ final class ErrorOutput
         }
     }
 
-    /**
-     * @param array{
-     *     function?: string,
-     *     line?: int,
-     *     file?: string,
-     *     class?: class-string,
-     *     type?: '::'|'->',
-     *     args?: mixed[],
-     *     object?: object,
-     * } $trace
-     */
     private function outputTrace(array $trace): void
     {
         if (isset($trace['class'], $trace['type'], $trace['function'])) {

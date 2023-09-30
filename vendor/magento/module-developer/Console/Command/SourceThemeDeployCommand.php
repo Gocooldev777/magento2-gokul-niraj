@@ -5,18 +5,13 @@
  */
 namespace Magento\Developer\Console\Command;
 
-use InvalidArgumentException;
-use Magento\Framework\App\ObjectManager;
-use Magento\Framework\App\View\Asset\Publisher;
-use Magento\Framework\Console\Cli;
-use Magento\Framework\Filesystem\Io\File;
 use Magento\Framework\Validator\Locale;
-use Magento\Framework\View\Asset\File\NotFoundException;
 use Magento\Framework\View\Asset\Repository;
 use Symfony\Component\Console\Command\Command;
+use Magento\Framework\App\View\Asset\Publisher;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -29,27 +24,27 @@ class SourceThemeDeployCommand extends Command
     /**
      * Locale option key
      */
-    public const LOCALE_OPTION = 'locale';
+    const LOCALE_OPTION = 'locale';
 
     /**
      * Area option key
      */
-    public const AREA_OPTION = 'area';
+    const AREA_OPTION = 'area';
 
     /**
      * Theme option key
      */
-    public const THEME_OPTION = 'theme';
+    const THEME_OPTION = 'theme';
 
     /**
      * Type argument key
      */
-    public const TYPE_ARGUMENT = 'type';
+    const TYPE_ARGUMENT = 'type';
 
     /**
      * Files argument key
      */
-    public const FILE_ARGUMENT = 'file';
+    const FILE_ARGUMENT = 'file';
 
     /**
      * @var Locale
@@ -67,29 +62,21 @@ class SourceThemeDeployCommand extends Command
     private $assetRepository;
 
     /**
-     * @var File
-     */
-    private $file;
-
-    /**
      * Constructor
      *
      * @param Locale $validator
      * @param Publisher $assetPublisher
      * @param Repository $assetRepository
-     * @param File|null $file
      */
     public function __construct(
         Locale $validator,
         Publisher $assetPublisher,
-        Repository $assetRepository,
-        File $file = null
+        Repository $assetRepository
     ) {
         parent::__construct('dev:source-theme:deploy');
         $this->validator = $validator;
         $this->assetPublisher = $assetPublisher;
         $this->assetRepository = $assetRepository;
-        $this->file = $file ?: ObjectManager::getInstance()->get(File::class);
     }
 
     /**
@@ -142,8 +129,7 @@ class SourceThemeDeployCommand extends Command
 
     /**
      * @inheritdoc
-     *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -155,13 +141,13 @@ class SourceThemeDeployCommand extends Command
         $files = $input->getArgument(self::FILE_ARGUMENT);
 
         if (!$this->validator->isValid($locale)) {
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 $locale . ' argument has invalid value, please run info:language:list for list of available locales'
             );
         }
 
-        if ($theme === null || !preg_match('#^[\w\-]+\/[\w\-]+$#', $theme)) {
-            throw new InvalidArgumentException(
+        if (!preg_match('#^[\w\-]+\/[\w\-]+$#', $theme)) {
+            throw new \InvalidArgumentException(
                 'Value "' . $theme . '" of the option "' . self::THEME_OPTION .
                 '" has invalid format. The format should be "Vendor/theme".'
             );
@@ -177,7 +163,7 @@ class SourceThemeDeployCommand extends Command
         $output->writeln($message);
 
         foreach ($files as $file) {
-            $fileInfo = $this->file->getPathInfo($file);
+            $fileInfo = pathinfo($file);
             $asset = $this->assetRepository->createAsset(
                 $fileInfo['dirname'] . DIRECTORY_SEPARATOR . $fileInfo['basename'] . '.' . $type,
                 [
@@ -189,8 +175,8 @@ class SourceThemeDeployCommand extends Command
 
             try {
                 $this->assetPublisher->publish($asset);
-            } catch (NotFoundException $e) {
-                throw new InvalidArgumentException(
+            } catch (\Magento\Framework\View\Asset\File\NotFoundException $e) {
+                throw new \InvalidArgumentException(
                     'Verify entered values of the argument and options. ' . $e->getMessage()
                 );
             }
@@ -199,7 +185,5 @@ class SourceThemeDeployCommand extends Command
         }
 
         $output->writeln('<info>Successfully processed.</info>');
-
-        return Cli::RETURN_SUCCESS;
     }
 }

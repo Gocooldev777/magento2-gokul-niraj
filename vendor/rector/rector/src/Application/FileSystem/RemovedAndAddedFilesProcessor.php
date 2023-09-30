@@ -3,11 +3,10 @@
 declare (strict_types=1);
 namespace Rector\Core\Application\FileSystem;
 
-use Rector\Core\Contract\Console\OutputStyleInterface;
-use Rector\Core\FileSystem\FilePathHelper;
 use Rector\Core\PhpParser\Printer\NodesWithFileDestinationPrinter;
 use Rector\Core\ValueObject\Configuration;
-use RectorPrefix202304\Symfony\Component\Filesystem\Filesystem;
+use RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle;
+use RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem;
 /**
  * Adds and removes scheduled file
  */
@@ -15,9 +14,9 @@ final class RemovedAndAddedFilesProcessor
 {
     /**
      * @readonly
-     * @var \Symfony\Component\Filesystem\Filesystem
+     * @var \Symplify\SmartFileSystem\SmartFileSystem
      */
-    private $filesystem;
+    private $smartFileSystem;
     /**
      * @readonly
      * @var \Rector\Core\PhpParser\Printer\NodesWithFileDestinationPrinter
@@ -30,84 +29,76 @@ final class RemovedAndAddedFilesProcessor
     private $removedAndAddedFilesCollector;
     /**
      * @readonly
-     * @var \Rector\Core\Contract\Console\OutputStyleInterface
+     * @var \Symfony\Component\Console\Style\SymfonyStyle
      */
-    private $rectorOutputStyle;
-    /**
-     * @readonly
-     * @var \Rector\Core\FileSystem\FilePathHelper
-     */
-    private $filePathHelper;
-    public function __construct(Filesystem $filesystem, NodesWithFileDestinationPrinter $nodesWithFileDestinationPrinter, \Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, OutputStyleInterface $rectorOutputStyle, FilePathHelper $filePathHelper)
+    private $symfonyStyle;
+    public function __construct(\RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem $smartFileSystem, \Rector\Core\PhpParser\Printer\NodesWithFileDestinationPrinter $nodesWithFileDestinationPrinter, \Rector\Core\Application\FileSystem\RemovedAndAddedFilesCollector $removedAndAddedFilesCollector, \RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle $symfonyStyle)
     {
-        $this->filesystem = $filesystem;
+        $this->smartFileSystem = $smartFileSystem;
         $this->nodesWithFileDestinationPrinter = $nodesWithFileDestinationPrinter;
         $this->removedAndAddedFilesCollector = $removedAndAddedFilesCollector;
-        $this->rectorOutputStyle = $rectorOutputStyle;
-        $this->filePathHelper = $filePathHelper;
+        $this->symfonyStyle = $symfonyStyle;
     }
-    public function run(Configuration $configuration) : void
+    public function run(\Rector\Core\ValueObject\Configuration $configuration) : void
     {
         $this->processAddedFilesWithContent($configuration);
         $this->processAddedFilesWithNodes($configuration);
         $this->processMovedFilesWithNodes($configuration);
         $this->processDeletedFiles($configuration);
     }
-    private function processDeletedFiles(Configuration $configuration) : void
+    private function processDeletedFiles(\Rector\Core\ValueObject\Configuration $configuration) : void
     {
-        foreach ($this->removedAndAddedFilesCollector->getRemovedFiles() as $removedFilePath) {
-            $removedFileRelativePath = $this->filePathHelper->relativePath($removedFilePath);
-            // @todo file helper
-            //            $removedFileRelativePath = $removedFile->getRelativeFilePathFromDirectory(getcwd());
+        foreach ($this->removedAndAddedFilesCollector->getRemovedFiles() as $removedFile) {
+            $relativePath = $removedFile->getRelativeFilePathFromDirectory(\getcwd());
             if ($configuration->isDryRun()) {
-                $message = \sprintf('File "%s" will be removed', $removedFileRelativePath);
-                $this->rectorOutputStyle->warning($message);
+                $message = \sprintf('File "%s" will be removed', $relativePath);
+                $this->symfonyStyle->warning($message);
             } else {
-                $message = \sprintf('File "%s" was removed', $removedFileRelativePath);
-                $this->rectorOutputStyle->warning($message);
-                $this->filesystem->remove($removedFilePath);
+                $message = \sprintf('File "%s" was removed', $relativePath);
+                $this->symfonyStyle->warning($message);
+                $this->smartFileSystem->remove($removedFile->getPathname());
             }
         }
     }
-    private function processAddedFilesWithContent(Configuration $configuration) : void
+    private function processAddedFilesWithContent(\Rector\Core\ValueObject\Configuration $configuration) : void
     {
         foreach ($this->removedAndAddedFilesCollector->getAddedFilesWithContent() as $addedFileWithContent) {
             if ($configuration->isDryRun()) {
                 $message = \sprintf('File "%s" will be added', $addedFileWithContent->getFilePath());
-                $this->rectorOutputStyle->note($message);
+                $this->symfonyStyle->note($message);
             } else {
-                $this->filesystem->dumpFile($addedFileWithContent->getFilePath(), $addedFileWithContent->getFileContent());
+                $this->smartFileSystem->dumpFile($addedFileWithContent->getFilePath(), $addedFileWithContent->getFileContent());
                 $message = \sprintf('File "%s" was added', $addedFileWithContent->getFilePath());
-                $this->rectorOutputStyle->note($message);
+                $this->symfonyStyle->note($message);
             }
         }
     }
-    private function processAddedFilesWithNodes(Configuration $configuration) : void
+    private function processAddedFilesWithNodes(\Rector\Core\ValueObject\Configuration $configuration) : void
     {
         foreach ($this->removedAndAddedFilesCollector->getAddedFilesWithNodes() as $addedFileWithNode) {
             $fileContent = $this->nodesWithFileDestinationPrinter->printNodesWithFileDestination($addedFileWithNode);
             if ($configuration->isDryRun()) {
                 $message = \sprintf('File "%s" will be added', $addedFileWithNode->getFilePath());
-                $this->rectorOutputStyle->note($message);
+                $this->symfonyStyle->note($message);
             } else {
-                $this->filesystem->dumpFile($addedFileWithNode->getFilePath(), $fileContent);
+                $this->smartFileSystem->dumpFile($addedFileWithNode->getFilePath(), $fileContent);
                 $message = \sprintf('File "%s" was added', $addedFileWithNode->getFilePath());
-                $this->rectorOutputStyle->note($message);
+                $this->symfonyStyle->note($message);
             }
         }
     }
-    private function processMovedFilesWithNodes(Configuration $configuration) : void
+    private function processMovedFilesWithNodes(\Rector\Core\ValueObject\Configuration $configuration) : void
     {
         foreach ($this->removedAndAddedFilesCollector->getMovedFiles() as $movedFile) {
             $fileContent = $this->nodesWithFileDestinationPrinter->printNodesWithFileDestination($movedFile);
             if ($configuration->isDryRun()) {
                 $message = \sprintf('File "%s" will be moved to "%s"', $movedFile->getFilePath(), $movedFile->getNewFilePath());
-                $this->rectorOutputStyle->note($message);
+                $this->symfonyStyle->note($message);
             } else {
-                $this->filesystem->dumpFile($movedFile->getNewFilePath(), $fileContent);
-                $this->filesystem->remove($movedFile->getFilePath());
+                $this->smartFileSystem->dumpFile($movedFile->getNewFilePath(), $fileContent);
+                $this->smartFileSystem->remove($movedFile->getFilePath());
                 $message = \sprintf('File "%s" was moved to "%s"', $movedFile->getFilePath(), $movedFile->getNewFilePath());
-                $this->rectorOutputStyle->note($message);
+                $this->symfonyStyle->note($message);
             }
         }
     }

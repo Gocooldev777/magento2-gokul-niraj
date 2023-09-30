@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Request;
@@ -13,56 +13,56 @@ class AddressDataBuilder implements BuilderInterface
     /**
      * ShippingAddress block name
      */
-    public const SHIPPING_ADDRESS = 'shipping';
+    const SHIPPING_ADDRESS = 'shipping';
 
     /**
      * BillingAddress block name
      */
-    public const BILLING_ADDRESS = 'billing';
+    const BILLING_ADDRESS = 'billing';
 
     /**
      * The first name value must be less than or equal to 255 characters.
      */
-    public const FIRST_NAME = 'firstName';
+    const FIRST_NAME = 'firstName';
 
     /**
      * The last name value must be less than or equal to 255 characters.
      */
-    public const LAST_NAME = 'lastName';
+    const LAST_NAME = 'lastName';
 
     /**
      * The customer’s company. 255 character maximum.
      */
-    public const COMPANY = 'company';
+    const COMPANY = 'company';
 
     /**
      * The street address. Maximum 255 characters, and must contain at least 1 digit.
      * Required when AVS rules are configured to require street address.
      */
-    public const STREET_ADDRESS = 'streetAddress';
+    const STREET_ADDRESS = 'streetAddress';
 
     /**
      * The extended address information—such as apartment or suite number. 255 character maximum.
      */
-    public const EXTENDED_ADDRESS = 'extendedAddress';
+    const EXTENDED_ADDRESS = 'extendedAddress';
 
     /**
      * The locality/city. 255 character maximum.
      */
-    public const LOCALITY = 'locality';
+    const LOCALITY = 'locality';
 
     /**
      * The state or province. For PayPal addresses, the region must be a 2-letter abbreviation;
      * for all other payment methods, it must be less than or equal to 255 characters.
      */
-    public const REGION = 'region';
+    const REGION = 'region';
 
     /**
      * The postal code. Postal code must be a string of 5 or 9 alphanumeric digits,
      * optionally separated by a dash or a space. Spaces, hyphens,
      * and all other special characters are ignored.
      */
-    public const POSTAL_CODE = 'postalCode';
+    const POSTAL_CODE = 'postalCode';
 
     /**
      * The ISO 3166-1 alpha-2 country code specified in an address.
@@ -70,7 +70,7 @@ class AddressDataBuilder implements BuilderInterface
      *
      * @link https://developers.braintreepayments.com/reference/general/countries/php#list-of-countries
      */
-    public const COUNTRY_CODE = 'countryCodeAlpha2';
+    const COUNTRY_CODE = 'countryCodeAlpha2';
 
     /**
      * @var SubjectReader

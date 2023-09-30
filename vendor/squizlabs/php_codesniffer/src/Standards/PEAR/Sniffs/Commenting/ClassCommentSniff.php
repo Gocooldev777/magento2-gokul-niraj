@@ -27,7 +27,6 @@ class ClassCommentSniff extends FileCommentSniff
             T_CLASS,
             T_INTERFACE,
             T_TRAIT,
-            T_ENUM,
         ];
 
     }//end register()

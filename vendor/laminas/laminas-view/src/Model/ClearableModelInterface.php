@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Model;
 
 /**
@@ -13,8 +11,6 @@ namespace Laminas\View\Model;
 interface ClearableModelInterface
 {
     public function clearChildren();
-
     public function clearOptions();
-
     public function clearVariables();
 }

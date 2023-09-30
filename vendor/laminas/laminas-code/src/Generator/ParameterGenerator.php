@@ -59,9 +59,6 @@ class ParameterGenerator extends AbstractGenerator
     /**
      * Generate from array
      *
-     * @deprecated this API is deprecated, and will be removed in the next major release. Please
-     *             use the other constructors of this class instead.
-     *
      * @configkey name                  string                                          [required] Class Name
      * @configkey type                  string
      * @configkey defaultvalue          null|bool|string|int|float|array|ValueGenerator
@@ -120,9 +117,9 @@ class ParameterGenerator extends AbstractGenerator
     /**
      * @param  ?string $name
      * @param  ?string $type
-     * @param  mixed   $defaultValue
-     * @param  ?int    $position
-     * @param  bool    $passByReference
+     * @param  ?mixed $defaultValue
+     * @param  ?int $position
+     * @param  bool $passByReference
      */
     public function __construct(
         $name = null,
@@ -159,7 +156,9 @@ class ParameterGenerator extends AbstractGenerator
         return $this;
     }
 
-    /** @return string|null */
+    /**
+     * @return string
+     */
     public function getType()
     {
         return $this->type
@@ -190,7 +189,7 @@ class ParameterGenerator extends AbstractGenerator
      *
      * Certain variables are difficult to express
      *
-     * @param  mixed $defaultValue
+     * @param  null|bool|string|int|float|array|ValueGenerator $defaultValue
      * @return ParameterGenerator
      */
     public function setDefaultValue($defaultValue)
@@ -199,9 +198,10 @@ class ParameterGenerator extends AbstractGenerator
             throw new Exception\InvalidArgumentException('Variadic parameter cannot have a default value');
         }
 
-        $this->defaultValue = $defaultValue instanceof ValueGenerator
-            ? $defaultValue
-            : new ValueGenerator($defaultValue);
+        if (! $defaultValue instanceof ValueGenerator) {
+            $defaultValue = new ValueGenerator($defaultValue);
+        }
+        $this->defaultValue = $defaultValue;
 
         return $this;
     }
@@ -256,11 +256,11 @@ class ParameterGenerator extends AbstractGenerator
      */
     public function setVariadic($variadic)
     {
-        $this->variadic = (bool) $variadic;
-
-        if (true === $this->variadic && isset($this->defaultValue)) {
+        if (isset($this->defaultValue)) {
             throw new Exception\InvalidArgumentException('Variadic parameter cannot have a default value');
         }
+
+        $this->variadic = (bool) $variadic;
 
         return $this;
     }

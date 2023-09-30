@@ -48,11 +48,6 @@ use PHPUnit\Framework\TestCase;
 class CartFixedTest extends TestCase
 {
     /**
-     * @var float
-     */
-    private const EPSILON = 0.0000000001;
-
-    /**
      * @var GuestCartManagementInterface
      */
     private $cartManagement;
@@ -526,11 +521,11 @@ class CartFixedTest extends TestCase
         $item = array_shift($items);
         $this->assertEquals('simple1', $item->getSku());
         $this->assertEquals(5.99, $item->getPrice());
-        $this->assertEqualsWithDelta($expectedDiscounts[$item->getSku()], $item->getDiscountAmount(), self::EPSILON);
+        $this->assertEquals($expectedDiscounts[$item->getSku()], $item->getDiscountAmount());
         $item = array_shift($items);
         $this->assertEquals('simple2', $item->getSku());
         $this->assertEquals(15.99, $item->getPrice());
-        $this->assertEqualsWithDelta($expectedDiscounts[$item->getSku()], $item->getDiscountAmount(), self::EPSILON);
+        $this->assertEquals($expectedDiscounts[$item->getSku()], $item->getDiscountAmount());
     }
 
     public function discountByPercentDataProvider()
@@ -553,33 +548,6 @@ class CartFixedTest extends TestCase
                 'expectedDiscounts' => ['simple1' => 5.99, 'simple2' => 15.99, 'totalDiscount' => -21.98]
             ],
         ];
-    }
-
-    /**
-     * @magentoConfigFixture current_store sales/minimum_order/tax_including 1
-     * @magentoConfigFixture current_store sales/minimum_order/include_discount_amount 1
-     * @magentoConfigFixture current_store tax/calculation/price_includes_tax 1
-     * @magentoConfigFixture current_store tax/calculation/shipping_includes_tax 1
-     * @magentoConfigFixture current_store tax/calculation/discount_tax 1
-     * @magentoConfigFixture current_store tax/calculation/apply_after_discount 1
-     * @magentoDataFixture Magento/SalesRule/_files/cart_rule_with_coupon_5_off_no_condition.php
-     * @magentoDataFixture Magento/Tax/_files/tax_rule_region_1_al.php
-     * @magentoDataFixture Magento/Checkout/_files/quote_with_taxable_product_and_customer.php
-     */
-    public function testCartFixedDiscountPriceIncludeTax()
-    {
-        $quote = $this->getQuote('test_order_with_taxable_product');
-        $quote->setCouponCode('CART_FIXED_DISCOUNT_5');
-        $quote->getShippingAddress()
-            ->setShippingMethod('flatrate_flatrate')
-            ->setCollectShippingRates(true);
-        $quote->collectTotals();
-        $this->quoteRepository->save($quote);
-
-        $this->assertEquals(0.4, $quote->getShippingAddress()->getTaxAmount());
-        $this->assertEquals(5, $quote->getShippingAddress()->getShippingAmount());
-        $this->assertEquals(5, $quote->getShippingAddress()->getSubtotalWithDiscount());
-        $this->assertEquals(-5, $quote->getShippingAddress()->getDiscountAmount());
     }
 
     /**

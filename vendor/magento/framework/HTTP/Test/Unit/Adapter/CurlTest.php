@@ -41,17 +41,6 @@ class CurlTest extends TestCase
     }
 
     /**
-     * @param string $response
-     */
-    public function testReadFailure()
-    {
-        self::$curlExectClosure = function () {
-            return false;
-        };
-        $this->assertEquals('', $this->model->read());
-    }
-
-    /**
      * @return array
      */
     public function readDataProvider()

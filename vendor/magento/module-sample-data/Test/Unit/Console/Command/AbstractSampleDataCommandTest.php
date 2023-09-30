@@ -26,6 +26,16 @@ use Symfony\Component\Console\Input\ArrayInputFactory;
  */
 abstract class AbstractSampleDataCommandTest extends TestCase
 {
+    /*
+     * Expected arguments for `composer config` to set missing field "version"
+     */
+    private const STUB_EXPECTED_COMPOSER_CONFIG = [
+        'command' => 'config',
+        'setting-key' => 'version',
+        'setting-value' => ['0.0.1'],
+        '--quiet' => 1
+    ];
+
     /**
      * @var ReadInterface|MockObject
      */
@@ -108,21 +118,49 @@ abstract class AbstractSampleDataCommandTest extends TestCase
             ->willReturn($sampleDataPackages);
         $this->arrayInputFactoryMock->expects($this->never())->method('create');
 
-        $this->applicationMock->expects($this->any())
-            ->method('run')
-            ->with(
-                new ArrayInput(
-                    array_merge(
-                        $this->expectedComposerArgumentsSampleDataCommands(
-                            $sampleDataPackages,
-                            $pathToComposerJson
+        if (!array_key_exists('version', $composerJsonContent)) {
+            $this->applicationMock->expects($this->any())
+                ->method('run')
+                ->withConsecutive(
+                    [
+                        'input' => new ArrayInput(
+                            self::STUB_EXPECTED_COMPOSER_CONFIG
                         ),
-                        $additionalComposerArgs
-                    )
-                ),
-                $this->anything()
-            )
-            ->willReturn($appRunResult);
+                        'output' => $this->anything()
+                    ],
+                    [
+                        'input' => new ArrayInput(
+                            array_merge(
+                                $this->expectedComposerArgumentsSampleDataCommands(
+                                    $sampleDataPackages,
+                                    $pathToComposerJson
+                                ),
+                                $additionalComposerArgs
+                            )
+                        ),
+                        'output' => $this->anything()
+                    ]
+                )->willReturnOnConsecutiveCalls(
+                    $this->returnValue(0),
+                    $this->returnValue($appRunResult)
+                );
+        } else {
+            $this->applicationMock->expects($this->any())
+                ->method('run')
+                ->with(
+                    new ArrayInput(
+                        array_merge(
+                            $this->expectedComposerArgumentsSampleDataCommands(
+                                $sampleDataPackages,
+                                $pathToComposerJson
+                            ),
+                            $additionalComposerArgs
+                        )
+                    ),
+                    $this->anything()
+                )
+                ->willReturn($appRunResult);
+        }
 
         if (($appRunResult !== 0) && !empty($sampleDataPackages)) {
             $this->applicationMock->expects($this->any())

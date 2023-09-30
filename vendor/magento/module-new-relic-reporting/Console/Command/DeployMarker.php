@@ -29,7 +29,7 @@ class DeployMarker extends Command
      *
      * @param DeploymentsFactory $deploymentsFactory
      * @param ServiceShellUser $serviceShellUser
-     * @param ?string $name
+     * @param null $name
      */
     public function __construct(
         DeploymentsFactory $deploymentsFactory,
@@ -42,7 +42,7 @@ class DeployMarker extends Command
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function configure()
     {
@@ -62,27 +62,20 @@ class DeployMarker extends Command
                 'user',
                 InputArgument::OPTIONAL,
                 'Deployment User'
-            )->addArgument(
-                'revision',
-                InputArgument::OPTIONAL,
-                'Revision'
             );
         parent::configure();
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->deploymentsFactory->create()->setDeployment(
             $input->getArgument('message'),
             $input->getArgument('change_log'),
-            $this->serviceShellUser->get($input->getArgument('user')),
-            $input->getArgument('revision')
+            $this->serviceShellUser->get($input->getArgument('user'))
         );
         $output->writeln('<info>NewRelic deployment information sent</info>');
-
-        return 0;
     }
 }

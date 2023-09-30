@@ -285,9 +285,7 @@ define([
             isChecked = $(this.options.billingAsShippingSelector).is(':checked');
             formData = null;
             callBackResponseHandler = null;
-            let val = $(this.options.shippingSelector).val();
-
-            shippingMethod = val.trim();
+            shippingMethod = $(this.options.shippingSelector).val().trim();
             this._shippingTobilling();
 
             if (url && resultId && shippingMethod) {
@@ -360,9 +358,7 @@ define([
          * Actions on change Shipping Address data
          */
         _onShippingChange: function () {
-            let val = $(this.options.shippingSelector).val();
-
-            if (this.triggerPropertyChange && val.trim()) {
+            if (this.triggerPropertyChange && $(this.options.shippingSelector).val().trim()) {
                 this.element.find(this.options.shippingSelector).hide().end()
                     .find(this.options.shippingSelector + '_update').show();
             }

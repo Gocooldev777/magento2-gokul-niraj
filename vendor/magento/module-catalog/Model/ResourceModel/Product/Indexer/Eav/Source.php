@@ -18,7 +18,7 @@ use Magento\Framework\DB\Sql\UnionExpression;
  */
 class Source extends AbstractEav
 {
-    public const TRANSIT_PREFIX = 'transit_';
+    const TRANSIT_PREFIX = 'transit_';
 
     /**
      * Catalog resource helper
@@ -343,7 +343,7 @@ class Source extends AbstractEav
         $this->_addAttributeToSelect($select, 'status', "pvd.{$productIdField}", 'cs.store_id', $statusCond);
 
         if ($entityIds !== null) {
-            $select->where('cpe.entity_id IN(?)', $entityIds, \Zend_Db::INT_TYPE);
+            $select->where('cpe.entity_id IN(?)', $entityIds);
         }
         /**
          * Add additional external limitation
@@ -441,7 +441,7 @@ class Source extends AbstractEav
         $data = [];
         $query = $select->query();
         while ($row = $query->fetch()) {
-            $values = isset($row['value']) ? explode(',', $row['value']) : [];
+            $values = explode(',', $row['value']);
             foreach ($values as $valueId) {
                 if (isset($options[$row['attribute_id']][$valueId])) {
                     $data[] = [$row['entity_id'], $row['attribute_id'], $row['store_id'], $valueId, $row['source_id']];

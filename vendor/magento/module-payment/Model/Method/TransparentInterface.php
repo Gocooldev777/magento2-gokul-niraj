@@ -10,9 +10,7 @@ use Magento\Payment\Model\MethodInterface;
 /**
  * Interface TransparentInterface need to be implemented by Payment Method service
  * which supports transparent redirect feature
- *
  * @package Magento\Payment\Model\Method
- * @api
  */
 interface TransparentInterface extends MethodInterface
 {

@@ -21,7 +21,7 @@ class Security
      */
     private function heuristicScan($xmlContent)
     {
-        return strpos((string)$xmlContent, '<!ENTITY') === false;
+        return strpos($xmlContent, '<!ENTITY') === false;
     }
 
     /**

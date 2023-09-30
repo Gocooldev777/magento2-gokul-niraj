@@ -43,27 +43,28 @@ class ProductsList extends AbstractProduct implements BlockInterface, IdentityIn
     /**
      * Default value for products count that will be shown
      */
-    public const DEFAULT_PRODUCTS_COUNT = 10;
+    const DEFAULT_PRODUCTS_COUNT = 10;
 
     /**
      * Name of request parameter for page number value
      *
-     * @deprecated
-     * @see $this->getData('page_var_name')
+     * @deprecated @see $this->getData('page_var_name')
      */
-    public const PAGE_VAR_NAME = 'np';
+    const PAGE_VAR_NAME = 'np';
 
     /**
      * Default value for products per page
      */
-    public const DEFAULT_PRODUCTS_PER_PAGE = 5;
+    const DEFAULT_PRODUCTS_PER_PAGE = 5;
 
     /**
      * Default value whether show pager or not
      */
-    public const DEFAULT_SHOW_PAGER = false;
+    const DEFAULT_SHOW_PAGER = false;
 
     /**
+     * Instance of pager block
+     *
      * @var Pager
      */
     protected $pager;
@@ -74,11 +75,15 @@ class ProductsList extends AbstractProduct implements BlockInterface, IdentityIn
     protected $httpContext;
 
     /**
+     * Catalog product visibility
+     *
      * @var Visibility
      */
     protected $catalogProductVisibility;
 
     /**
+     * Product collection factory
+     *
      * @var CollectionFactory
      */
     protected $productCollectionFactory;
@@ -218,7 +223,6 @@ class ProductsList extends AbstractProduct implements BlockInterface, IdentityIn
             $this->_storeManager->getStore()->getId(),
             $this->_design->getDesignTheme()->getId(),
             $this->httpContext->getValue(\Magento\Customer\Model\Context::CONTEXT_GROUP),
-            $this->json->serialize($this->httpContext->getValue('tax_rates')),
             (int)$this->getRequest()->getParam($this->getData('page_var_name'), 1),
             $this->getProductsPerPage(),
             $this->getProductsCount(),
@@ -533,8 +537,7 @@ class ProductsList extends AbstractProduct implements BlockInterface, IdentityIn
      * Get currency of product
      *
      * @return PriceCurrencyInterface
-     * @deprecated
-     * @see Constructor injection
+     * @deprecated 100.2.0
      */
     private function getPriceCurrency()
     {

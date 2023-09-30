@@ -6,12 +6,12 @@ use function ltrim;
 
 class PropertyTag extends AbstractTypeableTag implements TagInterface
 {
-    /** @var string|null */
+    /** @var string */
     protected $propertyName;
 
     /**
      * @param string $propertyName
-     * @param string[] $types
+     * @param array $types
      * @param string $description
      */
     public function __construct($propertyName = null, $types = [], $description = null)
@@ -42,7 +42,7 @@ class PropertyTag extends AbstractTypeableTag implements TagInterface
     }
 
     /**
-     * @return string|null
+     * @return string
      */
     public function getPropertyName()
     {

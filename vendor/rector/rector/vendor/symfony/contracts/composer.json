@@ -23,9 +23,9 @@
         }
     ],
     "require": {
-        "php": ">=8.1",
-        "psr\/cache": "^3.0",
-        "psr\/container": "^2.0",
+        "php": ">=7.2.5",
+        "psr\/cache": "^1.0|^2.0|^3.0",
+        "psr\/container": "^1.1",
         "psr\/event-dispatcher": "^1.0"
     },
     "require-dev": {
@@ -51,7 +51,7 @@
     },
     "autoload": {
         "psr-4": {
-            "RectorPrefix202304\\Symfony\\Contracts\\": ""
+            "RectorPrefix20211221\\Symfony\\Contracts\\": ""
         },
         "files": [
             "Deprecation\/function.php"
@@ -63,7 +63,7 @@
     "minimum-stability": "dev",
     "extra": {
         "branch-alias": {
-            "dev-main": "3.3-dev"
+            "dev-main": "2.5-dev"
         }
     }
 }

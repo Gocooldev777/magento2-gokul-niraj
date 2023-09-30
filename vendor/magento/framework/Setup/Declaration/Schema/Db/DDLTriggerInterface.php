@@ -25,8 +25,6 @@ use Magento\Framework\Setup\Declaration\Schema\ElementHistory;
  * This approach is correct from prospective of declaration but is not so fast as ALTER TABLE is.
  * So if you need to perform some renaming operations quickly, please use raw SQL dump instead, that can be taken with
  * help of --dry-run mode
- *
- * @api
  */
 interface DDLTriggerInterface
 {

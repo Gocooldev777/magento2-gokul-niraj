@@ -25,8 +25,6 @@ interface RuleSetDescriptionInterface
 
     /**
      * Get all rules from rules set.
-     *
-     * @return array<string, array<string, mixed>|bool>
      */
     public function getRules(): array;
 

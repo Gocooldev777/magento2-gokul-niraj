@@ -17,7 +17,7 @@ use Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Rector\Core\Configuration\CurrentNodeProvider;
 use Rector\Core\Exception\ShouldNotHappenException;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 final class PlainValueParser
 {
     /**
@@ -38,7 +38,7 @@ final class PlainValueParser
      * @var \Rector\Core\Configuration\CurrentNodeProvider
      */
     private $currentNodeProvider;
-    public function __construct(ClassAnnotationMatcher $classAnnotationMatcher, CurrentNodeProvider $currentNodeProvider)
+    public function __construct(\Rector\BetterPhpDocParser\PhpDocParser\ClassAnnotationMatcher $classAnnotationMatcher, \Rector\Core\Configuration\CurrentNodeProvider $currentNodeProvider)
     {
         $this->classAnnotationMatcher = $classAnnotationMatcher;
         $this->currentNodeProvider = $currentNodeProvider;
@@ -46,38 +46,38 @@ final class PlainValueParser
     /**
      * @required
      */
-    public function autowire(StaticDoctrineAnnotationParser $staticDoctrineAnnotationParser, \Rector\BetterPhpDocParser\PhpDocParser\StaticDoctrineAnnotationParser\ArrayParser $arrayParser) : void
+    public function autowire(\Rector\BetterPhpDocParser\PhpDocParser\StaticDoctrineAnnotationParser $staticDoctrineAnnotationParser, \Rector\BetterPhpDocParser\PhpDocParser\StaticDoctrineAnnotationParser\ArrayParser $arrayParser) : void
     {
         $this->staticDoctrineAnnotationParser = $staticDoctrineAnnotationParser;
         $this->arrayParser = $arrayParser;
     }
     /**
-     * @return string|mixed[]|ConstExprNode|DoctrineAnnotationTagValueNode
+     * @return mixed[]|\PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprNode|\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode|string
      */
-    public function parseValue(BetterTokenIterator $tokenIterator)
+    public function parseValue(\Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator $tokenIterator)
     {
         $currentTokenValue = $tokenIterator->currentTokenValue();
         // temporary hackaround multi-line doctrine annotations
-        if ($tokenIterator->isCurrentTokenType(Lexer::TOKEN_END)) {
+        if ($tokenIterator->isCurrentTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_END)) {
             return $currentTokenValue;
         }
         // consume the token
-        $isOpenCurlyArray = $tokenIterator->isCurrentTokenType(Lexer::TOKEN_OPEN_CURLY_BRACKET);
+        $isOpenCurlyArray = $tokenIterator->isCurrentTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_OPEN_CURLY_BRACKET);
         if ($isOpenCurlyArray) {
             return $this->arrayParser->parseCurlyArray($tokenIterator);
         }
         $tokenIterator->next();
         // normalize value
-        $constExprNode = $this->matchConstantValue($currentTokenValue);
-        if ($constExprNode instanceof ConstExprNode) {
-            return $constExprNode;
+        $constantValue = $this->matchConstantValue($currentTokenValue);
+        if ($constantValue !== null) {
+            return $constantValue;
         }
-        while ($tokenIterator->isCurrentTokenType(Lexer::TOKEN_DOUBLE_COLON) || $tokenIterator->isCurrentTokenType(Lexer::TOKEN_IDENTIFIER)) {
+        while ($tokenIterator->isCurrentTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_DOUBLE_COLON) || $tokenIterator->isCurrentTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_IDENTIFIER)) {
             $currentTokenValue .= $tokenIterator->currentTokenValue();
             $tokenIterator->next();
         }
         // nested entity!
-        if ($tokenIterator->isCurrentTokenType(Lexer::TOKEN_OPEN_PARENTHESES)) {
+        if ($tokenIterator->isCurrentTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_OPEN_PARENTHESES)) {
             return $this->parseNestedDoctrineAnnotationTagValueNode($currentTokenValue, $tokenIterator);
         }
         $start = $tokenIterator->currentPosition();
@@ -93,33 +93,36 @@ final class PlainValueParser
         }
         return $currentTokenValue;
     }
-    private function parseNestedDoctrineAnnotationTagValueNode(string $currentTokenValue, BetterTokenIterator $tokenIterator) : DoctrineAnnotationTagValueNode
+    private function parseNestedDoctrineAnnotationTagValueNode(string $currentTokenValue, \Rector\BetterPhpDocParser\ValueObject\Parser\BetterTokenIterator $tokenIterator) : \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
     {
         // @todo
         $annotationShortName = $currentTokenValue;
         $values = $this->staticDoctrineAnnotationParser->resolveAnnotationMethodCall($tokenIterator);
         $currentNode = $this->currentNodeProvider->getNode();
-        if (!$currentNode instanceof Node) {
-            throw new ShouldNotHappenException();
+        if (!$currentNode instanceof \PhpParser\Node) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException();
         }
         $fullyQualifiedAnnotationClass = $this->classAnnotationMatcher->resolveTagFullyQualifiedName($annotationShortName, $currentNode);
         // keep the last ")"
-        $tokenIterator->tryConsumeTokenType(Lexer::TOKEN_PHPDOC_EOL);
+        $tokenIterator->tryConsumeTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_PHPDOC_EOL);
         if ($tokenIterator->currentTokenValue() === ')') {
-            $tokenIterator->consumeTokenType(Lexer::TOKEN_CLOSE_PARENTHESES);
+            $tokenIterator->consumeTokenType(\PHPStan\PhpDocParser\Lexer\Lexer::TOKEN_CLOSE_PARENTHESES);
         }
         // keep original name to differentiate between short and FQN class
-        $identifierTypeNode = new IdentifierTypeNode($annotationShortName);
-        $identifierTypeNode->setAttribute(PhpDocAttributeKey::RESOLVED_CLASS, $fullyQualifiedAnnotationClass);
-        return new DoctrineAnnotationTagValueNode($identifierTypeNode, $annotationShortName, $values);
+        $identifierTypeNode = new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode($annotationShortName);
+        $identifierTypeNode->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::RESOLVED_CLASS, $fullyQualifiedAnnotationClass);
+        return new \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode($identifierTypeNode, $annotationShortName, $values);
     }
-    private function matchConstantValue(string $currentTokenValue) : ?\PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprNode
+    /**
+     * @return \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprNode|null
+     */
+    private function matchConstantValue(string $currentTokenValue)
     {
         if (\strtolower($currentTokenValue) === 'false') {
-            return new ConstExprFalseNode();
+            return new \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprFalseNode();
         }
         if (\strtolower($currentTokenValue) === 'true') {
-            return new ConstExprTrueNode();
+            return new \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprTrueNode();
         }
         if (!\is_numeric($currentTokenValue)) {
             return null;
@@ -127,6 +130,6 @@ final class PlainValueParser
         if ((string) (int) $currentTokenValue !== $currentTokenValue) {
             return null;
         }
-        return new ConstExprIntegerNode($currentTokenValue);
+        return new \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprIntegerNode($currentTokenValue);
     }
 }

@@ -417,7 +417,7 @@ class Processor
      */
     public function duplicateImageFromTmp($file)
     {
-        $file = $this->getFilenameFromTmp((string)$file);
+        $file = $this->getFilenameFromTmp($file);
 
         $destinationFile = $this->getUniqueFileName($file, true);
         if ($this->fileStorageDb->checkDbUsage()) {

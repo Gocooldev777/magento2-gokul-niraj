@@ -5,35 +5,26 @@
  */
 namespace Magento\Backend\Controller\Adminhtml\Dashboard;
 
-use Exception;
-use Laminas\Http\Request;
 use Magento\Backend\App\Action;
-use Magento\Backend\Block\Dashboard\Graph;
-use Magento\Backend\Controller\Adminhtml\Dashboard;
-use Magento\Backend\Helper\Dashboard\Data;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result;
-use Magento\Framework\Controller\Result\Raw;
-use Magento\Framework\Controller\Result\RawFactory;
 use Magento\Framework\Encryption\Helper\Security;
-use Magento\Framework\HTTP\LaminasClient;
-use Psr\Log\LoggerInterface;
 
 /**
  * Dashboard graph image tunnel
  * @deprecated dashboard graphs were migrated to dynamic chart.js solution
  * @see dashboard.chart.amounts and dashboard.chart.orders in adminhtml_dashboard_index.xml
  */
-class Tunnel extends Dashboard implements HttpGetActionInterface
+class Tunnel extends \Magento\Backend\Controller\Adminhtml\Dashboard implements HttpGetActionInterface
 {
     /**
-     * @var RawFactory
+     * @var \Magento\Framework\Controller\Result\RawFactory
      */
     protected $resultRawFactory;
 
     /**
      * @param Action\Context $context
-     * @param RawFactory $resultRawFactory
+     * @param \Magento\Framework\Controller\Result\RawFactory $resultRawFactory
      */
     public function __construct(
         Action\Context $context,
@@ -48,7 +39,7 @@ class Tunnel extends Dashboard implements HttpGetActionInterface
      *
      * This is done in order to include the image to a HTTPS-page regardless of web-service settings
      *
-     * @return  Raw
+     * @return  \Magento\Framework\Controller\Result\Raw
      */
     public function execute()
     {
@@ -56,11 +47,11 @@ class Tunnel extends Dashboard implements HttpGetActionInterface
         $httpCode = 400;
         $gaData = $this->_request->getParam('ga');
         $gaHash = $this->_request->getParam('h');
-        /** @var Raw $resultRaw */
+        /** @var \Magento\Framework\Controller\Result\Raw $resultRaw */
         $resultRaw = $this->resultRawFactory->create();
         if ($gaData && $gaHash) {
-            /** @var $helper Data */
-            $helper = $this->_objectManager->get(Data::class);
+            /** @var $helper \Magento\Backend\Helper\Dashboard\Data */
+            $helper = $this->_objectManager->get(\Magento\Backend\Helper\Dashboard\Data::class);
             $newHash = $helper->getChartDataHash($gaData);
             if (Security::compareStrings($newHash, $gaHash)) {
                 $params = null;
@@ -71,19 +62,25 @@ class Tunnel extends Dashboard implements HttpGetActionInterface
                 }
                 if ($params) {
                     try {
-                        $httpClient = $this->_objectManager->create(LaminasClient::class);
-                        $httpClient->setUri(Graph::API_URL);
-                        $httpClient->setParameterGet($params);
-                        $httpClient->setOptions(['timeout' => 5]);
-                        $httpClient->setMethod(Request::METHOD_GET);
-                        $response = $httpClient->send();
-                        $headers = $response->getHeaders()->toArray();
+                        /** @var $httpClient \Magento\Framework\HTTP\ZendClient */
+                        $httpClient = $this->_objectManager->create(\Magento\Framework\HTTP\ZendClient::class);
+                        $response = $httpClient->setUri(
+                            \Magento\Backend\Block\Dashboard\Graph::API_URL
+                        )->setParameterGet(
+                            $params
+                        )->setConfig(
+                            ['timeout' => 5]
+                        )->request(
+                            'GET'
+                        );
+
+                        $headers = $response->getHeaders();
 
                         $resultRaw->setHeader('Content-type', $headers['Content-type'])
                             ->setContents($response->getBody());
                         return $resultRaw;
-                    } catch (Exception $e) {
-                        $this->_objectManager->get(LoggerInterface::class)->critical($e);
+                    } catch (\Exception $e) {
+                        $this->_objectManager->get(\Psr\Log\LoggerInterface::class)->critical($e);
                         $error = __('see error log for details');
                         $httpCode = 503;
                     }

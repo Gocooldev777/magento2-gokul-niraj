@@ -1,14 +1,29 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Error;
 
+use RuntimeException;
+
 /**
- * Caused by GraphQL clients and can safely be displayed.
+ * Error caused by actions of GraphQL clients. Can be safely displayed to a client...
  */
-class UserError extends \RuntimeException implements ClientAware
+class UserError extends RuntimeException implements ClientAware
 {
-    public function isClientSafe(): bool
+    /**
+     * @return bool
+     */
+    public function isClientSafe()
     {
         return true;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return 'user';
     }
 }

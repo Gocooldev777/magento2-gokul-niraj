@@ -9,12 +9,37 @@ namespace Magento\SampleData\Test\Unit\Console\Command;
 
 use Exception;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\SampleData\Console\Command\SampleDataDeployCommand;
 use Magento\Setup\Model\PackagesAuth;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
 {
+    /**
+     * @var Json|MockObject
+     */
+    private $serializerMock;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->serializerMock = $this->createMock(Json::class);
+    }
+
+    /**
+     * Sets mock for unserialization composer content
+     * @param array $composerJsonContent
+     * @return void
+     */
+    protected function setupMockForSerializer(array $composerJsonContent): void
+    {
+        $this->serializerMock->expects($this->any())
+            ->method('unserialize')
+            ->will($this->returnValue($composerJsonContent));
+    }
+
     /**
      * Sets mocks for auth file
      *
@@ -60,6 +85,7 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
             $composerJsonContent
         );
         $this->setupMocksForAuthFile($authExist);
+        $this->setupMockForSerializer($composerJsonContent);
         $commandTester = $this->createCommandTester();
         $commandTester->execute([]);
 
@@ -91,6 +117,7 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
             ['--no-update' => 1]
         );
         $this->setupMocksForAuthFile($authExist);
+        $this->setupMockForSerializer($composerJsonContent);
         $commandInput = ['--no-update' => 1];
 
         $commandTester = $this->createCommandTester();
@@ -112,6 +139,7 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
                 'appRunResult' => 1,
                 'composerJsonContent' => [
                     'require' => ["magento/product-community-edition" => "0.0.1"],
+                    'version' => '0.0.1'
                 ],
                 'expectedMsg' => 'There is no sample data for current set of modules.' . PHP_EOL,
                 'authExist' => true,
@@ -123,10 +151,24 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
                 'appRunResult' => 1,
                 'composerJsonContent' => [
                     'require' => ["magento/product-community-edition" => "0.0.1"],
+                    'version' => '0.0.1'
                 ],
                 'expectedMsg' => 'There is an error during sample data deployment. Composer file will be reverted.'
                     . PHP_EOL,
                 'authExist' => false,
+            ],
+            'Successful sample data installation without field "version"' => [
+                'sampleDataPackages' => [
+                    'magento/module-cms-sample-data' => '1.0.0-beta',
+                ],
+                'appRunResult' => 0,
+                'composerJsonContent' => [
+                    'require' => ["magento/product-community-edition" => "0.0.1"]
+                ],
+                // @codingStandardsIgnoreLine
+                'expectedMsg' => 'We don\'t recommend to remove the "version" field from your composer.json; see https://getcomposer.org/doc/02-libraries.md#library-versioning for more information.'
+                    . PHP_EOL . 'The field "version" has been restored.' . PHP_EOL,
+                'authExist' => true,
             ],
             'Successful sample data installation' => [
                 'sampleDataPackages' => [
@@ -135,10 +177,9 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
                 'appRunResult' => 0,
                 'composerJsonContent' => [
                     'require' => ["magento/product-community-edition" => "0.0.1"],
+                    'version' => '0.0.1'
                 ],
-                'expectedMsg' => 'Sample data modules have been added via composer.'
-                    . ' Please run bin/magento setup:upgrade'
-                    . PHP_EOL,
+                'expectedMsg' => '',
                 'authExist' => true,
             ],
         ];
@@ -149,11 +190,24 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
      */
     public function testExecuteWithException(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(\Exception::class);
         $this->expectExceptionMessage(
             'Error in writing Auth file path/to/auth.json. Please check permissions for writing.'
         );
-
+        $this->directoryReadMock->expects($this->once())
+            ->method('readFile')
+            ->with('composer.json')
+            ->willReturn('{"require": {"magento/product-community-edition": "0.0.1"}, "version": "0.0.1"}');
+        $this->serializerMock->expects($this->any())
+            ->method('unserialize')
+            ->will($this->returnValue([
+                'require' => ["magento/product-community-edition" => "0.0.1"],
+                'version' => '0.0.1'
+            ]));
+        $this->filesystemMock->expects($this->once())
+            ->method('getDirectoryRead')
+            ->with(DirectoryList::ROOT)
+            ->willReturn($this->directoryReadMock);
         $this->directoryWriteMock->expects($this->once())
             ->method('isExist')
             ->with(PackagesAuth::PATH_TO_AUTH_FILE)
@@ -183,14 +237,16 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
             new SampleDataDeployCommand(
                 $this->filesystemMock,
                 $this->sampleDataDependencyMock,
-                $this->applicationFactoryMock
+                $this->arrayInputFactoryMock,
+                $this->applicationFactoryMock,
+                $this->serializerMock
             )
         );
     }
 
     /**
-     * @param array $sampleDataPackages
-     * @param string $pathToComposerJson
+     * @param $sampleDataPackages
+     * @param $pathToComposerJson
      * @return array
      */
     protected function expectedComposerArgumentsSampleDataCommands(
@@ -211,7 +267,7 @@ class SampleDataDeployCommandTest extends AbstractSampleDataCommandTest
      */
     private function packageVersionStrings(array $sampleDataPackages): array
     {
-        array_walk($sampleDataPackages, static function (&$v, $k) {
+        array_walk($sampleDataPackages, function (&$v, $k) {
             $v = "$k:$v";
         });
 

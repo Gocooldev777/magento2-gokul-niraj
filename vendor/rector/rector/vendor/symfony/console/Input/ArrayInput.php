@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Input;
+namespace RectorPrefix20211221\Symfony\Component\Console\Input;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidOptionException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidOptionException;
 /**
  * ArrayInput represents an input provided as an array.
  *
@@ -21,17 +21,20 @@ use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidOptionExceptio
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class ArrayInput extends Input
+class ArrayInput extends \RectorPrefix20211221\Symfony\Component\Console\Input\Input
 {
     /**
      * @var mixed[]
      */
     private $parameters;
-    public function __construct(array $parameters, InputDefinition $definition = null)
+    public function __construct(array $parameters, \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition = null)
     {
         $this->parameters = $parameters;
         parent::__construct($definition);
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getFirstArgument() : ?string
     {
         foreach ($this->parameters as $param => $value) {
@@ -43,7 +46,8 @@ class ArrayInput extends Input
         return null;
     }
     /**
-     * @param string|mixed[] $values
+     * {@inheritdoc}
+     * @param mixed[]|string $values
      */
     public function hasParameterOption($values, bool $onlyParams = \false) : bool
     {
@@ -62,8 +66,9 @@ class ArrayInput extends Input
         return \false;
     }
     /**
-     * @param string|mixed[] $values
-     * @param string|bool|int|float|mixed[]|null $default
+     * {@inheritdoc}
+     * @param mixed[]|string $values
+     * @param mixed[]|bool|float|int|string|null $default
      * @return mixed
      */
     public function getParameterOption($values, $default = \false, bool $onlyParams = \false)
@@ -100,11 +105,14 @@ class ArrayInput extends Input
                     $params[] = $param . ('' != $val ? $glue . $this->escapeToken($val) : '');
                 }
             } else {
-                $params[] = \is_array($val) ? \implode(' ', \array_map(\Closure::fromCallable([$this, 'escapeToken']), $val)) : $this->escapeToken($val);
+                $params[] = \is_array($val) ? \implode(' ', \array_map([$this, 'escapeToken'], $val)) : $this->escapeToken($val);
             }
         }
         return \implode(' ', $params);
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function parse()
     {
         foreach ($this->parameters as $key => $value) {
@@ -129,7 +137,7 @@ class ArrayInput extends Input
     private function addShortOption(string $shortcut, $value)
     {
         if (!$this->definition->hasShortcut($shortcut)) {
-            throw new InvalidOptionException(\sprintf('The "-%s" option does not exist.', $shortcut));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidOptionException(\sprintf('The "-%s" option does not exist.', $shortcut));
         }
         $this->addLongOption($this->definition->getOptionForShortcut($shortcut)->getName(), $value);
     }
@@ -144,7 +152,7 @@ class ArrayInput extends Input
     {
         if (!$this->definition->hasOption($name)) {
             if (!$this->definition->hasNegation($name)) {
-                throw new InvalidOptionException(\sprintf('The "--%s" option does not exist.', $name));
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidOptionException(\sprintf('The "--%s" option does not exist.', $name));
             }
             $optionName = $this->definition->negationToName($name);
             $this->options[$optionName] = \false;
@@ -153,7 +161,7 @@ class ArrayInput extends Input
         $option = $this->definition->getOption($name);
         if (null === $value) {
             if ($option->isValueRequired()) {
-                throw new InvalidOptionException(\sprintf('The "--%s" option requires a value.', $name));
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidOptionException(\sprintf('The "--%s" option requires a value.', $name));
             }
             if (!$option->isValueOptional()) {
                 $value = \true;
@@ -165,13 +173,13 @@ class ArrayInput extends Input
      * Adds an argument value.
      *
      * @throws InvalidArgumentException When argument given doesn't exist
-     * @param string|int $name
+     * @param int|string $name
      * @param mixed $value
      */
     private function addArgument($name, $value)
     {
         if (!$this->definition->hasArgument($name)) {
-            throw new InvalidArgumentException(\sprintf('The "%s" argument does not exist.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('The "%s" argument does not exist.', $name));
         }
         $this->arguments[$name] = $value;
     }

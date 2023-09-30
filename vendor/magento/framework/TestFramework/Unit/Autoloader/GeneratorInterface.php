@@ -8,8 +8,6 @@ namespace Magento\Framework\TestFramework\Unit\Autoloader;
 
 /**
  * Interface for generation of a class of specific type
- *
- * @api
  */
 interface GeneratorInterface
 {

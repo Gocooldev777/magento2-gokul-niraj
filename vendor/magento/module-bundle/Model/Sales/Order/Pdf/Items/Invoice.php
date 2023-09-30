@@ -153,11 +153,7 @@ class Invoice extends AbstractItems
             foreach ($this->string->split($this->getItem()->getSku(), 17) as $part) {
                 $text[] = $part;
             }
-            $lines[$index][] = [
-                'text' => $text,
-                'feed' => 290,
-                'align' => 'right'
-            ];
+            $lines[$index][] = ['text' => $text, 'feed' => 255];
         }
 
         return $lines;
@@ -181,8 +177,8 @@ class Invoice extends AbstractItems
 
             $item = $this->getItem();
             $this->_item = $childItem;
-            $feedPrice = 395;
-            $feedSubtotal = $feedPrice + 170;
+            $feedPrice = 380;
+            $feedSubtotal = $feedPrice + 185;
             foreach ($this->getItemPricesForDisplay() as $priceData) {
                 if (isset($priceData['label'])) {
                     // draw Price label

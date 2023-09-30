@@ -32,7 +32,7 @@ class Zip
      */
     public static function parseZip($zip)
     {
-        if ($zip === null || strpos($zip, '-') === false) {
+        if (strpos($zip, '-') === false) {
             return [$zip];
         } else {
             return self::zipRangeToZipPattern($zip);

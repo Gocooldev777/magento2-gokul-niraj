@@ -8,12 +8,15 @@ namespace Magento\Framework\View\Element\UiComponent\Config;
 use Magento\Framework\Config\Dom;
 use Magento\Framework\Config\ValidationStateInterface;
 
+/**
+ * Class DomMerger
+ */
 class DomMerger implements DomMergerInterface
 {
     /**
      * Format of items in errors array to be used by default. Available placeholders - fields of \LibXMLError.
      */
-    public const ERROR_FORMAT_DEFAULT = "Message: %message%\nLine: %line%\n";
+    const ERROR_FORMAT_DEFAULT = "Message: %message%\nLine: %line%\n";
 
     /**
      * @var \Magento\Framework\Config\ValidationStateInterface
@@ -42,11 +45,15 @@ class DomMerger implements DomMergerInterface
     protected $idAttributes = [];
 
     /**
+     * Context XPath
+     *
      * @var array
      */
     protected $contextXPath = [];
 
     /**
+     * Is merge simple XML Element
+     *
      * @var bool
      */
     protected $isMergeSimpleXMLElement;
@@ -145,7 +152,7 @@ class DomMerger implements DomMergerInterface
     protected function createXPath(\DOMNode $node)
     {
         $parentXPath = '';
-        $currentXPath = $node->getNodePath() ?? '';
+        $currentXPath = $node->getNodePath();
         if ($node->parentNode !== null && !$node->isSameNode($node->parentNode)) {
             $parentXPath = $this->createXPath($node->parentNode);
             $pathParts = explode('/', $currentXPath);
@@ -180,7 +187,6 @@ class DomMerger implements DomMergerInterface
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
-     * phpcs:disable Generic.Metrics.NestingLevel
      */
     protected function nestedMerge(\DOMXPath $rootDomXPath, \DOMNodeList $insertedNodes, \DOMNode $contextNode)
     {
@@ -230,7 +236,6 @@ class DomMerger implements DomMergerInterface
             }
         }
     }
-    // phpcs:enable Generic.Metrics.NestingLevel
 
     /**
      * Append child node

@@ -9,8 +9,6 @@ use Magento\Framework\View\Design\ThemeInterface;
 
 /**
  * Theme Image Path interface
- *
- * @api
  */
 interface PathInterface
 {

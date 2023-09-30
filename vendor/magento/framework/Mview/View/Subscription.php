@@ -11,16 +11,13 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Trigger;
 use Magento\Framework\DB\Ddl\TriggerFactory;
-use Magento\Framework\Exception\ConfigurationMismatchException;
 use Magento\Framework\Mview\Config;
 use Magento\Framework\Mview\ViewInterface;
 
 /**
  * Mview subscription.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Subscription implements SubscriptionInterface, SubscriptionTriggersInterface
+class Subscription implements SubscriptionInterface
 {
     /**
      * Database connection
@@ -72,8 +69,6 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
     /**
      * List of columns that can be updated in a specific subscribed table
      * for a specific view without creating a new change log entry
-     *
-     * @var array
      */
     private $ignoredUpdateColumnsBySubscription = [];
 
@@ -86,11 +81,6 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
      * @var Config
      */
     private $mviewConfig;
-
-    /**
-     * @var Trigger[]
-     */
-    private $triggers = [];
 
     /**
      * @param ResourceConnection $resource
@@ -129,10 +119,9 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
     /**
      * Create subscription
      *
-     * @param bool $save
      * @return SubscriptionInterface
      */
-    public function create(bool $save = true)
+    public function create()
     {
         foreach (Trigger::getListOfEvents() as $event) {
             $triggerName = $this->getAfterEventTriggerName($event);
@@ -150,37 +139,12 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
                 /** @var ViewInterface $view */
                 $trigger->addStatement($this->buildStatement($event, $view));
             }
-            $this->triggers[] = $trigger;
 
-            if ($save) {
-                $this->saveTrigger($trigger);
-            }
+            $this->connection->dropTrigger($trigger->getName());
+            $this->connection->createTrigger($trigger);
         }
 
         return $this;
-    }
-
-    /**
-     * Get all triggers for the subscription
-     *
-     * @return Trigger[]
-     */
-    public function getTriggers(): array
-    {
-        return $this->triggers;
-    }
-
-    /**
-     * Save a trigger to the DB
-     *
-     * @param Trigger $trigger
-     * @return void
-     * @throws \Zend_Db_Exception
-     */
-    public function saveTrigger(Trigger $trigger): void
-    {
-        $this->connection->dropTrigger($trigger->getName());
-        $this->connection->createTrigger($trigger);
     }
 
     /**
@@ -256,8 +220,7 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
     {
         $changelog = $view->getChangelog();
         $prefix = $event === Trigger::EVENT_DELETE ? 'OLD.' : 'NEW.';
-        $subscriptionData = $this->mviewConfig
-            ->getView($changelog->getViewId())['subscriptions'][$this->getTableName()];
+        $subscriptionData = $this->mviewConfig->getView($changelog->getViewId())['subscriptions'][$this->getTableName()];
         $columns = [
             'column_names' => [
                 'entity_id' => $this->connection->quoteIdentifier($changelog->getColumnName())
@@ -337,7 +300,7 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
      * Instantiate and retrieve additional columns processor
      *
      * @return AdditionalColumnProcessorInterface
-     * @throws ConfigurationMismatchException
+     * @throws \Exception
      */
     private function getProcessor(): AdditionalColumnProcessorInterface
     {
@@ -346,8 +309,8 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
         $processor = ObjectManager::getInstance()->get($processorClass);
 
         if (!$processor instanceof AdditionalColumnProcessorInterface) {
-            throw new ConfigurationMismatchException(
-                'Processor should implement ' . AdditionalColumnProcessorInterface::class
+            throw new \Exception(
+                'Processor should implements ' . AdditionalColumnProcessorInterface::class
             );
         }
 
@@ -355,8 +318,6 @@ class Subscription implements SubscriptionInterface, SubscriptionTriggersInterfa
     }
 
     /**
-     * Get subscription column for a view
-     *
      * @param string $prefix
      * @param ViewInterface $view
      * @return string

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/insert.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n\n<div data-bind=\"bindHtml: content,\n        visible: visible,\n        css: contentSelector\"></div>\n\n<!--ko if: showSpinner -->\n<div data-role=\"spinner\" class=\"admin__data-grid-loading-mask\" data-bind=\"visible: loading\">\n    <div class=\"spinner\">\n        <span></span><span></span><span></span><span></span>\n        <span></span><span></span><span></span><span></span>\n    </div>\n</div>\n<!-- /ko -->\n"}
+}});

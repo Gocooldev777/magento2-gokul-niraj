@@ -3,8 +3,7 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Application;
 
-use RectorPrefix202304\Nette\Utils\Strings;
-use PhpParser\Node\Name;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Namespace_;
@@ -28,7 +27,7 @@ final class UseImportsAdder
      * @var \Rector\NodeTypeResolver\PHPStan\Type\TypeFactory
      */
     private $typeFactory;
-    public function __construct(UsedImportsResolver $usedImportsResolver, TypeFactory $typeFactory)
+    public function __construct(\Rector\CodingStyle\ClassNameImport\UsedImportsResolver $usedImportsResolver, \Rector\NodeTypeResolver\PHPStan\Type\TypeFactory $typeFactory)
     {
         $this->usedImportsResolver = $usedImportsResolver;
         $this->typeFactory = $typeFactory;
@@ -51,19 +50,17 @@ final class UseImportsAdder
         }
         // place after declare strict_types
         foreach ($stmts as $key => $stmt) {
-            if ($stmt instanceof Declare_) {
-                if (isset($stmts[$key + 1]) && $stmts[$key + 1] instanceof Use_) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\Declare_) {
+                if (isset($stmts[$key + 1]) && $stmts[$key + 1] instanceof \PhpParser\Node\Stmt\Use_) {
                     $nodesToAdd = $newUses;
                 } else {
                     // add extra space, if there are no new use imports to be added
-                    $nodesToAdd = \array_merge([new Nop()], $newUses);
+                    $nodesToAdd = \array_merge([new \PhpParser\Node\Stmt\Nop()], $newUses);
                 }
-                $this->mirrorUseComments($stmts, $newUses, $key + 1);
                 \array_splice($stmts, $key + 1, 0, $nodesToAdd);
                 return $stmts;
             }
         }
-        $this->mirrorUseComments($stmts, $newUses);
         // make use stmts first
         return \array_merge($newUses, $stmts);
     }
@@ -71,7 +68,7 @@ final class UseImportsAdder
      * @param FullyQualifiedObjectType[] $useImportTypes
      * @param FullyQualifiedObjectType[] $functionUseImportTypes
      */
-    public function addImportsToNamespace(Namespace_ $namespace, array $useImportTypes, array $functionUseImportTypes) : void
+    public function addImportsToNamespace(\PhpParser\Node\Stmt\Namespace_ $namespace, array $useImportTypes, array $functionUseImportTypes) : void
     {
         $namespaceName = $this->getNamespaceName($namespace);
         $existingUseImportTypes = $this->usedImportsResolver->resolveForNode($namespace);
@@ -80,28 +77,14 @@ final class UseImportsAdder
         $useImportTypes = $this->diffFullyQualifiedObjectTypes($useImportTypes, $existingUseImportTypes);
         $functionUseImportTypes = $this->diffFullyQualifiedObjectTypes($functionUseImportTypes, $existingFunctionUseImportTypes);
         $newUses = $this->createUses($useImportTypes, $functionUseImportTypes, $namespaceName);
-        if ($newUses === []) {
-            return;
-        }
-        $this->mirrorUseComments($namespace->stmts, $newUses);
-        $namespace->stmts = \array_merge($newUses, $namespace->stmts);
-    }
-    /**
-     * @param Stmt[] $stmts
-     * @param Use_[] $newUses
-     */
-    private function mirrorUseComments(array $stmts, array $newUses, int $indexStmt = 0) : void
-    {
-        if ($stmts === []) {
-            return;
-        }
-        if ($stmts[$indexStmt] instanceof Use_) {
-            $comments = (array) $stmts[$indexStmt]->getAttribute(AttributeKey::COMMENTS);
+        if ($namespace->stmts[0] instanceof \PhpParser\Node\Stmt\Use_ && $newUses !== []) {
+            $comments = (array) $namespace->stmts[0]->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS);
             if ($comments !== []) {
-                $newUses[0]->setAttribute(AttributeKey::COMMENTS, $stmts[$indexStmt]->getAttribute(AttributeKey::COMMENTS));
-                $stmts[$indexStmt]->setAttribute(AttributeKey::COMMENTS, null);
+                $newUses[0]->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS, $namespace->stmts[0]->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS));
+                $namespace->stmts[0]->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS, null);
             }
         }
+        $namespace->stmts = \array_merge($newUses, $namespace->stmts);
     }
     /**
      * @param array<FullyQualifiedObjectType|AliasedObjectType> $mainTypes
@@ -143,16 +126,16 @@ final class UseImportsAdder
         }
         return $newUses;
     }
-    private function getNamespaceName(Namespace_ $namespace) : ?string
+    private function getNamespaceName(\PhpParser\Node\Stmt\Namespace_ $namespace) : ?string
     {
-        if (!$namespace->name instanceof Name) {
+        if ($namespace->name === null) {
             return null;
         }
         return $namespace->name->toString();
     }
-    private function isCurrentNamespace(string $namespaceName, ObjectType $objectType) : bool
+    private function isCurrentNamespace(string $namespaceName, \PHPStan\Type\ObjectType $objectType) : bool
     {
-        $afterCurrentNamespace = Strings::after($objectType->getClassName(), $namespaceName . '\\');
+        $afterCurrentNamespace = \RectorPrefix20211221\Nette\Utils\Strings::after($objectType->getClassName(), $namespaceName . '\\');
         if ($afterCurrentNamespace === null) {
             return \false;
         }

@@ -49,8 +49,7 @@ define([
             Component = new Masonry({
                 defaults: {
                     containerId: '#masonry_grid'
-                },
-                container: {}
+                }
             });
         });
 
@@ -63,7 +62,6 @@ define([
             it('verify setLayoutstyles called and grid iniztilized', function () {
                 var setlayoutStyles = spyOn(Component, 'setLayoutStyles');
 
-                Object.defineProperty(Component.container, 'clientWidth', {value: '', configurable: true});
                 expect(Component).toBeDefined();
                 Component.containerId = 'masonry_grid';
                 Component.initComponent(rows);
@@ -77,8 +75,6 @@ define([
                 var setLayoutStyles = spyOn(Component, 'setLayoutStyles');
 
                 Component.initComponent(rows);
-                Component.container = {};
-                Object.defineProperty(Component.container, 'clientWidth', {value: '', configurable: true});
                 window.dispatchEvent(new Event('resize'));
                 expect(setLayoutStyles).toHaveBeenCalled();
             });

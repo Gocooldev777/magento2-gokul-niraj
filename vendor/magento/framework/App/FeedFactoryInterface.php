@@ -9,8 +9,6 @@ namespace Magento\Framework\App;
 
 /**
  * Feed factory interface
- *
- * @api
  */
 interface FeedFactoryInterface
 {
@@ -28,5 +26,5 @@ interface FeedFactoryInterface
      * @param string $format
      * @return FeedInterface
      */
-    public function create(array $data, string $format = self::FORMAT_RSS): FeedInterface;
+    public function create(array $data, string $format = self::FORMAT_RSS) : FeedInterface;
 }

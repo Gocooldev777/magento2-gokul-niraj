@@ -5,8 +5,6 @@
  */
 namespace Magento\Analytics\Model\Connector\Http;
 
-use Laminas\Http\Response;
-
 /**
  * Extract result from http response. Call response handler by status.
  */
@@ -15,12 +13,12 @@ class ResponseResolver
     /**
      * @var ConverterInterface
      */
-    private ConverterInterface $converter;
+    private $converter;
 
     /**
      * @var array
      */
-    private array $responseHandlers;
+    private $responseHandlers;
 
     /**
      * @param ConverterInterface $converter
@@ -35,27 +33,24 @@ class ResponseResolver
     /**
      * Get result from $response.
      *
-     * @param Response $response
+     * @param \Zend_Http_Response $response
      * @return bool|string
      */
-    public function getResult(Response $response)
+    public function getResult(\Zend_Http_Response $response)
     {
         $result = false;
         $converterMediaType = $this->converter->getContentMediaType();
 
         /** Content-Type header may not only contain media-type declaration */
-        $responseBody = $response->getBody();
-        $contentType = $response->getHeaders()->has('Content-Type') ?
-            $response->getHeaders()->get('Content-Type')->getFieldValue() :
-            '';
-        if ($responseBody && is_int(strripos($contentType, $converterMediaType))) {
-            $responseBody = $this->converter->fromBody($responseBody);
+        if ($response->getBody()
+            && is_int(strripos($response->getHeader('Content-Type'), (string) $converterMediaType))) {
+            $responseBody = $this->converter->fromBody($response->getBody());
         } else {
             $responseBody = [];
         }
 
-        if (array_key_exists($response->getStatusCode(), $this->responseHandlers)) {
-            $result = $this->responseHandlers[$response->getStatusCode()]->handleResponse($responseBody);
+        if (array_key_exists($response->getStatus(), $this->responseHandlers)) {
+            $result = $this->responseHandlers[$response->getStatus()]->handleResponse($responseBody);
         }
 
         return $result;

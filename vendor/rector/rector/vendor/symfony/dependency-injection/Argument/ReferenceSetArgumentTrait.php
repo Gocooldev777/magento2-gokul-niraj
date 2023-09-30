@@ -8,22 +8,16 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Argument;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument;
 
-\RectorPrefix202304\trigger_deprecation('symfony/dependency-injection', '6.1', '"%s" is deprecated.', ReferenceSetArgumentTrait::class);
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
 /**
  * @author Titouan Galopin <galopintitouan@gmail.com>
  * @author Nicolas Grekas <p@tchwork.com>
- *
- * @deprecated since Symfony 6.1
  */
 trait ReferenceSetArgumentTrait
 {
-    /**
-     * @var mixed[]
-     */
     private $values;
     /**
      * @param Reference[] $values
@@ -35,7 +29,7 @@ trait ReferenceSetArgumentTrait
     /**
      * @return Reference[]
      */
-    public function getValues() : array
+    public function getValues()
     {
         return $this->values;
     }
@@ -45,8 +39,8 @@ trait ReferenceSetArgumentTrait
     public function setValues(array $values)
     {
         foreach ($values as $k => $v) {
-            if (null !== $v && !$v instanceof Reference) {
-                throw new InvalidArgumentException(\sprintf('A "%s" must hold only Reference instances, "%s" given.', __CLASS__, \get_debug_type($v)));
+            if (null !== $v && !$v instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference) {
+                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('A "%s" must hold only Reference instances, "%s" given.', __CLASS__, \get_debug_type($v)));
             }
         }
         $this->values = $values;

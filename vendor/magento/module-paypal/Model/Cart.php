@@ -180,11 +180,7 @@ class Cart extends \Magento\Payment\Model\Cart
     ) {
         $dataContainer = $salesEntity->getTaxContainer();
         $this->addTax((double)$dataContainer->getBaseDiscountTaxCompensationAmount());
-        if ($dataContainer->getBaseShippingDiscountTaxCompensationAmnt() !== null) {
-            $this->addTax((double)$dataContainer->getBaseShippingDiscountTaxCompensationAmnt());
-        } else {
-            $this->addTax((double)$dataContainer->getBaseShippingDiscountTaxCompensationAmount());
-        }
+        $this->addTax((double)$dataContainer->getBaseShippingDiscountTaxCompensationAmnt());
     }
 
     /**

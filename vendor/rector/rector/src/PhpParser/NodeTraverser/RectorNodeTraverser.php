@@ -4,20 +4,28 @@ declare (strict_types=1);
 namespace Rector\Core\PhpParser\NodeTraverser;
 
 use PhpParser\Node;
+use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use Rector\Core\Contract\Rector\PhpRectorInterface;
+use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
 use Rector\VersionBonding\PhpVersionedFilter;
-final class RectorNodeTraverser extends NodeTraverser
+final class RectorNodeTraverser extends \PhpParser\NodeTraverser
 {
     /**
      * @var bool
      */
     private $areNodeVisitorsPrepared = \false;
     /**
-     * @var PhpRectorInterface[]
+     * @var \Rector\Core\Contract\Rector\PhpRectorInterface[]
      * @readonly
      */
     private $phpRectors;
+    /**
+     * @readonly
+     * @var \PhpParser\NodeFinder
+     */
+    private $nodeFinder;
     /**
      * @readonly
      * @var \Rector\VersionBonding\PhpVersionedFilter
@@ -26,9 +34,10 @@ final class RectorNodeTraverser extends NodeTraverser
     /**
      * @param PhpRectorInterface[] $phpRectors
      */
-    public function __construct(array $phpRectors, PhpVersionedFilter $phpVersionedFilter)
+    public function __construct(array $phpRectors, \PhpParser\NodeFinder $nodeFinder, \Rector\VersionBonding\PhpVersionedFilter $phpVersionedFilter)
     {
         $this->phpRectors = $phpRectors;
+        $this->nodeFinder = $nodeFinder;
         $this->phpVersionedFilter = $phpVersionedFilter;
     }
     /**
@@ -39,6 +48,11 @@ final class RectorNodeTraverser extends NodeTraverser
     public function traverse(array $nodes) : array
     {
         $this->prepareNodeVisitors();
+        $hasNamespace = (bool) $this->nodeFinder->findFirstInstanceOf($nodes, \PhpParser\Node\Stmt\Namespace_::class);
+        if (!$hasNamespace && $nodes !== []) {
+            $fileWithoutNamespace = new \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace($nodes);
+            return parent::traverse([$fileWithoutNamespace]);
+        }
         return parent::traverse($nodes);
     }
     /**
@@ -54,7 +68,9 @@ final class RectorNodeTraverser extends NodeTraverser
         }
         // filer out by version
         $activePhpRectors = $this->phpVersionedFilter->filter($this->phpRectors);
-        $this->visitors = $this->visitors === [] ? $activePhpRectors : \array_merge($this->visitors, $activePhpRectors);
+        foreach ($activePhpRectors as $activePhpRector) {
+            $this->addVisitor($activePhpRector);
+        }
         $this->areNodeVisitorsPrepared = \true;
     }
 }

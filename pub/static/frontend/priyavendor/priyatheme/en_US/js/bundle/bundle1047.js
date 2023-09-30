@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_InstantPurchase/template/confirmation.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<p class=\"message\"><%- data.message %></p>\n<strong><%- data.shippingAddressTitle %>:</strong>\n<p><%- data.shippingAddress %></p>\n<strong><%- data.billingAddressTitle %>:</strong>\n<p><%- data.billingAddress %></p>\n<strong><%- data.paymentMethodTitle %>:</strong>\n<p><%- data.paymentToken %></p>\n<strong><%- data.shippingMethodTitle %>:</strong>\n<p><%- data.shippingMethod %></p>"}
+}});

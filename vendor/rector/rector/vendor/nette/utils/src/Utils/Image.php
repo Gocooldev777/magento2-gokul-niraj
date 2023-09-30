@@ -5,11 +5,11 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Utils;
+namespace RectorPrefix20211221\Nette\Utils;
 
-use RectorPrefix202304\Nette;
+use RectorPrefix20211221\Nette;
 /**
- * Basic manipulation with images. Supported types are JPEG, PNG, GIF, WEBP, AVIF and BMP.
+ * Basic manipulation with images. Supported types are JPEG, PNG, GIF, WEBP and BMP.
  *
  * <code>
  * $image = Image::fromFile('nette.jpg');
@@ -104,9 +104,9 @@ class Image
     /** {@link resize()} fills given area exactly */
     public const EXACT = 0b1000;
     /** image types */
-    public const JPEG = \IMAGETYPE_JPEG, PNG = \IMAGETYPE_PNG, GIF = \IMAGETYPE_GIF, WEBP = \IMAGETYPE_WEBP, AVIF = 19, BMP = \IMAGETYPE_BMP;
-    public const EMPTY_GIF = "GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;";
-    private const Formats = [self::JPEG => 'jpeg', self::PNG => 'png', self::GIF => 'gif', self::WEBP => 'webp', self::AVIF => 'avif', self::BMP => 'bmp'];
+    public const JPEG = \IMAGETYPE_JPEG, PNG = \IMAGETYPE_PNG, GIF = \IMAGETYPE_GIF, WEBP = \IMAGETYPE_WEBP, BMP = \IMAGETYPE_BMP;
+    public const EMPTY_GIF = "GIF89a\1\0\1\0€\0\0\0\0\0\0\0\0!ù\4\1\0\0\0\0,\0\0\0\0\1\0\1\0\0\2\2D\1\0;";
+    private const FORMATS = [self::JPEG => 'jpeg', self::PNG => 'png', self::GIF => 'gif', self::WEBP => 'webp', self::BMP => 'bmp'];
     /** @var resource|\GdImage */
     private $image;
     /**
@@ -122,16 +122,19 @@ class Image
      * @throws UnknownImageFileException if file not found or file type is not known
      * @return static
      */
-    public static function fromFile(string $file, ?int &$type = null)
+    public static function fromFile(string $file, int &$type = null)
     {
         if (!\extension_loaded('gd')) {
-            throw new Nette\NotSupportedException('PHP extension GD is not loaded.');
+            throw new \RectorPrefix20211221\Nette\NotSupportedException('PHP extension GD is not loaded.');
         }
         $type = self::detectTypeFromFile($file);
         if (!$type) {
-            throw new UnknownImageFileException(\is_file($file) ? "Unknown type of file '{$file}'." : "File '{$file}' not found.");
+            throw new \RectorPrefix20211221\Nette\Utils\UnknownImageFileException(\is_file($file) ? "Unknown type of file '{$file}'." : "File '{$file}' not found.");
         }
-        return self::invokeSafe('imagecreatefrom' . self::Formats[$type], $file, "Unable to open file '{$file}'.", __METHOD__);
+        $method = 'imagecreatefrom' . self::FORMATS[$type];
+        return new static(\RectorPrefix20211221\Nette\Utils\Callback::invokeSafe($method, [$file], function (string $message) : void {
+            throw new \RectorPrefix20211221\Nette\Utils\ImageException($message);
+        }));
     }
     /**
      * Reads an image from a string and returns its type in $type.
@@ -139,42 +142,31 @@ class Image
      * @throws Nette\NotSupportedException if gd extension is not loaded
      * @throws ImageException
      */
-    public static function fromString(string $s, ?int &$type = null)
+    public static function fromString(string $s, int &$type = null)
     {
         if (!\extension_loaded('gd')) {
-            throw new Nette\NotSupportedException('PHP extension GD is not loaded.');
+            throw new \RectorPrefix20211221\Nette\NotSupportedException('PHP extension GD is not loaded.');
         }
         $type = self::detectTypeFromString($s);
         if (!$type) {
-            throw new UnknownImageFileException('Unknown type of image.');
+            throw new \RectorPrefix20211221\Nette\Utils\UnknownImageFileException('Unknown type of image.');
         }
-        return self::invokeSafe('imagecreatefromstring', $s, 'Unable to open image from string.', __METHOD__);
-    }
-    private static function invokeSafe(string $func, string $arg, string $message, string $callee) : self
-    {
-        $errors = [];
-        $res = Callback::invokeSafe($func, [$arg], function (string $message) use(&$errors) : void {
-            $errors[] = $message;
-        });
-        if (!$res) {
-            throw new ImageException($message . ' Errors: ' . \implode(', ', $errors));
-        } elseif ($errors) {
-            \trigger_error($callee . '(): ' . \implode(', ', $errors), \E_USER_WARNING);
-        }
-        return new static($res);
+        return new static(\RectorPrefix20211221\Nette\Utils\Callback::invokeSafe('imagecreatefromstring', [$s], function (string $message) : void {
+            throw new \RectorPrefix20211221\Nette\Utils\ImageException($message);
+        }));
     }
     /**
      * Creates a new true color image of the given dimensions. The default color is black.
      * @return static
      * @throws Nette\NotSupportedException if gd extension is not loaded
      */
-    public static function fromBlank(int $width, int $height, ?array $color = null)
+    public static function fromBlank(int $width, int $height, array $color = null)
     {
         if (!\extension_loaded('gd')) {
-            throw new Nette\NotSupportedException('PHP extension GD is not loaded.');
+            throw new \RectorPrefix20211221\Nette\NotSupportedException('PHP extension GD is not loaded.');
         }
         if ($width < 1 || $height < 1) {
-            throw new Nette\InvalidArgumentException('Image width and height must be greater than zero.');
+            throw new \RectorPrefix20211221\Nette\InvalidArgumentException('Image width and height must be greater than zero.');
         }
         $image = \imagecreatetruecolor($width, $height);
         if ($color) {
@@ -189,42 +181,30 @@ class Image
     /**
      * Returns the type of image from file.
      */
-    public static function detectTypeFromFile(string $file, &$width = null, &$height = null) : ?int
+    public static function detectTypeFromFile(string $file) : ?int
     {
-        [$width, $height, $type] = @\getimagesize($file);
+        $type = @\getimagesize($file)[2];
         // @ - files smaller than 12 bytes causes read error
-        return isset(self::Formats[$type]) ? $type : null;
+        return isset(self::FORMATS[$type]) ? $type : null;
     }
     /**
      * Returns the type of image from string.
      */
-    public static function detectTypeFromString(string $s, &$width = null, &$height = null) : ?int
+    public static function detectTypeFromString(string $s) : ?int
     {
-        [$width, $height, $type] = @\getimagesizefromstring($s);
+        $type = @\getimagesizefromstring($s)[2];
         // @ - strings smaller than 12 bytes causes read error
-        return isset(self::Formats[$type]) ? $type : null;
+        return isset(self::FORMATS[$type]) ? $type : null;
     }
     /**
      * Returns the file extension for the given `Image::XXX` constant.
      */
     public static function typeToExtension(int $type) : string
     {
-        if (!isset(self::Formats[$type])) {
-            throw new Nette\InvalidArgumentException("Unsupported image type '{$type}'.");
+        if (!isset(self::FORMATS[$type])) {
+            throw new \RectorPrefix20211221\Nette\InvalidArgumentException("Unsupported image type '{$type}'.");
         }
-        return self::Formats[$type];
-    }
-    /**
-     * Returns the `Image::XXX` constant for given file extension.
-     */
-    public static function extensionToType(string $extension) : int
-    {
-        $extensions = \array_flip(self::Formats) + ['jpg' => self::JPEG];
-        $extension = \strtolower($extension);
-        if (!isset($extensions[$extension])) {
-            throw new Nette\InvalidArgumentException("Unsupported file extension '{$extension}'.");
-        }
-        return $extensions[$extension];
+        return self::FORMATS[$type];
     }
     /**
      * Returns the mime type for the given `Image::XXX` constant.
@@ -264,7 +244,7 @@ class Image
     protected function setImageResource($image)
     {
         if (!$image instanceof \GdImage && !(\is_resource($image) && \get_resource_type($image) === 'gd')) {
-            throw new Nette\InvalidArgumentException('Image is not valid.');
+            throw new \RectorPrefix20211221\Nette\InvalidArgumentException('Image is not valid.');
         }
         $this->image = $image;
         return $this;
@@ -324,7 +304,7 @@ class Image
         if ($flags & self::STRETCH) {
             // non-proportional
             if (!$newWidth || !$newHeight) {
-                throw new Nette\InvalidArgumentException('For stretching must be both width and height specified.');
+                throw new \RectorPrefix20211221\Nette\InvalidArgumentException('For stretching must be both width and height specified.');
             }
             if ($flags & self::SHRINK_ONLY) {
                 $newWidth = (int) \round($srcWidth * \min(1, $newWidth / $srcWidth));
@@ -333,7 +313,7 @@ class Image
         } else {
             // proportional
             if (!$newWidth && !$newHeight) {
-                throw new Nette\InvalidArgumentException('At least width or height must be specified.');
+                throw new \RectorPrefix20211221\Nette\InvalidArgumentException('At least width or height must be specified.');
             }
             $scale = [];
             if ($newWidth > 0) {
@@ -471,20 +451,27 @@ class Image
         return $this;
     }
     /**
-     * Saves image to the file. Quality is in the range 0..100 for JPEG (default 85), WEBP (default 80) and AVIF (default 30) and 0..9 for PNG (default 9).
+     * Saves image to the file. Quality is in the range 0..100 for JPEG (default 85) and WEBP (default 80) and 0..9 for PNG (default 9).
      * @throws ImageException
      */
-    public function save(string $file, ?int $quality = null, ?int $type = null) : void
+    public function save(string $file, int $quality = null, int $type = null) : void
     {
-        $type = $type ?? self::extensionToType(\pathinfo($file, \PATHINFO_EXTENSION));
+        if ($type === null) {
+            $extensions = \array_flip(self::FORMATS) + ['jpg' => self::JPEG];
+            $ext = \strtolower(\pathinfo($file, \PATHINFO_EXTENSION));
+            if (!isset($extensions[$ext])) {
+                throw new \RectorPrefix20211221\Nette\InvalidArgumentException("Unsupported file extension '{$ext}'.");
+            }
+            $type = $extensions[$ext];
+        }
         $this->output($type, $quality, $file);
     }
     /**
-     * Outputs image to string. Quality is in the range 0..100 for JPEG (default 85), WEBP (default 80) and AVIF (default 30) and 0..9 for PNG (default 9).
+     * Outputs image to string. Quality is in the range 0..100 for JPEG (default 85) and WEBP (default 80) and 0..9 for PNG (default 9).
      */
-    public function toString(int $type = self::JPEG, ?int $quality = null) : string
+    public function toString(int $type = self::JPEG, int $quality = null) : string
     {
-        return Helpers::capture(function () use($type, $quality) {
+        return \RectorPrefix20211221\Nette\Utils\Helpers::capture(function () use($type, $quality) {
             $this->output($type, $quality);
         });
     }
@@ -504,10 +491,10 @@ class Image
         }
     }
     /**
-     * Outputs image to browser. Quality is in the range 0..100 for JPEG (default 85), WEBP (default 80) and AVIF (default 30) and 0..9 for PNG (default 9).
+     * Outputs image to browser. Quality is in the range 0..100 for JPEG (default 85) and WEBP (default 80) and 0..9 for PNG (default 9).
      * @throws ImageException
      */
-    public function send(int $type = self::JPEG, ?int $quality = null) : void
+    public function send(int $type = self::JPEG, int $quality = null) : void
     {
         \header('Content-Type: ' . self::typeToMimeType($type));
         $this->output($type, $quality);
@@ -516,7 +503,7 @@ class Image
      * Outputs image to browser or file.
      * @throws ImageException
      */
-    private function output(int $type, ?int $quality, ?string $file = null) : void
+    private function output(int $type, ?int $quality, string $file = null) : void
     {
         switch ($type) {
             case self::JPEG:
@@ -538,20 +525,15 @@ class Image
                 $success = @\imagewebp($this->image, $file, $quality);
                 // @ is escalated to exception
                 break;
-            case self::AVIF:
-                $quality = $quality === null ? 30 : \max(0, \min(100, $quality));
-                $success = @\imageavif($this->image, $file, $quality);
-                // @ is escalated to exception
-                break;
             case self::BMP:
                 $success = @\imagebmp($this->image, $file);
                 // @ is escalated to exception
                 break;
             default:
-                throw new Nette\InvalidArgumentException("Unsupported image type '{$type}'.");
+                throw new \RectorPrefix20211221\Nette\InvalidArgumentException("Unsupported image type '{$type}'.");
         }
         if (!$success) {
-            throw new ImageException(Helpers::getLastError() ?: 'Unknown error');
+            throw new \RectorPrefix20211221\Nette\Utils\ImageException(\RectorPrefix20211221\Nette\Utils\Helpers::getLastError() ?: 'Unknown error');
         }
     }
     /**
@@ -563,7 +545,7 @@ class Image
     {
         $function = 'image' . $name;
         if (!\function_exists($function)) {
-            ObjectHelpers::strictCall(static::class, $name);
+            \RectorPrefix20211221\Nette\Utils\ObjectHelpers::strictCall(static::class, $name);
         }
         foreach ($args as $key => $value) {
             if ($value instanceof self) {
@@ -580,7 +562,7 @@ class Image
     {
         \ob_start(function () {
         });
-        \imagepng($this->image, null, 0);
+        \imagegd2($this->image);
         $this->setImageResource(\imagecreatefromstring(\ob_get_clean()));
     }
     /**
@@ -595,13 +577,13 @@ class Image
             $num = (int) $num;
             return \false;
         }
-        throw new Nette\InvalidArgumentException("Expected dimension in int|string, '{$num}' given.");
+        throw new \RectorPrefix20211221\Nette\InvalidArgumentException("Expected dimension in int|string, '{$num}' given.");
     }
     /**
      * Prevents serialization.
      */
     public function __sleep() : array
     {
-        throw new Nette\NotSupportedException('You cannot serialize or unserialize ' . self::class . ' instances.');
+        throw new \RectorPrefix20211221\Nette\NotSupportedException('You cannot serialize or unserialize ' . self::class . ' instances.');
     }
 }

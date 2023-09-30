@@ -31,12 +31,15 @@ use PhpCsFixer\Tokenizer\Tokens;
  */
 abstract class AbstractPhpdocToTypeDeclarationFixer extends AbstractFixer implements ConfigurableFixerInterface
 {
-    private const CLASS_REGEX = '/^\\\\?[a-zA-Z_\\x7f-\\xff](?:\\\\?[a-zA-Z0-9_\\x7f-\\xff]+)*$/';
+    /**
+     * @var string
+     */
+    private $classRegex = '/^\\\\?[a-zA-Z_\\x7f-\\xff](?:\\\\?[a-zA-Z0-9_\\x7f-\\xff]+)*$/';
 
     /**
      * @var array<string, int>
      */
-    private array $versionSpecificTypes = [
+    private $versionSpecificTypes = [
         'void' => 70100,
         'iterable' => 70100,
         'object' => 70200,
@@ -46,7 +49,7 @@ abstract class AbstractPhpdocToTypeDeclarationFixer extends AbstractFixer implem
     /**
      * @var array<string, bool>
      */
-    private array $scalarTypes = [
+    private $scalarTypes = [
         'bool' => true,
         'float' => true,
         'int' => true,
@@ -56,7 +59,7 @@ abstract class AbstractPhpdocToTypeDeclarationFixer extends AbstractFixer implem
     /**
      * @var array<string, bool>
      */
-    private static array $syntaxValidationCache = [];
+    private static $syntaxValidationCache = [];
 
     /**
      * {@inheritdoc}
@@ -168,9 +171,6 @@ abstract class AbstractPhpdocToTypeDeclarationFixer extends AbstractFixer implem
         return $newTokens;
     }
 
-    /**
-     * @return null|array{string, bool}
-     */
     protected function getCommonTypeFromAnnotation(Annotation $annotation, bool $isReturnType): ?array
     {
         $typesExpression = $annotation->getTypeExpression();
@@ -202,7 +202,7 @@ abstract class AbstractPhpdocToTypeDeclarationFixer extends AbstractFixer implem
             if (false === $this->configuration['scalar_types']) {
                 return null;
             }
-        } elseif (1 !== Preg::match(self::CLASS_REGEX, $commonType)) {
+        } elseif (1 !== Preg::match($this->classRegex, $commonType)) {
             return null;
         }
 

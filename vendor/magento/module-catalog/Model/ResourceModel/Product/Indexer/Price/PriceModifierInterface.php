@@ -9,8 +9,6 @@ namespace Magento\Catalog\Model\ResourceModel\Product\Indexer\Price;
 
 /**
  * Interface for modifying price data in price index table.
- *
- * @api
  */
 interface PriceModifierInterface
 {

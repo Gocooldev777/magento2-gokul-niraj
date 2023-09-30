@@ -65,7 +65,8 @@ return [
             "Element 'config_path': [facet 'minLength'] The value has a length of '2'; this underruns " .
             "the allowed minimum length of '5'.\nLine: 1\n",
             "Element 'config_path': [facet 'pattern'] The value 'co' is not " .
-            "accepted by the pattern '[a-zA-Z0-9_\\\\]+/[a-zA-Z0-9_\\\\]+/[a-zA-Z0-9_\\\\]+'.\nLine: 1\n"
+            "accepted by the pattern '[a-zA-Z0-9_\\\\]+/[a-zA-Z0-9_\\\\]+/[a-zA-Z0-9_\\\\]+'.\nLine: 1\n",
+            "Element 'config_path': 'co' is " . "not a valid value of the atomic type 'typeConfigPath'.\nLine: 1\n"
         ],
     ],
     'if_module_enabled_with_invalid_type' => [
@@ -77,7 +78,8 @@ return [
             "Element 'if_module_enabled': [facet 'minLength'] The value has a length of '3'; this underruns the " .
             "allowed minimum length of '5'.\nLine: 1\n",
             "Element 'if_module_enabled': [facet 'pattern'] The value 'Som' is not " .
-            "accepted by the pattern '[A-Z]+[a-zA-Z0-9]{1,}[_\\\\][A-Z]+[A-Z0-9a-z]{1,}'.\nLine: 1\n"
+            "accepted by the pattern '[A-Z]+[a-zA-Z0-9]{1,}[_\\\\][A-Z]+[A-Z0-9a-z]{1,}'.\nLine: 1\n",
+            "Element 'if_module_enabled': 'Som' " . "is not a valid value of the atomic type 'typeModule'.\nLine: 1\n"
         ],
     ],
     'id_minimum length' => [
@@ -87,11 +89,22 @@ return [
         [
             "Element 'section', attribute 'id': [facet 'minLength'] The value 's' has a length of '1'; this " .
             "underruns the allowed minimum length of '2'.\nLine: 1\n",
+            "Element 'section', attribute 'id': 's' is not a valid value " . "of the atomic type 'typeId'.\nLine: 1\n",
+            "Element 'section', attribute 'id': Warning: No precomputed " .
+            "value available, the value was either invalid or something strange happend.\nLine: 1\n",
             "Element 'field', attribute " .
             "'id': [facet 'minLength'] The value 'f' has a length of '1'; this underruns the allowed minimum length " .
             "of '2'.\nLine: 1\n",
+            "Element 'field', attribute 'id': 'f' is not a valid value of the atomic type 'typeId'.\nLine: 1\n",
+            "Element" .
+            " 'field', attribute 'id': " .
+            "Warning: No precomputed value available, the value was either invalid or something" .
+            " strange happend.\nLine: 1\n",
             "Element 'tab', attribute 'id': [facet 'minLength'] The value 'h' has a length of '1'; " .
-            "this underruns the allowed minimum length of '2'.\nLine: 1\n"
+            "this underruns the allowed minimum length of '2'.\nLine: 1\n",
+            "Element 'tab', attribute 'id': 'h' is not a valid value" . " of the atomic type 'typeId'.\nLine: 1\n",
+            "Element 'tab', attribute 'id': Warning: No precomputed value available, " .
+            "the value was either invalid or something strange happend.\nLine: 1\n"
         ],
     ],
     'source_model_with_invalid_type' => [
@@ -101,7 +114,8 @@ return [
         '<group id="group2"><label>Label_One</label></group></section></system></config>',
         [
             "Element 'source_model': [facet 'minLength'] The value has a length of '4'; this underruns the allowed " .
-            "minimum length of '5'.\nLine: 1\n"
+            "minimum length of '5'.\nLine: 1\n",
+            "Element 'source_model': 'Sour' is not a valid value of the atomic" . " type 'typeModel'.\nLine: 1\n"
         ],
     ],
     'base_url_with_invalid_type' => [
@@ -112,7 +126,8 @@ return [
             "Element 'resource': [facet 'minLength'] The value has a length of '4'; this underruns the allowed " .
             "minimum length of '8'.\nLine: 1\n",
             "Element 'resource': [facet 'pattern'] The value 'One:' is not accepted by the " .
-            "pattern '([A-Z]+[a-zA-Z0-9]{1,}){1,}_[A-Z]+[A-Z0-9a-z]{1,}::[A-Za-z_0-9]{1,}'.\nLine: 1\n"
+            "pattern '([A-Z]+[a-zA-Z0-9]{1,}){1,}_[A-Z]+[A-Z0-9a-z]{1,}::[A-Za-z_0-9]{1,}'.\nLine: 1\n",
+            "Element 'resource': 'One:' is not " . "a valid value of the atomic type 'typeAclResourceId'.\nLine: 1\n"
         ],
     ],
     'advanced_with_invalid_type' => [

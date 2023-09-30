@@ -54,9 +54,6 @@ namespace PDepend\Source\Language\PHP;
  */
 abstract class PHPParserVersion73 extends PHPParserVersion72
 {
-    /**
-     * @return bool
-     */
     protected function allowTrailingCommaInSpecialFunctions()
     {
         return true;

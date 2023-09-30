@@ -1,5 +1,7 @@
 <?php
 /**
+ * Session configuration object
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -14,20 +16,20 @@ use Magento\Framework\Session\Config\ConfigInterface;
 use Magento\Framework\Session\Config\Validator\CookieSameSiteValidator;
 
 /**
- * Magento session configuration object
+ * Magento session configuration
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Config implements ConfigInterface
 {
     /** Configuration path for session save method */
-    public const PARAM_SESSION_SAVE_METHOD = 'session/save';
+    const PARAM_SESSION_SAVE_METHOD = 'session/save';
 
     /** Configuration path for session save path */
-    public const PARAM_SESSION_SAVE_PATH = 'session/save_path';
+    const PARAM_SESSION_SAVE_PATH = 'session/save_path';
 
     /** Configuration path for session cache limiter */
-    public const PARAM_SESSION_CACHE_LIMITER = 'session/cache_limiter';
+    const PARAM_SESSION_CACHE_LIMITER = 'session/cache_limiter';
 
     /** Configuration path for session garbage collection probability */
     private const PARAM_SESSION_GC_PROBABILITY = 'session/gc_probability';
@@ -42,19 +44,19 @@ class Config implements ConfigInterface
     private const PARAM_SESSION_GC_MAXLIFETIME = 'session/gc_maxlifetime';
 
     /** Configuration path for cookie domain */
-    public const XML_PATH_COOKIE_DOMAIN = 'web/cookie/cookie_domain';
+    const XML_PATH_COOKIE_DOMAIN = 'web/cookie/cookie_domain';
 
     /** Configuration path for cookie lifetime */
-    public const XML_PATH_COOKIE_LIFETIME = 'web/cookie/cookie_lifetime';
+    const XML_PATH_COOKIE_LIFETIME = 'web/cookie/cookie_lifetime';
 
     /** Configuration path for cookie http only param */
-    public const XML_PATH_COOKIE_HTTPONLY = 'web/cookie/cookie_httponly';
+    const XML_PATH_COOKIE_HTTPONLY = 'web/cookie/cookie_httponly';
 
     /** Configuration path for cookie path */
-    public const XML_PATH_COOKIE_PATH = 'web/cookie/cookie_path';
+    const XML_PATH_COOKIE_PATH = 'web/cookie/cookie_path';
 
     /** Cookie default lifetime */
-    public const COOKIE_LIFETIME_DEFAULT = 3600;
+    const COOKIE_LIFETIME_DEFAULT = 3600;
 
     /**
      * All options
@@ -532,7 +534,7 @@ class Config implements ConfigInterface
      */
     protected function getFixedOptionName($option)
     {
-        $option = $option !== null ? strtolower($option) : '';
+        $option = strtolower($option);
 
         switch ($option) {
             case 'url_rewriter_tags':

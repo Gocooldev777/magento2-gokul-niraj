@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Process\Pipes;
+namespace RectorPrefix20211221\Symfony\Component\Process\Pipes;
 
-use RectorPrefix202304\Symfony\Component\Process\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\InvalidArgumentException;
 /**
  * @author Romain Neutron <imprec@gmail.com>
  *
  * @internal
  */
-abstract class AbstractPipes implements PipesInterface
+abstract class AbstractPipes implements \RectorPrefix20211221\Symfony\Component\Process\Pipes\PipesInterface
 {
     /**
      * @var mixed[]
@@ -39,12 +39,13 @@ abstract class AbstractPipes implements PipesInterface
             $this->inputBuffer = (string) $input;
         }
     }
+    /**
+     * {@inheritdoc}
+     */
     public function close()
     {
         foreach ($this->pipes as $pipe) {
-            if (\is_resource($pipe)) {
-                \fclose($pipe);
-            }
+            \fclose($pipe);
         }
         $this->pipes = [];
     }
@@ -93,7 +94,7 @@ abstract class AbstractPipes implements PipesInterface
             } elseif (!isset($this->inputBuffer[0])) {
                 if (!\is_string($input)) {
                     if (!\is_scalar($input)) {
-                        throw new InvalidArgumentException(\sprintf('"%s" yielded a value of type "%s", but only scalars and stream resources are supported.', \get_debug_type($this->input), \get_debug_type($input)));
+                        throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\InvalidArgumentException(\sprintf('"%s" yielded a value of type "%s", but only scalars and stream resources are supported.', \get_debug_type($this->input), \get_debug_type($input)));
                     }
                     $input = (string) $input;
                 }
@@ -119,7 +120,7 @@ abstract class AbstractPipes implements PipesInterface
                 }
             }
             if ($input) {
-                while (\true) {
+                for (;;) {
                     $data = \fread($input, self::CHUNK_SIZE);
                     if (!isset($data[0])) {
                         break;

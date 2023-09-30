@@ -33,7 +33,6 @@
                 <argument name="StoreGroup" value="customStoreGroup"/>
                 <argument name="customStore" value="customStore"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
             <actionGroup ref="AdminGoCreatedWebsitePageActionGroup" stepKey="openWebsiteToGetId">
                 <argument name="websiteName" value="{{customWebsite.name}}"/>
             </actionGroup>
@@ -50,7 +49,6 @@
         <actionGroup ref="AdminDeleteWebsiteActionGroup" stepKey="DeleteWebsite">
             <argument name="websiteName" value="{{customWebsite.name}}"/>
         </actionGroup>
-        <magentoCron groups="index" stepKey="reindex"/>
         <actionGroup ref="AdminOpenCustomersGridActionGroup" stepKey="goToCustomersGridPage"/>
         <actionGroup stepKey="resetFilter" ref="AdminResetFilterInCustomerGrid"/>
         <actionGroup stepKey="filterByEamil" ref="AdminFilterCustomerGridByEmail">

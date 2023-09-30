@@ -7,8 +7,6 @@
 namespace Magento\Eav\Model\Validator\Attribute;
 
 use Magento\Eav\Model\Attribute;
-use Magento\Eav\Model\AttributeDataFactory;
-use Magento\Framework\DataObject;
 
 /**
  * EAV attribute data validator
@@ -38,25 +36,16 @@ class Data extends \Magento\Framework\Validator\AbstractValidator
     protected $_data = [];
 
     /**
-     * @var AttributeDataFactory
+     * @var \Magento\Eav\Model\AttributeDataFactory
      */
     protected $_attrDataFactory;
 
     /**
-     * @var array
+     * @param \Magento\Eav\Model\AttributeDataFactory $attrDataFactory
      */
-    private $ignoredAttributesByTypesList;
-
-    /**
-     * @param AttributeDataFactory $attrDataFactory
-     * @param array $ignoredAttributesByTypesList
-     */
-    public function __construct(
-        AttributeDataFactory $attrDataFactory,
-        array $ignoredAttributesByTypesList = []
-    ) {
+    public function __construct(\Magento\Eav\Model\AttributeDataFactory $attrDataFactory)
+    {
         $this->_attrDataFactory = $attrDataFactory;
-        $this->ignoredAttributesByTypesList = $ignoredAttributesByTypesList;
     }
 
     /**
@@ -122,17 +111,18 @@ class Data extends \Magento\Framework\Validator\AbstractValidator
         /** @var $attributes Attribute[] */
         $attributes = $this->_getAttributes($entity);
 
-        $data = $this->retrieveData($entity);
+        $data = [];
+        if ($this->_data) {
+            $data = $this->_data;
+        } elseif ($entity instanceof \Magento\Framework\DataObject) {
+            $data = $entity->getData();
+        }
 
         foreach ($attributes as $attribute) {
             $attributeCode = $attribute->getAttributeCode();
             if (!$attribute->getDataModel() && !$attribute->getFrontendInput()) {
                 continue;
             }
-            if (!isset($data[$attributeCode]) && !$attribute->getIsVisible()) {
-                continue;
-            }
-
             $dataModel = $this->_attrDataFactory->create($attribute, $entity);
             $dataModel->setExtractedData($data);
             if (!isset($data[$attributeCode])) {
@@ -159,7 +149,6 @@ class Data extends \Magento\Framework\Validator\AbstractValidator
     {
         /** @var \Magento\Eav\Model\Attribute[] $attributes */
         $attributes = [];
-        $ignoreAttributes = $this->deniedAttributesList;
 
         if ($this->_attributes) {
             $attributes = $this->_attributes;
@@ -169,27 +158,27 @@ class Data extends \Magento\Framework\Validator\AbstractValidator
             /** @var \Magento\Eav\Model\Entity\Type $entityType */
             $entityType = $entity->getEntityType();
             $attributes = $entityType->getAttributeCollection()->getItems();
-
-            $ignoredTypeAttributes = $this->ignoredAttributesByTypesList[$entityType->getEntityTypeCode()] ?? [];
-            if ($ignoredTypeAttributes) {
-                $ignoreAttributes = array_merge($ignoreAttributes, $ignoredTypeAttributes);
-            }
         }
 
         $attributesByCode = [];
         $attributesCodes = [];
         foreach ($attributes as $attribute) {
+            if (!$attribute->getIsVisible()) {
+                continue;
+            }
             $attributeCode = $attribute->getAttributeCode();
             $attributesByCode[$attributeCode] = $attribute;
             $attributesCodes[] = $attributeCode;
         }
 
+        $ignoreAttributes = $this->deniedAttributesList;
         if ($this->allowedAttributesList) {
             $ignoreAttributes = array_merge(
                 $ignoreAttributes,
                 array_diff($attributesCodes, $this->allowedAttributesList)
             );
         }
+
         foreach ($ignoreAttributes as $attributeCode) {
             unset($attributesByCode[$attributeCode]);
         }
@@ -211,23 +200,5 @@ class Data extends \Magento\Framework\Validator\AbstractValidator
         } else {
             $this->_messages[$code] = array_merge($this->_messages[$code], $messages);
         }
-    }
-
-    /**
-     * Retrieve entity data
-     *
-     * @param \Magento\Framework\Model\AbstractModel $entity
-     * @return array
-     */
-    private function retrieveData($entity): array
-    {
-        $data = [];
-        if ($this->_data) {
-            $data = $this->_data;
-        } elseif ($entity instanceof DataObject) {
-            $data = $entity->getData();
-        }
-
-        return $data;
     }
 }

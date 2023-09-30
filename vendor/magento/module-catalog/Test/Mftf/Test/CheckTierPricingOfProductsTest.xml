@@ -55,7 +55,6 @@
         </actionGroup>
         <!--Set Configuration-->
         <createData entity="CatalogPriceScopeWebsite" stepKey="paymentMethodsSettingConfig"/>
-        <magentoCron groups="index" stepKey="reindex"/>
         <!--Set advanced pricing for all 4 products-->
         <actionGroup ref="SearchForProductOnBackendActionGroup" stepKey="searchForSimpleProduct1">
             <argument name="product" value="$$product1$$"/>
@@ -329,7 +328,7 @@
             <createData entity="CustomerAccountSharingDefault" stepKey="setConfigCustomerAccountDefault"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
 
-            <magentoCron groups="index" stepKey="reindex"/>
+            <comment userInput="Adding the comment to replace CliIndexerReindexActionGroup action group ('indexer:reindex' commands) for preserving Backward Compatibility" stepKey="reindex"/>
             <comment userInput="Adding the comment to replace CliCacheFlushActionGroup action group ('cache:flush' command) for preserving Backward Compatibility" stepKey="flushCache"/>
         </after>
     </test>

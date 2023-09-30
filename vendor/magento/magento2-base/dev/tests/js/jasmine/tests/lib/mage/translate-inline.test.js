@@ -45,7 +45,6 @@ define([
                 dialogVisibleAfterTriggerEdit = translateInline.is(':visible');
                 expect(isDialogHiddenOnInit).toBe(true);
                 expect(dialogVisibleAfterTriggerEdit).toBe(true);
-                expect($('body').find('.window-translate-inline')).not.toBe(null);
             });
 
             it('Check translation form template', function () {

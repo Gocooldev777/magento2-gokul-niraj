@@ -323,18 +323,18 @@ define([
                 finalPrice = prices[priceIndex].finalPrice.amount;
 
                 if (msrpPrice === null || msrpPrice <= finalPrice) {
-                    this.updateNonMsrpPrice(priceUtils.formatPriceLocale(finalPrice), $priceBox);
+                    this.updateNonMsrpPrice(priceUtils.formatPrice(finalPrice), $priceBox);
                 } else {
                     this.updateMsrpPrice(
-                        priceUtils.formatPriceLocale(finalPrice),
-                        priceUtils.formatPriceLocale(msrpPrice),
+                        priceUtils.formatPrice(finalPrice),
+                        priceUtils.formatPrice(msrpPrice),
                         false,
                         $priceBox);
                 }
             } else {
                 this.updateMsrpPrice(
-                    priceUtils.formatPriceLocale(defaultPrice),
-                    priceUtils.formatPriceLocale(defaultMsrp),
+                    priceUtils.formatPrice(defaultPrice),
+                    priceUtils.formatPrice(defaultMsrp),
                     true,
                     $priceBox);
             }

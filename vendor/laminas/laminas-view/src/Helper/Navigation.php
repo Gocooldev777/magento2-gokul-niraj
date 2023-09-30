@@ -1,29 +1,20 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
 use Laminas\Navigation\AbstractContainer;
-use Laminas\Navigation\Exception\ExceptionInterface;
 use Laminas\View\Exception;
 use Laminas\View\Helper\Navigation\AbstractHelper as AbstractNavigationHelper;
 use Laminas\View\Helper\Navigation\HelperInterface as NavigationHelper;
 use Laminas\View\Renderer\RendererInterface as Renderer;
 
-use function assert;
-use function call_user_func_array;
-use function method_exists;
-use function spl_object_hash;
-use function sprintf;
-
 /**
  * Proxy helper for retrieving navigational helpers and forwarding calls
  *
- * @method Navigation\Breadcrumbs breadcrumbs($container = null)
- * @method Navigation\Links links($container = null)
- * @method Navigation\Menu menu($container = null)
- * @method Navigation\Sitemap sitemap($container = null)
+ * @method \Laminas\View\Helper\Navigation\Breadcrumbs breadcrumbs($container = null)
+ * @method \Laminas\View\Helper\Navigation\Links links($container = null)
+ * @method \Laminas\View\Helper\Navigation\Menu menu($container = null)
+ * @method \Laminas\View\Helper\Navigation\Sitemap sitemap($container = null)
  */
 class Navigation extends AbstractNavigationHelper
 {
@@ -32,7 +23,7 @@ class Navigation extends AbstractNavigationHelper
      *
      * @var string
      */
-    public const NS = self::class;
+    const NS = 'Laminas\View\Helper\Navigation';
 
     /**
      * Default proxy to use in {@link render()}
@@ -69,7 +60,9 @@ class Navigation extends AbstractNavigationHelper
      */
     protected $injectTranslator = true;
 
-    /** @var Navigation\PluginManager|null */
+    /**
+     * @var Navigation\PluginManager
+     */
     protected $plugins;
 
     /**
@@ -102,13 +95,13 @@ class Navigation extends AbstractNavigationHelper
      * $blogPages = $this->navigation()->findAllByRoute('blog');
      * </code>
      *
-     * @param  string|class-string<NavigationHelper> $method helper name or method name in container
+     * @param  string $method             helper name or method name in container
      * @param  array  $arguments          [optional] arguments to pass
-     * @throws Exception\ExceptionInterface        If proxying to a helper, and the
+     * @throws \Laminas\View\Exception\ExceptionInterface        if proxying to a helper, and the
      *                                    helper is not an instance of the
      *                                    interface specified in
-     *                                    {@link findHelper()}.
-     * @throws ExceptionInterface  If method does not exist in container.
+     *                                    {@link findHelper()}
+     * @throws \Laminas\Navigation\Exception\ExceptionInterface  if method does not exist in container
      * @return mixed                      returns what the proxied call returns
      */
     public function __call($method, array $arguments = [])
@@ -141,15 +134,15 @@ class Navigation extends AbstractNavigationHelper
     /**
      * Returns the helper matching $proxy
      *
-     * The helper must implement the interface {@link NavigationHelper}.
+     * The helper must implement the interface
+     * {@link Laminas\View\Helper\Navigation\Helper}.
      *
-     * @param string|class-string<NavigationHelper> $proxy  helper name
+     * @param string $proxy  helper name
      * @param bool   $strict [optional] whether exceptions should be
      *                                  thrown if something goes
      *                                  wrong. Default is true.
-     * @throws Exception\RuntimeException If $strict is true and helper cannot be found.
-     * @return NavigationHelper|false  helper instance
-     * @psalm-return ($strict is true ? NavigationHelper : NavigationHelper|false)
+     * @throws Exception\RuntimeException if $strict is true and helper cannot be found
+     * @return \Laminas\View\Helper\Navigation\HelperInterface  helper instance
      */
     public function findHelper($proxy, $strict = true)
     {
@@ -161,12 +154,10 @@ class Navigation extends AbstractNavigationHelper
                     $proxy
                 ));
             }
-
             return false;
         }
 
-        $helper = $plugins->get($proxy);
-        assert($helper instanceof NavigationHelper);
+        $helper    = $plugins->get($proxy);
         $container = $this->getContainer();
         $hash      = spl_object_hash($container) . spl_object_hash($helper);
 
@@ -304,6 +295,7 @@ class Navigation extends AbstractNavigationHelper
     /**
      * Set manager for retrieving navigation helpers
      *
+     * @param  Navigation\PluginManager $plugins
      * @return Navigation
      */
     public function setPluginManager(Navigation\PluginManager $plugins)
@@ -327,18 +319,17 @@ class Navigation extends AbstractNavigationHelper
      */
     public function getPluginManager()
     {
-        $pluginManager = $this->plugins;
-        if ($pluginManager === null) {
-            $pluginManager = new Navigation\PluginManager($this->getServiceLocator());
-            $this->setPluginManager($pluginManager);
+        if (null === $this->plugins) {
+            $this->setPluginManager(new Navigation\PluginManager($this->getServiceLocator()));
         }
 
-        return $pluginManager;
+        return $this->plugins;
     }
 
     /**
      * Set the View object
      *
+     * @param  Renderer $view
      * @return self
      */
     public function setView(Renderer $view)

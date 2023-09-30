@@ -3,7 +3,7 @@
  * See COPYING.txt for license details.
  */
 
-/* global FORM_KEY */
+/* global $break $ $$ FORM_KEY */
 
 /**
  * @api
@@ -374,7 +374,7 @@ define([
                     };
 
                 swatchComponents.iframe.off('load');
-                swatchComponents.iframe.on('load', iframeHandler);
+                swatchComponents.iframe.load(iframeHandler);
                 swatchComponents.form.submit();
                 $(this).val('');
             });

@@ -62,7 +62,7 @@ define([
             it('check on failed status', function () {
                 var messageContainer = jasmine.createSpyObj('globalMessageList', ['addErrorMessage']);
 
-                spyOn(model, 'redirectTo').and.callFake(function () {});
+                spyOn(window.location, 'replace').and.callFake(function () {});
                 model.process({
                     status: 401,
                     responseText: ''

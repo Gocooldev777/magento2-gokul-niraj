@@ -1,21 +1,19 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Controller\GooglePay;
 
 use Exception;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\HttpGetActionInterface;
-use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\View\Result\Page;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use PayPal\Braintree\Model\GooglePay\Config;
 use PayPal\Braintree\Model\Paypal\Helper\ShippingMethodUpdater;
 
-class SaveShippingMethod extends AbstractAction implements HttpGetActionInterface, HttpPostActionInterface
+class SaveShippingMethod extends AbstractAction
 {
     /**
      * @var ShippingMethodUpdater
@@ -46,7 +44,7 @@ class SaveShippingMethod extends AbstractAction implements HttpGetActionInterfac
      */
     public function execute()
     {
-        $isAjaxGPay = $this->getRequest()->getParam('isAjax');
+        $isAjax = $this->getRequest()->getParam('isAjax');
         $quote = $this->checkoutSession->getQuote();
 
         try {
@@ -57,7 +55,7 @@ class SaveShippingMethod extends AbstractAction implements HttpGetActionInterfac
                 $quote
             );
 
-            if ($isAjaxGPay) {
+            if ($isAjax) {
                 /** @var Page $response */
                 $response = $this->resultFactory->create(ResultFactory::TYPE_PAGE);
                 $layout = $response->addHandle('paypal_express_review_details')->getLayout();
@@ -72,12 +70,12 @@ class SaveShippingMethod extends AbstractAction implements HttpGetActionInterfac
 
         $path = $this->_url->getUrl('*/*/review', ['_secure' => true]);
 
-        if ($isAjaxGPay) {
+        if ($isAjax) {
             $this->getResponse()->setBody(sprintf('<script>window.location.href = "%s";</script>', $path));
 
             return;
         }
 
-        return $this->_redirect($path);
+        $this->_redirect($path);
     }
 }

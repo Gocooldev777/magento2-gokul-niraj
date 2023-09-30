@@ -146,14 +146,6 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function complete(\Symfony\Component\Console\Completion\CompletionInput $input, \Symfony\Component\Console\Completion\CompletionSuggestions $suggestions) : void
-    {
-        $this->_getSubject()->complete($input, $suggestions);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function setCode(callable $code)
     {
         return $this->_getSubject()->setCode($code);
@@ -162,7 +154,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function mergeApplicationDefinition(bool $mergeArgs = true)
+    public function mergeApplicationDefinition($mergeArgs = true)
     {
         return $this->_getSubject()->mergeApplicationDefinition($mergeArgs);
     }
@@ -194,7 +186,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function addArgument(string $name, ?int $mode = null, string $description = '', $default = null)
+    public function addArgument($name, $mode = null, $description = '', $default = null)
     {
         return $this->_getSubject()->addArgument($name, $mode, $description, $default);
     }
@@ -202,7 +194,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function addOption(string $name, $shortcut = null, ?int $mode = null, string $description = '', $default = null)
+    public function addOption($name, $shortcut = null, $mode = null, $description = '', $default = null)
     {
         return $this->_getSubject()->addOption($name, $shortcut, $mode, $description, $default);
     }
@@ -210,7 +202,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function setName(string $name)
+    public function setName($name)
     {
         return $this->_getSubject()->setName($name);
     }
@@ -218,7 +210,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function setProcessTitle(string $title)
+    public function setProcessTitle($title)
     {
         return $this->_getSubject()->setProcessTitle($title);
     }
@@ -234,7 +226,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function setHidden(bool $hidden)
+    public function setHidden($hidden)
     {
         return $this->_getSubject()->setHidden($hidden);
     }
@@ -250,7 +242,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function setDescription(string $description)
+    public function setDescription($description)
     {
         return $this->_getSubject()->setDescription($description);
     }
@@ -266,7 +258,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function setHelp(string $help)
+    public function setHelp($help)
     {
         return $this->_getSubject()->setHelp($help);
     }
@@ -290,7 +282,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function setAliases(iterable $aliases)
+    public function setAliases($aliases)
     {
         return $this->_getSubject()->setAliases($aliases);
     }
@@ -306,7 +298,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function getSynopsis(bool $short = false)
+    public function getSynopsis($short = false)
     {
         return $this->_getSubject()->getSynopsis($short);
     }
@@ -314,7 +306,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function addUsage(string $usage)
+    public function addUsage($usage)
     {
         return $this->_getSubject()->addUsage($usage);
     }
@@ -330,7 +322,7 @@ class Proxy extends \Magento\MessageQueue\Console\ConsumerListCommand implements
     /**
      * {@inheritdoc}
      */
-    public function getHelper(string $name)
+    public function getHelper($name)
     {
         return $this->_getSubject()->getHelper($name);
     }

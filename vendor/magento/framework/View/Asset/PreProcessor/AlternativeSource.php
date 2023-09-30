@@ -12,6 +12,8 @@ use Magento\Framework\View\Asset\LockerProcessInterface;
 use Magento\Framework\View\Asset\PreProcessor\AlternativeSource\AssetBuilder;
 
 /**
+ * Class AlternativeSource
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class AlternativeSource implements AlternativeSourceInterface
@@ -19,7 +21,7 @@ class AlternativeSource implements AlternativeSourceInterface
     /**
      * The key name of the processor class
      */
-    public const PROCESSOR_CLASS = 'class';
+    const PROCESSOR_CLASS = 'class';
 
     /**
      * @var Helper\SortInterface
@@ -98,7 +100,7 @@ class AlternativeSource implements AlternativeSourceInterface
     {
         $path = $chain->getAsset()->getFilePath();
         $content = $chain->getContent();
-        if ($content && trim($content) !== '') {
+        if (trim($content) !== '') {
             return;
         }
 
@@ -153,7 +155,7 @@ class AlternativeSource implements AlternativeSourceInterface
             }
             $content = $processor->processContent($asset);
 
-            if ($content && trim($content) !== '') {
+            if (trim($content) !== '') {
                 return $content;
             }
         }

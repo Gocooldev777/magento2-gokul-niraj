@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Payment/js/view/payment/method-renderer/free-method.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/* @api */\ndefine([\n    'Magento_Checkout/js/view/payment/default',\n    'Magento_Checkout/js/model/quote'\n], function (Component, quote) {\n    'use strict';\n\n    return Component.extend({\n        defaults: {\n            template: 'Magento_Payment/payment/free'\n        },\n\n        /** Returns is method available */\n        isAvailable: function () {\n            return quote.totals()['grand_total'] <= 0;\n        }\n    });\n});\n"}
+}});

@@ -5,7 +5,6 @@
  */
 namespace Magento\Customer\Model\Indexer;
 
-use Magento\Customer\Model\Config\Source\FilterConditionType;
 use Magento\Customer\Model\Customer;
 use Magento\Framework\Indexer\FieldsetInterface;
 use Magento\Eav\Model\Config;
@@ -16,7 +15,7 @@ class AttributeProvider implements FieldsetInterface
     /**
      * EAV entity
      */
-    public const ENTITY = Customer::ENTITY;
+    const ENTITY = Customer::ENTITY;
 
     /**
      * @var Attribute[]
@@ -95,14 +94,14 @@ class AttributeProvider implements FieldsetInterface
                         'dataType' => $attribute->getBackendType(),
                         'filters' => [],
                         'entity' => static::ENTITY,
-                        'bind' => $fieldset['references']['customer']['to'] ?? null,
-                        'index' => $this->hasIndex($attribute)
+                        'bind' => isset($fieldset['references']['customer']['to'])
+                            ? $fieldset['references']['customer']['to']
+                            : null,
                     ];
                 }
             } else {
                 $fields[$attribute->getName()] = [
                     'type' => $this->getType($attribute),
-                    'index' => $this->hasIndex($attribute)
                 ];
             }
         }
@@ -151,21 +150,5 @@ class AttributeProvider implements FieldsetInterface
         }
 
         return $dataFields;
-    }
-
-    /**
-     * Checks whether the attribute should be indexed
-     *
-     * @param Attribute $attribute
-     * @return bool
-     */
-    private function hasIndex(Attribute $attribute): bool
-    {
-        return $attribute->canBeFilterableInGrid()
-            && in_array(
-                (int) $attribute->getGridFilterConditionType(),
-                [FilterConditionType::FULL_MATCH, FilterConditionType::PREFIX_MATCH],
-                true
-            );
     }
 }

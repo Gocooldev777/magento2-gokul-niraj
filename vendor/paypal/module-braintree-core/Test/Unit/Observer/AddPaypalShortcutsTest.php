@@ -6,24 +6,19 @@
 namespace PayPal\Braintree\Test\Unit\Observer;
 
 use PayPal\Braintree\Block\Paypal\Button;
-use PayPal\Braintree\Gateway\Config\PayPal\Config;
+use PayPal\Braintree\Gateway\Config\Config;
 use Magento\Catalog\Block\ShortcutButtons;
 use Magento\Framework\Event;
 use Magento\Framework\Event\Observer;
+use PayPal\Braintree\Model\Paypal\OrderCancellationService;
 use PayPal\Braintree\Observer\AddPaypalShortcuts;
 use Magento\Framework\View\LayoutInterface;
-use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @see \PayPal\Braintree\Observer\AddPaypalShortcuts
  */
 class AddPaypalShortcutsTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @var Config|MockObject
-     */
-    private $config;
-
     public function testExecute()
     {
         $this->config = $this->getMockBuilder(Config::class)
@@ -31,18 +26,18 @@ class AddPaypalShortcutsTest extends \PHPUnit\Framework\TestCase
             ->getMock();
         $addPaypalShortcuts = new AddPaypalShortcuts($this->config);
 
-        /** @var Observer|MockObject $observerMock */
+        /** @var Observer|\PHPUnit\Framework\MockObject\MockObject $observerMock */
         $observerMock = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        /** @var Event|MockObject $eventMock */
+        /** @var Event|\PHPUnit\Framework\MockObject\MockObject $eventMock */
         $eventMock = $this->getMockBuilder(Event::class)
             ->setMethods(['getContainer'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        /** @var ShortcutButtons|MockObject $shortcutButtonsMock */
+        /** @var ShortcutButtons|\PHPUnit\Framework\MockObject\MockObject $shortcutButtonsMock */
         $shortcutButtonsMock = $this->getMockBuilder(ShortcutButtons::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -53,9 +48,6 @@ class AddPaypalShortcutsTest extends \PHPUnit\Framework\TestCase
         $blockMock = $this->getMockBuilder(Button::class)
             ->disableOriginalConstructor()
             ->getMock();
-
-        $this->config->method('isActive')
-            ->willReturn(true);
 
         $observerMock->expects(self::once())
             ->method('getEvent')

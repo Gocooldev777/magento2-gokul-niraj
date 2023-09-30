@@ -27,7 +27,7 @@ class Customer extends AbstractCustomer
     /**
      * Collection name attribute
      */
-    public const ATTRIBUTE_COLLECTION_NAME = \Magento\Customer\Model\ResourceModel\Attribute\Collection::class;
+    const ATTRIBUTE_COLLECTION_NAME = \Magento\Customer\Model\ResourceModel\Attribute\Collection::class;
 
     /**#@+
      * Permanent column names
@@ -35,45 +35,49 @@ class Customer extends AbstractCustomer
      * Names that begins with underscore is not an attribute. This name convention is for
      * to avoid interference with same attribute name.
      */
-    public const COLUMN_EMAIL = 'email';
+    const COLUMN_EMAIL = 'email';
 
-    public const COLUMN_STORE = '_store';
+    const COLUMN_STORE = '_store';
 
-    public const COLUMN_PASSWORD = 'password';
+    const COLUMN_PASSWORD = 'password';
 
     /**#@-*/
 
     /**#@+
      * Error codes
      */
-    public const ERROR_DUPLICATE_EMAIL_SITE = 'duplicateEmailSite';
+    const ERROR_DUPLICATE_EMAIL_SITE = 'duplicateEmailSite';
 
-    public const ERROR_ROW_IS_ORPHAN = 'rowIsOrphan';
+    const ERROR_ROW_IS_ORPHAN = 'rowIsOrphan';
 
-    public const ERROR_INVALID_STORE = 'invalidStore';
+    const ERROR_INVALID_STORE = 'invalidStore';
 
-    public const ERROR_EMAIL_SITE_NOT_FOUND = 'emailSiteNotFound';
+    const ERROR_EMAIL_SITE_NOT_FOUND = 'emailSiteNotFound';
 
-    public const ERROR_PASSWORD_LENGTH = 'passwordLength';
+    const ERROR_PASSWORD_LENGTH = 'passwordLength';
+
+    /**#@-*/
 
     /**#@+
      * Keys which used to build result data array for future update
      */
-    public const ENTITIES_TO_CREATE_KEY = 'entities_to_create';
+    const ENTITIES_TO_CREATE_KEY = 'entities_to_create';
 
-    public const ENTITIES_TO_UPDATE_KEY = 'entities_to_update';
+    const ENTITIES_TO_UPDATE_KEY = 'entities_to_update';
 
-    public const ATTRIBUTES_TO_SAVE_KEY = 'attributes_to_save';
+    const ATTRIBUTES_TO_SAVE_KEY = 'attributes_to_save';
+
+    /**#@-*/
 
     /**
      * Minimum password length
      */
-    public const MIN_PASSWORD_LENGTH = 6;
+    const MIN_PASSWORD_LENGTH = 6;
 
     /**
      * Default customer group
      */
-    public const DEFAULT_GROUP_ID = 1;
+    const DEFAULT_GROUP_ID = 1;
 
     /**
      * Customers information from import file
@@ -99,6 +103,8 @@ class Customer extends AbstractCustomer
     protected $_entityTable;
 
     /**
+     * Customer model
+     *
      * @var \Magento\Customer\Model\Customer
      */
     protected $_customerModel;
@@ -123,12 +129,14 @@ class Customer extends AbstractCustomer
     protected $_resourceHelper;
 
     /**
-     * @var string
+     * {@inheritdoc}
      */
     protected $masterAttributeCode = 'email';
 
     /**
-     * @var array
+     * Valid column names
+     *
+     * @array
      */
     protected $validColumnNames = [
         self::COLUMN_DEFAULT_BILLING,
@@ -138,8 +146,6 @@ class Customer extends AbstractCustomer
 
     /**
      * Customer fields in file
-     *
-     * @var array
      */
     protected $customerFields = [
         CustomerInterface::GROUP_ID,
@@ -439,8 +445,7 @@ class Customer extends AbstractCustomer
                 }
             } elseif ('multiselect' == $attributeParameters['type']) {
                 $ids = [];
-                $values = $value !== null ? explode($multiSeparator, mb_strtolower($value)) : [];
-                foreach ($values as $subValue) {
+                foreach (explode($multiSeparator, mb_strtolower($value)) as $subValue) {
                     $ids[] = $this->getSelectAttrIdByValue($attributeParameters, $subValue);
                 }
                 $value = implode(',', $ids);
@@ -502,13 +507,12 @@ class Customer extends AbstractCustomer
      * Import data rows
      *
      * @return bool
-     * @throws \Exception
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     protected function _importData()
     {
-        while ($bunch = $this->_dataSourceModel->getNextUniqueBunch($this->getIds())) {
+        while ($bunch = $this->_dataSourceModel->getNextBunch()) {
             $this->prepareCustomerData($bunch);
             $entitiesToCreate = [];
             $entitiesToUpdate = [];

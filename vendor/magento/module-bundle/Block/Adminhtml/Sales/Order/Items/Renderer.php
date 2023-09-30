@@ -5,10 +5,10 @@
  */
 namespace Magento\Bundle\Block\Adminhtml\Sales\Order\Items;
 
-use Magento\Catalog\Helper\Data as CatalogHelper;
 use Magento\Catalog\Model\Product\Type\AbstractType;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Framework\App\ObjectManager;
+use Magento\Catalog\Helper\Data as CatalogHelper;
 
 /**
  * Adminhtml sales order item renderer
@@ -19,7 +19,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 class Renderer extends \Magento\Sales\Block\Adminhtml\Items\Renderer\DefaultRenderer
 {
     /**
-     * Serializer interface instance.
+     * Serializer
      *
      * @var Json
      */
@@ -248,7 +248,7 @@ class Renderer extends \Magento\Sales\Block\Adminhtml\Items\Renderer\DefaultRend
         if (!$this->isShipmentSeparately($item)) {
             $attributes = $this->getSelectionAttributes($item);
             if ($attributes) {
-                $result = (float) $attributes['qty'] . ' x ' . $result;
+                $result = sprintf('%d', $attributes['qty']) . ' x ' . $result;
             }
         }
         if (!$this->isChildCalculated($item)) {

@@ -8,11 +8,8 @@ declare(strict_types=1);
 namespace Magento\InventoryCatalog\Plugin\InventoryIndexer\Indexer\SourceItem\Strategy\Sync;
 
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
-use Magento\InventoryCatalogApi\Api\DefaultSourceProviderInterface;
-use Magento\InventoryIndexer\Model\GetProductsIdsToProcess;
 use Magento\InventoryIndexer\Indexer\SourceItem\Strategy\Sync;
-use Magento\InventoryIndexer\Indexer\SourceItem\GetSalableStatuses;
-use Magento\InventoryIndexer\Model\ResourceModel\GetSourceCodesBySourceItemIds;
+use Magento\InventoryIndexer\Model\ResourceModel\GetProductIdsBySourceItemIds;
 
 /**
  * Reindex price after source item has reindexed.
@@ -25,71 +22,38 @@ class PriceIndexUpdater
     private $priceIndexProcessor;
 
     /**
-     * @var GetSourceCodesBySourceItemIds
+     * @var GetProductIdsBySourceItemIds
      */
-    private $getSourceCodesBySourceItemIds;
-
-    /**
-     * @var DefaultSourceProviderInterface
-     */
-    private $defaultSourceProvider;
-
-    /**
-     * @var GetSalableStatuses
-     */
-    private $getSalableStatuses;
-
-    /**
-     * @var GetProductsIdsToProcess
-     */
-    private $getProductsIdsToProcess;
+    private $productIdsBySourceItemIds;
 
     /**
      * @param Processor $priceIndexProcessor
-     * @param GetSourceCodesBySourceItemIds $getSourceCodesBySourceItemIds
-     * @param DefaultSourceProviderInterface $defaultSourceProvider
-     * @param GetSalableStatuses $getSalableStatuses
-     * @param GetProductsIdsToProcess $getProductsIdsToProcess
+     * @param GetProductIdsBySourceItemIds $productIdsBySourceItemIds
      */
     public function __construct(
         Processor $priceIndexProcessor,
-        GetSourceCodesBySourceItemIds $getSourceCodesBySourceItemIds,
-        DefaultSourceProviderInterface $defaultSourceProvider,
-        GetSalableStatuses $getSalableStatuses,
-        GetProductsIdsToProcess $getProductsIdsToProcess
+        GetProductIdsBySourceItemIds $productIdsBySourceItemIds
     ) {
         $this->priceIndexProcessor = $priceIndexProcessor;
-        $this->getSourceCodesBySourceItemIds = $getSourceCodesBySourceItemIds;
-        $this->defaultSourceProvider = $defaultSourceProvider;
-        $this->getSalableStatuses = $getSalableStatuses;
-        $this->getProductsIdsToProcess = $getProductsIdsToProcess;
+        $this->productIdsBySourceItemIds = $productIdsBySourceItemIds;
     }
 
     /**
      * Reindex product prices.
      *
      * @param Sync $subject
-     * @param callable $proceed
+     * @param void $result
      * @param array $sourceItemIds
-     * @return void
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function aroundExecuteList(Sync $subject, callable $proceed, array $sourceItemIds) : void
-    {
-        $customSourceItemIds = [];
-        $defaultSourceCode = $this->defaultSourceProvider->getCode();
-        foreach ($this->getSourceCodesBySourceItemIds->execute($sourceItemIds) as $sourceItemId => $sourceCode) {
-            if ($sourceCode !== $defaultSourceCode) {
-                $customSourceItemIds[] = $sourceItemId;
-            }
-        }
-        $beforeSalableList = $this->getSalableStatuses->execute($customSourceItemIds);
-        $proceed($sourceItemIds);
-        $afterSalableList = $this->getSalableStatuses->execute($customSourceItemIds);
-
-        $productsIdsToReindex = $this->getProductsIdsToProcess->execute($beforeSalableList, $afterSalableList);
-        if (!empty($productsIdsToReindex)) {
-            $this->priceIndexProcessor->reindexList($productsIdsToReindex, true);
+    public function afterExecuteList(
+        Sync $subject,
+        $result,
+        array $sourceItemIds
+    ): void {
+        $productIds = $this->productIdsBySourceItemIds->execute($sourceItemIds);
+        if (!empty($productIds)) {
+            $this->priceIndexProcessor->reindexList($productIds);
         }
     }
 }

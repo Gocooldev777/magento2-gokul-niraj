@@ -8,8 +8,6 @@ namespace Magento\SalesRule\Model\Rule\Action\Discount;
 class ByPercent extends AbstractDiscount
 {
     /**
-     * Calculate discount by percent
-     *
      * @param \Magento\SalesRule\Model\Rule $rule
      * @param \Magento\Quote\Model\Quote\Item\AbstractItem $item
      * @param float $qty
@@ -24,8 +22,6 @@ class ByPercent extends AbstractDiscount
     }
 
     /**
-     * Fix quantity depending on discount step
-     *
      * @param float $qty
      * @param \Magento\SalesRule\Model\Rule $rule
      * @return float
@@ -41,8 +37,6 @@ class ByPercent extends AbstractDiscount
     }
 
     /**
-     * Calculate discount by rule percent
-     *
      * @param \Magento\SalesRule\Model\Rule $rule
      * @param \Magento\Quote\Model\Quote\Item\AbstractItem $item
      * @param float $qty
@@ -67,7 +61,7 @@ class ByPercent extends AbstractDiscount
             ($qty * $baseItemOriginalPrice - $item->getBaseDiscountAmount()) * $_rulePct
         );
 
-        if (!$rule->getDiscountQty() || $rule->getDiscountQty() >= $qty) {
+        if (!$rule->getDiscountQty() || $rule->getDiscountQty() > $qty) {
             $discountPercent = min(100, $item->getDiscountPercent() + $rulePercent);
             $item->setDiscountPercent($discountPercent);
         }

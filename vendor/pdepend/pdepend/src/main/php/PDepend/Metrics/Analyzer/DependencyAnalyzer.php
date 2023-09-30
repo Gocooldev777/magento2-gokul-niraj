@@ -133,6 +133,8 @@ class DependencyAnalyzer extends AbstractAnalyzer
     /**
      * Processes all {@link ASTNamespace} code nodes.
      *
+     * @param ASTNamespace[] $namespaces
+     *
      * @return void
      */
     public function analyze($namespaces)

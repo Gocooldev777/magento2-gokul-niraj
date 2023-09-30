@@ -30,9 +30,9 @@ class DataFixture extends Base
                 }
             }
         }
-        $fixture = $this->replaceFixtures([$this->getFixtureAsArray($fixture)], $replacedFixtures);
+        $fixture = $this->replaceFixtures([$fixture], $replacedFixtures);
 
-        return reset($fixture)['factory'];
+        return is_array($fixture) ? reset($fixture) : $fixture;
     }
 
     /**
@@ -68,11 +68,9 @@ class DataFixture extends Base
      */
     private function replaceFixtures(array $fixtures, array $replacedFixtures): array
     {
-        if ($replacedFixtures) {
-            foreach ($fixtures as $key => $fixture) {
-                if (!empty($replacedFixtures[$fixture['factory']])) {
-                    $fixtures[$key] = $this->getFixtureAsArray($replacedFixtures[$fixture['factory']]);
-                }
+        foreach ($fixtures as $key => $fixture) {
+            if (!empty($replacedFixtures[$fixture])) {
+                $fixtures[$key] = $replacedFixtures[$fixture];
             }
         }
 
@@ -88,11 +86,9 @@ class DataFixture extends Base
      */
     private function removeFixtures(array $fixtures, array $attributes): array
     {
-        try {
-            $key = $this->getFixturePosition($attributes['path'], $fixtures);
+        $key = array_search($attributes['path'], $fixtures);
+        if ($key || $key === 0) {
             unset($fixtures[$key]);
-        } catch (\Throwable $exception) {
-            //ignore exception
         }
 
         return $fixtures;
@@ -110,22 +106,22 @@ class DataFixture extends Base
         $beforeFixtures = [];
         $afterFixtures = [];
         if (!empty($attributes['before'])) {
-            $offset = $attributes['before'] === '-' ? 0 : $this->getFixturePosition($attributes['before'], $fixtures);
-            if ($offset === 0) {
-                $beforeFixtures[] = $this->getFixtureAsArray($attributes['path']);
+            $offset = $this->getFixturePosition($attributes['before'], $fixtures);
+            if ($attributes['before'] === '-' || $offset === 0) {
+                $beforeFixtures[] = $attributes['path'];
             } else {
                 $fixtures = $this->insertFixture($fixtures, $attributes['path'], $offset);
             }
         }
         if (!empty($attributes['after'])) {
             if ($attributes['after'] === '-') {
-                $afterFixtures[] = $this->getFixtureAsArray($attributes['path']);
+                $afterFixtures[] = $attributes['path'];
             } else {
                 $offset = $this->getFixturePosition($attributes['after'], $fixtures);
                 $fixtures = $this->insertFixture($fixtures, $attributes['path'], $offset + 1);
             }
         } elseif (empty($attributes['before'])) {
-            $fixtures[] = $this->getFixtureAsArray($attributes['path']);
+            $fixtures[] = $attributes['path'];
         }
 
         return array_merge($beforeFixtures, $fixtures, $afterFixtures);
@@ -141,15 +137,12 @@ class DataFixture extends Base
      */
     private function getFixturePosition(string $fixtureToFind, array $existingFixtures): int
     {
-        $offset = false;
-        foreach ($existingFixtures as $key => $fixture) {
-            if ($fixture['factory'] === $fixtureToFind) {
-                $offset = $key;
-                break;
+        $offset = 0;
+        if ($fixtureToFind !== '-') {
+            $offset = array_search($fixtureToFind, $existingFixtures);
+            if ($offset === false) {
+                throw new LocalizedException(__('The fixture %1 does not exist in fixtures list', $fixtureToFind));
             }
-        }
-        if ($offset === false) {
-            throw new LocalizedException(__('The fixture %1 does not exist in fixtures list', $fixtureToFind));
         }
 
         return $offset;
@@ -167,21 +160,8 @@ class DataFixture extends Base
     {
         return array_merge(
             array_slice($fixtures, 0, $position),
-            [$this->getFixtureAsArray($fixture)],
+            [$fixture],
             array_slice($fixtures, $position)
         );
-    }
-
-    /**
-     * Creates an array with the supplied fixture factory
-     *
-     * @param string $fixture
-     * @return string[]
-     */
-    private function getFixtureAsArray(string $fixture): array
-    {
-        return [
-            'factory' => $fixture
-        ];
     }
 }

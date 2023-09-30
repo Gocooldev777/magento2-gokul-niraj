@@ -3,21 +3,22 @@
 declare (strict_types=1);
 namespace Rector\Core\ValueObject;
 
-use Rector\Core\ValueObject\Error\SystemError;
+use Rector\Core\ValueObject\Application\SystemError;
 use Rector\Core\ValueObject\Reporting\FileDiff;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use Symplify\SmartFileSystem\SmartFileInfo;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Core\ValueObjectFactory\ProcessResultFactory
  */
 final class ProcessResult
 {
     /**
-     * @var SystemError[]
+     * @var \Rector\Core\ValueObject\Application\SystemError[]
      * @readonly
      */
     private $systemErrors;
     /**
-     * @var FileDiff[]
+     * @var \Rector\Core\ValueObject\Reporting\FileDiff[]
      * @readonly
      */
     private $fileDiffs;
@@ -47,8 +48,8 @@ final class ProcessResult
         $this->addedFilesCount = $addedFilesCount;
         $this->removedFilesCount = $removedFilesCount;
         $this->removedNodeCount = $removedNodeCount;
-        Assert::allIsAOf($fileDiffs, FileDiff::class);
-        Assert::allIsAOf($systemErrors, SystemError::class);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($fileDiffs, \Rector\Core\ValueObject\Reporting\FileDiff::class);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($systemErrors, \Rector\Core\ValueObject\Application\SystemError::class);
     }
     /**
      * @return FileDiff[]
@@ -81,13 +82,13 @@ final class ProcessResult
         return $this->removedNodeCount;
     }
     /**
-     * @return string[]
+     * @return SmartFileInfo[]
      */
-    public function getChangedFilePaths() : array
+    public function getChangedFileInfos() : array
     {
         $fileInfos = [];
         foreach ($this->fileDiffs as $fileDiff) {
-            $fileInfos[] = $fileDiff->getRelativeFilePath();
+            $fileInfos[] = new \Symplify\SmartFileSystem\SmartFileInfo($fileDiff->getRelativeFilePath());
         }
         return \array_unique($fileInfos);
     }

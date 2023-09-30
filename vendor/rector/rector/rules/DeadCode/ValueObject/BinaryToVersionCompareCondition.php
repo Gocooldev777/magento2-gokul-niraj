@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\DeadCode\ValueObject;
 
 use Rector\DeadCode\Contract\ConditionInterface;
-final class BinaryToVersionCompareCondition implements ConditionInterface
+final class BinaryToVersionCompareCondition implements \Rector\DeadCode\Contract\ConditionInterface
 {
     /**
      * @readonly
@@ -16,10 +16,6 @@ final class BinaryToVersionCompareCondition implements ConditionInterface
      * @var string
      */
     private $binaryClass;
-    /**
-     * @readonly
-     * @var mixed
-     */
     private $expectedValue;
     /**
      * @param mixed $expectedValue

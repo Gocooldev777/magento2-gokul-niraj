@@ -59,31 +59,28 @@ class Dropdown implements CustomizableOptionValueInterface
             ->setOption($option)
             ->setConfigurationItemOption($selectedOption);
 
-        $selectedOptionValues = [];
         $selectedValue = $selectedOption->getValue();
         $optionValue = $option->getValueById($selectedValue);
-        if ($optionValue) {
-            $optionPriceType = (string)$optionValue->getPriceType();
-            $priceValueUnits = $this->priceUnitLabel->getData($optionPriceType);
+        $optionPriceType = (string)$optionValue->getPriceType();
+        $priceValueUnits = $this->priceUnitLabel->getData($optionPriceType);
 
-            $optionDetails = [
-                self::OPTION_TYPE,
-                $option->getOptionId(),
-                $optionValue->getOptionTypeId()
-            ];
+        $optionDetails = [
+            self::OPTION_TYPE,
+            $option->getOptionId(),
+            $optionValue->getOptionTypeId()
+        ];
 
-            $selectedOptionValues[] = [
-                'id' => $selectedOption->getId(),
-                'customizable_option_value_uid' => $this->uidEncoder->encode((string)implode('/', $optionDetails)),
-                'label' => $optionTypeRenderer->getFormattedOptionValue($selectedValue),
-                'value' => $selectedValue,
-                'price' => [
-                    'type' => strtoupper($optionPriceType),
-                    'units' => $priceValueUnits,
-                    'value' => $optionValue->getPrice(),
-                ]
-            ];
-        }
-        return $selectedOptionValues;
+        $selectedOptionValueData = [
+            'id' => $selectedOption->getId(),
+            'customizable_option_value_uid' => $this->uidEncoder->encode((string) implode('/', $optionDetails)),
+            'label' => $optionTypeRenderer->getFormattedOptionValue($selectedValue),
+            'value' => $selectedValue,
+            'price' => [
+                'type' => strtoupper($optionPriceType),
+                'units' => $priceValueUnits,
+                'value' => $optionValue->getPrice(),
+            ]
+        ];
+        return [$selectedOptionValueData];
     }
 }

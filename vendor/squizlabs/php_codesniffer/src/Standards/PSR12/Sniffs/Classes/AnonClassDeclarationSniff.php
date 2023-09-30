@@ -21,14 +21,14 @@ class AnonClassDeclarationSniff extends ClassDeclarationSniff
     /**
      * The PSR2 MultiLineFunctionDeclarations sniff.
      *
-     * @var \PHP_CodeSniffer\Standards\Squiz\Sniffs\Functions\MultiLineFunctionDeclarationSniff
+     * @var MultiLineFunctionDeclarationSniff
      */
     private $multiLineSniff = null;
 
     /**
      * The Generic FunctionCallArgumentSpacing sniff.
      *
-     * @var \PHP_CodeSniffer\Standards\Generic\Sniffs\Functions\FunctionCallArgumentSpacingSniff
+     * @var FunctionCallArgumentSpacingSniff
      */
     private $functionCallSniff = null;
 

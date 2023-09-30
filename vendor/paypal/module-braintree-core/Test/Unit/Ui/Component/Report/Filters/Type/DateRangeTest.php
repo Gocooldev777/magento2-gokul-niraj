@@ -88,7 +88,6 @@ class DateRangeTest extends \PHPUnit\Framework\TestCase
      */
     public function testPrepare($name, $filterData, $expectedCondition)
     {
-        $this->markTestSkipped('Skip this test');
         /** @var FormDate PHPUnit\Framework\MockObject\MockObject|$uiComponent */
         $uiComponent = $this->getMockBuilder(FormDate::class)->disableOriginalConstructor()->getMock();
 

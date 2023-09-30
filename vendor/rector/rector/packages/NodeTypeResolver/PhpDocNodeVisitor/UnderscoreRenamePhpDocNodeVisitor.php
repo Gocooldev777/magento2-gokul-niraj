@@ -3,70 +3,71 @@
 declare (strict_types=1);
 namespace Rector\NodeTypeResolver\PhpDocNodeVisitor;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\Type\ObjectType;
-use Rector\PhpDocParser\PhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
+use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Renaming\ValueObject\PseudoNamespaceToNamespace;
 use Rector\StaticTypeMapper\StaticTypeMapper;
-final class UnderscoreRenamePhpDocNodeVisitor extends AbstractPhpDocNodeVisitor
+use RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor;
+final class UnderscoreRenamePhpDocNodeVisitor extends \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeVisitor\AbstractPhpDocNodeVisitor
 {
     /**
-     * @var bool
+     * @var \Rector\Renaming\ValueObject\PseudoNamespaceToNamespace|null
      */
-    private $hasChanged = \false;
+    private $pseudoNamespaceToNamespace;
+    /**
+     * @var \PhpParser\Node|null
+     */
+    private $currentPhpParserNode;
     /**
      * @readonly
      * @var \Rector\StaticTypeMapper\StaticTypeMapper
      */
     private $staticTypeMapper;
-    /**
-     * @readonly
-     * @var \Rector\Renaming\ValueObject\PseudoNamespaceToNamespace
-     */
-    private $pseudoNamespaceToNamespace;
-    /**
-     * @readonly
-     * @var \PhpParser\Node
-     */
-    private $phpNode;
-    public function __construct(StaticTypeMapper $staticTypeMapper, PseudoNamespaceToNamespace $pseudoNamespaceToNamespace, \PhpParser\Node $phpNode)
+    public function __construct(\Rector\StaticTypeMapper\StaticTypeMapper $staticTypeMapper)
     {
         $this->staticTypeMapper = $staticTypeMapper;
-        $this->pseudoNamespaceToNamespace = $pseudoNamespaceToNamespace;
-        $this->phpNode = $phpNode;
     }
-    public function beforeTraverse(Node $node) : void
+    public function beforeTraverse(\PHPStan\PhpDocParser\Ast\Node $node) : void
     {
-        $this->hasChanged = \false;
+        if ($this->pseudoNamespaceToNamespace === null) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException('Set PseudoNamespaceToNamespace first');
+        }
+        if (!$this->currentPhpParserNode instanceof \PhpParser\Node) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException('Set "$currentPhpParserNode" first');
+        }
     }
-    public function enterNode(Node $node) : ?Node
+    public function enterNode(\PHPStan\PhpDocParser\Ast\Node $node) : ?\PHPStan\PhpDocParser\Ast\Node
     {
-        if (!$node instanceof IdentifierTypeNode) {
+        if (!$node instanceof \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode) {
             return null;
         }
-        if ($this->shouldSkip($node, $this->phpNode, $this->pseudoNamespaceToNamespace)) {
+        if ($this->shouldSkip($node, $this->currentPhpParserNode, $this->pseudoNamespaceToNamespace)) {
             return null;
         }
         /** @var IdentifierTypeNode $node */
-        $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType($node, $this->phpNode);
-        if (!$staticType instanceof ObjectType) {
+        $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType($node, $this->currentPhpParserNode);
+        if (!$staticType instanceof \PHPStan\Type\ObjectType) {
             return null;
         }
-        $this->hasChanged = \true;
         // change underscore to \\
-        $slashedName = '\\' . Strings::replace($staticType->getClassName(), '#_#', '\\');
-        return new IdentifierTypeNode($slashedName);
+        $slashedName = '\\' . \RectorPrefix20211221\Nette\Utils\Strings::replace($staticType->getClassName(), '#_#', '\\');
+        return new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode($slashedName);
     }
-    public function hasChanged() : bool
+    public function setPseudoNamespaceToNamespace(\Rector\Renaming\ValueObject\PseudoNamespaceToNamespace $pseudoNamespaceToNamespace) : void
     {
-        return $this->hasChanged;
+        $this->pseudoNamespaceToNamespace = $pseudoNamespaceToNamespace;
     }
-    private function shouldSkip(IdentifierTypeNode $identifierTypeNode, \PhpParser\Node $phpParserNode, PseudoNamespaceToNamespace $pseudoNamespaceToNamespace) : bool
+    public function setCurrentPhpParserNode(\PhpParser\Node $node) : void
+    {
+        $this->currentPhpParserNode = $node;
+    }
+    private function shouldSkip(\PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode $identifierTypeNode, \PhpParser\Node $phpParserNode, \Rector\Renaming\ValueObject\PseudoNamespaceToNamespace $pseudoNamespaceToNamespace) : bool
     {
         $staticType = $this->staticTypeMapper->mapPHPStanPhpDocTypeNodeToPHPStanType($identifierTypeNode, $phpParserNode);
-        if (!$staticType instanceof ObjectType) {
+        if (!$staticType instanceof \PHPStan\Type\ObjectType) {
             return \true;
         }
         if (\strncmp($staticType->getClassName(), $pseudoNamespaceToNamespace->getNamespacePrefix(), \strlen($pseudoNamespaceToNamespace->getNamespacePrefix())) !== 0) {

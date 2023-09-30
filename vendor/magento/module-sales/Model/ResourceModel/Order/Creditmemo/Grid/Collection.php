@@ -9,11 +9,9 @@ namespace Magento\Sales\Model\ResourceModel\Order\Creditmemo\Grid;
 use Magento\Framework\Data\Collection\Db\FetchStrategyInterface as FetchStrategy;
 use Magento\Framework\Data\Collection\EntityFactoryInterface as EntityFactory;
 use Magento\Framework\Event\ManagerInterface as EventManager;
-use Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult;
-use Magento\Sales\Model\ResourceModel\Order\Creditmemo;
 use Psr\Log\LoggerInterface as Logger;
 
-class Collection extends SearchResult
+class Collection extends \Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult
 {
     /**
      * Initialize dependencies.
@@ -24,8 +22,6 @@ class Collection extends SearchResult
      * @param EventManager $eventManager
      * @param string $mainTable
      * @param string $resourceModel
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * phpcs:disable Generic.CodeAnalysis.UselessOverridingMethod.Found
      */
     public function __construct(
         EntityFactory $entityFactory,
@@ -33,7 +29,7 @@ class Collection extends SearchResult
         FetchStrategy $fetchStrategy,
         EventManager $eventManager,
         $mainTable = 'sales_creditmemo_grid',
-        $resourceModel = Creditmemo::class
+        $resourceModel = \Magento\Sales\Model\ResourceModel\Order\Creditmemo::class
     ) {
         parent::__construct($entityFactory, $logger, $fetchStrategy, $eventManager, $mainTable, $resourceModel);
     }

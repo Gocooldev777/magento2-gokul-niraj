@@ -1,15 +1,15 @@
 <?php
 
-namespace RectorPrefix202304\React\Socket;
+namespace RectorPrefix20211221\React\Socket;
 
-use RectorPrefix202304\React\Dns\Resolver\ResolverInterface;
-use RectorPrefix202304\React\Promise;
-use RectorPrefix202304\React\Promise\PromiseInterface;
-final class DnsConnector implements ConnectorInterface
+use RectorPrefix20211221\React\Dns\Resolver\ResolverInterface;
+use RectorPrefix20211221\React\Promise;
+use RectorPrefix20211221\React\Promise\CancellablePromiseInterface;
+final class DnsConnector implements \RectorPrefix20211221\React\Socket\ConnectorInterface
 {
     private $connector;
     private $resolver;
-    public function __construct(ConnectorInterface $connector, ResolverInterface $resolver)
+    public function __construct(\RectorPrefix20211221\React\Socket\ConnectorInterface $connector, \RectorPrefix20211221\React\Dns\Resolver\ResolverInterface $resolver)
     {
         $this->connector = $connector;
         $this->resolver = $resolver;
@@ -20,28 +20,26 @@ final class DnsConnector implements ConnectorInterface
         if (\strpos($uri, '://') === \false) {
             $uri = 'tcp://' . $uri;
             $parts = \parse_url($uri);
-            if (isset($parts['scheme'])) {
-                unset($parts['scheme']);
-            }
+            unset($parts['scheme']);
         } else {
             $parts = \parse_url($uri);
         }
         if (!$parts || !isset($parts['host'])) {
-            return Promise\reject(new \InvalidArgumentException('Given URI "' . $original . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
+            return \RectorPrefix20211221\React\Promise\reject(new \InvalidArgumentException('Given URI "' . $original . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
         }
         $host = \trim($parts['host'], '[]');
         $connector = $this->connector;
         // skip DNS lookup / URI manipulation if this URI already contains an IP
-        if (@\inet_pton($host) !== \false) {
+        if (\false !== \filter_var($host, \FILTER_VALIDATE_IP)) {
             return $connector->connect($original);
         }
         $promise = $this->resolver->resolve($host);
         $resolved = null;
-        return new Promise\Promise(function ($resolve, $reject) use(&$promise, &$resolved, $uri, $connector, $host, $parts) {
+        return new \RectorPrefix20211221\React\Promise\Promise(function ($resolve, $reject) use(&$promise, &$resolved, $uri, $connector, $host, $parts) {
             // resolve/reject with result of DNS lookup
             $promise->then(function ($ip) use(&$promise, &$resolved, $uri, $connector, $host, $parts) {
                 $resolved = $ip;
-                return $promise = $connector->connect(Connector::uri($parts, $host, $ip))->then(null, function (\Exception $e) use($uri) {
+                return $promise = $connector->connect(\RectorPrefix20211221\React\Socket\Connector::uri($parts, $host, $ip))->then(null, function (\Exception $e) use($uri) {
                     if ($e instanceof \RuntimeException) {
                         $message = \preg_replace('/^(Connection to [^ ]+)[&?]hostname=[^ &]+/', '$1', $e->getMessage());
                         $e = new \RuntimeException('Connection to ' . $uri . ' failed: ' . $message, $e->getCode(), $e);
@@ -52,11 +50,11 @@ final class DnsConnector implements ConnectorInterface
                         $trace = $r->getValue($e);
                         // Exception trace arguments are not available on some PHP 7.4 installs
                         // @codeCoverageIgnoreStart
-                        foreach ($trace as $ti => $one) {
+                        foreach ($trace as &$one) {
                             if (isset($one['args'])) {
-                                foreach ($one['args'] as $ai => $arg) {
+                                foreach ($one['args'] as &$arg) {
                                     if ($arg instanceof \Closure) {
-                                        $trace[$ti]['args'][$ai] = 'Object(' . \get_class($arg) . ')';
+                                        $arg = 'Object(' . \get_class($arg) . ')';
                                     }
                                 }
                             }
@@ -76,7 +74,7 @@ final class DnsConnector implements ConnectorInterface
                 $reject(new \RuntimeException('Connection to ' . $uri . ' cancelled during DNS lookup (ECONNABORTED)', \defined('SOCKET_ECONNABORTED') ? \SOCKET_ECONNABORTED : 103));
             }
             // (try to) cancel pending DNS lookup / connection attempt
-            if ($promise instanceof PromiseInterface && \method_exists($promise, 'cancel')) {
+            if ($promise instanceof \RectorPrefix20211221\React\Promise\CancellablePromiseInterface) {
                 // overwrite callback arguments for PHP7+ only, so they do not show
                 // up in the Exception trace and do not cause a possible cyclic reference.
                 $_ = $reject = null;

@@ -18,6 +18,7 @@ use Magento\Framework\EntityManager\EntityMetadata;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\Stdlib\DateTime;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Indexer\Model\Indexer;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
@@ -29,6 +30,11 @@ use PHPUnit\Framework\TestCase;
  */
 class RefreshSpecialPricesTest extends TestCase
 {
+    /**
+     * @var ObjectManager
+     */
+    protected $_objectManager;
+
     /**
      * @var RefreshSpecialPrices
      */
@@ -76,24 +82,35 @@ class RefreshSpecialPricesTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->_objectManager = new ObjectManager($this);
+
         $this->_storeManagerMock = $this->getMockForAbstractClass(StoreManagerInterface::class);
         $this->_resourceMock = $this->createMock(ResourceConnection::class);
         $this->_dateTimeMock = $this->createMock(DateTime::class);
         $this->_localeDateMock = $this->getMockForAbstractClass(TimezoneInterface::class);
         $this->_eavConfigMock = $this->createMock(Config::class);
         $this->_priceProcessorMock = $this->createMock(Processor::class);
-        $this->metadataPool = $this->createMock(MetadataPool::class);
+
         $this->metadataMock = $this->createMock(EntityMetadata::class);
 
-        $this->_model = new RefreshSpecialPrices(
-            $this->_storeManagerMock,
-            $this->_resourceMock,
-            $this->_dateTimeMock,
-            $this->_localeDateMock,
-            $this->_eavConfigMock,
-            $this->_priceProcessorMock,
-            $this->metadataPool
+        $this->_model = $this->_objectManager->getObject(
+            RefreshSpecialPrices::class,
+            [
+                'storeManager' => $this->_storeManagerMock,
+                'resource' => $this->_resourceMock,
+                'dateTime' => $this->_dateTimeMock,
+                'localeDate' => $this->_localeDateMock,
+                'eavConfig' => $this->_eavConfigMock,
+                'processor' => $this->_priceProcessorMock
+            ]
         );
+
+        $this->metadataPool = $this->createMock(MetadataPool::class);
+
+        $reflection = new \ReflectionClass(get_class($this->_model));
+        $reflectionProperty = $reflection->getProperty('metadataPool');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($this->_model, $this->metadataPool);
     }
 
     public function testRefreshSpecialPrices()
@@ -115,10 +132,13 @@ class RefreshSpecialPricesTest extends TestCase
 
         $connectionMock = $this->getMockForAbstractClass(AdapterInterface::class);
         $connectionMock->expects($this->any())->method('select')->willReturn($selectMock);
-        $connectionMock->expects($this->exactly(2))
-            ->method('fetchCol')
-            ->with($selectMock, [])
-            ->willReturn($idsToProcess);
+        $connectionMock->expects(
+            $this->any()
+        )->method(
+            'fetchCol'
+        )->willReturn(
+            $idsToProcess
+        );
 
         $this->_resourceMock->expects(
             $this->once()

@@ -1,26 +1,32 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304\Doctrine\Inflector\Rules\Spanish;
+namespace RectorPrefix20211221\Doctrine\Inflector\Rules\Spanish;
 
-use RectorPrefix202304\Doctrine\Inflector\Rules\Pattern;
+use RectorPrefix20211221\Doctrine\Inflector\Rules\Pattern;
 final class Uninflected
 {
-    /** @return Pattern[] */
+    /**
+     * @return Pattern[]
+     */
     public static function getSingular() : iterable
     {
         yield from self::getDefault();
     }
-    /** @return Pattern[] */
+    /**
+     * @return Pattern[]
+     */
     public static function getPlural() : iterable
     {
         yield from self::getDefault();
     }
-    /** @return Pattern[] */
+    /**
+     * @return Pattern[]
+     */
     private static function getDefault() : iterable
     {
-        (yield new Pattern('lunes'));
-        (yield new Pattern('rompecabezas'));
-        (yield new Pattern('crisis'));
+        (yield new \RectorPrefix20211221\Doctrine\Inflector\Rules\Pattern('lunes'));
+        (yield new \RectorPrefix20211221\Doctrine\Inflector\Rules\Pattern('rompecabezas'));
+        (yield new \RectorPrefix20211221\Doctrine\Inflector\Rules\Pattern('crisis'));
     }
 }

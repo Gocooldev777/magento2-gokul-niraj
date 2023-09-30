@@ -5,13 +5,13 @@
  */
 namespace Magento\Framework\MessageQueue\Code\Generator;
 
-use Laminas\Code\Reflection\MethodReflection;
 use Magento\Framework\Code\Generator\DefinedClasses;
 use Magento\Framework\Code\Generator\Io;
 use Magento\Framework\Communication\Config\ReflectionGenerator;
 use Magento\Framework\Communication\ConfigInterface as CommunicationConfig;
 use Magento\Framework\MessageQueue\Code\Generator\Config\RemoteServiceReader\Communication as RemoteServiceReader;
 use Magento\Framework\Reflection\MethodsMap as ServiceMethodsMap;
+use Laminas\Code\Reflection\MethodReflection;
 
 /**
  * Code generator for remote services.
@@ -20,8 +20,8 @@ use Magento\Framework\Reflection\MethodsMap as ServiceMethodsMap;
  */
 class RemoteServiceGenerator extends \Magento\Framework\Code\Generator\EntityAbstract
 {
-    public const ENTITY_TYPE = 'remote';
-    public const REMOTE_SERVICE_SUFFIX = 'Remote';
+    const ENTITY_TYPE = 'remote';
+    const REMOTE_SERVICE_SUFFIX = 'Remote';
 
     /**
      * @var CommunicationConfig
@@ -173,21 +173,7 @@ class RemoteServiceGenerator extends \Magento\Framework\Code\Generator\EntityAbs
      */
     private function convertMethodType($type)
     {
-        $returnTypeValue = $type instanceof \ReflectionNamedType ? $type->getName() : $type;
-
-        if ($type instanceof \ReflectionUnionType || $type instanceof \ReflectionIntersectionType) {
-            $returnTypeValue = [];
-            foreach ($type->getTypes() as $type) {
-                $returnTypeValue[] =  $type->getName();
-            }
-
-            $returnTypeValue = implode(
-                $type instanceof \ReflectionUnionType ? '|' : '&',
-                $returnTypeValue
-            );
-        }
-
-        return $returnTypeValue;
+        return $type instanceof \ReflectionNamedType ? $type->getName() : $type;
     }
 
     /**
@@ -244,7 +230,6 @@ class RemoteServiceGenerator extends \Magento\Framework\Code\Generator\EntityAbs
      * @return ReflectionGenerator
      *
      * @deprecated 103.0.0
-     * @see https://jira.corp.adobe.com/browse/MAGETWO-56305
      */
     private function getReflectionGenerator()
     {

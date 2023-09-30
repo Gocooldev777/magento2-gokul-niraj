@@ -16,23 +16,17 @@ use Magento\InventoryCatalogApi\Api\DefaultStockProviderInterface;
 /**
  * Adapt adding is in stock filter to collection for multi stocks.
  */
-#[\AllowDynamicProperties]
 class AdaptAddIsInStockFilterToCollectionPlugin
 {
     /**
      * @var GetStockIdForCurrentWebsite
      */
-    private GetStockIdForCurrentWebsite $getStockIdForCurrentWebsite;
+    private $getStockIdForCurrentWebsite;
 
     /**
      * @var AddIsInStockFilterToCollection
      */
-    private AddIsInStockFilterToCollection $addIsInStockFilterToCollection;
-
-    /**
-     * @var DefaultStockProviderInterface
-     */
-    private DefaultStockProviderInterface $defaultStockProvider;
+    private $addIsInStockFilterToCollection;
 
     /**
      * @param GetStockIdForCurrentWebsite $getStockIdForCurrentWebsite

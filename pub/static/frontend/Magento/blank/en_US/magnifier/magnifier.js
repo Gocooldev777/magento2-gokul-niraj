@@ -541,27 +541,25 @@
 
             showWrapper = false;
             $(thumbObj).on('load', function () {
-                if (data.length > 0) {
-                    data[idx].status = 1;
+                data[idx].status = 1;
 
-                    $(largeObj).on('load', function () {
+                $(largeObj).on('load', function () {
 
-                        if (largeObj.width > largeWrapper.width() || largeObj.height > largeWrapper.height()) {
-                            showWrapper = true;
-                            bindEvents(eventType, thumb);
-                            data[idx].status = 2;
-                            if (largeObj.width > largeObj.height) {
-                                data[idx].zoom = largeObj.width / largeWrapper.width();
-                            } else {
-                                data[idx].zoom = largeObj.height / largeWrapper.height();
-                            }
-                            setThumbData(thumb, data[idx]);
-                            updateLensOnLoad(idx, thumb, largeObj, largeWrapper);
+                    if (largeObj.width > largeWrapper.width() || largeObj.height > largeWrapper.height()) {
+                        showWrapper = true;
+                        bindEvents(eventType, thumb);
+                        data[idx].status = 2;
+                        if (largeObj.width > largeObj.height) {
+                            data[idx].zoom = largeObj.width / largeWrapper.width();
+                        } else {
+                            data[idx].zoom = largeObj.height / largeWrapper.height();
                         }
-                    });
+                        setThumbData(thumb, data[idx]);
+                        updateLensOnLoad(idx, thumb, largeObj, largeWrapper);
+                    }
+                });
 
-                    largeObj.src = data[idx].largeUrl;
-                }
+                largeObj.src = data[idx].largeUrl;
             });
 
             thumbObj.src = thumb.src;

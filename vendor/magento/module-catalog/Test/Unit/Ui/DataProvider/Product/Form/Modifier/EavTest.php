@@ -330,11 +330,24 @@ class EavTest extends AbstractModifierTest
         $this->storeMock = $this->getMockBuilder(StoreInterface::class)
             ->setMethods(['load', 'getId', 'getConfig', 'getBaseCurrencyCode'])
             ->getMockForAbstractClass();
+        $this->currencyMock = $this->getMockBuilder(Currency::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['toCurrency'])
+            ->getMock();
+        $this->currencyLocaleMock = $this->getMockBuilder(CurrencyLocale::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getCurrency'])
+            ->getMock();
         $this->eavAttributeMock->expects($this->any())
             ->method('load')
             ->willReturnSelf();
 
         $this->eav =$this->getModel();
+        $this->objectManager->setBackwardCompatibleProperty(
+            $this->eav,
+            'localeCurrency',
+            $this->currencyLocaleMock
+        );
     }
 
     /**
@@ -427,6 +440,15 @@ class EavTest extends AbstractModifierTest
             ->willReturn(ProductAttributeInterface::CODE_PRICE);
         $this->searchResultsMock->expects($this->once())->method('getItems')
             ->willReturn([$this->eavAttributeMock]);
+
+        $this->storeMock->expects(($this->once()))->method('getBaseCurrencyCode')
+            ->willReturn('en_US');
+        $this->storeManagerMock->expects($this->once())->method('getStore')
+            ->willReturn($this->storeMock);
+        $this->currencyMock->expects($this->once())->method('toCurrency')
+            ->willReturn('19.99');
+        $this->currencyLocaleMock->expects($this->once())->method('getCurrency')
+            ->willReturn($this->currencyMock);
 
         $this->assertEquals($sourceData, $this->eav->modifyData([]));
     }

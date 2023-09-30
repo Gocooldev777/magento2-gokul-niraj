@@ -116,6 +116,6 @@ class PreProcessor implements PreProcessorInterface
      */
     protected function isDictionaryPath($path)
     {
-        return $path !== null && strpos($path, (string) $this->config->getDictionaryFileName()) !== false;
+        return (strpos($path, (string) $this->config->getDictionaryFileName()) !== false);
     }
 }

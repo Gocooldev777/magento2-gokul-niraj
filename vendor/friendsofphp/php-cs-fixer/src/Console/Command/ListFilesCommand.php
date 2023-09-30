@@ -18,7 +18,7 @@ use PhpCsFixer\Config;
 use PhpCsFixer\ConfigInterface;
 use PhpCsFixer\Console\ConfigurationResolver;
 use PhpCsFixer\ToolInfoInterface;
-use Symfony\Component\Console\Attribute\AsCommand;
+use SplFileInfo;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,7 +29,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @internal
  */
-#[AsCommand(name: 'list-files')]
 final class ListFilesCommand extends Command
 {
     /**
@@ -37,9 +36,15 @@ final class ListFilesCommand extends Command
      */
     protected static $defaultName = 'list-files';
 
-    private ConfigInterface $defaultConfig;
+    /**
+     * @var ConfigInterface
+     */
+    private $defaultConfig;
 
-    private ToolInfoInterface $toolInfo;
+    /**
+     * @var ToolInfoInterface
+     */
+    private $toolInfo;
 
     public function __construct(ToolInfoInterface $toolInfo)
     {
@@ -80,7 +85,7 @@ final class ListFilesCommand extends Command
 
         $finder = $resolver->getFinder();
 
-        /** @var \SplFileInfo $file */
+        /** @var SplFileInfo $file */
         foreach ($finder as $file) {
             if ($file->isFile()) {
                 $relativePath = str_replace($cwd, '.', $file->getRealPath());

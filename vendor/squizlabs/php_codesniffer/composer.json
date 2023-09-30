@@ -4,8 +4,7 @@
     "type": "library",
     "keywords": [
         "phpcs",
-        "standards",
-        "static analysis"
+        "standards"
     ],
     "homepage": "https://github.com/squizlabs/PHP_CodeSniffer",
     "license": "BSD-3-Clause",

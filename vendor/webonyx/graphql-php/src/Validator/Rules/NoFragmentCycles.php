@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Validator\Rules;
 
@@ -8,20 +10,26 @@ use GraphQL\Language\AST\FragmentSpreadNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\Visitor;
 use GraphQL\Language\VisitorOperation;
-use GraphQL\Validator\QueryValidationContext;
+use GraphQL\Utils\Utils;
+use GraphQL\Validator\ValidationContext;
+use function array_pop;
+use function array_slice;
+use function count;
+use function implode;
+use function sprintf;
 
 class NoFragmentCycles extends ValidationRule
 {
-    /** @var array<string, bool> */
-    protected array $visitedFrags;
+    /** @var bool[] */
+    public $visitedFrags;
 
-    /** @var array<int, FragmentSpreadNode> */
-    protected array $spreadPath;
+    /** @var FragmentSpreadNode[] */
+    public $spreadPath;
 
-    /** @var array<string, int|null> */
-    protected array $spreadPathIndexByName;
+    /** @var (int|null)[] */
+    public $spreadPathIndexByName;
 
-    public function getVisitor(QueryValidationContext $context): array
+    public function getVisitor(ValidationContext $context)
     {
         // Tracks already visited fragments to maintain O(N) and to ensure that cycles
         // are not redundantly reported.
@@ -34,8 +42,10 @@ class NoFragmentCycles extends ValidationRule
         $this->spreadPathIndexByName = [];
 
         return [
-            NodeKind::OPERATION_DEFINITION => static fn (): VisitorOperation => Visitor::skipNode(),
-            NodeKind::FRAGMENT_DEFINITION => function (FragmentDefinitionNode $node) use ($context): VisitorOperation {
+            NodeKind::OPERATION_DEFINITION => static function () : VisitorOperation {
+                return Visitor::skipNode();
+            },
+            NodeKind::FRAGMENT_DEFINITION  => function (FragmentDefinitionNode $node) use ($context) : VisitorOperation {
                 $this->detectCycleRecursive($node, $context);
 
                 return Visitor::skipNode();
@@ -43,59 +53,60 @@ class NoFragmentCycles extends ValidationRule
         ];
     }
 
-    protected function detectCycleRecursive(FragmentDefinitionNode $fragment, QueryValidationContext $context): void
+    private function detectCycleRecursive(FragmentDefinitionNode $fragment, ValidationContext $context)
     {
         if (isset($this->visitedFrags[$fragment->name->value])) {
             return;
         }
 
-        $fragmentName = $fragment->name->value;
+        $fragmentName                      = $fragment->name->value;
         $this->visitedFrags[$fragmentName] = true;
 
         $spreadNodes = $context->getFragmentSpreads($fragment);
 
-        if ($spreadNodes === []) {
+        if (count($spreadNodes) === 0) {
             return;
         }
 
-        $this->spreadPathIndexByName[$fragmentName] = \count($this->spreadPath);
+        $this->spreadPathIndexByName[$fragmentName] = count($this->spreadPath);
 
-        foreach ($spreadNodes as $spreadNode) {
+        for ($i = 0; $i < count($spreadNodes); $i++) {
+            $spreadNode = $spreadNodes[$i];
             $spreadName = $spreadNode->name->value;
             $cycleIndex = $this->spreadPathIndexByName[$spreadName] ?? null;
 
             $this->spreadPath[] = $spreadNode;
             if ($cycleIndex === null) {
                 $spreadFragment = $context->getFragment($spreadName);
-                if ($spreadFragment !== null) {
+                if ($spreadFragment) {
                     $this->detectCycleRecursive($spreadFragment, $context);
                 }
             } else {
-                $cyclePath = \array_slice($this->spreadPath, $cycleIndex);
-                $fragmentNames = [];
-                foreach (\array_slice($cyclePath, 0, -1) as $frag) {
-                    $fragmentNames[] = $frag->name->value;
-                }
+                $cyclePath     = array_slice($this->spreadPath, $cycleIndex);
+                $fragmentNames = Utils::map(array_slice($cyclePath, 0, -1), static function ($s) {
+                    return $s->name->value;
+                });
 
                 $context->reportError(new Error(
-                    static::cycleErrorMessage($spreadName, $fragmentNames),
+                    self::cycleErrorMessage($spreadName, $fragmentNames),
                     $cyclePath
                 ));
             }
-
-            \array_pop($this->spreadPath);
+            array_pop($this->spreadPath);
         }
 
         $this->spreadPathIndexByName[$fragmentName] = null;
     }
 
-    /** @param array<string> $spreadNames */
-    public static function cycleErrorMessage(string $fragName, array $spreadNames = []): string
+    /**
+     * @param string[] $spreadNames
+     */
+    public static function cycleErrorMessage($fragName, array $spreadNames = [])
     {
-        $via = $spreadNames === []
-            ? ''
-            : ' via ' . \implode(', ', $spreadNames);
-
-        return "Cannot spread fragment \"{$fragName}\" within itself{$via}.";
+        return sprintf(
+            'Cannot spread fragment "%s" within itself%s.',
+            $fragName,
+            count($spreadNames) > 0 ? ' via ' . implode(', ', $spreadNames) : ''
+        );
     }
 }

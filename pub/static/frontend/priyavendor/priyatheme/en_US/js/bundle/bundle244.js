@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"mage/url.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/* eslint-disable strict */\ndefine([], function () {\n    var baseUrl = '';\n\n    return {\n        /**\n         * @param {String} url\n         */\n        setBaseUrl: function (url) {\n            baseUrl = url;\n        },\n\n        /**\n         * @param {String} path\n         * @return {*}\n         */\n        build: function (path) {\n            if (path.indexOf(baseUrl) !== -1) {\n                return path;\n            }\n\n            return baseUrl + path;\n        }\n    };\n});\n"}
+}});

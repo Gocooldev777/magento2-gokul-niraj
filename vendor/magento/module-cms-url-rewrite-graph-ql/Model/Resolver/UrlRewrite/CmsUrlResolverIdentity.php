@@ -26,10 +26,9 @@ class CmsUrlResolverIdentity implements IdentityInterface
     public function getIdentities(array $resolvedData): array
     {
         $ids = [];
-        $id = $resolvedData['id'] ?? $resolvedData['page_id'] ?? null;
-        if (isset($id)) {
+        if (isset($resolvedData['id'])) {
             $selectedCacheTag = $this->cacheTag;
-            $ids =  [$selectedCacheTag, sprintf('%s_%s', $selectedCacheTag, $id)];
+            $ids =  [$selectedCacheTag, sprintf('%s_%s', $selectedCacheTag, $resolvedData['id'])];
         }
         return $ids;
     }

@@ -11,16 +11,13 @@ use PHPStan\Reflection\BetterReflection\SourceLocator\OptimizedDirectorySourceLo
 use PHPStan\Reflection\BetterReflection\SourceLocator\OptimizedSingleFileSourceLocator;
 use Rector\NodeTypeResolver\Contract\SourceLocatorProviderInterface;
 use Rector\Testing\PHPUnit\StaticPHPUnitEnvironment;
-use RectorPrefix202304\Webmozart\Assert\Assert;
-/**
- * @api phpstan external
- */
-final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterface
+use Symplify\SmartFileSystem\SmartFileInfo;
+final class DynamicSourceLocatorProvider implements \Rector\NodeTypeResolver\Contract\SourceLocatorProviderInterface
 {
     /**
      * @var string[]
      */
-    private $filePaths = [];
+    private $files = [];
     /**
      * @var array<string, string[]>
      */
@@ -39,37 +36,37 @@ final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterfa
      * @var \PHPStan\Php\PhpVersion
      */
     private $phpVersion;
-    public function __construct(FileNodesFetcher $fileNodesFetcher, PhpVersion $phpVersion)
+    public function __construct(\PHPStan\Reflection\BetterReflection\SourceLocator\FileNodesFetcher $fileNodesFetcher, \PHPStan\Php\PhpVersion $phpVersion)
     {
         $this->fileNodesFetcher = $fileNodesFetcher;
         $this->phpVersion = $phpVersion;
     }
-    public function setFilePath(string $filePath) : void
+    public function setFileInfo(\Symplify\SmartFileSystem\SmartFileInfo $fileInfo) : void
     {
-        $this->filePaths = [$filePath];
+        $this->files = [$fileInfo->getRealPath()];
     }
     /**
      * @param string[] $files
      */
     public function addFiles(array $files) : void
     {
-        $this->filePaths = \array_merge($this->filePaths, $files);
+        $this->files = \array_merge($this->files, $files);
     }
-    public function provide() : SourceLocator
+    public function provide() : \PHPStan\BetterReflection\SourceLocator\Type\SourceLocator
     {
         // do not cache for PHPUnit, as in test every fixture is different
-        $isPHPUnitRun = StaticPHPUnitEnvironment::isPHPUnitRun();
-        if ($this->aggregateSourceLocator instanceof AggregateSourceLocator && !$isPHPUnitRun) {
+        $isPHPUnitRun = \Rector\Testing\PHPUnit\StaticPHPUnitEnvironment::isPHPUnitRun();
+        if ($this->aggregateSourceLocator instanceof \PHPStan\BetterReflection\SourceLocator\Type\AggregateSourceLocator && !$isPHPUnitRun) {
             return $this->aggregateSourceLocator;
         }
         $sourceLocators = [];
-        foreach ($this->filePaths as $file) {
-            $sourceLocators[] = new OptimizedSingleFileSourceLocator($this->fileNodesFetcher, $file);
+        foreach ($this->files as $file) {
+            $sourceLocators[] = new \PHPStan\Reflection\BetterReflection\SourceLocator\OptimizedSingleFileSourceLocator($this->fileNodesFetcher, $file);
         }
         foreach ($this->filesByDirectory as $files) {
-            $sourceLocators[] = new OptimizedDirectorySourceLocator($this->fileNodesFetcher, $this->phpVersion, $files);
+            $sourceLocators[] = new \PHPStan\Reflection\BetterReflection\SourceLocator\OptimizedDirectorySourceLocator($this->fileNodesFetcher, $this->phpVersion, $files);
         }
-        $this->aggregateSourceLocator = new AggregateSourceLocator($sourceLocators);
+        $this->aggregateSourceLocator = new \PHPStan\BetterReflection\SourceLocator\Type\AggregateSourceLocator($sourceLocators);
         return $this->aggregateSourceLocator;
     }
     /**
@@ -77,7 +74,6 @@ final class DynamicSourceLocatorProvider implements SourceLocatorProviderInterfa
      */
     public function addFilesByDirectory(string $directory, array $files) : void
     {
-        Assert::allString($files);
         $this->filesByDirectory[$directory] = $files;
     }
 }

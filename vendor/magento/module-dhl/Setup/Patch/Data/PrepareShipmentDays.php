@@ -6,13 +6,17 @@
 
 namespace Magento\Dhl\Setup\Patch\Data;
 
-use Magento\Framework\Console\Cli;
 use Magento\Framework\Locale\Bundle\DataBundle;
 use Magento\Framework\Locale\ResolverInterface;
+use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Setup\Patch\PatchVersionInterface;
 
+/**
+ * Class PrepareShipmentDays
+ * @package Magento\Dhl\Setup\Patch
+ */
 class PrepareShipmentDays implements DataPatchInterface, PatchVersionInterface
 {
     /**
@@ -32,14 +36,14 @@ class PrepareShipmentDays implements DataPatchInterface, PatchVersionInterface
      */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
-        ResolverInterface $localeResolver
+        \Magento\Framework\Locale\ResolverInterface $localeResolver
     ) {
         $this->moduleDataSetup = $moduleDataSetup;
         $this->localeResolver = $localeResolver;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function apply()
     {
@@ -58,7 +62,7 @@ class PrepareShipmentDays implements DataPatchInterface, PatchVersionInterface
             $row = [
                 'value' => implode(
                     ',',
-                    array_intersect_key(iterator_to_array($days), array_flip(explode(',', $configRow['value'] ?? '')))
+                    array_intersect_key(iterator_to_array($days), array_flip(explode(',', $configRow['value'])))
                 )
             ];
             $this->moduleDataSetup->getConnection()->update(
@@ -67,12 +71,10 @@ class PrepareShipmentDays implements DataPatchInterface, PatchVersionInterface
                 ['config_id = ?' => $configRow['config_id']]
             );
         }
-
-        return Cli::RETURN_SUCCESS;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function getDependencies()
     {
@@ -80,7 +82,7 @@ class PrepareShipmentDays implements DataPatchInterface, PatchVersionInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public static function getVersion()
     {
@@ -88,7 +90,7 @@ class PrepareShipmentDays implements DataPatchInterface, PatchVersionInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getAliases()
     {

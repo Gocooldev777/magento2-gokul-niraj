@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/grid/cells/multiselect.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<label class=\"data-grid-checkbox-cell-inner\">\n    <input class=\"admin__control-checkbox\" type=\"checkbox\" data-action=\"select-row\"\n        data-bind=\"\n            staticChecked: $col.selected,\n            disable: $col.disabled.indexOf($row()[$col.indexField]) != -1 ,\n            checkedValue: $row()[$col.indexField],\n            attr: {\n                id: index + 'check' + $row()[$col.indexField]\n            }\"/>\n    <label attr=\"for: index + 'check' + $row()[$col.indexField]\"></label>\n</label>\n"}
+}});

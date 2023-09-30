@@ -29,7 +29,6 @@ class MethodScopeUnitTest extends AbstractSniffUnitTest
             6  => 1,
             30 => 1,
             39 => 1,
-            46 => 1,
         ];
 
     }//end getErrorList()

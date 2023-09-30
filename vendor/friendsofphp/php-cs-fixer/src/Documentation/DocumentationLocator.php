@@ -23,7 +23,10 @@ use PhpCsFixer\Utils;
  */
 final class DocumentationLocator
 {
-    private string $path;
+    /**
+     * @var string
+     */
+    private $path;
 
     public function __construct()
     {

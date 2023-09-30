@@ -79,16 +79,6 @@ foreach ($orders as $orderData) {
     $messageModel->setMessage('Gift Message Text');
     $message->save($messageModel);
 
-    /** @var MessageResource $productMessage */
-    $productMessage = $objectManager->create(MessageResource::class);
-    /** @var Message $productMessageModel */
-    $productMessageModel = $objectManager->create(Message::class);
-
-    $productMessageModel->setSender('Jack');
-    $productMessageModel->setRecipient('Luci');
-    $productMessageModel->setMessage('Good Job!');
-    $productMessage->save($productMessageModel);
-
     /** @var Order\Item $orderItem */
     $orderItem = $objectManager->create(Order\Item::class);
     $orderItem->setProductId($product->getId())
@@ -96,8 +86,7 @@ foreach ($orders as $orderData) {
         ->setBasePrice($product->getPrice())
         ->setPrice($product->getPrice())
         ->setRowTotal($product->getPrice())
-        ->setProductType('simple')
-        ->setGiftMessageId($productMessageModel->getId());
+        ->setProductType('simple');
 
     $order
         ->setData($orderData)

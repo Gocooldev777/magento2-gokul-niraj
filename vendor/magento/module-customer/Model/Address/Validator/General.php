@@ -8,10 +8,6 @@ namespace Magento\Customer\Model\Address\Validator;
 use Magento\Customer\Api\AddressMetadataInterface;
 use Magento\Customer\Model\Address\AbstractAddress;
 use Magento\Customer\Model\Address\ValidatorInterface;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Validator\NotEmpty;
-use Magento\Framework\Validator\ValidateException;
-use Magento\Framework\Validator\ValidatorChain;
 
 /**
  * Address general fields validator.
@@ -58,24 +54,24 @@ class General implements ValidatorInterface
      *
      * @param AbstractAddress $address
      * @return array
-     * @throws ValidateException
+     * @throws \Zend_Validate_Exception
      */
     private function checkRequiredFields(AbstractAddress $address)
     {
         $errors = [];
-        if (!ValidatorChain::is($address->getFirstname(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($address->getFirstname(), 'NotEmpty')) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'firstname']);
         }
 
-        if (!ValidatorChain::is($address->getLastname(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($address->getLastname(), 'NotEmpty')) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'lastname']);
         }
 
-        if (!ValidatorChain::is($address->getStreetLine(1), NotEmpty::class)) {
+        if (!\Zend_Validate::is($address->getStreetLine(1), 'NotEmpty')) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'street']);
         }
 
-        if (!ValidatorChain::is($address->getCity(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($address->getCity(), 'NotEmpty')) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'city']);
         }
 
@@ -87,33 +83,34 @@ class General implements ValidatorInterface
      *
      * @param AbstractAddress $address
      * @return array
-     * @throws LocalizedException|ValidateException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Zend_Validate_Exception
      */
     private function checkOptionalFields(AbstractAddress $address)
     {
         $this->reloadAddressAttributes($address);
         $errors = [];
         if ($this->isTelephoneRequired()
-            && !ValidatorChain::is($address->getTelephone(), NotEmpty::class)
+            && !\Zend_Validate::is($address->getTelephone(), 'NotEmpty')
         ) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'telephone']);
         }
 
         if ($this->isFaxRequired()
-            && !ValidatorChain::is($address->getFax(), NotEmpty::class)
+            && !\Zend_Validate::is($address->getFax(), 'NotEmpty')
         ) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'fax']);
         }
 
         if ($this->isCompanyRequired()
-            && !ValidatorChain::is($address->getCompany(), NotEmpty::class)
+            && !\Zend_Validate::is($address->getCompany(), 'NotEmpty')
         ) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'company']);
         }
 
         $havingOptionalZip = $this->directoryData->getCountriesWithOptionalZip();
         if (!in_array($address->getCountryId(), $havingOptionalZip)
-            && !ValidatorChain::is($address->getPostcode(), NotEmpty::class)
+            && !\Zend_Validate::is($address->getPostcode(), 'NotEmpty')
         ) {
             $errors[] = __('"%fieldName" is required. Enter and try again.', ['fieldName' => 'postcode']);
         }
@@ -125,7 +122,7 @@ class General implements ValidatorInterface
      * Check if company field required in configuration.
      *
      * @return bool
-     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function isCompanyRequired()
     {
@@ -136,7 +133,7 @@ class General implements ValidatorInterface
      * Check if telephone field required in configuration.
      *
      * @return bool
-     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function isTelephoneRequired()
     {
@@ -147,7 +144,7 @@ class General implements ValidatorInterface
      * Check if fax field required in configuration.
      *
      * @return bool
-     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     private function isFaxRequired()
     {

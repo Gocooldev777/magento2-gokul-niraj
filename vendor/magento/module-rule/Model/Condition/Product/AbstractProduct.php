@@ -15,7 +15,6 @@ use Magento\Framework\App\ObjectManager;
  * phpcs:disable Magento2.Classes.AbstractApi
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * phpcs:disable Magento2.Classes.AbstractApi
  * @api
  * @since 100.0.2
  */
@@ -516,7 +515,7 @@ abstract class AbstractProduct extends \Magento\Rule\Model\Condition\AbstractCon
             ) ? $this->_localeFormat->getNumber(
                 $arr['is_value_parsed']
             ) : false;
-        } elseif (!empty($arr['operator']) && in_array($arr['operator'], ['()', '!()', true])) {
+        } elseif (!empty($arr['operator']) && $arr['operator'] == '()') {
             if (isset($arr['value'])) {
                 $arr['value'] = preg_replace('/\s*,\s*/', ',', $arr['value']);
             }
@@ -554,7 +553,7 @@ abstract class AbstractProduct extends \Magento\Rule\Model\Condition\AbstractCon
 
             if ($attr && $attr->getFrontendInput() == 'multiselect') {
                 $value = $model->getData($attrCode);
-                $value = ($value && strlen($value)) ? explode(',', $value) : [];
+                $value = strlen($value) ? explode(',', $value) : [];
                 return $this->validateAttribute($value);
             }
 
@@ -570,7 +569,7 @@ abstract class AbstractProduct extends \Magento\Rule\Model\Condition\AbstractCon
                 if ($attr && $attr->getBackendType() == 'datetime') {
                     $value = strtotime($value);
                 } elseif ($attr && $attr->getFrontendInput() == 'multiselect') {
-                    $value = ($value && strlen($value)) ? explode(',', $value) : [];
+                    $value = strlen($value) ? explode(',', $value) : [];
                 }
 
                 $model->setData($attrCode, $value);

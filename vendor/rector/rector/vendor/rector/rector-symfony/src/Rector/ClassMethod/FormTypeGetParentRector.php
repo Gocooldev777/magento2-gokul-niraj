@@ -4,7 +4,6 @@ declare (strict_types=1);
 namespace Rector\Symfony\Rector\ClassMethod;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -17,20 +16,19 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Symfony\Tests\Rector\ClassMethod\FormTypeGetParentRector\FormTypeGetParentRectorTest
  */
-final class FormTypeGetParentRector extends AbstractRector
+final class FormTypeGetParentRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @readonly
      * @var \Rector\Symfony\FormHelper\FormTypeStringToTypeProvider
      */
     private $formTypeStringToTypeProvider;
-    public function __construct(FormTypeStringToTypeProvider $formTypeStringToTypeProvider)
+    public function __construct(\Rector\Symfony\FormHelper\FormTypeStringToTypeProvider $formTypeStringToTypeProvider)
     {
         $this->formTypeStringToTypeProvider = $formTypeStringToTypeProvider;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Turns string Form Type references to their CONSTANT alternatives in `getParent()` and `getExtendedType()` methods in Form in Symfony', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns string Form Type references to their CONSTANT alternatives in `getParent()` and `getExtendedType()` methods in Form in Symfony', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use Symfony\Component\Form\AbstractType;
 
 class SomeType extends AbstractType
@@ -52,7 +50,7 @@ class SomeType extends AbstractType
     }
 }
 CODE_SAMPLE
-), new CodeSample(<<<'CODE_SAMPLE'
+), new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use Symfony\Component\Form\AbstractTypeExtension;
 
 class SomeExtension extends AbstractTypeExtension
@@ -81,24 +79,24 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (!$this->isClassAndMethodMatch($node)) {
             return null;
         }
-        $this->traverseNodesWithCallable((array) $node->stmts, function (Node $node) : ?Node {
-            if (!$node instanceof Return_) {
+        $this->traverseNodesWithCallable((array) $node->stmts, function (\PhpParser\Node $node) : ?Node {
+            if (!$node instanceof \PhpParser\Node\Stmt\Return_) {
                 return null;
             }
-            if (!$node->expr instanceof Expr) {
+            if ($node->expr === null) {
                 return null;
             }
-            if (!$node->expr instanceof String_) {
+            if (!$node->expr instanceof \PhpParser\Node\Scalar\String_) {
                 return null;
             }
             $this->replaceStringWIthFormTypeClassConstIfFound($node->expr->value, $node);
@@ -106,21 +104,21 @@ CODE_SAMPLE
         });
         return null;
     }
-    private function isClassAndMethodMatch(ClassMethod $classMethod) : bool
+    private function isClassAndMethodMatch(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
     {
-        $class = $this->betterNodeFinder->findParentType($classMethod, Class_::class);
-        if (!$class instanceof Class_) {
+        $class = $this->betterNodeFinder->findParentType($classMethod, \PhpParser\Node\Stmt\Class_::class);
+        if (!$class instanceof \PhpParser\Node\Stmt\Class_) {
             return \false;
         }
-        if ($this->isName($classMethod->name, 'getParent')) {
-            return $this->isObjectType($class, new ObjectType('Symfony\\Component\\Form\\AbstractType'));
+        if ($this->isObjectType($class, new \PHPStan\Type\ObjectType('Symfony\\Component\\Form\\AbstractType'))) {
+            return $this->isName($classMethod->name, 'getParent');
         }
-        if ($this->isName($classMethod->name, 'getExtendedType')) {
-            return $this->isObjectType($classMethod, new ObjectType('Symfony\\Component\\Form\\AbstractTypeExtension'));
+        if ($this->isObjectType($classMethod, new \PHPStan\Type\ObjectType('Symfony\\Component\\Form\\AbstractTypeExtension'))) {
+            return $this->isName($classMethod->name, 'getExtendedType');
         }
         return \false;
     }
-    private function replaceStringWIthFormTypeClassConstIfFound(string $stringValue, Return_ $return) : void
+    private function replaceStringWIthFormTypeClassConstIfFound(string $stringValue, \PhpParser\Node\Stmt\Return_ $return) : void
     {
         $formClass = $this->formTypeStringToTypeProvider->matchClassForNameWithPrefix($stringValue);
         if ($formClass === null) {

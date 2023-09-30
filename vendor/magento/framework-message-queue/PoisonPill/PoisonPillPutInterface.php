@@ -9,7 +9,6 @@ namespace Magento\Framework\MessageQueue\PoisonPill;
 
 /**
  * Command interface describes how to create new version on poison pill.
- * @api
  */
 interface PoisonPillPutInterface
 {

@@ -8,25 +8,22 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Extension;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Extension;
 
-use RectorPrefix202304\Symfony\Component\Config\Definition\ConfigurationInterface;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Processor;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Container;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\BadMethodCallException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\LogicException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Processor;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Container;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\BadMethodCallException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException;
 /**
  * Provides useful features shared by many extensions.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-abstract class Extension implements ExtensionInterface, ConfigurationExtensionInterface
+abstract class Extension implements \RectorPrefix20211221\Symfony\Component\DependencyInjection\Extension\ExtensionInterface, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Extension\ConfigurationExtensionInterface
 {
-    /**
-     * @var mixed[]
-     */
     private $processedConfigs = [];
     /**
      * {@inheritdoc}
@@ -58,24 +55,26 @@ abstract class Extension implements ExtensionInterface, ConfigurationExtensionIn
      *
      * This can be overridden in a sub-class to specify the alias manually.
      *
+     * @return string
+     *
      * @throws BadMethodCallException When the extension name does not follow conventions
      */
-    public function getAlias() : string
+    public function getAlias()
     {
         $className = static::class;
         if (\substr_compare($className, 'Extension', -\strlen('Extension')) !== 0) {
-            throw new BadMethodCallException('This extension does not follow the naming convention; you must overwrite the getAlias() method.');
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\BadMethodCallException('This extension does not follow the naming convention; you must overwrite the getAlias() method.');
         }
         $classBaseName = \substr(\strrchr($className, '\\'), 1, -9);
-        return Container::underscore($classBaseName);
+        return \RectorPrefix20211221\Symfony\Component\DependencyInjection\Container::underscore($classBaseName);
     }
     /**
      * {@inheritdoc}
      */
-    public function getConfiguration(array $config, ContainerBuilder $container)
+    public function getConfiguration(array $config, \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
         $class = static::class;
-        if (\strpos($class, "\x00") !== \false) {
+        if (\strpos($class, "\0") !== \false) {
             return null;
             // ignore anonymous classes
         }
@@ -84,17 +83,17 @@ abstract class Extension implements ExtensionInterface, ConfigurationExtensionIn
         if (!$class) {
             return null;
         }
-        if (!$class->implementsInterface(ConfigurationInterface::class)) {
-            throw new LogicException(\sprintf('The extension configuration class "%s" must implement "%s".', $class->getName(), ConfigurationInterface::class));
+        if (!$class->implementsInterface(\RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface::class)) {
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException(\sprintf('The extension configuration class "%s" must implement "%s".', $class->getName(), \RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface::class));
         }
         if (!($constructor = $class->getConstructor()) || !$constructor->getNumberOfRequiredParameters()) {
             return $class->newInstance();
         }
         return null;
     }
-    protected final function processConfiguration(ConfigurationInterface $configuration, array $configs) : array
+    protected final function processConfiguration(\RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface $configuration, array $configs) : array
     {
-        $processor = new Processor();
+        $processor = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Processor();
         return $this->processedConfigs[] = $processor->processConfiguration($configuration, $configs);
     }
     /**
@@ -109,12 +108,14 @@ abstract class Extension implements ExtensionInterface, ConfigurationExtensionIn
         }
     }
     /**
+     * @return bool
+     *
      * @throws InvalidArgumentException When the config is not enableable
      */
-    protected function isConfigEnabled(ContainerBuilder $container, array $config) : bool
+    protected function isConfigEnabled(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, array $config)
     {
         if (!\array_key_exists('enabled', $config)) {
-            throw new InvalidArgumentException("The config array has no 'enabled' key.");
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException("The config array has no 'enabled' key.");
         }
         return (bool) $container->getParameterBag()->resolveValue($config['enabled']);
     }

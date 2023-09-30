@@ -51,11 +51,11 @@ class Token extends \Magento\Framework\Model\AbstractModel
     /**#@+
      * Token types
      */
-    public const TYPE_REQUEST = 'request';
+    const TYPE_REQUEST = 'request';
 
-    public const TYPE_ACCESS = 'access';
+    const TYPE_ACCESS = 'access';
 
-    public const TYPE_VERIFIER = 'verifier';
+    const TYPE_VERIFIER = 'verifier';
 
     /**#@- */
 

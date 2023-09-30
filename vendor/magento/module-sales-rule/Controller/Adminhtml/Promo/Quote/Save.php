@@ -8,7 +8,6 @@ namespace Magento\SalesRule\Controller\Adminhtml\Promo\Quote;
 
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Request\DataPersistorInterface;
-use Magento\Framework\Filter\FilterInput;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 /**
@@ -22,7 +21,7 @@ class Save extends \Magento\SalesRule\Controller\Adminhtml\Promo\Quote implement
      * @var TimezoneInterface
      */
     private $timezone;
-
+    
     /**
      * @var DataPersistorInterface
      */
@@ -64,9 +63,6 @@ class Save extends \Magento\SalesRule\Controller\Adminhtml\Promo\Quote implement
     {
         $data = $this->getRequest()->getPostValue();
         if ($data) {
-            $data['simple_free_shipping'] = ($data['simple_free_shipping'] === '')
-                    ? null : $data['simple_free_shipping'];
-
             try {
                 /** @var $model \Magento\SalesRule\Model\Rule */
                 $model = $this->_objectManager->create(\Magento\SalesRule\Model\Rule::class);
@@ -82,7 +78,7 @@ class Save extends \Magento\SalesRule\Controller\Adminhtml\Promo\Quote implement
                 if ($this->getRequest()->getParam('to_date')) {
                     $filterValues['to_date'] = $this->_dateFilter;
                 }
-                $inputFilter = new FilterInput(
+                $inputFilter = new \Zend_Filter_Input(
                     $filterValues,
                     [],
                     $data

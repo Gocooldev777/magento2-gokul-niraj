@@ -8,7 +8,7 @@ namespace Magento\Bundle\Model\Option;
 
 use Magento\Framework\Validator\NotEmpty;
 use Magento\Framework\Validator\NotEmptyFactory;
-use Magento\Framework\Validator\ValidateException;
+use Zend_Validate_Exception;
 
 class Validator extends \Magento\Framework\Validator\AbstractValidator
 {
@@ -31,7 +31,7 @@ class Validator extends \Magento\Framework\Validator\AbstractValidator
      * @param \Magento\Bundle\Model\Option $value
      *
      * @return boolean
-     * @throws ValidateException
+     * @throws Zend_Validate_Exception If validation of $value is impossible
      */
     public function isValid($value)
     {
@@ -46,7 +46,7 @@ class Validator extends \Magento\Framework\Validator\AbstractValidator
      * @param \Magento\Bundle\Model\Option $value
      *
      * @return void
-     * @throws \Exception|ValidateException
+     * @throws \Exception|Zend_Validate_Exception
      */
     protected function validateRequiredFields($value)
     {

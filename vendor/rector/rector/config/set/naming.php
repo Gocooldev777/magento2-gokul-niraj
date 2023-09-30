@@ -1,20 +1,21 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
 use Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector;
 use Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
 use Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector;
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->rule(RenameParamToMatchTypeRector::class);
-    $rectorConfig->rule(RenamePropertyToMatchTypeRector::class);
-    $rectorConfig->rule(RenameVariableToMatchNewTypeRector::class);
-    $rectorConfig->rule(RenameVariableToMatchMethodCallReturnTypeRector::class);
-    $rectorConfig->rule(RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class);
-    $rectorConfig->rule(RenameForeachValueVariableToMatchExprVariableRector::class);
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector::class);
+    $services->set(\Rector\Naming\Rector\Class_\RenamePropertyToMatchTypeRector::class);
+    $services->set(\Rector\Naming\Rector\ClassMethod\RenameVariableToMatchNewTypeRector::class);
+    $services->set(\Rector\Naming\Rector\Assign\RenameVariableToMatchMethodCallReturnTypeRector::class);
+    $services->set(\Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class);
+    $services->set(\Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableRector::class);
 };

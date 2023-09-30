@@ -12,10 +12,8 @@ use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Customer\Model\Address as AddressModel;
 use Magento\Customer\Model\Address\DataProvider;
-use Magento\Customer\Model\AddressRegistry;
 use Magento\Customer\Model\AttributeMetadataResolver;
 use Magento\Customer\Model\FileUploaderDataResolver;
-use Magento\Customer\Model\ResourceModel\Address\Attribute\Collection;
 use Magento\Customer\Model\ResourceModel\Address\Collection as AddressCollection;
 use Magento\Customer\Model\ResourceModel\Address\CollectionFactory;
 use Magento\Eav\Model\Config;
@@ -84,11 +82,6 @@ class DataProviderTest extends TestCase
      * @var DataProvider
      */
     private $model;
-
-    /**
-     * @var AddressRegistry|MockObject
-     */
-    private $addressRegistry;
 
     /**
      * @inheritdoc
@@ -169,8 +162,6 @@ class DataProviderTest extends TestCase
                     ]
                 ]
             );
-
-        $this->addressRegistry = $this->createMock(AddressRegistry::class);
         $this->model = $objectManagerHelper->getObject(
             DataProvider::class,
             [
@@ -185,8 +176,7 @@ class DataProviderTest extends TestCase
                 'attributeMetadataResolver' => $this->attributeMetadataResolver,
                 [],
                 [],
-                true,
-                'addressRegistry' => $this->addressRegistry
+                true
             ]
         );
     }
@@ -299,17 +289,9 @@ class DataProviderTest extends TestCase
                 ->willReturn($typeAddressMock);
         }
 
-        $attributesCollectionMock = $this->getMockBuilder(Collection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getIterator'])
-            ->getMockForAbstractClass();
-
-        $attributesCollectionMock->method('getIterator')
-            ->willReturn(new \ArrayIterator($attributesCollection));
-
         $typeAddressMock->expects($this->once())
             ->method('getAttributeCollection')
-            ->willReturn($attributesCollectionMock);
+            ->willReturn($attributesCollection);
 
         return $typeAddressMock;
     }
@@ -343,7 +325,7 @@ class DataProviderTest extends TestCase
             $attributeCode .= $options[self::ATTRIBUTE_CODE]['specific_code_prefix'];
         }
 
-        $attributeMock->expects($this->exactly(3))
+        $attributeMock->expects($this->exactly(2))
             ->method('getAttributeCode')
             ->willReturn($attributeCode);
 
@@ -367,7 +349,7 @@ class DataProviderTest extends TestCase
             $booleanAttributeCode .= $options['test-code-boolean']['specific_code_prefix'];
         }
 
-        $attributeBooleanMock->expects($this->exactly(3))
+        $attributeBooleanMock->expects($this->exactly(2))
             ->method('getAttributeCode')
             ->willReturn($booleanAttributeCode);
 

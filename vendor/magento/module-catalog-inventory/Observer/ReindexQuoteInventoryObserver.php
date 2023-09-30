@@ -4,58 +4,41 @@
  * See COPYING.txt for license details.
  */
 
-declare(strict_types=1);
-
 namespace Magento\CatalogInventory\Observer;
 
-use Magento\CatalogInventory\Model\Indexer\Stock\Processor as StockProcessor;
-use Magento\Catalog\Model\Indexer\Product\Price\Processor  as PriceProcessor;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Exception\LocalizedException;
-use Psr\Log\LoggerInterface;
 
-/**
- * Responsible for re-indexing stock items after a successful order.
- */
 class ReindexQuoteInventoryObserver implements ObserverInterface
 {
     /**
-     * @var StockProcessor
+     * @var \Magento\CatalogInventory\Model\Indexer\Stock\Processor
      */
-    private StockProcessor $stockIndexerProcessor;
+    protected $stockIndexerProcessor;
 
     /**
-     * @var PriceProcessor
+     * @var \Magento\Catalog\Model\Indexer\Product\Price\Processor
      */
-    private PriceProcessor $priceIndexer;
+    protected $priceIndexer;
 
     /**
-     * @var ItemsForReindex
+     * @var \Magento\CatalogInventory\Observer\ItemsForReindex
      */
-    private ItemsForReindex $itemsForReindex;
+    protected $itemsForReindex;
 
     /**
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
-
-    /**
-     * @param StockProcessor $stockIndexerProcessor
-     * @param PriceProcessor $priceIndexer
+     * @param \Magento\CatalogInventory\Model\Indexer\Stock\Processor $stockIndexerProcessor
+     * @param \Magento\Catalog\Model\Indexer\Product\Price\Processor $priceIndexer
      * @param ItemsForReindex $itemsForReindex
-     * @param LoggerInterface $logger
      */
     public function __construct(
-        StockProcessor $stockIndexerProcessor,
-        PriceProcessor $priceIndexer,
-        ItemsForReindex $itemsForReindex,
-        LoggerInterface $logger
+        \Magento\CatalogInventory\Model\Indexer\Stock\Processor $stockIndexerProcessor,
+        \Magento\Catalog\Model\Indexer\Product\Price\Processor $priceIndexer,
+        ItemsForReindex $itemsForReindex
     ) {
         $this->stockIndexerProcessor = $stockIndexerProcessor;
         $this->priceIndexer = $priceIndexer;
         $this->itemsForReindex = $itemsForReindex;
-        $this->logger = $logger;
     }
 
     /**
@@ -64,43 +47,37 @@ class ReindexQuoteInventoryObserver implements ObserverInterface
      * @param EventObserver $observer
      * @return void
      */
-    public function execute(EventObserver $observer): void
+    public function execute(EventObserver $observer)
     {
-        try {
-            // Reindex quote ids
-            $quote = $observer->getEvent()->getData('quote');
-            $productIds = [];
-            foreach ($quote->getAllItems() as $item) {
-                $productIds[$item->getData('product_id')] = $item->getData('product_id');
-                $children = $item->getData('children_items');
-                if ($children) {
-                    foreach ($children as $childItem) {
-                        $productIds[$childItem->getData('product_id')] = $childItem->getData('product_id');
-                    }
+        // Reindex quote ids
+        $quote = $observer->getEvent()->getQuote();
+        $productIds = [];
+        foreach ($quote->getAllItems() as $item) {
+            $productIds[$item->getProductId()] = $item->getProductId();
+            $children = $item->getChildrenItems();
+            if ($children) {
+                foreach ($children as $childItem) {
+                    $productIds[$childItem->getProductId()] = $childItem->getProductId();
                 }
             }
-
-            if ($productIds) {
-                $this->stockIndexerProcessor->reindexList($productIds);
-            }
-
-            // Reindex previously remembered items
-            $productIds = [];
-            foreach ($this->itemsForReindex->getItems() as $item) {
-                $item->save();
-                $productIds[] = $item->getData('product_id');
-            }
-
-            if (!empty($productIds)) {
-                $this->priceIndexer->reindexList($productIds);
-            }
-
-            $this->itemsForReindex->clear();
-            // Clear list of remembered items - we don't need it anymore
-        } catch (LocalizedException $exception) {
-            $this->logger->error('Error while re-indexing order items: ' . $exception->getLogMessage());
-            $this->stockIndexerProcessor->markIndexerAsInvalid();
-            $this->priceIndexer->markIndexerAsInvalid();
         }
+
+        if ($productIds) {
+            $this->stockIndexerProcessor->reindexList($productIds);
+        }
+
+        // Reindex previously remembered items
+        $productIds = [];
+        foreach ($this->itemsForReindex->getItems() as $item) {
+            $item->save();
+            $productIds[] = $item->getProductId();
+        }
+
+        if (!empty($productIds)) {
+            $this->priceIndexer->reindexList($productIds);
+        }
+
+        $this->itemsForReindex->clear();
+        // Clear list of remembered items - we don't need it anymore
     }
 }

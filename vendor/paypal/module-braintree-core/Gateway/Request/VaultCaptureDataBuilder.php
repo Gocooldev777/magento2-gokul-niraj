@@ -1,13 +1,13 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Request;
 
+use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
-use PayPal\Braintree\Gateway\Helper\SubjectReader;
 
 class VaultCaptureDataBuilder implements BuilderInterface
 {
@@ -19,7 +19,7 @@ class VaultCaptureDataBuilder implements BuilderInterface
     private $subjectReader;
 
     /**
-     * VaultCaptureDataBuilder Constructor
+     * Constructor
      *
      * @param SubjectReader $subjectReader
      */
@@ -40,7 +40,7 @@ class VaultCaptureDataBuilder implements BuilderInterface
 
         return [
             'amount' => $this->formatPrice($this->subjectReader->readAmount($buildSubject)),
-            'paymentMethodToken' => is_null($paymentToken) ?? $paymentToken->getGatewayToken()
+            'paymentMethodToken' => $paymentToken->getGatewayToken()
         ];
     }
 }

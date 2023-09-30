@@ -68,7 +68,22 @@ class ClassDependencyAnalyzer extends AbstractAnalyzer
     /**
      * Hash with all calculated node metrics.
      *
-     * @var array<string, array<string, array<string, int>>>
+     * <code>
+     * array(
+     *     '0375e305-885a-4e91-8b5c-e25bda005438'  =>  array(
+     *         'loc'    =>  42,
+     *         'ncloc'  =>  17,
+     *         'cc'     =>  12
+     *     ),
+     *     'e60c22f0-1a63-4c40-893e-ed3b35b84d0b'  =>  array(
+     *         'loc'    =>  42,
+     *         'ncloc'  =>  17,
+     *         'cc'     =>  12
+     *     )
+     * )
+     * </code>
+     *
+     * @var array<string, array>
      */
     private $nodeMetrics = null;
 
@@ -80,19 +95,21 @@ class ClassDependencyAnalyzer extends AbstractAnalyzer
     /**
      * Nodes in which the current analyzed class is used.
      *
-     * @var array<string, array<int, AbstractASTType>>
+     * @var array<string, array<int, AbstractASTArtifact>>
      */
     private $efferentNodes = array();
 
     /**
      * Nodes that is used by the current analyzed class.
      *
-     * @var array<string, array<int, AbstractASTType>>
+     * @var array<string, array<int, AbstractASTArtifact>>
      */
     private $afferentNodes = array();
 
     /**
      * Processes all {@link ASTNamespace} code nodes.
+     *
+     * @param ASTNamespace[] $namespaces
      *
      * @return void
      */

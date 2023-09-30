@@ -36,7 +36,7 @@ class Tag extends GenericTag
     /**
      * @deprecated Deprecated in 2.3. Use GenericTag::getContent() instead
      *
-     * @return string|null
+     * @return string
      */
     public function getDescription()
     {

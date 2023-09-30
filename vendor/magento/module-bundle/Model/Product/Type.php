@@ -31,7 +31,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
     /**
      * Product type
      */
-    public const TYPE_CODE = 'bundle';
+    const TYPE_CODE = 'bundle';
 
     /**
      * Product is composite
@@ -52,7 +52,6 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
      *
      * @var string
      * @deprecated 100.2.0
-     * @see MAGETWO-71174
      */
     protected $_keySelectionsCollection = '_cache_instance_selections_collection';
 
@@ -92,14 +91,14 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
     protected $_canConfigure = true;
 
     /**
-     * Catalog data helper
+     * Catalog data
      *
      * @var \Magento\Catalog\Helper\Data
      */
     protected $_catalogData = null;
 
     /**
-     * Catalog product helper
+     * Catalog product
      *
      * @var \Magento\Catalog\Helper\Product
      */
@@ -1287,7 +1286,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
     {
         if (!$product->getSkipCheckRequiredOption() && $isStrictProcessMode) {
             foreach ($optionsCollection->getItems() as $option) {
-                if ($option->getRequired() && empty($options[$option->getId()])) {
+                if ($option->getRequired() && !isset($options[$option->getId()])) {
                     throw new \Magento\Framework\Exception\LocalizedException(
                         __('Please select all required options.')
                     );
@@ -1422,7 +1421,6 @@ class Type extends \Magento\Catalog\Model\Product\Type\AbstractType
     /**
      * Get prepared options with selection ids
      *
-     * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      * @param array $options
      * @return array
      */

@@ -14,7 +14,7 @@ use PhpParser\Node\Stmt\Foreach_;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\NodeNameResolver\NodeNameResolver;
-use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
+use RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
 final class ForeachAnalyzer
 {
     /**
@@ -34,7 +34,7 @@ final class ForeachAnalyzer
     private $nodeNameResolver;
     /**
      * @readonly
-     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -42,19 +42,13 @@ final class ForeachAnalyzer
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    /**
-     * @readonly
-     * @var \Rector\CodeQuality\NodeAnalyzer\VariableNameUsedNextAnalyzer
-     */
-    private $variableNameUsedNextAnalyzer;
-    public function __construct(NodeComparator $nodeComparator, \Rector\CodeQuality\NodeAnalyzer\ForAnalyzer $forAnalyzer, NodeNameResolver $nodeNameResolver, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, BetterNodeFinder $betterNodeFinder, \Rector\CodeQuality\NodeAnalyzer\VariableNameUsedNextAnalyzer $variableNameUsedNextAnalyzer)
+    public function __construct(\Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator, \Rector\CodeQuality\NodeAnalyzer\ForAnalyzer $forAnalyzer, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser $simpleCallableNodeTraverser, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
     {
         $this->nodeComparator = $nodeComparator;
         $this->forAnalyzer = $forAnalyzer;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
         $this->betterNodeFinder = $betterNodeFinder;
-        $this->variableNameUsedNextAnalyzer = $variableNameUsedNextAnalyzer;
     }
     /**
      * Matches$
@@ -62,22 +56,22 @@ final class ForeachAnalyzer
      *      <$assigns[]> = $value;
      * }
      */
-    public function matchAssignItemsOnlyForeachArrayVariable(Foreach_ $foreach) : ?Expr
+    public function matchAssignItemsOnlyForeachArrayVariable(\PhpParser\Node\Stmt\Foreach_ $foreach) : ?\PhpParser\Node\Expr
     {
         if (\count($foreach->stmts) !== 1) {
             return null;
         }
         $onlyStatement = $foreach->stmts[0];
-        if ($onlyStatement instanceof Expression) {
+        if ($onlyStatement instanceof \PhpParser\Node\Stmt\Expression) {
             $onlyStatement = $onlyStatement->expr;
         }
-        if (!$onlyStatement instanceof Assign) {
+        if (!$onlyStatement instanceof \PhpParser\Node\Expr\Assign) {
             return null;
         }
-        if (!$onlyStatement->var instanceof ArrayDimFetch) {
+        if (!$onlyStatement->var instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
             return null;
         }
-        if ($onlyStatement->var->dim instanceof Expr) {
+        if ($onlyStatement->var->dim !== null) {
             return null;
         }
         if (!$this->nodeComparator->areNodesEqual($foreach->valueVar, $onlyStatement->expr)) {
@@ -88,10 +82,10 @@ final class ForeachAnalyzer
     /**
      * @param Stmt[] $stmts
      */
-    public function useForeachVariableInStmts(Expr $foreachedValue, Expr $singleValue, array $stmts, string $keyValueName) : void
+    public function useForeachVariableInStmts(\PhpParser\Node\Expr $foreachedValue, \PhpParser\Node\Expr $singleValue, array $stmts, string $keyValueName) : void
     {
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($stmts, function (Node $node) use($foreachedValue, $singleValue, $keyValueName) : ?Expr {
-            if (!$node instanceof ArrayDimFetch) {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($stmts, function (\PhpParser\Node $node) use($foreachedValue, $singleValue, $keyValueName) : ?Expr {
+            if (!$node instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
                 return null;
             }
             // must be the same as foreach value
@@ -102,7 +96,7 @@ final class ForeachAnalyzer
                 return null;
             }
             // is dim same as key value name, ...[$i]
-            if (!$node->dim instanceof Variable) {
+            if (!$node->dim instanceof \PhpParser\Node\Expr\Variable) {
                 return null;
             }
             if (!$this->nodeNameResolver->isName($node->dim, $keyValueName)) {
@@ -111,10 +105,10 @@ final class ForeachAnalyzer
             return $singleValue;
         });
     }
-    public function isValueVarUsed(Foreach_ $foreach, string $singularValueVarName) : bool
+    public function isValueVarUsed(\PhpParser\Node\Stmt\Foreach_ $foreach, string $singularValueVarName) : bool
     {
-        $isUsedInStmts = (bool) $this->betterNodeFinder->findFirst($foreach->stmts, function (Node $node) use($singularValueVarName) : bool {
-            if (!$node instanceof Variable) {
+        $isUsedInStmts = (bool) $this->betterNodeFinder->findFirst($foreach->stmts, function (\PhpParser\Node $node) use($singularValueVarName) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
                 return \false;
             }
             return $this->nodeNameResolver->isName($node, $singularValueVarName);
@@ -122,9 +116,11 @@ final class ForeachAnalyzer
         if ($isUsedInStmts) {
             return \true;
         }
-        if ($this->variableNameUsedNextAnalyzer->isValueVarUsedNext($foreach, $singularValueVarName)) {
-            return \true;
-        }
-        return $this->variableNameUsedNextAnalyzer->isValueVarUsedNext($foreach, (string) $this->nodeNameResolver->getName($foreach->valueVar));
+        return (bool) $this->betterNodeFinder->findFirstNext($foreach, function (\PhpParser\Node $node) use($singularValueVarName) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
+                return \false;
+            }
+            return $this->nodeNameResolver->isName($node, $singularValueVarName);
+        });
     }
 }

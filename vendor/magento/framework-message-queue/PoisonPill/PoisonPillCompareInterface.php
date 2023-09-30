@@ -9,7 +9,6 @@ namespace Magento\Framework\MessageQueue\PoisonPill;
 
 /**
  * Interface describes how to compare given version of poison pill with latest in DB.
- * @api
  */
 interface PoisonPillCompareInterface
 {

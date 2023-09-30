@@ -8,57 +8,61 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 /**
  * Reads #[Autoconfigure] attributes on definitions that are autoconfigured
  * and don't have the "container.ignore_attributes" tag.
  *
  * @author Nicolas Grekas <p@tchwork.com>
  */
-final class RegisterAutoconfigureAttributesPass implements CompilerPassInterface
+final class RegisterAutoconfigureAttributesPass implements \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface
 {
     private static $registerForAutoconfiguration;
     /**
      * {@inheritdoc}
      */
-    public function process(ContainerBuilder $container)
+    public function process(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
+        if (80000 > \PHP_VERSION_ID) {
+            return;
+        }
         foreach ($container->getDefinitions() as $id => $definition) {
             if ($this->accept($definition) && ($class = $container->getReflectionClass($definition->getClass(), \false))) {
                 $this->processClass($container, $class);
             }
         }
     }
-    public function accept(Definition $definition) : bool
+    public function accept(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition) : bool
     {
-        return $definition->isAutoconfigured() && !$definition->hasTag('container.ignore_attributes');
+        return 80000 <= \PHP_VERSION_ID && $definition->isAutoconfigured() && !$definition->hasTag('container.ignore_attributes');
     }
-    public function processClass(ContainerBuilder $container, \ReflectionClass $class)
+    public function processClass(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, \ReflectionClass $class)
     {
-        foreach (\method_exists($class, 'getAttributes') ? $class->getAttributes(Autoconfigure::class, \ReflectionAttribute::IS_INSTANCEOF) : [] as $attribute) {
+        foreach (\method_exists($class, 'getAttributes') ? $class->getAttributes(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\Autoconfigure::class, \ReflectionAttribute::IS_INSTANCEOF) : [] as $attribute) {
             self::registerForAutoconfiguration($container, $class, $attribute);
         }
     }
-    private static function registerForAutoconfiguration(ContainerBuilder $container, \ReflectionClass $class, \ReflectionAttribute $attribute)
+    private static function registerForAutoconfiguration(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, \ReflectionClass $class, \ReflectionAttribute $attribute)
     {
         if (self::$registerForAutoconfiguration) {
             return (self::$registerForAutoconfiguration)($container, $class, $attribute);
         }
-        $parseDefinitions = new \ReflectionMethod(YamlFileLoader::class, 'parseDefinitions');
+        $parseDefinitions = new \ReflectionMethod(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\YamlFileLoader::class, 'parseDefinitions');
+        $parseDefinitions->setAccessible(\true);
         $yamlLoader = $parseDefinitions->getDeclaringClass()->newInstanceWithoutConstructor();
-        self::$registerForAutoconfiguration = static function (ContainerBuilder $container, \ReflectionClass $class, \ReflectionAttribute $attribute) use($parseDefinitions, $yamlLoader) {
+        self::$registerForAutoconfiguration = static function (\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, \ReflectionClass $class, \ReflectionAttribute $attribute) use($parseDefinitions, $yamlLoader) {
             $attribute = (array) $attribute->newInstance();
             foreach ($attribute['tags'] ?? [] as $i => $tag) {
                 if (\is_array($tag) && [0] === \array_keys($tag)) {
                     $attribute['tags'][$i] = [$class->name => $tag[0]];
                 }
             }
-            $parseDefinitions->invoke($yamlLoader, ['services' => ['_instanceof' => [$class->name => [$container->registerForAutoconfiguration($class->name)] + $attribute]]], $class->getFileName(), \false);
+            $parseDefinitions->invoke($yamlLoader, ['services' => ['_instanceof' => [$class->name => [$container->registerForAutoconfiguration($class->name)] + $attribute]]], $class->getFileName());
         };
         return (self::$registerForAutoconfiguration)($container, $class, $attribute);
     }

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Test layout declaration and usage of block elements
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -68,7 +70,7 @@ class BlocksTest extends \PHPUnit\Framework\TestCase
                             )
                         );
                     } else {
-                        $this->markTestSkipped(
+                        $this->markTestIncomplete(
                             "Element with alias '{$alias}' is used as a block in file '{$file}' " .
                             "via getChildBlock() method." .
                             " It's impossible to determine explicitly whether the element is a block or a container, " .

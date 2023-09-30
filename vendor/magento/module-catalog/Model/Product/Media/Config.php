@@ -19,6 +19,8 @@ use Magento\Store\Model\StoreManagerInterface;
 class Config implements ConfigInterface
 {
     /**
+     * Store manager
+     *
      * @var StoreManagerInterface
      */
     protected $storeManager;
@@ -168,7 +170,7 @@ class Config implements ConfigInterface
      */
     protected function _prepareFile($file)
     {
-        return $file === null ? '' : ltrim(str_replace('\\', '/', $file), '/');
+        return ltrim(str_replace('\\', '/', $file), '/');
     }
 
     /**

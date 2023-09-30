@@ -201,8 +201,8 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
     {
         $data = $this->getFilterData()->getData();
         foreach ($data as $key => $value) {
-            if (is_array($value) && count($value) === 1) {
-                $data[$key] = explode(',', reset($value));
+            if (is_array($value) && isset($value[0])) {
+                $data[$key] = explode(',', $value[0]);
             }
         }
         $this->getForm()->addValues($data);

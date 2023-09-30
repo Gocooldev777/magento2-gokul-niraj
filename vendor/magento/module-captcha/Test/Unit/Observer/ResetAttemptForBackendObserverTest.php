@@ -51,6 +51,6 @@ class ResetAttemptForBackendObserverTest extends TestCase
             ResetAttemptForBackendObserver::class,
             ['resLogFactory' => $resLogFactoryMock]
         );
-        $observer->execute($eventObserverMock);
+        $this->assertInstanceOf(Log::class, $observer->execute($eventObserverMock));
     }
 }

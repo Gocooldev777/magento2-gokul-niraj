@@ -9,7 +9,7 @@ declare (strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\SebastianBergmann\Diff;
+namespace RectorPrefix20211221\SebastianBergmann\Diff;
 
 final class Chunk
 {
@@ -30,7 +30,7 @@ final class Chunk
      */
     private $endRange;
     /**
-     * @var mixed[]
+     * @var Line[]
      */
     private $lines;
     public function __construct(int $start = 0, int $startRange = 1, int $end = 0, int $endRange = 1, array $lines = [])
@@ -58,20 +58,20 @@ final class Chunk
         return $this->endRange;
     }
     /**
-     * @psalm-return list<Line>
+     * @return Line[]
      */
     public function getLines() : array
     {
         return $this->lines;
     }
     /**
-     * @psalm-param list<Line> $lines
+     * @param Line[] $lines
      */
     public function setLines(array $lines) : void
     {
         foreach ($lines as $line) {
-            if (!$line instanceof Line) {
-                throw new InvalidArgumentException();
+            if (!$line instanceof \RectorPrefix20211221\SebastianBergmann\Diff\Line) {
+                throw new \RectorPrefix20211221\SebastianBergmann\Diff\InvalidArgumentException();
             }
         }
         $this->lines = $lines;

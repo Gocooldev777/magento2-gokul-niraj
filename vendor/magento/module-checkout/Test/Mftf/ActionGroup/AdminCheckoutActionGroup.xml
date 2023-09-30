@@ -14,9 +14,9 @@
             <description>Selects the Billing Method "Check / Money order" on the Admin 'Create New Order for' page.</description>
         </annotations>
 
-        <waitForPageLoad stepKey="waitForLoadingMask"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForLoadingMask"/>
         <waitForPageLoad stepKey="waitForPageLoad"/>
         <conditionalClick selector="{{AdminCheckoutPaymentSection.checkBillingMethodByName('Check / Money order')}}" dependentSelector="{{AdminCheckoutPaymentSection.checkBillingMethodByName('Check / Money order')}}" visible="true" stepKey="selectCheckmoBillingMethod"/>
-        <waitForPageLoad stepKey="waitForLoadingMaskAfterBillingMethodSelection"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForLoadingMaskAfterBillingMethodSelection"/>
     </actionGroup>
 </actionGroups>

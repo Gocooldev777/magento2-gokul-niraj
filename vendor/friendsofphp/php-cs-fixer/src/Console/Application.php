@@ -39,10 +39,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class Application extends BaseApplication
 {
-    public const VERSION = '3.14.2';
-    public const VERSION_CODENAME = 'Oliva';
+    public const VERSION = '3.3.1';
+    public const VERSION_CODENAME = 'Trinacria';
 
-    private ToolInfo $toolInfo;
+    /**
+     * @var ToolInfo
+     */
+    private $toolInfo;
 
     public function __construct()
     {
@@ -116,20 +119,19 @@ final class Application extends BaseApplication
      */
     public function getLongVersion(): string
     {
-        $commit = '@git-commit@';
-        $versionCommit = '';
+        $version = implode('', [
+            parent::getLongVersion(),
+            self::VERSION_CODENAME ? sprintf(' <info>%s</info>', self::VERSION_CODENAME) : '', // @phpstan-ignore-line to avoid `Ternary operator condition is always true|false.`
+            ' by <comment>Fabien Potencier</comment> and <comment>Dariusz Ruminski</comment>',
+        ]);
 
-        if ('@'.'git-commit@' !== $commit) { /** @phpstan-ignore-line as `$commit` is replaced during phar building */
-            $versionCommit = substr($commit, 0, 7);
+        $commit = '@git-commit@';
+
+        if ('@'.'git-commit@' !== $commit) { // @phpstan-ignore-line as `$commit` is replaced during phar building
+            $version .= ' ('.substr($commit, 0, 7).')';
         }
 
-        return implode('', [
-            parent::getLongVersion(),
-            $versionCommit ? sprintf(' <info>(%s)</info>', $versionCommit) : '', // @phpstan-ignore-line to avoid `Ternary operator condition is always true|false.`
-            self::VERSION_CODENAME ? sprintf(' <info>%s</info>', self::VERSION_CODENAME) : '', // @phpstan-ignore-line to avoid `Ternary operator condition is always true|false.`
-            ' by <comment>Fabien Potencier</comment> and <comment>Dariusz Ruminski</comment>.',
-            "\nPHP runtime: <info>".PHP_VERSION.'</info>',
-        ]);
+        return $version;
     }
 
     /**

@@ -12,7 +12,6 @@ use Magento\Framework\View\LayoutInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\Helper\Xpath;
 use PHPUnit\Framework\TestCase;
-use Magento\Customer\ViewModel\LoginButton;
 
 /**
  * Class checks login form view
@@ -49,7 +48,6 @@ class LoginTest extends TestCase
         $this->layout = $this->objectManager->get(LayoutInterface::class);
         $this->block = $this->layout->createBlock(Login::class);
         $this->block->setTemplate('Magento_Customer::form/login.phtml');
-        $this->block->setLoginButtonViewModel($this->objectManager->get(LoginButton::class));
 
         parent::setUp();
     }

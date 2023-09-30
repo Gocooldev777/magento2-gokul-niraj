@@ -76,19 +76,17 @@ var config = {
             'jquery-ui-modules/progressbar': 'jquery/ui-modules/widgets/progressbar',
             'jquery-ui-modules/resizable': 'jquery/ui-modules/widgets/resizable',
             'jquery-ui-modules/selectable': 'jquery/ui-modules/widgets/selectable',
-            'jquery-ui-modules/selectmenu': 'jquery/ui-modules/widgets/selectmenu',
-            'jquery-ui-modules/slider': 'jquery/ui-modules/widgets/slider',
+            'jquery-ui-modules/slider': 'jquery/ui-modules/widgets/selectmenu',
             'jquery-ui-modules/sortable': 'jquery/ui-modules/widgets/sortable',
             'jquery-ui-modules/spinner': 'jquery/ui-modules/widgets/spinner',
             'jquery-ui-modules/tabs': 'jquery/ui-modules/widgets/tabs',
             'jquery-ui-modules/tooltip': 'jquery/ui-modules/widgets/tooltip',
             'jquery-ui-modules/widget': 'jquery/ui-modules/widget',
-            'jquery-ui-modules/timepicker': 'jquery/timepicker',
-            'vimeo': 'vimeo/player',
-            'vimeoWrapper': 'vimeo/vimeo-wrapper'
+            'jquery-ui-modules/timepicker': 'jquery/timepicker'
         }
     },
     shim: {
+        'jquery/jquery-migrate': ['jquery'],
         'mage/adminhtml/backup': ['prototype'],
         'mage/captcha': ['prototype'],
         'mage/new-gallery': ['jquery'],
@@ -96,22 +94,22 @@ var config = {
         'matchMedia': {
             'exports': 'mediaCheck'
         },
-        'magnifier/magnifier': ['jquery'],
-        'vimeo/player': {
-            'exports': 'Player'
-        }
+        'magnifier/magnifier': ['jquery']
     },
     paths: {
         'jquery/validate': 'jquery/jquery.validate',
         'jquery/file-uploader': 'jquery/fileUploader/jquery.fileuploader',
         'prototype': 'legacy-build.min',
-        'jquery/jquery-storageapi': 'js-storage/storage-wrapper',
+        'jquery/jquery-storageapi': 'jquery/jquery.storageapi.min',
         'text': 'mage/requirejs/text',
         'domReady': 'requirejs/domReady',
         'spectrum': 'jquery/spectrum/spectrum',
         'tinycolor': 'jquery/spectrum/tinycolor',
         'jquery-ui-modules': 'jquery/ui-modules'
     },
+    deps: [
+        'jquery/jquery-migrate'
+    ],
     config: {
         text: {
             'headers': {
@@ -220,6 +218,13 @@ var config = {
         'mage/backend/bootstrap',
         'mage/adminhtml/globals'
     ],
+    config: {
+        mixins: {
+            'jquery/jquery-ui': {
+                'jquery/patches/jquery-ui-sortable': true
+            }
+        }
+    },
     'paths': {
         'jquery/ui': 'jquery/jquery-ui'
     }
@@ -237,23 +242,6 @@ var config = {
     map: {
         '*': {
             'mediaUploader':  'Magento_Backend/js/media-uploader'
-        }
-    }
-};
-
-require.config(config);
-})();
-(function() {
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-
-var config = {
-    map: {
-        '*': {
-            rolesTree: 'Magento_User/js/roles-tree',
-            deleteUserAccount: 'Magento_User/js/delete-user-account'
         }
     }
 };
@@ -291,11 +279,16 @@ var config = {
 require.config(config);
 })();
 (function() {
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
 var config = {
     map: {
         '*': {
-            loadIcons: 'Magento_AdminAdobeIms/js/loadicons',
-            adobeImsReauth: 'Magento_AdminAdobeIms/js/adobe-ims-reauth'
+            rolesTree: 'Magento_User/js/roles-tree',
+            deleteUserAccount: 'Magento_User/js/delete-user-account'
         }
     }
 };
@@ -312,39 +305,6 @@ var config = {
     map: {
         '*': {
             folderTree: 'Magento_Cms/js/folder-tree'
-        }
-    }
-};
-
-require.config(config);
-})();
-(function() {
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-
-var config = {
-    map: {
-        '*': {
-            escaper: 'Magento_Security/js/escaper'
-        }
-    }
-};
-
-require.config(config);
-})();
-(function() {
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-
-var config = {
-    map: {
-        '*': {
-            popupWindow:            'mage/popup-window',
-            confirmRedirect:        'Magento_Security/js/confirm-redirect'
         }
     }
 };
@@ -418,7 +378,24 @@ require.config(config);
 var config = {
     map: {
         '*': {
-            integration: 'Magento_Integration/js/integration'
+            escaper: 'Magento_Security/js/escaper'
+        }
+    }
+};
+
+require.config(config);
+})();
+(function() {
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+var config = {
+    map: {
+        '*': {
+            popupWindow:            'mage/popup-window',
+            confirmRedirect:        'Magento_Security/js/confirm-redirect'
         }
     }
 };
@@ -450,7 +427,69 @@ require.config(config);
 var config = {
     map: {
         '*': {
+            integration: 'Magento_Integration/js/integration'
+        }
+    }
+};
+
+require.config(config);
+})();
+(function() {
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+var config = {
+    paths: {
+        'jquery/jquery-storageapi': 'Magento_Cookie/js/jquery.storageapi.extended'
+    }
+};
+
+require.config(config);
+})();
+(function() {
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+var config = {
+    map: {
+        '*': {
             testConnection: 'Magento_AdvancedSearch/js/testconnection'
+        }
+    }
+};
+
+require.config(config);
+})();
+(function() {
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+var config = {
+    map: {
+        '*': {
+            groupedProduct: 'Magento_GroupedProduct/js/grouped-product'
+        }
+    }
+};
+
+require.config(config);
+})();
+(function() {
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+var config = {
+    map: {
+        '*': {
+            fptAttribute: 'Magento_Weee/js/fpt-attribute'
         }
     }
 };
@@ -467,7 +506,6 @@ var config = {
     deps: [],
     shim: {
         'chartjs/chartjs-adapter-moment': ['moment'],
-        'chartjs/es6-shim.min': {},
         'tiny_mce_5/tinymce.min': {
             exports: 'tinyMCE'
         }
@@ -490,22 +528,6 @@ var config = {
             'chart.js':     'chartjs/Chart.min',
             tinymce:        'tiny_mce_5/tinymce.min',
             wysiwygAdapter: 'mage/adminhtml/wysiwyg/tiny_mce/tinymce5Adapter'
-        }
-    }
-};
-
-require.config(config);
-})();
-(function() {
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-
-var config = {
-    map: {
-        '*': {
-            groupedProduct: 'Magento_GroupedProduct/js/grouped-product'
         }
     }
 };
@@ -721,15 +743,11 @@ var config = {
 require.config(config);
 })();
 (function() {
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-
 var config = {
     map: {
         '*': {
-            fptAttribute: 'Magento_Weee/js/fpt-attribute'
+            loadIcons: 'Magento_AdminAdobeIms/js/loadicons',
+            adobeImsReauth: 'Magento_AdminAdobeIms/js/adobe-ims-reauth'
         }
     }
 };
@@ -744,20 +762,20 @@ require.config(config);
 var config = {
     map: {
         '*': {
-            braintree: 'https://js.braintreegateway.com/web/3.88.1/js/client.min.js',
+            braintree: 'https://js.braintreegateway.com/web/3.79.1/js/client.min.js',
         }
     },
 
     paths: {
-        "braintreePayPalCheckout": "https://js.braintreegateway.com/web/3.88.1/js/paypal-checkout.min",
-        "braintreeHostedFields": "https://js.braintreegateway.com/web/3.88.1/js/hosted-fields.min",
-        "braintreeDataCollector": "https://js.braintreegateway.com/web/3.88.1/js/data-collector.min",
-        "braintreeThreeDSecure": "https://js.braintreegateway.com/web/3.88.1/js/three-d-secure.min",
-        "braintreeApplePay": 'https://js.braintreegateway.com/web/3.88.1/js/apple-pay.min',
-        "braintreeGooglePay": 'https://js.braintreegateway.com/web/3.88.1/js/google-payment.min',
-        "braintreeVenmo": 'https://js.braintreegateway.com/web/3.88.1/js/venmo.min',
-        "braintreeAch": "https://js.braintreegateway.com/web/3.88.1/js/us-bank-account.min",
-        "braintreeLpm": "https://js.braintreegateway.com/web/3.88.1/js/local-payment.min",
+        "braintreePayPalCheckout": "https://js.braintreegateway.com/web/3.79.1/js/paypal-checkout.min",
+        "braintreeHostedFields": "https://js.braintreegateway.com/web/3.79.1/js/hosted-fields.min",
+        "braintreeDataCollector": "https://js.braintreegateway.com/web/3.79.1/js/data-collector.min",
+        "braintreeThreeDSecure": "https://js.braintreegateway.com/web/3.79.1/js/three-d-secure.min",
+        "braintreeApplePay": 'https://js.braintreegateway.com/web/3.79.1/js/apple-pay.min',
+        "braintreeGooglePay": 'https://js.braintreegateway.com/web/3.79.1/js/google-payment.min',
+        "braintreeVenmo": 'https://js.braintreegateway.com/web/3.79.1/js/venmo.min',
+        "braintreeAch": "https://js.braintreegateway.com/web/3.79.1/js/us-bank-account.min",
+        "braintreeLpm": "https://js.braintreegateway.com/web/3.79.1/js/local-payment.min",
         "googlePayLibrary": "https://pay.google.com/gp/p/js/pay",
         "braintreePayPalInContextCheckout": "https://www.paypalobjects.com/api/checkout"
     }

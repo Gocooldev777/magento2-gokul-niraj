@@ -1,5 +1,7 @@
 <?php
 /**
+ * Resolves file/directory paths to modules they belong to
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -8,9 +10,6 @@ namespace Magento\Framework\Module\Dir;
 use Magento\Framework\Module\Dir;
 use Magento\Framework\Module\ModuleListInterface;
 
-/**
- * Resolves file/directory paths to modules they belong to
- */
 class ReverseResolver
 {
     /**
@@ -41,7 +40,7 @@ class ReverseResolver
      */
     public function getModuleName($path)
     {
-        $path = $path !== null ? str_replace('\\', '/', $path) : '';
+        $path = str_replace('\\', '/', $path);
         foreach ($this->_moduleList->getNames() as $moduleName) {
             $moduleDir = $this->_moduleDirs->getDir($moduleName);
             $moduleDir = str_replace('\\', '/', $moduleDir);

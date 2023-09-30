@@ -1,49 +1,40 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
 use PhpParser\Node;
 use PhpParser\PrettyPrinter\Standard;
-use RectorPrefix202304\Tracy\Dumper;
-if (!\function_exists('dump_with_depth')) {
-    /**
-     * @param mixed $value
-     */
-    function dump_with_depth($value, int $depth = 2) : void
-    {
-        Dumper::dump($value, [Dumper::DEPTH => $depth]);
-    }
-}
+use RectorPrefix20211221\Tracy\Dumper;
 if (!\function_exists('dn')) {
-    function dn(Node $node, int $depth = 2) : void
+    function dn(\PhpParser\Node $node, int $depth = 2) : void
     {
-        \RectorPrefix202304\dump_node($node, $depth);
+        \RectorPrefix20211221\dump_node($node, $depth);
     }
 }
 if (!\function_exists('dump_node')) {
     /**
-     * @param \PhpParser\Node|mixed[] $node
+     * @param mixed[]|\PhpParser\Node $node
      */
     function dump_node($node, int $depth = 2) : void
     {
         $nodes = \is_array($node) ? $node : [$node];
         foreach ($nodes as $node) {
-            Dumper::dump($node, [Dumper::DEPTH => $depth]);
+            \RectorPrefix20211221\Tracy\Dumper::dump($node, [\RectorPrefix20211221\Tracy\Dumper::DEPTH => $depth]);
         }
     }
 }
 if (!\function_exists('print_node')) {
     /**
-     * @param \PhpParser\Node|mixed[] $node
+     * @param mixed[]|\PhpParser\Node $node
      */
     function print_node($node) : void
     {
-        $standard = new Standard();
+        $standard = new \PhpParser\PrettyPrinter\Standard();
         $nodes = \is_array($node) ? $node : [$node];
         foreach ($nodes as $node) {
             $printedContent = $standard->prettyPrint([$node]);
-            Dumper::dump($printedContent);
+            \RectorPrefix20211221\Tracy\Dumper::dump($printedContent);
         }
     }
 }

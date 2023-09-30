@@ -3,11 +3,12 @@
 declare (strict_types=1);
 namespace Rector\Core\PhpParser\Parser;
 
-use RectorPrefix202304\Nette\Utils\FileSystem;
 use PhpParser\Node\Stmt;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NodeConnectingVisitor;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
-use Rector\Core\PhpParser\NodeTraverser\NodeConnectingTraverser;
+use RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem;
 final class SimplePhpParser
 {
     /**
@@ -17,22 +18,21 @@ final class SimplePhpParser
     private $phpParser;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\NodeTraverser\NodeConnectingTraverser
+     * @var \Symplify\SmartFileSystem\SmartFileSystem
      */
-    private $nodeConnectingTraverser;
-    public function __construct(NodeConnectingTraverser $nodeConnectingTraverser)
+    private $smartFileSystem;
+    public function __construct(\RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem $smartFileSystem)
     {
-        $this->nodeConnectingTraverser = $nodeConnectingTraverser;
-        $parserFactory = new ParserFactory();
-        $this->phpParser = $parserFactory->create(ParserFactory::PREFER_PHP7);
+        $this->smartFileSystem = $smartFileSystem;
+        $parserFactory = new \PhpParser\ParserFactory();
+        $this->phpParser = $parserFactory->create(\PhpParser\ParserFactory::PREFER_PHP7);
     }
     /**
-     * @api tests
      * @return Stmt[]
      */
     public function parseFile(string $filePath) : array
     {
-        $fileContent = FileSystem::read($filePath);
+        $fileContent = $this->smartFileSystem->readFile($filePath);
         return $this->parseString($fileContent);
     }
     /**
@@ -44,6 +44,8 @@ final class SimplePhpParser
         if ($stmts === null) {
             return [];
         }
-        return $this->nodeConnectingTraverser->traverse($stmts);
+        $nodeTraverser = new \PhpParser\NodeTraverser();
+        $nodeTraverser->addVisitor(new \PhpParser\NodeVisitor\NodeConnectingVisitor());
+        return $nodeTraverser->traverse($stmts);
     }
 }

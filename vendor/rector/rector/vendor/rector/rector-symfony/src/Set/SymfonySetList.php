@@ -4,23 +4,12 @@ declare (strict_types=1);
 namespace Rector\Symfony\Set;
 
 use Rector\Set\Contract\SetListInterface;
-/**
- * @api
- */
-final class SymfonySetList implements SetListInterface
+final class SymfonySetList implements \Rector\Set\Contract\SetListInterface
 {
     /**
      * @var string
      */
-    public const SYMFONY_25 = __DIR__ . '/../../config/sets/symfony/symfony25.php';
-    /**
-     * @var string
-     */
     public const SYMFONY_26 = __DIR__ . '/../../config/sets/symfony/symfony26.php';
-    /**
-     * @var string
-     */
-    public const SYMFONY_27 = __DIR__ . '/../../config/sets/symfony/symfony27.php';
     /**
      * @var string
      */
@@ -97,14 +86,6 @@ final class SymfonySetList implements SetListInterface
      * @var string
      */
     public const SYMFONY_60 = __DIR__ . '/../../config/sets/symfony/symfony60.php';
-    /**
-     * @var string
-     */
-    public const SYMFONY_61 = __DIR__ . '/../../config/sets/symfony/symfony61.php';
-    /**
-     * @var string
-     */
-    public const SYMFONY_62 = __DIR__ . '/../../config/sets/symfony/symfony62.php';
     /**
      * @var string
      */

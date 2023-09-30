@@ -12,8 +12,6 @@ use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Thrown when coupon codes requests limit is reached.
- *
- * @api
  */
 class CodeRequestLimitException extends LocalizedException
 {

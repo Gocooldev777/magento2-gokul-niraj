@@ -29,9 +29,11 @@ class TaxClassProcessor
     /**
      * Tax attribute code.
      */
-    public const ATRR_CODE = 'tax_class_id';
+    const ATRR_CODE = 'tax_class_id';
 
     /**
+     * Tax classes.
+     *
      * @var array
      */
     protected $taxClasses;
@@ -112,7 +114,7 @@ class TaxClassProcessor
      */
     public function upsertTaxClass($taxClassName, AbstractType $productTypeModel)
     {
-        $normalizedTaxClassName = $taxClassName !== null ? mb_strtolower($taxClassName) : '';
+        $normalizedTaxClassName = mb_strtolower($taxClassName);
 
         if ($normalizedTaxClassName === (string) self::CLASS_NONE_ID) {
             $normalizedTaxClassName = self::CLASS_NONE_NAME;

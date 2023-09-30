@@ -12,8 +12,6 @@ use Magento\Framework\Pricing\SaleableInterface;
 
 /**
  * Provides product prices
- *
- * @api
  */
 interface ProviderInterface
 {

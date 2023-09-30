@@ -115,13 +115,3 @@ $b = new class()
         return $This;
     }
 }
-
-enum MyEnum {
-    private function notStatic () {
-        $this->doSomething();
-    }
-
-    public static function myFunc() {
-        $this->doSomething();
-    }
-}

@@ -20,12 +20,12 @@ class AddComment extends \Magento\Sales\Controller\Adminhtml\Order implements Ht
      *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'Magento_Sales::comment';
+    const ADMIN_RESOURCE = 'Magento_Sales::comment';
 
     /**
      * ACL resource needed to send comment email notification
      */
-    public const ADMIN_SALES_EMAIL_RESOURCE = 'Magento_Sales::emails';
+    const ADMIN_SALES_EMAIL_RESOURCE = 'Magento_Sales::emails';
 
     /**
      * Add order comment action
@@ -52,11 +52,12 @@ class AddComment extends \Magento\Sales\Controller\Adminhtml\Order implements Ht
                     $notify = false;
                 }
 
-                $comment = trim(strip_tags($data['comment']));
-                $history = $order->addStatusHistoryComment($comment, $data['status']);
+                $history = $order->addStatusHistoryComment($data['comment'], $data['status']);
                 $history->setIsVisibleOnFront($visible);
                 $history->setIsCustomerNotified($notify);
                 $history->save();
+
+                $comment = trim(strip_tags($data['comment']));
 
                 $order->save();
                 /** @var OrderCommentSender $orderCommentSender */

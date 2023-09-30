@@ -23,9 +23,8 @@ class AbstractArchive
      */
     protected function _writeFile($destination, $data)
     {
-        $destination = $destination !== null ? trim($destination) : '';
+        $destination = trim($destination);
         if (false === file_put_contents($destination, $data)) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Can't write to file: " . $destination);
         }
         return true;
@@ -61,7 +60,7 @@ class AbstractArchive
      */
     public function getFilename($source, $withExtension = false)
     {
-        $file = $source !== null ? str_replace(dirname($source) . '/', '', $source) : '';
+        $file = str_replace(dirname($source) . '/', '', $source);
         if (!$withExtension) {
             $file = substr($file, 0, strrpos($file, '.'));
         }

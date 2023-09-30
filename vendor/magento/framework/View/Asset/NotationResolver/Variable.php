@@ -16,12 +16,12 @@ class Variable
     /**
      * Regex matching {{placeholders}}
      */
-    public const VAR_REGEX = '/{{([_a-z]*)}}/si';
+    const VAR_REGEX = '/{{([_a-z]*)}}/si';
 
     /**
      * Provides the combined base url and base path from the asset context
      */
-    public const VAR_BASE_URL_PATH = 'base_url_path';
+    const VAR_BASE_URL_PATH = 'base_url_path';
 
     /**
      * @var \Magento\Framework\View\Asset\Repository
@@ -52,7 +52,7 @@ class Variable
                     $replacements[$match[0]] = $this->getPlaceholderValue($match[1]);
                 }
             }
-            $path = $path !== null ? str_replace(array_keys($replacements), $replacements, $path) : '';
+            $path = str_replace(array_keys($replacements), $replacements, $path);
         }
         return $path;
     }

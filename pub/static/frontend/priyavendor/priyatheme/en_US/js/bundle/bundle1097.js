@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Theme/templates/breadcrumbs.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<ul class=\"items\">\n<% _.each(breadcrumbs, function(crumb) { %>\n    <li class=\"item <%- crumb.name %>\">\n        <% if (crumb.link) { %>\n        <a href=\"<%= crumb.link %>\" title=\"<%- crumb.title %>\"><%- crumb.label %></a>\n        <% } else if (crumb.last) { %>\n        <strong><%= crumb.label %></strong>\n        <% } else { %>\n        <%= crumb.label %>\n        <% } %>\n    </li>\n<% }); %>\n</ul>\n"}
+}});

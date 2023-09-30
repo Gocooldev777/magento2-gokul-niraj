@@ -12,7 +12,6 @@ use Magento\Backend\Block\Widget\Grid\Column\Renderer\Currency;
 use Magento\Directory\Model\Currency\DefaultLocator;
 use Magento\Directory\Model\CurrencyFactory;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Currency\Data\Currency as CurrencyData;
 use Magento\Framework\DataObject;
 use Magento\Framework\Locale\CurrencyInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
@@ -124,7 +123,7 @@ class CurrencyTest extends TestCase
             ->method('getDefaultCurrency')
             ->with($this->_requestMock)
             ->willReturn('defaultCurrency');
-        $currLocaleMock = $this->createMock(CurrencyData::class);
+        $currLocaleMock = $this->createMock(\Zend_Currency::class);
         $currLocaleMock->expects($this->once())
             ->method('toCurrency')
             ->with(15.0000)

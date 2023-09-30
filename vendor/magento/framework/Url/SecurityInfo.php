@@ -1,13 +1,12 @@
 <?php
 /**
+ * Url security information
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Framework\Url;
 
-/**
- * Url security information
- */
 class SecurityInfo implements \Magento\Framework\Url\SecurityInfoInterface
 {
     /**
@@ -19,8 +18,6 @@ class SecurityInfo implements \Magento\Framework\Url\SecurityInfoInterface
 
     /**
      * List of patterns excluded form secure url list
-     *
-     * @var array
      */
     protected $excludedUrlsList = [];
 
@@ -52,12 +49,12 @@ class SecurityInfo implements \Magento\Framework\Url\SecurityInfoInterface
         if (!isset($this->secureUrlsCache[$url])) {
             $this->secureUrlsCache[$url] = false;
             foreach ($this->excludedUrlsList as $match) {
-                if (strpos((string)$url, (string)$match) === 0) {
+                if (strpos($url, (string)$match) === 0) {
                     return $this->secureUrlsCache[$url];
                 }
             }
             foreach ($this->secureUrlsList as $match) {
-                if (strpos((string)$url, (string)$match) === 0) {
+                if (strpos($url, (string)$match) === 0) {
                     $this->secureUrlsCache[$url] = true;
                     break;
                 }

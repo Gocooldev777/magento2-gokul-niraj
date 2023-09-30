@@ -10,8 +10,6 @@ use PhpAmqpLib\Channel\AMQPChannel;
 
 /**
  * Exchange binding installer.
- *
- * @api
  */
 interface BindingInstallerInterface
 {

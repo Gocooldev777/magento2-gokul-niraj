@@ -22,7 +22,6 @@ use Magento\Framework\View\LayoutInterface;
 use Magento\User\Block\Role\Grid\User;
 use Magento\User\Controller\Adminhtml\User\Role\SaveRole;
 use Magento\User\Model\ResourceModel\Role\User\CollectionFactory;
-use Magento\Framework\Escaper;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -83,11 +82,6 @@ class UserTest extends TestCase
      */
     protected $filesystemMock;
 
-    /**
-     * @var Escaper|MockObject
-     */
-    protected $escaperMock;
-
     protected function setUp(): void
     {
         $this->backendHelperMock = $this->getMockBuilder(Data::class)
@@ -129,10 +123,6 @@ class UserTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->escaperMock = $this->getMockBuilder(Escaper::class)
-            ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
-
         $objectManagerHelper = new ObjectManager($this);
         $this->model = $objectManagerHelper->getObject(
             User::class,
@@ -145,8 +135,7 @@ class UserTest extends TestCase
                 'request' => $this->requestInterfaceMock,
                 'urlBuilder' => $this->urlInterfaceMock,
                 'layout' => $this->layoutMock,
-                'filesystem' => $this->filesystemMock,
-                'escaper' => $this->escaperMock
+                'filesystem' => $this->filesystemMock
             ]
         );
     }
@@ -312,16 +301,5 @@ class UserTest extends TestCase
         $paramValue = 'not_JSON';
         $this->requestInterfaceMock->expects($this->once())->method('getParam')->with($param)->willReturn($paramValue);
         $this->assertEquals('{}', $this->model->getUsers(true));
-    }
-
-    /**
-     * @return void
-     */
-    public function testGetUsers(): void
-    {
-        $paramValue = ['1'];
-        $this->requestInterfaceMock->expects($this->once())->method('getParam')
-            ->with('in_role_user')->willReturn($paramValue);
-        $this->assertEquals($paramValue, $this->model->getUsers());
     }
 }

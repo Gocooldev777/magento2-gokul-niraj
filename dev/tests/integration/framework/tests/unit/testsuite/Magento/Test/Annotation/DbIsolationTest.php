@@ -5,11 +5,6 @@
  */
 namespace Magento\Test\Annotation;
 
-use Magento\Framework\ObjectManagerInterface;
-use Magento\TestFramework\Fixture\Parser\DbIsolation;
-use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\MockObject\MockObject;
-
 /**
  * Test class for \Magento\TestFramework\Annotation\DbIsolation.
  *
@@ -24,29 +19,6 @@ class DbIsolationTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp(): void
     {
-        /** @var ObjectManagerInterface|MockObject $objectManager */
-        $objectManager = $this->getMockBuilder(ObjectManagerInterface::class)
-            ->onlyMethods(['get', 'create'])
-            ->disableOriginalConstructor()
-            ->getMockForAbstractClass();
-
-        $sharedInstances = [
-            DbIsolation::class => $this->createConfiguredMock(DbIsolation::class, ['parse' => []])
-        ];
-        $objectManager->method('get')
-            ->willReturnCallback(
-                function (string $type) use ($sharedInstances) {
-                    return $sharedInstances[$type] ?? new $type();
-                }
-            );
-        $objectManager->method('create')
-            ->willReturnCallback(
-                function (string $type, array $arguments = []) {
-                    return new $type(...array_values($arguments));
-                }
-            );
-
-        Bootstrap::setObjectManager($objectManager);
         $this->_object = new \Magento\TestFramework\Annotation\DbIsolation();
     }
 
@@ -94,7 +66,7 @@ class DbIsolationTest extends \PHPUnit\Framework\TestCase
      */
     public function testStartTestTransactionRequestInvalidAnnotation()
     {
-        $this->expectException(\PHPUnit\Framework\Exception::class);
+        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
 
         $this->_object->startTestTransactionRequest($this, new \Magento\TestFramework\Event\Param\Transaction());
     }
@@ -105,7 +77,7 @@ class DbIsolationTest extends \PHPUnit\Framework\TestCase
      */
     public function testStartTestTransactionRequestAmbiguousAnnotation()
     {
-        $this->expectException(\PHPUnit\Framework\Exception::class);
+        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
 
         $this->_object->startTestTransactionRequest($this, new \Magento\TestFramework\Event\Param\Transaction());
     }

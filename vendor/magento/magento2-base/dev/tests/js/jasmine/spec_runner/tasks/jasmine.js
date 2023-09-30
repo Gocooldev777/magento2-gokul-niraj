@@ -67,11 +67,7 @@ function init(config) {
                 /**
                  * @todo rename "helpers" to "specs" (implies overriding grunt-contrib-jasmine code)
                  */
-                helpers: specs,
-                sandboxArgs: {
-                    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-                    defaultViewport: {width: 400, height: 400, hasTouch: true}
-                }
+                helpers: specs
             }
         };
     });

@@ -3,6 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+
 namespace Magento\Framework\View\Design\FileResolution\Fallback;
 
 use Magento\Framework\View\Design\FileResolution\Fallback;
@@ -10,8 +11,6 @@ use Magento\Framework\View\Design\ThemeInterface;
 
 /**
  * Interface for resolvers of view files using fallback rules
- *
- * @api
  */
 interface ResolverInterface
 {

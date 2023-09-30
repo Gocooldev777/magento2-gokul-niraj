@@ -8,9 +8,8 @@ declare(strict_types=1);
 namespace Magento\Framework\Amqp\Test\Unit;
 
 use Magento\Framework\Amqp\Config;
-use Magento\Framework\Amqp\Connection\Factory as ConnectionFactory;
-use Magento\Framework\Amqp\Connection\FactoryOptions;
 use Magento\Framework\App\DeploymentConfig;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -22,9 +21,9 @@ class ConfigTest extends TestCase
     private $deploymentConfigMock;
 
     /**
-     * @var ConnectionFactory
+     * @var ObjectManager
      */
-    private $connectionFactory;
+    private $objectManager;
 
     /**
      * @var Config
@@ -33,12 +32,17 @@ class ConfigTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->objectManager = new ObjectManager($this);
         $this->deploymentConfigMock = $this->getMockBuilder(DeploymentConfig::class)
             ->disableOriginalConstructor()
             ->setMethods(['getConfigData'])
             ->getMock();
-        $this->connectionFactory = $this->createMock(ConnectionFactory::class);
-        $this->amqpConfig = new Config($this->deploymentConfigMock, 'amqp', $this->connectionFactory);
+        $this->amqpConfig = $this->objectManager->getObject(
+            Config::class,
+            [
+                'config' => $this->deploymentConfigMock,
+            ]
+        );
     }
 
     public function testGetNullConfig()
@@ -135,71 +139,5 @@ class ConfigTest extends TestCase
         $this->assertEquals($expectedVirtualHost, $amqpConfig->getValue(Config::VIRTUALHOST));
         $this->assertEquals($expectedSsl, $amqpConfig->getValue(Config::SSL));
         $this->assertEquals('randomValue', $amqpConfig->getValue('randomKey'));
-    }
-
-    /**
-     * @param array $config
-     * @param array $expected
-     * @return void
-     * @dataProvider configDataProvider
-     */
-    public function testCreateConnection(array $config, array $expected): void
-    {
-        $this->deploymentConfigMock->expects($this->once())
-            ->method('getConfigData')
-            ->with(Config::QUEUE_CONFIG)
-            ->willReturn(
-                [
-                    Config::AMQP_CONFIG => $config
-                ]
-            );
-        $this->connectionFactory->expects($this->once())
-            ->method('create')
-            ->with(
-                $this->callback(
-                    function (FactoryOptions $factoryOptions) use ($expected) {
-                        $actual = [];
-                        foreach (array_keys($expected) as $method) {
-                            $actual[$method] = $factoryOptions->$method();
-                        }
-                        return $actual === $expected;
-                    }
-                )
-            );
-        $this->amqpConfig->getChannel();
-    }
-
-    /**
-     * @return array
-     */
-    public function configDataProvider(): array
-    {
-        return [
-            [
-                [
-                    Config::HOST => 'localhost',
-                    Config::PORT => '5672',
-                    Config::USERNAME => 'user',
-                    Config::PASSWORD => 'pass',
-                    Config::VIRTUALHOST => '/',
-                ],
-                [
-                    'isSslEnabled' => false
-                ]
-            ],
-            [
-                [
-                    Config::HOST => 'localhost',
-                    Config::PORT => '5672',
-                    Config::USERNAME => 'user',
-                    Config::PASSWORD => 'pass',
-                    Config::VIRTUALHOST => '/',
-                    Config::SSL => ' true ',
-                ],
-                [
-                    'isSslEnabled' => true
-                ]
-            ]
-        ];
     }
 }

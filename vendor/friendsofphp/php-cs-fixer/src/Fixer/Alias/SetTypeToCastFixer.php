@@ -47,16 +47,6 @@ settype($bar, "null");
 
     /**
      * {@inheritdoc}
-     *
-     * Must run after NoBinaryStringFixer, NoUselessConcatOperatorFixer.
-     */
-    public function getPriority(): int
-    {
-        return 0;
-    }
-
-    /**
-     * {@inheritdoc}
      */
     public function isCandidate(Tokens $tokens): bool
     {
@@ -156,16 +146,13 @@ settype($bar, "null");
             );
 
             if ('null' === $type) {
-                $this->fixSettypeNullCall($tokens, $functionNameIndex, $argumentToken);
+                $this->findSettypeNullCall($tokens, $functionNameIndex, $argumentToken);
             } else {
                 $this->fixSettypeCall($tokens, $functionNameIndex, $argumentToken, new Token($map[$type]));
             }
         }
     }
 
-    /**
-     * @return list<list<int>>
-     */
     private function findSettypeCalls(Tokens $tokens): array
     {
         $candidates = [];
@@ -228,7 +215,7 @@ settype($bar, "null");
         $tokens->removeTrailingWhitespace($functionNameIndex + 6); // 6 = number of inserted tokens -1 for offset correction
     }
 
-    private function fixSettypeNullCall(
+    private function findSettypeNullCall(
         Tokens $tokens,
         int $functionNameIndex,
         Token $argumentToken

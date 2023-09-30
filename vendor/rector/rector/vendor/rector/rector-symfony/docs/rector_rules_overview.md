@@ -1,4 +1,4 @@
-# 83 Rules Overview
+# 52 Rules Overview
 
 ## ActionSuffixRemoverRector
 
@@ -12,6 +12,25 @@ Removes Action suffixes from methods in Symfony Controllers
 -    public function indexAction()
 +    public function index()
      {
+     }
+ }
+```
+
+<br>
+
+## AddFlashRector
+
+Turns long flash adding to short helper method in Controller in Symfony
+
+- class: [`Rector\Symfony\Rector\MethodCall\AddFlashRector`](../src/Rector/MethodCall/AddFlashRector.php)
+
+```diff
+ class SomeController extends Controller
+ {
+     public function some(Request $request)
+     {
+-        $request->getSession()->getFlashBag()->add("success", "something");
++        $this->addFlash("success", "something");
      }
  }
 ```
@@ -38,61 +57,6 @@ Add response content to response code assert, so it is easier to debug
 +            $response->getContent()
          );
      }
- }
-```
-
-<br>
-
-## AddRouteAnnotationRector
-
-Collect routes from Symfony project router and add Route annotation to controller action
-
-- class: [`Rector\Symfony\Rector\ClassMethod\AddRouteAnnotationRector`](../src/Rector/ClassMethod/AddRouteAnnotationRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-+use Symfony\Component\Routing\Annotation\Route;
-
- final class SomeController extends AbstractController
- {
-+    /**
-+     * @Route(name="homepage", path="/welcome")
-+     */
-     public function index()
-     {
-     }
- }
-```
-
-<br>
-
-## AddViolationToBuildViolationRector
-
-Change `$context->addViolationAt` to `$context->buildViolation` on Validator ExecutionContext
-
-- class: [`Rector\Symfony\Rector\MethodCall\AddViolationToBuildViolationRector`](../src/Rector/MethodCall/AddViolationToBuildViolationRector.php)
-
-```diff
--$context->addViolationAt('property', 'The value {{ value }} is invalid.', array(
--    '{{ value }}' => $invalidValue,
--));
-+$context->buildViolation('The value {{ value }} is invalid.')
-+    ->atPath('property')
-+    ->setParameter('{{ value }}', $invalidValue)
-+    ->addViolation();
-```
-
-<br>
-
-## AuthorizationCheckerIsGrantedExtractorRector
-
-Change `$this->authorizationChecker->isGranted([$a, $b])` to `$this->authorizationChecker->isGranted($a) || $this->authorizationChecker->isGranted($b)`
-
-- class: [`Rector\Symfony\Rector\MethodCall\AuthorizationCheckerIsGrantedExtractorRector`](../src/Rector/MethodCall/AuthorizationCheckerIsGrantedExtractorRector.php)
-
-```diff
--if ($this->authorizationChecker->isGranted(['ROLE_USER', 'ROLE_ADMIN'])) {
-+if ($this->authorizationChecker->isGranted('ROLE_USER') || $this->authorizationChecker->isGranted('ROLE_ADMIN')) {
  }
 ```
 
@@ -185,18 +149,17 @@ Change XML loader to YAML in Bundle Extension
 - class: [`Rector\Symfony\Rector\Class_\ChangeFileLoaderInExtensionAndKernelRector`](../src/Rector/Class_/ChangeFileLoaderInExtensionAndKernelRector.php)
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-use Rector\Config\RectorConfig;
 use Rector\Symfony\Rector\Class_\ChangeFileLoaderInExtensionAndKernelRector;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
-return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->ruleWithConfiguration(ChangeFileLoaderInExtensionAndKernelRector::class, [
-        ChangeFileLoaderInExtensionAndKernelRector::FROM => 'xml',
-        ChangeFileLoaderInExtensionAndKernelRector::TO => 'yaml',
-    ]);
+return static function (ContainerConfigurator $containerConfigurator): void {
+    $services = $containerConfigurator->services();
+
+    $services->set(ChangeFileLoaderInExtensionAndKernelRector::class)
+        ->configure([
+            ChangeFileLoaderInExtensionAndKernelRector::FROM => 'xml',
+            ChangeFileLoaderInExtensionAndKernelRector::TO => 'yaml',
+        ]);
 };
 ```
 
@@ -250,68 +213,6 @@ Change type in CollectionType from alias string to class reference
 +            'type' => \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class,
          ]);
      }
- }
-```
-
-<br>
-
-## CommandConstantReturnCodeRector
-
-Changes int return from execute to use Symfony Command constants.
-
-- class: [`Rector\Symfony\Rector\ClassMethod\CommandConstantReturnCodeRector`](../src/Rector/ClassMethod/CommandConstantReturnCodeRector.php)
-
-```diff
- class SomeCommand extends Command
- {
-     protected function execute(InputInterface $input, OutputInterface $output): int
-     {
--        return 0;
-+        return \Symfony\Component\Console\Command\Command::SUCCESS;
-     }
-
- }
-```
-
-<br>
-
-## CommandDescriptionToPropertyRector
-
-Symfony Command description setters are moved to properties
-
-- class: [`Rector\Symfony\Rector\Class_\CommandDescriptionToPropertyRector`](../src/Rector/Class_/CommandDescriptionToPropertyRector.php)
-
-```diff
- use Symfony\Component\Console\Command\Command
-
- final class SunshineCommand extends Command
- {
-     protected static $defaultName = 'sunshine';
-+    protected static $defaultDescription = 'sunshine description';
-     public function configure()
-     {
--        $this->setDescription('sunshine description');
-     }
- }
-```
-
-<br>
-
-## CommandPropertyToAttributeRector
-
-Add `Symfony\Component\Console\Attribute\AsCommand` to Symfony Commands and remove the deprecated properties
-
-- class: [`Rector\Symfony\Rector\Class_\CommandPropertyToAttributeRector`](../src/Rector/Class_/CommandPropertyToAttributeRector.php)
-
-```diff
-+use Symfony\Component\Console\Attribute\AsCommand;
- use Symfony\Component\Console\Command\Command;
-
-+#[AsCommand('sunshine')]
- final class SunshineCommand extends Command
- {
--    /** @var string|null */
--    public static $defaultName = 'sunshine';
  }
 ```
 
@@ -386,28 +287,6 @@ Turns old default value to parameter in `ContainerBuilder->build()` method in DI
 
 <br>
 
-## ContainerGetNameToTypeInTestsRector
-
-Change `$container->get("some_name")` to bare type, useful since Symfony 3.4
-
-- class: [`Rector\Symfony\Rector\Closure\ContainerGetNameToTypeInTestsRector`](../src/Rector/Closure/ContainerGetNameToTypeInTestsRector.php)
-
-```diff
- use PHPUnit\Framework\TestCase;
-
- final class SomeTest extends TestCase
- {
-     public function run()
-     {
-         $container = $this->getContainer();
--        $someClass = $container->get('some_name');
-+        $someClass = $container->get(SomeType::class);
-     }
- }
-```
-
-<br>
-
 ## ContainerGetToConstructorInjectionRector
 
 Turns fetching of dependencies via `$container->get()` in ContainerAware to constructor injection in Command and Controller in Symfony
@@ -429,37 +308,6 @@ Turns fetching of dependencies via `$container->get()` in ContainerAware to cons
 -        $this->container->get('some_service');
 +        $this->someService;
 +        $this->someService;
-     }
- }
-```
-
-<br>
-
-## ContainerGetToRequiredDependencyAbstractClassRector
-
-Change `$this->get("some_service");` to `@required` dependency in an abstract class
-
-- class: [`Rector\Symfony\Rector\Class_\ContainerGetToRequiredDependencyAbstractClassRector`](../src/Rector/Class_/ContainerGetToRequiredDependencyAbstractClassRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
- abstract class CustomAbstractController extends AbstractController
- {
-+    private SomeService $someService;
-+
-+    /**
-+     * @required
-+     */
-+    public function autowire(SomeService $someService)
-+    {
-+        $this->someService = $someService;
-+    }
-+
-     public function run()
-     {
--        $this->get('some_service')->apply();
-+        $this->someService->apply();
      }
  }
 ```
@@ -488,25 +336,6 @@ Migrates from deprecated `Definition/Alias->setPrivate()` to `Definition/Alias->
 -        $alias->setPrivate(false);
 +        $alias->setPublic(true);
      }
- }
-```
-
-<br>
-
-## ErrorNamesPropertyToConstantRector
-
-Turns old Constraint::$errorNames properties to use Constraint::ERROR_NAMES instead
-
-- class: [`Rector\Symfony\Rector\StaticPropertyFetch\ErrorNamesPropertyToConstantRector`](../src/Rector/StaticPropertyFetch/ErrorNamesPropertyToConstantRector.php)
-
-```diff
- use Symfony\Component\Validator\Constraints\NotBlank;
-
- class SomeClass
- {
--    NotBlank::$errorNames
-+    NotBlank::ERROR_NAMES
-
  }
 ```
 
@@ -628,90 +457,39 @@ Changes createForm(new FormType), add(new FormType) to ones with "FormType::clas
 - class: [`Rector\Symfony\Rector\MethodCall\FormTypeInstanceToClassConstRector`](../src/Rector/MethodCall/FormTypeInstanceToClassConstRector.php)
 
 ```diff
- use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-
- final class SomeController extends Controller
+ class SomeController
  {
      public function action()
      {
--        $form = $this->createForm(new TeamType);
-+        $form = $this->createForm(TeamType::class);
+-        $form = $this->createForm(new TeamType, $entity);
++        $form = $this->createForm(TeamType::class, $entity);
      }
  }
 ```
 
 <br>
 
-## FormTypeWithDependencyToOptionsRector
+## GetParameterToConstructorInjectionRector
 
-Move constructor dependency from form type class to an `$options` parameter
+Turns fetching of parameters via `getParameter()` in ContainerAware to constructor injection in Command and Controller in Symfony
 
-- class: [`Rector\Symfony\Rector\Class_\FormTypeWithDependencyToOptionsRector`](../src/Rector/Class_/FormTypeWithDependencyToOptionsRector.php)
+- class: [`Rector\Symfony\Rector\MethodCall\GetParameterToConstructorInjectionRector`](../src/Rector/MethodCall/GetParameterToConstructorInjectionRector.php)
 
 ```diff
- use Symfony\Component\Form\AbstractType;
- use Symfony\Component\Form\Extension\Core\Type\TextType;
- use Symfony\Component\Form\FormBuilderInterface;
-
- final class FormTypeWithDependency extends AbstractType
+-class MyCommand extends ContainerAwareCommand
++class MyCommand extends Command
  {
--    private Agent $agent;
--
--    public function __construct(Agent $agent)
-+    public function buildForm(FormBuilderInterface $builder, array $options): void
-     {
--        $this->agent = $agent;
--    }
-+        $agent = $options['agent'];
-
--    public function buildForm(FormBuilderInterface $builder, array $options): void
--    {
--        if ($this->agent) {
-+        if ($agent) {
-             $builder->add('agent', TextType::class);
-         }
-     }
- }
-```
-
-<br>
-
-## GetCurrencyBundleMethodCallsToIntlRector
-
-Intl static bundle method were changed to direct static calls
-
-- class: [`Rector\Symfony\Rector\MethodCall\GetCurrencyBundleMethodCallsToIntlRector`](../src/Rector/MethodCall/GetCurrencyBundleMethodCallsToIntlRector.php)
-
-```diff
--$currencyBundle = \Symfony\Component\Intl\Intl::getCurrencyBundle();
--
--$currencyNames = $currencyBundle->getCurrencyNames();
-+$currencyNames = \Symfony\Component\Intl\Currencies::getNames();
-```
-
-<br>
-
-## GetHelperControllerToServiceRector
-
-Replace `$this->getDoctrine()` and `$this->dispatchMessage()` calls in AbstractController with direct service use
-
-- class: [`Rector\Symfony\Rector\MethodCall\GetHelperControllerToServiceRector`](../src/Rector/MethodCall/GetHelperControllerToServiceRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-+use Doctrine\Persistence\ManagerRegistry;
-
- final class SomeController extends AbstractController
- {
-+    public function __construct(
-+        private ManagerRegistry $managerRegistry
-+    ) {
++    private $someParameter;
++
++    public function __construct($someParameter)
++    {
++        $this->someParameter = $someParameter;
 +    }
 +
-     public function run()
+     public function someMethod()
      {
--        $productRepository = $this->getDoctrine()->getRepository(Product::class);
-+        $productRepository = $this->managerRegistry->getRepository(Product::class);
+-        $this->getParameter('someParameter');
++        $this->someParameter;
      }
  }
 ```
@@ -767,37 +545,6 @@ Turns fetching of dependencies via `$this->get()` to constructor injection in Co
 
 <br>
 
-## InvokableControllerRector
-
-Change god controller to single-action invokable controllers
-
-- class: [`Rector\Symfony\Rector\Class_\InvokableControllerRector`](../src/Rector/Class_/InvokableControllerRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-
--final class SomeController extends Controller
-+final class SomeDetailController extends Controller
- {
--    public function detailAction()
-+    public function __invoke()
-     {
-     }
-+}
-
--    public function listAction()
-+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-+
-+final class SomeListController extends Controller
-+{
-+    public function __invoke()
-     {
-     }
- }
-```
-
-<br>
-
 ## JMSInjectPropertyToConstructorInjectionRector
 
 Turns properties with `@inject` to private properties and constructor injection
@@ -816,76 +563,6 @@ Turns properties with `@inject` to private properties and constructor injection
 +{
 +    $this->someService = $someService;
 +}
-```
-
-<br>
-
-## KernelTestCaseContainerPropertyDeprecationRector
-
-Simplify use of assertions in WebTestCase
-
-- class: [`Rector\Symfony\Rector\StaticPropertyFetch\KernelTestCaseContainerPropertyDeprecationRector`](../src/Rector/StaticPropertyFetch/KernelTestCaseContainerPropertyDeprecationRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-
- class SomeTest extends KernelTestCase
- {
-     protected function setUp(): void
-     {
--        $container = self::$container;
-+        $container = self::getContainer();
-     }
- }
-```
-
-<br>
-
-## LiteralGetToRequestClassConstantRector
-
-Replace "GET" string by Symfony Request object class constants
-
-- class: [`Rector\Symfony\Rector\MethodCall\LiteralGetToRequestClassConstantRector`](../src/Rector/MethodCall/LiteralGetToRequestClassConstantRector.php)
-
-```diff
- use Symfony\Component\Form\FormBuilderInterface;
-
- final class SomeClass
- {
-     public function detail(FormBuilderInterface $formBuilder)
-     {
--        $formBuilder->setMethod('GET');
-+        $formBuilder->setMethod(\Symfony\Component\HttpFoundation\Request::GET);
-     }
- }
-```
-
-<br>
-
-## LoadValidatorMetadataToAnnotationRector
-
-Move metadata from `loadValidatorMetadata()` to property/getter/method annotations
-
-- class: [`Rector\Symfony\Rector\Class_\LoadValidatorMetadataToAnnotationRector`](../src/Rector/Class_/LoadValidatorMetadataToAnnotationRector.php)
-
-```diff
- use Symfony\Component\Validator\Constraints as Assert;
- use Symfony\Component\Validator\Mapping\ClassMetadata;
-
- final class SomeClass
- {
-+    /**
-+     * @Assert\NotBlank(message="City can't be blank.")
-+     */
-     private $city;
--
--    public static function loadValidatorMetadata(ClassMetadata $metadata): void
--    {
--        $metadata->addPropertyConstraint('city', new Assert\NotBlank([
--            'message' => 'City can\'t be blank.',
--        ]));
--    }
- }
 ```
 
 <br>
@@ -980,38 +657,6 @@ Change logout success handler to an event listener that listens to LogoutEvent
 
 <br>
 
-## MagicClosureTwigExtensionToNativeMethodsRector
-
-Change TwigExtension function/filter magic closures to inlined and clear callables
-
-- class: [`Rector\Symfony\Rector\Class_\MagicClosureTwigExtensionToNativeMethodsRector`](../src/Rector/Class_/MagicClosureTwigExtensionToNativeMethodsRector.php)
-
-```diff
- use Twig\Extension\AbstractExtension;
- use Twig\TwigFunction;
-
- final class TerminologyExtension extends AbstractExtension
- {
-     public function getFunctions(): array
-     {
-         return [
--            new TwigFunction('resolve', [$this, 'resolve']);
-+            new TwigFunction('resolve', function ($values) {
-+                return $value + 100;
-+            }),
-         ];
--    }
--
--
--    private function resolve($value)
--    {
--        return $value + 100;
-     }
- }
-```
-
-<br>
-
 ## MakeCommandLazyRector
 
 Make Symfony commands lazy
@@ -1021,7 +666,7 @@ Make Symfony commands lazy
 ```diff
  use Symfony\Component\Console\Command\Command
 
- final class SunshineCommand extends Command
+ class SunshineCommand extends Command
  {
 +    protected static $defaultName = 'sunshine';
      public function configure()
@@ -1054,23 +699,6 @@ Make event object a first argument of `dispatch()` method, event name as second
 
 <br>
 
-## MaxLengthSymfonyFormOptionToAttrRector
-
-Change form option "max_length" to a form "attr" > "max_length"
-
-- class: [`Rector\Symfony\Rector\MethodCall\MaxLengthSymfonyFormOptionToAttrRector`](../src/Rector/MethodCall/MaxLengthSymfonyFormOptionToAttrRector.php)
-
-```diff
- $formBuilder = new Symfony\Component\Form\FormBuilder();
-
- $form = $formBuilder->create('name', 'text', [
--    'max_length' => 123,
-+    'attr' => ['maxlength' => 123],
- ]);
-```
-
-<br>
-
 ## MergeMethodAnnotationToRouteAnnotationRector
 
 Merge removed `@Method` annotation to `@Route` one
@@ -1096,29 +724,6 @@ Merge removed `@Method` annotation to `@Route` one
 
 <br>
 
-## MessageHandlerInterfaceToAttributeRector
-
-Replaces MessageHandlerInterface with AsMessageHandler attribute
-
-- class: [`Rector\Symfony\Rector\Class_\MessageHandlerInterfaceToAttributeRector`](../src/Rector/Class_/MessageHandlerInterfaceToAttributeRector.php)
-
-```diff
--use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
-+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-
--class SmsNotificationHandler implements MessageHandlerInterface
-+#[AsMessageHandler]
-+class SmsNotificationHandler
- {
-     public function __invoke(SmsNotification $message)
-     {
-         // ... do some work - like sending an SMS message!
-     }
- }
-```
-
-<br>
-
 ## OptionNameRector
 
 Turns old option names to new ones in FormTypes in Form in Symfony
@@ -1133,67 +738,15 @@ Turns old option names to new ones in FormTypes in Form in Symfony
 
 <br>
 
-## ParamConverterAttributeToMapEntityAttributeRector
-
-Replace ParamConverter attribute with mappings with the MapEntity attribute
-
-- class: [`Rector\Symfony\Rector\ClassMethod\ParamConverterAttributeToMapEntityAttributeRector`](../src/Rector/ClassMethod/ParamConverterAttributeToMapEntityAttributeRector.php)
-
-```diff
- class SomeController
- {
-     #[Route('/blog/{date}/{slug}/comments/{comment_slug}')]
--    #[ParamConverter('post', options: ['mapping' => ['date' => 'date', 'slug' => 'slug']])]
--    #[ParamConverter('comment', options: ['mapping' => ['comment_slug' => 'slug']])]
-     public function showComment(
--        Post $post,
--        Comment $comment
-+        #[\Symfony\Bridge\Doctrine\Attribute\MapEntity(mapping: ['date' => 'date', 'slug' => 'slug'])] Post $post,
-+        #[\Symfony\Bridge\Doctrine\Attribute\MapEntity(mapping: ['comment_slug' => 'slug'])] Comment $comment
-     ) {
-     }
- }
-```
-
-<br>
-
-## ParamTypeFromRouteRequiredRegexRector
-
-Complete strict param type declaration based on route annotation
-
-- class: [`Rector\Symfony\Rector\ClassMethod\ParamTypeFromRouteRequiredRegexRector`](../src/Rector/ClassMethod/ParamTypeFromRouteRequiredRegexRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Controller\Controller;
- use Symfony\Component\Routing\Annotation\Route;
-
- final class SomeController extends Controller
- {
-     /**
-      * @Route(
-      *     requirements={"number"="\d+"},
-      * )
-      */
--    public function detailAction($number)
-+    public function detailAction(int $number)
-     {
-     }
- }
-```
-
-<br>
-
 ## ParseFileRector
 
-Replaces deprecated `Yaml::parse()` of file argument with file contents
+session > use_strict_mode is true by default and can be removed
 
 - class: [`Rector\Symfony\Rector\StaticCall\ParseFileRector`](../src/Rector/StaticCall/ParseFileRector.php)
 
 ```diff
- use Symfony\Component\Yaml\Yaml;
-
--$parsedFile = Yaml::parse('someFile.yml');
-+$parsedFile = Yaml::parse(file_get_contents('someFile.yml'));
+-session > use_strict_mode: true
++session:
 ```
 
 <br>
@@ -1365,28 +918,6 @@ Remove service from Sensio `@Route`
 
 <br>
 
-## RemoveUnusedRequestParamRector
-
-Remove unused `$request` parameter from controller action
-
-- class: [`Rector\Symfony\Rector\ClassMethod\RemoveUnusedRequestParamRector`](../src/Rector/ClassMethod/RemoveUnusedRequestParamRector.php)
-
-```diff
- use Symfony\Component\HttpFoundation\Request;
- use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-
- final class SomeController extends Controller
- {
--    public function run(Request $request, int $id)
-+    public function run(int $id)
-     {
-         echo $id;
-     }
- }
-```
-
-<br>
-
 ## ReplaceSensioRouteAnnotationWithSymfonyRector
 
 Replace Sensio `@Route` annotation with Symfony one
@@ -1410,67 +941,6 @@ Replace Sensio `@Route` annotation with Symfony one
 
 <br>
 
-## ReplaceServiceArgumentRector
-
-Replace defined `service()` argument in Symfony PHP config
-
-:wrench: **configure it!**
-
-- class: [`Rector\Symfony\Rector\FuncCall\ReplaceServiceArgumentRector`](../src/Rector/FuncCall/ReplaceServiceArgumentRector.php)
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use PhpParser\Node\Scalar\String_;
-use Rector\Config\RectorConfig;
-use Rector\Symfony\Rector\FuncCall\ReplaceServiceArgumentRector;
-use Rector\Symfony\ValueObject\ReplaceServiceArgument;
-
-return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->ruleWithConfiguration(ReplaceServiceArgumentRector::class, [
-        new ReplaceServiceArgument('ContainerInterface', new String_('service_container', [
-        ])),
-    ]);
-};
-```
-
-↓
-
-```diff
- use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
-
--return service(ContainerInterface::class);
-+return service('service_container');
-```
-
-<br>
-
-## ResponseReturnTypeControllerActionRector
-
-Add Response object return type to controller actions
-
-- class: [`Rector\Symfony\Rector\ClassMethod\ResponseReturnTypeControllerActionRector`](../src/Rector/ClassMethod/ResponseReturnTypeControllerActionRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-+use Symfony\Component\HttpFoundation\Response;
- use Symfony\Component\Routing\Annotation\Route;
-
- final class SomeController extends AbstractController
- {
-     #[Route]
--    public function detail()
-+    public function detail(): Response
-     {
-         return $this->render('some_template');
-     }
- }
-```
-
-<br>
-
 ## ResponseStatusCodeRector
 
 Turns status code numbers to constants
@@ -1478,19 +948,16 @@ Turns status code numbers to constants
 - class: [`Rector\Symfony\Rector\BinaryOp\ResponseStatusCodeRector`](../src/Rector/BinaryOp/ResponseStatusCodeRector.php)
 
 ```diff
- use Symfony\Component\HttpFoundation\Response;
-
  class SomeController
  {
      public function index()
      {
-         $response = new Response();
+         $response = new \Symfony\Component\HttpFoundation\Response();
 -        $response->setStatusCode(200);
-+        $response->setStatusCode(Response::HTTP_OK);
++        $response->setStatusCode(\Symfony\Component\HttpFoundation\Response::HTTP_OK);
 
--        if ($response->getStatusCode() === 200) {
-+        if ($response->getStatusCode() === Response::HTTP_OK) {
-         }
+-        if ($response->getStatusCode() === 200) {}
++        if ($response->getStatusCode() === \Symfony\Component\HttpFoundation\Response::HTTP_OK) {}
      }
  }
 ```
@@ -1544,112 +1011,6 @@ Change RouteCollectionBuilder to RoutingConfiguratorRector
 
 <br>
 
-## ServiceArgsToServiceNamedArgRector
-
-Converts order-dependent arguments `args()` to named `arg()` call
-
-- class: [`Rector\Symfony\Rector\Closure\ServiceArgsToServiceNamedArgRector`](../src/Rector/Closure/ServiceArgsToServiceNamedArgRector.php)
-
-```diff
- use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-
- return static function (ContainerConfigurator $containerConfigurator): void {
-     $services = $containerConfigurator->services();
-
-     $services->set(SomeClass::class)
--        ->args(['some_value']);
-+        ->arg('$someCtorParameter', 'some_value');
- };
-```
-
-<br>
-
-## ServiceSetStringNameToClassNameRector
-
-Change `$service->set()` string names to class-type-based names, to allow `$container->get()` by types in Symfony 2.8. Provide XML config via `$rectorConfig->symfonyContainerXml(...);`
-
-- class: [`Rector\Symfony\Rector\Closure\ServiceSetStringNameToClassNameRector`](../src/Rector/Closure/ServiceSetStringNameToClassNameRector.php)
-
-```diff
- use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-
- return static function (ContainerConfigurator $containerConfigurator): void {
-     $services = $containerConfigurator->services();
-
--    $services->set('some_name', App\SomeClass::class);
-+    $services->set('app\\someclass', App\SomeClass::class);
- };
-```
-
-<br>
-
-## ServiceSettersToSettersAutodiscoveryRector
-
-Change `$services->set(...,` ...) to `$services->load(...,` ...) where meaningful
-
-- class: [`Rector\Symfony\Rector\Closure\ServiceSettersToSettersAutodiscoveryRector`](../src/Rector/Closure/ServiceSettersToSettersAutodiscoveryRector.php)
-
-```diff
- use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-
--use App\Services\FistService;
--use App\Services\SecondService;
--
- return static function (ContainerConfigurator $containerConfigurator): void {
-     $parameters = $containerConfigurator->parameters();
-
-     $services = $containerConfigurator->services();
-
--    $services->set(FistService::class);
--    $services->set(SecondService::class);
-+    $services->load('App\\Services\\', '../src/Services/*');
- };
-```
-
-<br>
-
-## ServiceTagsToDefaultsAutoconfigureRector
-
-Change `$services->set(...,` ...)->tag(...) to `$services->defaults()->autodiscovery()` where meaningful
-
-- class: [`Rector\Symfony\Rector\Closure\ServiceTagsToDefaultsAutoconfigureRector`](../src/Rector/Closure/ServiceTagsToDefaultsAutoconfigureRector.php)
-
-```diff
- use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
- use App\Command\SomeCommand;
-
- return static function (ContainerConfigurator $containerConfigurator): void {
-     $services = $containerConfigurator->services();
-+    $services->defaults()
-+        ->autoconfigure();
-
--    $services->set(SomeCommand::class)
--        ->tag('console.command');
-+    $services->set(SomeCommand::class);
- };
-```
-
-<br>
-
-## ServicesSetNameToSetTypeRector
-
-Change `$services->set("name_type",` SomeType::class) to bare type, useful since Symfony 3.4
-
-- class: [`Rector\Symfony\Rector\Closure\ServicesSetNameToSetTypeRector`](../src/Rector/Closure/ServicesSetNameToSetTypeRector.php)
-
-```diff
- use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-
- return static function (ContainerConfigurator $containerConfigurator): void {
-     $services = $containerConfigurator->services();
-
--    $services->set('some_name', App\SomeClass::class);
-+    $services->set(App\SomeClass::class);
- };
-```
-
-<br>
-
 ## SimpleFunctionAndFilterRector
 
 Changes Twig_Function_Method to Twig_SimpleFunction calls in Twig_Extension.
@@ -1679,23 +1040,34 @@ Changes Twig_Function_Method to Twig_SimpleFunction calls in Twig_Extension.
 
 <br>
 
-## SimplifyFormRenderingRector
+## SimplifyWebTestCaseAssertionsRector
 
-Symplify form rendering by not calling `->createView()` on `render` function
+Simplify use of assertions in WebTestCase
 
-- class: [`Rector\Symfony\Rector\MethodCall\SimplifyFormRenderingRector`](../src/Rector/MethodCall/SimplifyFormRenderingRector.php)
+- class: [`Rector\Symfony\Rector\MethodCall\SimplifyWebTestCaseAssertionsRector`](../src/Rector/MethodCall/SimplifyWebTestCaseAssertionsRector.php)
 
 ```diff
- use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+ use PHPUnit\Framework\TestCase;
 
- class ReplaceFormCreateViewFunctionCall extends AbstractController
+ class SomeClass extends TestCase
  {
-     public function form(): Response
+     public function test()
      {
-         return $this->render('form.html.twig', [
--            'form' => $form->createView(),
-+            'form' => $form,
-         ]);
+-        $this->assertSame(200, $client->getResponse()->getStatusCode());
++         $this->assertResponseIsSuccessful();
+     }
+
+     public function testUrl()
+     {
+-        $this->assertSame(301, $client->getResponse()->getStatusCode());
+-        $this->assertSame('https://example.com', $client->getResponse()->headers->get('Location'));
++        $this->assertResponseRedirects('https://example.com', 301);
+     }
+
+     public function testContains()
+     {
+-        $this->assertContains('Hello World', $crawler->filter('h1')->text());
++        $this->assertSelectorTextContains('h1', 'Hello World');
      }
  }
 ```
@@ -1704,7 +1076,7 @@ Symplify form rendering by not calling `->createView()` on `render` function
 
 ## StringFormTypeToClassRector
 
-Turns string Form Type references to their CONSTANT alternatives in FormTypes in Form in Symfony. To enable custom types, add link to your container XML dump in "$rectorConfig->symfonyContainerXml(...)"
+Turns string Form Type references to their CONSTANT alternatives in FormTypes in Form in Symfony. To enable custom types, add link to your container XML dump in "$parameters->set(Option::SYMFONY_CONTAINER_XML_PATH_PARAMETER, ...);"
 
 - class: [`Rector\Symfony\Rector\MethodCall\StringFormTypeToClassRector`](../src/Rector/MethodCall/StringFormTypeToClassRector.php)
 
@@ -1781,25 +1153,6 @@ Turns `@Template` annotation to explicit method call in Controller of FrameworkE
 
 <br>
 
-## TwigBundleFilesystemLoaderToTwigRector
-
-Change TwigBundle FilesystemLoader to native one
-
-- class: [`Rector\Symfony\Rector\StmtsAwareInterface\TwigBundleFilesystemLoaderToTwigRector`](../src/Rector/StmtsAwareInterface/TwigBundleFilesystemLoaderToTwigRector.php)
-
-```diff
--use Symfony\Bundle\TwigBundle\Loader\FilesystemLoader;
--use Symfony\Bundle\FrameworkBundle\Templating\Loader\TemplateLocator;
--use Symfony\Bundle\FrameworkBundle\Templating\TemplateNameParser;
-+use Twig\Loader\FilesystemLoader;
-
--$filesystemLoader = new FilesystemLoader(new TemplateLocator(), new TemplateParser());
--$filesystemLoader->addPath(__DIR__ . '/some-directory');
-+$fileSystemLoader = new FilesystemLoader([__DIR__ . '/some-directory']);
-```
-
-<br>
-
 ## ValidatorBuilderEnableAnnotationMappingRector
 
 Migrates from deprecated ValidatorBuilder->enableAnnotationMapping($reader) to ValidatorBuilder->enableAnnotationMapping(true)->setDoctrineAnnotationReader($reader)
@@ -1838,75 +1191,6 @@ Adds a new `$filter` argument in `VarDumperTestTrait->assertDumpEquals()` and `V
 ```diff
 -$varDumperTestTrait->assertDumpMatchesFormat($dump, $data, $message = "");
 +$varDumperTestTrait->assertDumpMatchesFormat($dump, $data, $filter = 0, $message = "");
-```
-
-<br>
-
-## WebTestCaseAssertIsSuccessfulRector
-
-Simplify use of assertions in WebTestCase
-
-- class: [`Rector\Symfony\Rector\MethodCall\WebTestCaseAssertIsSuccessfulRector`](../src/Rector/MethodCall/WebTestCaseAssertIsSuccessfulRector.php)
-
-```diff
- use PHPUnit\Framework\TestCase;
-
- class SomeClass extends TestCase
- {
-     public function test()
-     {
--        $this->assertSame(200, $this->client->getResponse()->getStatusCode());
-+         $this->assertResponseIsSuccessful();
-     }
- }
-```
-
-<br>
-
-## WebTestCaseAssertResponseCodeRector
-
-Simplify use of assertions in WebTestCase
-
-- class: [`Rector\Symfony\Rector\MethodCall\WebTestCaseAssertResponseCodeRector`](../src/Rector/MethodCall/WebTestCaseAssertResponseCodeRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
- final class SomeClass extends WebTestCase
- {
-     public function test()
-     {
--        $response = self::getClient()->getResponse();
--
--        $this->assertSame(301, $response->getStatusCode());
--        $this->assertSame('https://example.com', $response->headers->get('Location'));
-+        $this->assertResponseStatusCodeSame(301);
-+        $this->assertResponseRedirects('https://example.com');
-     }
- }
-```
-
-<br>
-
-## WebTestCaseAssertSelectorTextContainsRector
-
-Simplify use of assertions in WebTestCase to `assertSelectorTextContains()`
-
-- class: [`Rector\Symfony\Rector\MethodCall\WebTestCaseAssertSelectorTextContainsRector`](../src/Rector/MethodCall/WebTestCaseAssertSelectorTextContainsRector.php)
-
-```diff
- use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
- use Symfony\Component\DomCrawler\Crawler;
-
- final class SomeTest extends WebTestCase
- {
-     public function testContains()
-     {
-         $crawler = new Symfony\Component\DomCrawler\Crawler();
--        $this->assertContains('Hello World', $crawler->filter('h1')->text());
-+        $this->assertSelectorTextContains('h1', 'Hello World');
-     }
- }
 ```
 
 <br>

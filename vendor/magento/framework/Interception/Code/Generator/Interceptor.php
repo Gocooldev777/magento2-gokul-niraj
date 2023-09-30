@@ -8,12 +8,9 @@ declare(strict_types=1);
 namespace Magento\Framework\Interception\Code\Generator;
 
 use Magento\Framework\Code\Generator\EntityAbstract;
-use Magento\Framework\GetReflectionMethodReturnTypeValueTrait;
 
 class Interceptor extends EntityAbstract
 {
-    use GetReflectionMethodReturnTypeValueTrait;
-
     public const ENTITY_TYPE = 'interceptor';
 
     /**
@@ -75,7 +72,7 @@ class Interceptor extends EntityAbstract
         $reflectionClass = new \ReflectionClass($this->getSourceClassName());
         $publicMethods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($publicMethods as $method) {
-            if (!$method->isInternal() && $this->isInterceptedMethod($method)) {
+            if ($this->isInterceptedMethod($method)) {
                 $methods[] = $this->_getMethodInfo($method);
             }
         }
@@ -202,5 +199,25 @@ METHOD_BODY
         }
 
         return $result;
+    }
+
+    /**
+     * Returns return type
+     *
+     * @param \ReflectionMethod $method
+     * @return null|string
+     */
+    private function getReturnTypeValue(\ReflectionMethod $method): ?string
+    {
+        $returnTypeValue = null;
+        $returnType = $method->getReturnType();
+        if ($returnType) {
+            $returnTypeValue = ($returnType->allowsNull() ? '?' : '');
+            $returnTypeValue .= ($returnType->getName() === 'self')
+                ? $this->_getFullyQualifiedClassName($method->getDeclaringClass()->getName())
+                : $returnType->getName();
+        }
+
+        return $returnTypeValue;
     }
 }

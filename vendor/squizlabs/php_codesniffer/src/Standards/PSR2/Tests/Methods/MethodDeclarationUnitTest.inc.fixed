@@ -64,12 +64,3 @@ class Nested_Function {
         };
     }
 }
-
-enum MyEnum
-{
-    function _myFunction() {}
-    function __myFunction() {}
-    public static function myFunction() {}
-    public static function myFunction() {}
-    public function _() {}
-}

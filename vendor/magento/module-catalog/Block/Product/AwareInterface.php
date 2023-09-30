@@ -7,8 +7,6 @@ namespace Magento\Catalog\Block\Product;
 
 /**
  * Class Product Aware interface
- *
- * @api
  */
 interface AwareInterface
 {

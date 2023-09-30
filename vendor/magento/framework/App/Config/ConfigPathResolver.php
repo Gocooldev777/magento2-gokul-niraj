@@ -27,7 +27,6 @@ class ConfigPathResolver
 
     /**
      * Creates full config path for given params.
-     *
      * If $type variable was provided, it will be used as first part of path.
      *
      * @param string $path The path of configuration
@@ -44,8 +43,8 @@ class ConfigPathResolver
      */
     public function resolve($path, $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, $scopeCode = null, $type = null)
     {
-        $path = $path !== null ? trim($path, '/') : '';
-        $scope = $scope !== null ? rtrim($scope, 's') : '';
+        $path = trim($path, '/');
+        $scope = rtrim($scope, 's');
 
         /** Scope name is currently stored in plural form. */
         if (in_array($scope, [ScopeInterface::SCOPE_STORE, ScopeInterface::SCOPE_WEBSITE])) {

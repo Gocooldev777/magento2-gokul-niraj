@@ -190,7 +190,7 @@ class PackageInfo
      */
     protected function isMagentoPackage($packageName)
     {
-        return $packageName !== null && strpos($packageName, 'magento/module-') === 0;
+        return strpos($packageName, 'magento/module-') === 0;
     }
 
     /**

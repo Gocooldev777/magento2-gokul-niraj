@@ -4,60 +4,68 @@ declare (strict_types=1);
 namespace Rector\Core\ProcessAnalyzer;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Stmt\Class_;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\Core\Contract\Rector\RectorInterface;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Core\ValueObject\Application\File;
+use Rector\Core\ValueObject\RectifiedNode;
 /**
- * This service verify if the Node:
+ * This service verify if the Node already rectified with same Rector rule before current Rector rule with condition
  *
- *      - already applied same Rector rule before current Rector rule on last previous Rector rule.
- *      - just re-printed but token start still >= 0
+ *        Same Rector Rule <-> Same Node <-> Same File
+ *
+ * Some limitations:
+ *
+ *   - only check against Node which not Assign or Class_
+ *   - The checked node doesn't has PhpDocInfo changed.
+ *
+ * which possibly changed by other process.
  */
 final class RectifiedAnalyzer
 {
     /**
-     * @param class-string<RectorInterface> $rectorClass
+     * @var array<class-string<Node>>
      */
-    public function hasRectified(string $rectorClass, Node $node) : bool
-    {
-        $originalNode = $node->getAttribute(AttributeKey::ORIGINAL_NODE);
-        if ($this->hasConsecutiveCreatedByRule($rectorClass, $node, $originalNode)) {
-            return \true;
-        }
-        return $this->isJustReprintedOverlappedTokenStart($node, $originalNode);
-    }
+    private const EXCLUDE_NODES = [\PhpParser\Node\Expr\Assign::class, \PhpParser\Node\Stmt\Class_::class];
     /**
-     * @param class-string<RectorInterface> $rectorClass
+     * @var array<string, RectifiedNode|null>
      */
-    private function hasConsecutiveCreatedByRule(string $rectorClass, Node $node, ?Node $originalNode) : bool
+    private $previousFileWithNodes = [];
+    /**
+     * @readonly
+     * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
+     */
+    private $phpDocInfoFactory;
+    public function __construct(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory $phpDocInfoFactory)
     {
-        $createdByRuleNode = $originalNode ?? $node;
-        /** @var class-string<RectorInterface>[] $createdByRule */
-        $createdByRule = $createdByRuleNode->getAttribute(AttributeKey::CREATED_BY_RULE) ?? [];
-        if ($createdByRule === []) {
-            return \false;
-        }
-        return \end($createdByRule) === $rectorClass;
+        $this->phpDocInfoFactory = $phpDocInfoFactory;
     }
-    private function isJustReprintedOverlappedTokenStart(Node $node, ?Node $originalNode) : bool
+    public function verify(\Rector\Core\Contract\Rector\RectorInterface $rector, \PhpParser\Node $node, \Rector\Core\ValueObject\Application\File $currentFile) : ?\Rector\Core\ValueObject\RectifiedNode
     {
-        if ($originalNode instanceof Node) {
-            return \false;
+        if (\in_array(\get_class($node), self::EXCLUDE_NODES, \true)) {
+            return null;
         }
-        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parentNode instanceof Node) {
-            return \false;
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
+        if ($phpDocInfo->hasChanged()) {
+            return null;
         }
-        $parentOriginalNode = $parentNode->getAttribute(AttributeKey::ORIGINAL_NODE);
-        if ($parentOriginalNode instanceof Node) {
-            return \false;
+        $smartFileInfo = $currentFile->getSmartFileInfo();
+        $realPath = $smartFileInfo->getRealPath();
+        if (!isset($this->previousFileWithNodes[$realPath])) {
+            $this->previousFileWithNodes[$realPath] = new \Rector\Core\ValueObject\RectifiedNode(\get_class($rector), $node);
+            return null;
         }
-        /**
-         * Start token pos must be < 0 to continue, as the node and parent node just re-printed
-         *
-         * - Node's original node is null
-         * - Parent Node's original node is null
-         */
-        $startTokenPos = $node->getStartTokenPos();
-        return $startTokenPos >= 0;
+        /** @var RectifiedNode $rectifiedNode */
+        $rectifiedNode = $this->previousFileWithNodes[$realPath];
+        if ($rectifiedNode->getRectorClass() !== \get_class($rector)) {
+            return null;
+        }
+        if ($rectifiedNode->getNode() !== $node) {
+            return null;
+        }
+        // re-set to refill next
+        $this->previousFileWithNodes[$realPath] = null;
+        return $rectifiedNode;
     }
 }

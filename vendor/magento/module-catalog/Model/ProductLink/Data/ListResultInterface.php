@@ -11,8 +11,6 @@ use Magento\Catalog\Api\Data\ProductLinkInterface;
 
 /**
  * Result of finding a list of links.
- *
- * @api
  */
 interface ListResultInterface
 {

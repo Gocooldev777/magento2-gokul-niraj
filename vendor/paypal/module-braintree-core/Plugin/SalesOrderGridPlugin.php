@@ -9,12 +9,10 @@ class SalesOrderGridPlugin
 {
     /**
      * @param Collection $subject
-     * @param bool $printQuery
-     * @param bool $logQuery
-     * @return array
+     * @return null
      * @throws LocalizedException
      */
-    public function beforeLoad(Collection $subject, bool $printQuery = false, bool $logQuery = false): array
+    public function beforeLoad(Collection $subject)
     {
         if (!$subject->isLoaded()) {
             $primaryKey = $subject->getResource()->getIdFieldName();
@@ -27,6 +25,6 @@ class SalesOrderGridPlugin
             );
         }
 
-        return [$printQuery, $logQuery];
+        return null;
     }
 }

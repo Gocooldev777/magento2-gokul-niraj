@@ -54,7 +54,7 @@ class FileProcessor
     /**
      * @var string
      */
-    public const FILE_DIR = 'design/file';
+    const FILE_DIR = 'design/file';
 
     /**
      * @param UploaderFactory $uploaderFactory
@@ -115,7 +115,7 @@ class FileProcessor
      */
     protected function prepareFile($file)
     {
-        return $file !== null ? ltrim(str_replace('\\', '/', $file), '/') : '';
+        return ltrim(str_replace('\\', '/', $file), '/');
     }
 
     /**

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/element/color-picker.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div class=\"admin__field-control\"\n     visible=\"visible\"\n     css=\"$data.additionalClasses\">\n    <input type=\"hidden\" class=\"colorpicker-spectrum\" colorPicker=\"colorPickerConfig\" disable=\"disabled\" />\n    <input type=\"text\" class=\"admin__control-text colorpicker-input\"\n           ko-value=\"value\" hasFocus=\"focused\" disable=\"disabled\"\n           attr=\"name: inputName, id: uid, placeholder: placeholder\"/>\n</div>\n"}
+}});

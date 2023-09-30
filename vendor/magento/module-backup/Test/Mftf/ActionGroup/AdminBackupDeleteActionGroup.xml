@@ -16,8 +16,7 @@
             <argument name="backup"/>
         </arguments>
 
-        <waitForElementVisible selector="{{AdminGridTableSection.backupTypeByName(backup.name)}}" stepKey="seeBackupInGrid"/>
-        <executeJS function="return document.evaluate(&quot;{{AdminGridTableSection.backupTypeByName(backup.name)}}&quot;, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotLength-1" stepKey="expectedDatabaseBackupCount"/>
+        <see selector="{{AdminGridTableSection.backupNameColumn}}" userInput="{{backup.name}}" stepKey="seeBackupInGrid"/>
         <click selector="{{AdminGridTableSection.backupRowCheckbox(backup.name)}}" stepKey="selectBackupRow"/>
         <selectOption selector="{{AdminGridActionSection.actionSelect}}" userInput="Delete" stepKey="selectDeleteAction"/>
         <click selector="{{AdminGridActionSection.submitButton}}" stepKey="clickSubmit"/>
@@ -25,11 +24,6 @@
         <see selector="{{AdminConfirmationModalSection.message}}" userInput="Are you sure you want to delete the selected backup(s)?" stepKey="seeConfirmationModal"/>
         <waitForPageLoad stepKey="waitForSubmitAction"/>
         <click selector="{{AdminConfirmationModalSection.ok}}" stepKey="clickOkConfirmDelete"/>
-        <executeJS function="return document.evaluate(&quot;{{AdminGridTableSection.backupTypeByName(backup.name)}}&quot;, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null).snapshotLength" stepKey="resultingDatabaseBackupCount"/>
-        <assertEquals stepKey="assertDatabaseBackupDeleted">
-            <actualResult type="variable">$resultingDatabaseBackupCount</actualResult>
-            <expectedResult type="variable">$expectedDatabaseBackupCount</expectedResult>
-        </assertEquals>
-        <comment userInput="BIC workaround" stepKey="dontSeeBackupInGrid"/>
+        <dontSee selector="{{AdminGridTableSection.backupNameColumn}}" userInput="{{backup.name}}" stepKey="dontSeeBackupInGrid"/>
     </actionGroup>
 </actionGroups>

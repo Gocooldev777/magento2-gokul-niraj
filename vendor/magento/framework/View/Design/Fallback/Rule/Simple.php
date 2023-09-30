@@ -5,7 +5,9 @@
  */
 namespace Magento\Framework\View\Design\Fallback\Rule;
 
-use InvalidArgumentException;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Module\Dir\Reader;
 
 /**
  * Class with simple substitution parameters to values
@@ -45,18 +47,18 @@ class Simple implements RuleInterface
      *
      * @param array $params array of parameters
      * @return array folders to perform a search
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     public function getPatternDirs(array $params)
     {
-        $pattern = $this->pattern ?? '';
+        $pattern = $this->pattern;
         if (preg_match_all('/<([a-zA-Z\_]+)>/', $pattern, $matches)) {
             foreach ($matches[1] as $placeholder) {
                 if (empty($params[$placeholder])) {
                     if (in_array($placeholder, $this->optionalParams)) {
                         return [];
                     } else {
-                        throw new InvalidArgumentException("Required parameter '{$placeholder}' was not passed");
+                        throw new \InvalidArgumentException("Required parameter '{$placeholder}' was not passed");
                     }
                 }
                 $pattern = str_replace('<' . $placeholder . '>', $params[$placeholder], $pattern);

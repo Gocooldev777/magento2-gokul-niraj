@@ -5,37 +5,21 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Neon;
+namespace RectorPrefix20211221\Nette\Neon;
 
-/**
- * @implements \IteratorAggregate<Node>
- */
-abstract class Node implements \IteratorAggregate
+/** @internal */
+abstract class Node
 {
-    /**
-     * @var int|null
-     */
-    public $startTokenPos;
-    /**
-     * @var int|null
-     */
-    public $endTokenPos;
-    /**
-     * @var int|null
-     */
-    public $startLine;
-    /**
-     * @var int|null
-     */
-    public $endLine;
-    /**
-     * @return mixed
-     */
+    /** @var ?int */
+    public $startPos;
+    /** @var ?int */
+    public $endPos;
+    /** @return mixed */
     public abstract function toValue();
     public abstract function toString() : string;
-    public function &getIterator() : \Generator
+    /** @return self[] */
+    public function getSubNodes() : array
     {
-        return;
-        yield;
+        return [];
     }
 }

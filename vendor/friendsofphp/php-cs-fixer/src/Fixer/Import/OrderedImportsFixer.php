@@ -172,7 +172,6 @@ use Bar;
     /**
      * {@inheritdoc}
      *
-     * Must run before BlankLineBetweenImportGroupsFixer.
      * Must run after GlobalNamespaceImportFixer, NoLeadingImportSlashFixer.
      */
     public function getPriority(): int
@@ -280,7 +279,7 @@ use Bar;
 
                     return true;
                 }])
-                ->setDefault(null) // @TODO set to ['class', 'function', 'const'] on 4.0
+                ->setDefault(null)
                 ->getOption(),
         ]);
     }
@@ -333,12 +332,12 @@ use Bar;
     }
 
     /**
-     * @param list<int> $uses
+     * @param int[] $uses
      */
     private function getNewOrder(array $uses, Tokens $tokens): array
     {
-        $indices = [];
-        $originalIndices = [];
+        $indexes = [];
+        $originalIndexes = [];
         $lineEnding = $this->whitespacesConfig->getLineEnding();
 
         for ($i = \count($uses) - 1; $i >= 0; --$i) {
@@ -447,7 +446,7 @@ use Bar;
                         $namespace = Tokens::fromArray($namespaceTokens)->generateCode();
                     }
 
-                    $indices[$startIndex] = [
+                    $indexes[$startIndex] = [
                         'namespace' => $namespace,
                         'startIndex' => $startIndex,
                         'endIndex' => $index - 1,
@@ -455,14 +454,14 @@ use Bar;
                         'group' => $group,
                     ];
 
-                    $originalIndices[] = $startIndex;
+                    $originalIndexes[] = $startIndex;
 
                     if ($index === $endIndex) {
                         break;
                     }
 
                     $namespaceTokens = [];
-                    $nextPartIndex = $tokens->getTokenNotOfKindSibling($index, 1, [',', [T_WHITESPACE]]);
+                    $nextPartIndex = $tokens->getTokenNotOfKindSibling($index, 1, [[','], [T_WHITESPACE]]);
                     $startIndex = $nextPartIndex;
                     $index = $nextPartIndex;
 
@@ -476,16 +475,16 @@ use Bar;
 
         // Is sort types provided, sorting by groups and each group by algorithm
         if (null !== $this->configuration['imports_order']) {
-            // Grouping indices by import type.
+            // Grouping indexes by import type.
             $groupedByTypes = [];
 
-            foreach ($indices as $startIndex => $item) {
+            foreach ($indexes as $startIndex => $item) {
                 $groupedByTypes[$item['importType']][$startIndex] = $item;
             }
 
             // Sorting each group by algorithm.
-            foreach ($groupedByTypes as $type => $groupIndices) {
-                $groupedByTypes[$type] = $this->sortByAlgorithm($groupIndices);
+            foreach ($groupedByTypes as $type => $groupIndexes) {
+                $groupedByTypes[$type] = $this->sortByAlgorithm($groupIndexes);
             }
 
             // Ordering groups
@@ -498,55 +497,34 @@ use Bar;
                     }
                 }
             }
-
-            $indices = $sortedGroups;
+            $indexes = $sortedGroups;
         } else {
             // Sorting only by algorithm
-            $indices = $this->sortByAlgorithm($indices);
+            $indexes = $this->sortByAlgorithm($indexes);
         }
 
         $index = -1;
         $usesOrder = [];
 
         // Loop through the index but use original index order
-        foreach ($indices as $v) {
-            $usesOrder[$originalIndices[++$index]] = $v;
+        foreach ($indexes as $v) {
+            $usesOrder[$originalIndexes[++$index]] = $v;
         }
 
         return $usesOrder;
     }
 
     /**
-     * @param array<
-     *     int,
-     *     array{
-     *         namespace: string,
-     *         startIndex: int,
-     *         endIndex: int,
-     *         importType: string,
-     *         group: bool,
-     *     }
-     * > $indices
-     *
-     * @return array<
-     *     int,
-     *     array{
-     *         namespace: string,
-     *         startIndex: int,
-     *         endIndex: int,
-     *         importType: string,
-     *         group: bool,
-     *     }
-     * >
+     * @param array[] $indexes
      */
-    private function sortByAlgorithm(array $indices): array
+    private function sortByAlgorithm(array $indexes): array
     {
         if (self::SORT_ALPHA === $this->configuration['sort_algorithm']) {
-            uasort($indices, [$this, 'sortAlphabetically']);
+            uasort($indexes, [$this, 'sortAlphabetically']);
         } elseif (self::SORT_LENGTH === $this->configuration['sort_algorithm']) {
-            uasort($indices, [$this, 'sortByLength']);
+            uasort($indexes, [$this, 'sortByLength']);
         }
 
-        return $indices;
+        return $indexes;
     }
 }

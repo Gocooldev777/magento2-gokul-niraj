@@ -5,24 +5,24 @@ namespace Rector\Core\Bootstrap;
 
 use Rector\RectorInstaller\GeneratedConfig;
 use ReflectionClass;
+use Symplify\SmartFileSystem\SmartFileInfo;
 final class ExtensionConfigResolver
 {
     /**
-     * @api
-     * @return string[]
+     * @return SmartFileInfo[]
      */
     public function provide() : array
     {
-        $configFilePaths = [];
+        $configFileInfos = [];
         if (!\class_exists('Rector\\RectorInstaller\\GeneratedConfig')) {
-            return $configFilePaths;
+            return $configFileInfos;
         }
-        $generatedConfigReflectionClass = new ReflectionClass('Rector\\RectorInstaller\\GeneratedConfig');
+        $generatedConfigReflectionClass = new \ReflectionClass('Rector\\RectorInstaller\\GeneratedConfig');
         if ($generatedConfigReflectionClass->getFileName() === \false) {
-            return $configFilePaths;
+            return $configFileInfos;
         }
         $generatedConfigDirectory = \dirname($generatedConfigReflectionClass->getFileName());
-        foreach (GeneratedConfig::EXTENSIONS as $extensionConfig) {
+        foreach (\Rector\RectorInstaller\GeneratedConfig::EXTENSIONS as $extensionConfig) {
             /** @var string[] $includedFiles */
             $includedFiles = $extensionConfig['extra']['includes'] ?? [];
             foreach ($includedFiles as $includedFile) {
@@ -32,10 +32,10 @@ final class ExtensionConfigResolver
                     $installPath = $extensionConfig['install_path'];
                     $includedFilePath = \sprintf('%s/%s', $installPath, $includedFile);
                 }
-                $configFilePaths[] = $includedFilePath;
+                $configFileInfos[] = new \Symplify\SmartFileSystem\SmartFileInfo($includedFilePath);
             }
         }
-        return $configFilePaths;
+        return $configFileInfos;
     }
     /**
      * @param array<string, mixed> $extensionConfig

@@ -1,18 +1,18 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304\Doctrine\Inflector\Rules\Turkish;
+namespace RectorPrefix20211221\Doctrine\Inflector\Rules\Turkish;
 
-use RectorPrefix202304\Doctrine\Inflector\GenericLanguageInflectorFactory;
-use RectorPrefix202304\Doctrine\Inflector\Rules\Ruleset;
-final class InflectorFactory extends GenericLanguageInflectorFactory
+use RectorPrefix20211221\Doctrine\Inflector\GenericLanguageInflectorFactory;
+use RectorPrefix20211221\Doctrine\Inflector\Rules\Ruleset;
+final class InflectorFactory extends \RectorPrefix20211221\Doctrine\Inflector\GenericLanguageInflectorFactory
 {
-    protected function getSingularRuleset() : Ruleset
+    protected function getSingularRuleset() : \RectorPrefix20211221\Doctrine\Inflector\Rules\Ruleset
     {
-        return Rules::getSingularRuleset();
+        return \RectorPrefix20211221\Doctrine\Inflector\Rules\Turkish\Rules::getSingularRuleset();
     }
-    protected function getPluralRuleset() : Ruleset
+    protected function getPluralRuleset() : \RectorPrefix20211221\Doctrine\Inflector\Rules\Ruleset
     {
-        return Rules::getPluralRuleset();
+        return \RectorPrefix20211221\Doctrine\Inflector\Rules\Turkish\Rules::getPluralRuleset();
     }
 }

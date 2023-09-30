@@ -100,14 +100,7 @@ class PreviewTest extends TestCase
             ->with(
                 Template::DEFAULT_DESIGN_AREA,
                 [$this->templateMock, 'getProcessedTemplate'],
-                [
-                    [
-                        'subscriber' => null,
-                        'subscriber_data' => [
-                            'unsubscription_link' => null
-                        ]
-                    ]
-                ]
+                [['subscriber' => null]]
             )
             ->willReturn('Processed Template');
 
@@ -148,10 +141,7 @@ class PreviewTest extends TestCase
                 ],
                 [
                     [
-                        'subscriber' => null,
-                        'subscriber_data' => [
-                            'unsubscription_link' => null
-                        ]
+                        'subscriber' => null
                     ]
                 ]
             )
@@ -172,9 +162,7 @@ class PreviewTest extends TestCase
         $subscriber = $this->createMock(Subscriber::class);
         $subscriber->expects($this->atLeastOnce())->method('load')->with(3)->willReturnSelf();
         $this->subscriberFactoryMock->expects($this->atLeastOnce())->method('create')->willReturn($subscriber);
-        $subscriber->expects($this->exactly(2))
-            ->method('getUnsubscriptionLink')
-            ->willReturn('http://example.com/newsletter/subscriber/unsubscribe/');
+
         $this->templateMock->expects($this->atLeastOnce())->method('emulateDesign')->with(1);
         $this->templateMock->expects($this->atLeastOnce())->method('revertDesign');
 
@@ -187,10 +175,7 @@ class PreviewTest extends TestCase
                 ],
                 [
                     [
-                        'subscriber' => $subscriber,
-                        'subscriber_data' => [
-                            'unsubscription_link' => $subscriber->getUnsubscriptionLink()
-                        ]
+                        'subscriber' => $subscriber
                     ]
                 ]
             )

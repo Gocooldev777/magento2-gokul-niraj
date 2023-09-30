@@ -16,31 +16,22 @@ use function in_array;
 use function is_array;
 use function is_string;
 use function sprintf;
-use function str_contains;
 use function strpos;
 
-/** @psalm-type Visibility = ReflectionMethod::IS_PRIVATE|ReflectionMethod::IS_PROTECTED|ReflectionMethod::IS_PUBLIC */
 class TraitUsageGenerator extends AbstractGenerator implements TraitUsageInterface
 {
     protected ClassGenerator $classGenerator;
 
     /** @psalm-var array<int, string> Array of trait names */
     protected array $traits = [];
-    /**
-     * @var array<
-     *     non-empty-string,
-     *     array{
-     *      alias: string,
-     *      visibility: Visibility|null
-     *     }
-     * > Array of trait aliases
-     */
+
+    /** @var array Array of trait aliases */
     protected array $traitAliases = [];
 
     /** @var array Array of trait overrides */
     protected array $traitOverrides = [];
 
-    /** @var array<non-empty-string, non-empty-string> Array of string names */
+    /** @var array Array of string names */
     protected array $uses = [];
 
     public function __construct(ClassGenerator $classGenerator)
@@ -63,7 +54,9 @@ class TraitUsageGenerator extends AbstractGenerator implements TraitUsageInterfa
         return $this;
     }
 
-    /** @inheritDoc */
+    /**
+     * @inheritDoc
+     */
     public function getUses()
     {
         return array_values($this->uses);
@@ -240,6 +233,7 @@ class TraitUsageGenerator extends AbstractGenerator implements TraitUsageInterfa
      */
     public function addTraitAlias($method, $alias, $visibility = null)
     {
+        $traitAndMethod = $method;
         if (is_array($method)) {
             if (! array_key_exists('traitName', $method)) {
                 throw new Exception\InvalidArgumentException('Missing required argument "traitName" for $method');
@@ -250,12 +244,10 @@ class TraitUsageGenerator extends AbstractGenerator implements TraitUsageInterfa
             }
 
             $traitAndMethod = $method['traitName'] . '::' . $method['method'];
-        } else {
-            $traitAndMethod = $method;
         }
 
         // Validations
-        if (! str_contains($traitAndMethod, '::')) {
+        if (false === strpos($traitAndMethod, '::')) {
             throw new Exception\InvalidArgumentException(
                 'Invalid Format: $method must be in the format of trait::method'
             );
@@ -322,7 +314,7 @@ class TraitUsageGenerator extends AbstractGenerator implements TraitUsageInterfa
         }
 
         // Validations
-        if (! str_contains($traitAndMethod, '::')) {
+        if (false === strpos($traitAndMethod, '::')) {
             throw new Exception\InvalidArgumentException(
                 'Invalid Format: $method must be in the format of trait::method'
             );
@@ -445,6 +437,6 @@ class TraitUsageGenerator extends AbstractGenerator implements TraitUsageInterfa
             }
         }
 
-        return $output . $indent . '}' . self::LINE_FEED . self::LINE_FEED;
+        return $output . self::LINE_FEED . $indent . '}' . self::LINE_FEED . self::LINE_FEED;
     }
 }

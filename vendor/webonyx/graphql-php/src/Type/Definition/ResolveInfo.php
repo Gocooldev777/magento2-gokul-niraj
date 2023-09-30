@@ -1,9 +1,9 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type\Definition;
 
-use GraphQL\Error\Error;
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\FragmentDefinitionNode;
 use GraphQL\Language\AST\FragmentSpreadNode;
@@ -11,15 +11,12 @@ use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Type\Schema;
+use function array_merge_recursive;
 
 /**
  * Structure containing information useful for field resolution process.
  *
  * Passed as 4th argument to every field resolver. See [docs on field resolving (data fetching)](data-fetching.md).
- *
- * @phpstan-import-type QueryPlanOptions from QueryPlan
- *
- * @phpstan-type Path array<int, string|int>
  */
 class ResolveInfo
 {
@@ -27,71 +24,70 @@ class ResolveInfo
      * The definition of the field being resolved.
      *
      * @api
+     * @var FieldDefinition
      */
-    public FieldDefinition $fieldDefinition;
+    public $fieldDefinition;
 
     /**
      * The name of the field being resolved.
      *
      * @api
+     * @var string
      */
-    public string $fieldName;
+    public $fieldName;
 
     /**
      * Expected return type of the field being resolved.
      *
      * @api
+     * @var Type
      */
-    public Type $returnType;
+    public $returnType;
 
     /**
      * AST of all nodes referencing this field in the query.
      *
      * @api
-     *
-     * @var \ArrayObject<int, FieldNode>
+     * @var FieldNode[]
      */
-    public \ArrayObject $fieldNodes;
+    public $fieldNodes = [];
 
     /**
      * Parent type of the field being resolved.
      *
      * @api
+     * @var ObjectType
      */
-    public ObjectType $parentType;
+    public $parentType;
 
     /**
      * Path to this field from the very root value.
      *
      * @api
-     *
-     * @var array<int, string|int>
-     *
-     * @phpstan-var Path
+     * @var string[]
      */
-    public array $path;
+    public $path;
 
     /**
      * Instance of a schema used for execution.
      *
      * @api
+     * @var Schema
      */
-    public Schema $schema;
+    public $schema;
 
     /**
      * AST of all fragments defined in query.
      *
      * @api
-     *
-     * @var array<string, FragmentDefinitionNode>
+     * @var FragmentDefinitionNode[]
      */
-    public array $fragments = [];
+    public $fragments = [];
 
     /**
      * Root value passed to query execution.
      *
      * @api
-     *
      * @var mixed
      */
     public $rootValue;
@@ -100,50 +96,54 @@ class ResolveInfo
      * AST of operation definition node (query, mutation).
      *
      * @api
+     * @var OperationDefinitionNode|null
      */
-    public OperationDefinitionNode $operation;
+    public $operation;
 
     /**
      * Array of variables passed to query execution.
      *
      * @api
-     *
-     * @var array<string, mixed>
+     * @var mixed[]
      */
-    public array $variableValues = [];
+    public $variableValues = [];
 
     /**
-     * @param \ArrayObject<int, FieldNode> $fieldNodes
-     * @param array<int, string|int> $path
+     * Lazily initialized.
      *
-     * @phpstan-param Path $path
-     *
-     * @param array<string, FragmentDefinitionNode> $fragments
-     * @param mixed|null $rootValue
-     * @param array<string, mixed> $variableValues
+     * @var QueryPlan
+     */
+    private $queryPlan;
+
+    /**
+     * @param FieldNode[]              $fieldNodes
+     * @param string[]                 $path
+     * @param FragmentDefinitionNode[] $fragments
+     * @param mixed|null               $rootValue
+     * @param mixed[]                  $variableValues
      */
     public function __construct(
         FieldDefinition $fieldDefinition,
-        \ArrayObject $fieldNodes,
+        iterable $fieldNodes,
         ObjectType $parentType,
         array $path,
         Schema $schema,
         array $fragments,
         $rootValue,
-        OperationDefinitionNode $operation,
+        ?OperationDefinitionNode $operation,
         array $variableValues
     ) {
         $this->fieldDefinition = $fieldDefinition;
-        $this->fieldName = $fieldDefinition->name;
-        $this->returnType = $fieldDefinition->getType();
-        $this->fieldNodes = $fieldNodes;
-        $this->parentType = $parentType;
-        $this->path = $path;
-        $this->schema = $schema;
-        $this->fragments = $fragments;
-        $this->rootValue = $rootValue;
-        $this->operation = $operation;
-        $this->variableValues = $variableValues;
+        $this->fieldName       = $fieldDefinition->name;
+        $this->returnType      = $fieldDefinition->getType();
+        $this->fieldNodes      = $fieldNodes;
+        $this->parentType      = $parentType;
+        $this->path            = $path;
+        $this->schema          = $schema;
+        $this->fragments       = $fragments;
+        $this->rootValue       = $rootValue;
+        $this->operation       = $operation;
+        $this->variableValues  = $variableValues;
     }
 
     /**
@@ -183,66 +183,67 @@ class ResolveInfo
      *
      * @api
      */
-    public function getFieldSelection(int $depth = 0): array
+    public function getFieldSelection($depth = 0)
     {
         $fields = [];
 
+        /** @var FieldNode $fieldNode */
         foreach ($this->fieldNodes as $fieldNode) {
-            if (isset($fieldNode->selectionSet)) {
-                $fields = \array_merge_recursive(
-                    $fields,
-                    $this->foldSelectionSet($fieldNode->selectionSet, $depth)
-                );
+            if ($fieldNode->selectionSet === null) {
+                continue;
             }
+
+            $fields = array_merge_recursive(
+                $fields,
+                $this->foldSelectionSet($fieldNode->selectionSet, $depth)
+            );
         }
 
         return $fields;
     }
 
     /**
-     * @param QueryPlanOptions $options
-     *
-     * @throws \Exception
-     * @throws Error
-     * @throws InvariantViolation
+     * @param mixed[] $options
      */
-    public function lookAhead(array $options = []): QueryPlan
+    public function lookAhead(array $options = []) : QueryPlan
     {
-        return new QueryPlan(
-            $this->parentType,
-            $this->schema,
-            $this->fieldNodes,
-            $this->variableValues,
-            $this->fragments,
-            $options
-        );
+        if (! isset($this->queryPlan)) {
+            $this->queryPlan = new QueryPlan(
+                $this->parentType,
+                $this->schema,
+                $this->fieldNodes,
+                $this->variableValues,
+                $this->fragments,
+                $options
+            );
+        }
+
+        return $this->queryPlan;
     }
 
-    /** @return array<string, bool> */
-    private function foldSelectionSet(SelectionSetNode $selectionSet, int $descend): array
+    /**
+     * @return bool[]
+     */
+    private function foldSelectionSet(SelectionSetNode $selectionSet, int $descend) : array
     {
-        /** @var array<string, bool> $fields */
         $fields = [];
-
         foreach ($selectionSet->selections as $selectionNode) {
             if ($selectionNode instanceof FieldNode) {
                 $fields[$selectionNode->name->value] = $descend > 0 && $selectionNode->selectionSet !== null
-                    ? \array_merge_recursive(
-                        $fields[$selectionNode->name->value] ?? [],
-                        $this->foldSelectionSet($selectionNode->selectionSet, $descend - 1)
-                    )
+                    ? $this->foldSelectionSet($selectionNode->selectionSet, $descend - 1)
                     : true;
             } elseif ($selectionNode instanceof FragmentSpreadNode) {
                 $spreadName = $selectionNode->name->value;
                 if (isset($this->fragments[$spreadName])) {
+                    /** @var FragmentDefinitionNode $fragment */
                     $fragment = $this->fragments[$spreadName];
-                    $fields = \array_merge_recursive(
+                    $fields   = array_merge_recursive(
                         $this->foldSelectionSet($fragment->selectionSet, $descend),
                         $fields
                     );
                 }
             } elseif ($selectionNode instanceof InlineFragmentNode) {
-                $fields = \array_merge_recursive(
+                $fields = array_merge_recursive(
                     $this->foldSelectionSet($selectionNode->selectionSet, $descend),
                     $fields
                 );

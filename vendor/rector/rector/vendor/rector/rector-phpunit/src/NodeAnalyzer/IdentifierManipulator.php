@@ -20,33 +20,31 @@ use Rector\NodeNameResolver\NodeNameResolver;
 final class IdentifierManipulator
 {
     /**
-     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(NodeNameResolver $nodeNameResolver)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
     }
     /**
-     * @param array<string, string> $renameMethodMap
+     * @param string[] $renameMethodMap
      * @param \PhpParser\Node\Expr\ClassConstFetch|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Stmt\ClassMethod $node
      */
-    public function renameNodeWithMap($node, array $renameMethodMap) : bool
+    public function renameNodeWithMap($node, array $renameMethodMap) : void
     {
         $oldNodeMethodName = $this->resolveOldMethodName($node);
-        if (!\is_string($oldNodeMethodName)) {
-            return \false;
+        if ($oldNodeMethodName === null) {
+            return;
         }
-        $node->name = new Identifier($renameMethodMap[$oldNodeMethodName]);
-        return \true;
+        $node->name = new \PhpParser\Node\Identifier($renameMethodMap[$oldNodeMethodName]);
     }
     /**
      * @param \PhpParser\Node\Expr\ClassConstFetch|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Stmt\ClassMethod $node
      */
     private function resolveOldMethodName($node) : ?string
     {
-        if ($node instanceof StaticCall || $node instanceof MethodCall) {
+        if ($node instanceof \PhpParser\Node\Expr\StaticCall || $node instanceof \PhpParser\Node\Expr\MethodCall) {
             return $this->nodeNameResolver->getName($node->name);
         }
         return $this->nodeNameResolver->getName($node);

@@ -53,42 +53,20 @@ use const E_USER_DEPRECATED;
  *
  * @see ConfigInterface
  *
- * @psalm-type AbstractFactoriesConfiguration = array<
- *      array-key,
- *      (class-string<Factory\AbstractFactoryInterface>|Factory\AbstractFactoryInterface)
- * >
- * @psalm-type DelegatorsConfiguration = array<
- *      string,
- *      array<
- *          array-key,
- *          (class-string<Factory\DelegatorFactoryInterface>|Factory\DelegatorFactoryInterface)
- *          |callable(ContainerInterface,string,callable():object,array<mixed>|null):object
- *      >
- * >
- * @psalm-type FactoriesConfiguration = array<
- *      string,
- *      (class-string<Factory\FactoryInterface>|Factory\FactoryInterface)
- *      |callable(ContainerInterface,?string,?array<mixed>|null):object
- * >
- * @psalm-type InitializersConfiguration = array<
- *      array-key,
- *      (class-string<Initializer\InitializerInterface>|Initializer\InitializerInterface)
- *      |callable(ContainerInterface,object):void
- * >
- * @psalm-type LazyServicesConfiguration = array{
- *      class_map?:array<string,class-string>,
- *      proxies_namespace?:non-empty-string,
- *      proxies_target_dir?:non-empty-string,
- *      write_proxy_files?:bool
- * }
+ * @psalm-import-type ServiceManagerConfigurationType from ConfigInterface
+ * @psalm-import-type AbstractFactoriesConfigurationType from ConfigInterface
+ * @psalm-import-type DelegatorsConfigurationType from ConfigInterface
+ * @psalm-import-type FactoriesConfigurationType from ConfigInterface
+ * @psalm-import-type InitializersConfigurationType from ConfigInterface
+ * @psalm-import-type LazyServicesConfigurationType from ConfigInterface
  * @psalm-type ServiceManagerConfiguration = array{
- *     abstract_factories?: AbstractFactoriesConfiguration,
+ *     abstract_factories?: AbstractFactoriesConfigurationType,
  *     aliases?: array<string,string>,
- *     delegators?: DelegatorsConfiguration,
- *     factories?: FactoriesConfiguration,
- *     initializers?: InitializersConfiguration,
+ *     delegators?: DelegatorsConfigurationType,
+ *     factories?: FactoriesConfigurationType,
+ *     initializers?: InitializersConfigurationType,
  *     invokables?: array<string,string>,
- *     lazy_services?: LazyServicesConfiguration,
+ *     lazy_services?: LazyServicesConfigurationType,
  *     services?: array<string,object|array>,
  *     shared?:array<string,bool>,
  *     shared_by_default?:bool,
@@ -121,7 +99,7 @@ class ServiceManager implements ServiceLocatorInterface
 
     /**
      * @var string[][]|Factory\DelegatorFactoryInterface[][]
-     * @psalm-var DelegatorsConfiguration
+     * @psalm-var DelegatorsConfigurationType
      */
     protected $delegators = [];
 
@@ -129,19 +107,19 @@ class ServiceManager implements ServiceLocatorInterface
      * A list of factories (either as string name or callable)
      *
      * @var string[]|callable[]
-     * @psalm-var FactoriesConfiguration
+     * @psalm-var FactoriesConfigurationType
      */
     protected $factories = [];
 
     /**
      * @var Initializer\InitializerInterface[]|callable[]
-     * @psalm-var InitializersConfiguration
+     * @psalm-var InitializersConfigurationType
      */
     protected $initializers = [];
 
     /**
      * @var array
-     * @psalm-var LazyServicesConfiguration
+     * @psalm-var LazyServicesConfigurationType
      */
     protected $lazyServices = [];
 
@@ -534,7 +512,7 @@ class ServiceManager implements ServiceLocatorInterface
     /**
      * Instantiate initializers for to avoid checks during service construction.
      *
-     * @psalm-param InitializersConfiguration $initializers
+     * @psalm-param InitializersConfigurationType $initializers
      */
     private function resolveInitializers(array $initializers): void
     {
@@ -711,8 +689,8 @@ class ServiceManager implements ServiceLocatorInterface
      * It works with strings and class instances.
      * It's not possible to de-duple anonymous functions
      *
-     * @psalm-param DelegatorsConfiguration $config
-     * @psalm-return DelegatorsConfiguration
+     * @psalm-param DelegatorsConfigurationType $config
+     * @psalm-return DelegatorsConfigurationType
      */
     private function mergeDelegators(array $config): array
     {
@@ -767,7 +745,7 @@ class ServiceManager implements ServiceLocatorInterface
      * a given service name we do not have a service instance
      * in the cache OR override is explicitly allowed.
      *
-     * @psalm-param ServiceManagerConfiguration $config
+     * @psalm-param ServiceManagerConfigurationType $config
      * @throws ContainerModificationsNotAllowedException If any
      *     service key is invalid.
      */

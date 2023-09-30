@@ -28,9 +28,9 @@ final class TypeAnalysis implements StartEndTokenAwareAnalysis
      * @see https://php.net/manual/en/reserved.other-reserved-words.php
      * @see https://php.net/manual/en/language.pseudo-types.php
      *
-     * @var list<string>
+     * @var array
      */
-    private static array $reservedTypes = [
+    private static $reservedTypes = [
         'array',
         'bool',
         'callable',
@@ -47,13 +47,25 @@ final class TypeAnalysis implements StartEndTokenAwareAnalysis
         'void',
     ];
 
-    private string $name;
+    /**
+     * @var string
+     */
+    private $name;
 
-    private int $startIndex;
+    /**
+     * @var int
+     */
+    private $startIndex;
 
-    private int $endIndex;
+    /**
+     * @var int
+     */
+    private $endIndex;
 
-    private bool $nullable;
+    /**
+     * @var bool
+     */
+    private $nullable;
 
     public function __construct(string $name, int $startIndex, int $endIndex)
     {

@@ -30,11 +30,6 @@ trait HelloWorld
     use Hello, World;
 }
 
-enum SomeEnum
-{
-    use Hello, World;
-}
-
 $x = $foo ? function ($foo) use /* comment */ ($bar): int {
     return 1;
 } : $bar;

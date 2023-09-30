@@ -60,11 +60,11 @@ final class StrictParamFixer extends AbstractFixer
     /**
      * {@inheritdoc}
      *
-     * Must run before MethodArgumentSpaceFixer, NativeFunctionInvocationFixer.
+     * Must run before NativeFunctionInvocationFixer.
      */
     public function getPriority(): int
     {
-        return 31;
+        return 11;
     }
 
     /**

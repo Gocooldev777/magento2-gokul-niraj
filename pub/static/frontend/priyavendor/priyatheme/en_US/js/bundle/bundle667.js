@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Tax/js/view/checkout/cart/totals/shipping.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/**\n * @api\n */\n\ndefine([\n    'Magento_Tax/js/view/checkout/summary/shipping',\n    'Magento_Checkout/js/model/quote'\n], function (Component, quote) {\n    'use strict';\n\n    return Component.extend({\n        /**\n         * @override\n         */\n        isCalculated: function () {\n            return !!quote.shippingMethod();\n        },\n\n        /**\n         * @override\n         */\n        getShippingMethodTitle: function () {\n            return '(' + this._super() + ')';\n        }\n    });\n});\n"}
+}});

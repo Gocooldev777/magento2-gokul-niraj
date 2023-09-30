@@ -6,6 +6,7 @@
 
 namespace Magento\SampleData\Console\Command;
 
+use Composer\Console\Application;
 use Composer\Console\ApplicationFactory;
 use Exception;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -14,10 +15,12 @@ use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\InvalidArgumentException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\SampleData\Model\Dependency;
 use Magento\Setup\Model\PackagesAuth;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\ArrayInputFactory;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -29,31 +32,53 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class SampleDataDeployCommand extends Command
 {
-    public const OPTION_NO_UPDATE = 'no-update';
+    const OPTION_NO_UPDATE = 'no-update';
 
-    /** @var Filesystem */
-    private Filesystem $filesystem;
+    /**
+     * @var Filesystem
+     */
+    private $filesystem;
 
-    /** @var Dependency */
-    private Dependency $sampleDataDependency;
+    /**
+     * @var Dependency
+     */
+    private $sampleDataDependency;
 
-    /** @var ApplicationFactory */
-    private ApplicationFactory $applicationFactory;
+    /**
+     * @var ArrayInputFactory
+     * @deprecated 100.1.0
+     */
+    private $arrayInputFactory;
+
+    /**
+     * @var ApplicationFactory
+     */
+    private $applicationFactory;
+
+    /**
+     * @var Json
+     */
+    private $serializer;
 
     /**
      * @param Filesystem $filesystem
      * @param Dependency $sampleDataDependency
+     * @param ArrayInputFactory $arrayInputFactory
      * @param ApplicationFactory $applicationFactory
+     * @param Json $serializer
      */
     public function __construct(
         Filesystem $filesystem,
         Dependency $sampleDataDependency,
-        ApplicationFactory $applicationFactory
+        ArrayInputFactory $arrayInputFactory,
+        ApplicationFactory $applicationFactory,
+        Json $serializer
     ) {
         $this->filesystem = $filesystem;
         $this->sampleDataDependency = $sampleDataDependency;
+        $this->arrayInputFactory = $arrayInputFactory;
         $this->applicationFactory = $applicationFactory;
-
+        $this->serializer = $serializer;
         parent::__construct();
     }
 
@@ -82,8 +107,35 @@ class SampleDataDeployCommand extends Command
      * @throws FileSystemException
      * @throws LocalizedException
      */
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $rootJson = $this->serializer->unserialize(
+            $this->filesystem->getDirectoryRead(
+                DirectoryList::ROOT
+            )->readFile("composer.json")
+        );
+        if (!isset($rootJson['version'])) {
+            $magentoProductPackage = array_filter(
+                $rootJson['require'],
+                function ($package) {
+                    return false !== strpos($package, 'magento/product-');
+                },
+                ARRAY_FILTER_USE_KEY
+            );
+            $version = reset($magentoProductPackage);
+            $output->writeln(
+                '<info>' .
+                // @codingStandardsIgnoreLine
+                'We don\'t recommend to remove the "version" field from your composer.json; see https://getcomposer.org/doc/02-libraries.md#library-versioning for more information.' .
+                '</info>'
+            );
+            $restoreVersion = new ArrayInput([
+                'command' => 'config',
+                'setting-key' => 'version',
+                'setting-value' => [$version],
+                '--quiet' => 1
+            ]);
+        }
         $this->updateMemoryLimit();
         $this->createAuthFile();
         $sampleDataPackages = $this->sampleDataDependency->getSampleDataPackages();
@@ -101,8 +153,15 @@ class SampleDataDeployCommand extends Command
             $arguments = array_merge(['command' => 'require'], $commonArgs);
             $commandInput = new ArrayInput($arguments);
 
+            /** @var Application $application */
             $application = $this->applicationFactory->create();
             $application->setAutoExit(false);
+            if (!empty($restoreVersion)) {
+                $result = $application->run($restoreVersion, clone $output);
+                if ($result === 0) {
+                    $output->writeln('<info>The field "version" has been restored.</info>');
+                }
+            }
             $result = $application->run($commandInput, $output);
             if ($result !== 0) {
                 $output->writeln(
@@ -114,18 +173,12 @@ class SampleDataDeployCommand extends Command
                 return Cli::RETURN_FAILURE;
             }
 
-            $output->writeln(
-                '<info>'
-                . 'Sample data modules have been added via composer. Please run bin/magento setup:upgrade'
-                . '</info>'
-            );
-
             return Cli::RETURN_SUCCESS;
+        } else {
+            $output->writeln('<info>' . 'There is no sample data for current set of modules.' . '</info>');
+
+            return Cli::RETURN_FAILURE;
         }
-
-        $output->writeln('<info>' . 'There is no sample data for current set of modules.' . '</info>');
-
-        return Cli::RETURN_FAILURE;
     }
 
     /**
@@ -136,7 +189,7 @@ class SampleDataDeployCommand extends Command
      * @return void
      * @throws LocalizedException
      */
-    private function createAuthFile(): void
+    private function createAuthFile()
     {
         $directory = $this->filesystem->getDirectoryWrite(DirectoryList::COMPOSER_HOME);
 
@@ -158,7 +211,7 @@ class SampleDataDeployCommand extends Command
      * @throws InvalidArgumentException
      * @return void
      */
-    private function updateMemoryLimit(): void
+    private function updateMemoryLimit()
     {
         if (function_exists('ini_set')) {
             // phpcs:ignore Magento2.Functions.DiscouragedFunction
@@ -191,7 +244,7 @@ class SampleDataDeployCommand extends Command
      * @param string $value
      * @return int
      */
-    private function getMemoryInBytes(string $value): int
+    private function getMemoryInBytes($value)
     {
         $unit = strtolower(substr($value, -1, 1));
         $value = (int) $value;

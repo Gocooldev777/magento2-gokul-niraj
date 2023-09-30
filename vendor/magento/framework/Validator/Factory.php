@@ -9,7 +9,6 @@ namespace Magento\Framework\Validator;
 use Magento\Framework\Module\Dir\Reader;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Phrase;
-use Magento\Framework\Translate\Adapter;
 use Magento\Framework\Validator;
 use Magento\Framework\Cache\FrontendInterface;
 
@@ -22,9 +21,8 @@ class Factory
      * cache key
      *
      * @deprecated
-     * @see we don't recommend this approach anymore
      */
-    public const CACHE_KEY = __CLASS__;
+    const CACHE_KEY = __CLASS__;
 
     /**
      * @var ObjectManagerInterface
@@ -86,9 +84,15 @@ class Factory
     protected function _initializeDefaultTranslator()
     {
         if (!$this->isDefaultTranslatorInitialized) {
-            /** @var Adapter $translator */
-            $translator = $this->_objectManager->create(Adapter::class);
-            AbstractValidator::setDefaultTranslator($translator);
+            // Pass translations to \Magento\Framework\TranslateInterface from validators
+            $translatorCallback = function () {
+                $argc = func_get_args();
+                return (string)new Phrase(array_shift($argc), $argc);
+            };
+            /** @var \Magento\Framework\Translate\Adapter $translator */
+            $translator = $this->_objectManager->create(\Magento\Framework\Translate\Adapter::class);
+            $translator->setOptions(['translator' => $translatorCallback]);
+            \Magento\Framework\Validator\AbstractValidator::setDefaultTranslator($translator);
             $this->isDefaultTranslatorInitialized = true;
         }
     }

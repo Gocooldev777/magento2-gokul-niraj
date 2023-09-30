@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 namespace PayPal\Braintree\Model\Config\Source;
 
@@ -18,9 +14,9 @@ class Size implements ArrayInterface
     public function toOptionArray(): array
     {
         return [
-            ['value' => 'medium', 'label' => __('Medium')],
-            ['value' => 'large', 'label' => __('Large')],
-            ['value' => 'responsive', 'label' => __('Responsive')]
+            ['value' => 0, 'label' => __('Medium')],
+            ['value' => 1, 'label' => __('Large')],
+            ['value' => 2, 'label' => __('Responsive')]
         ];
     }
 
@@ -32,9 +28,9 @@ class Size implements ArrayInterface
     public function toArray(): array
     {
         return [
-            'medium' => __('Medium'),
-            'large' => __('Large'),
-            'responsive' => __('Responsive')
+            0 => __('Medium'),
+            1 => __('Large'),
+            2 => __('Responsive')
         ];
     }
 
@@ -45,9 +41,9 @@ class Size implements ArrayInterface
     public function toRawValues(): array
     {
         return [
-            'medium' => 'medium',
-            'large' => 'large',
-            'responsive' => 'responsive'
+            0 => 'medium',
+            1 => 'large',
+            2 => 'responsive'
         ];
     }
 }

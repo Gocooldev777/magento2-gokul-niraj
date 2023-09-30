@@ -5,8 +5,9 @@
  */
 namespace Magento\Framework\View\Design\Theme;
 
-use Laminas\Validator\NotEmpty;
-
+/**
+ * Class Validator
+ */
 class Validator
 {
     /**
@@ -44,7 +45,7 @@ class Validator
         $titleValidators = [
             [
                 'name' => 'not_empty',
-                'class' => NotEmpty::class,
+                'class' => 'Zend_Validate_NotEmpty',
                 'break' => true,
                 'options' => [],
                 'message' => (string)new \Magento\Framework\Phrase('Field title can\'t be empty'),
@@ -65,14 +66,14 @@ class Validator
         $typeValidators = [
             [
                 'name' => 'not_empty',
-                'class' => NotEmpty::class,
+                'class' => 'Zend_Validate_NotEmpty',
                 'break' => true,
                 'options' => [],
                 'message' => (string)new \Magento\Framework\Phrase('Theme type can\'t be empty'),
             ],
             [
                 'name' => 'available',
-                'class' => \Laminas\Validator\InArray::class,
+                'class' => 'Zend_Validate_InArray',
                 'break' => true,
                 'options' => [
                     'haystack' => [
@@ -133,6 +134,7 @@ class Validator
         foreach ($validators as &$validator) {
             if (is_string($validator['class'])) {
                 $validator['class'] = new $validator['class']($validator['options']);
+                $validator['class']->setDisableTranslator(true);
             }
         }
         return $this;
@@ -148,7 +150,7 @@ class Validator
      */
     protected function _validateDataItem($validator, $dataKey, $dataValue)
     {
-        if ($validator['class'] instanceof NotEmpty && !$validator['class']->isValid(
+        if ($validator['class'] instanceof \Zend_Validate_NotEmpty && !$validator['class']->isValid(
             $dataValue
         ) || !empty($dataValue) && !$validator['class']->isValid(
             $dataValue

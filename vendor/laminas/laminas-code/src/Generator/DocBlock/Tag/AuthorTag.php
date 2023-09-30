@@ -8,15 +8,15 @@ use Laminas\Code\Reflection\DocBlock\Tag\TagInterface as ReflectionTagInterface;
 
 class AuthorTag extends AbstractGenerator implements TagInterface
 {
-    /** @var string|null */
+    /** @var string */
     protected $authorName;
 
-    /** @var string|null */
+    /** @var string */
     protected $authorEmail;
 
     /**
-     * @param string|null $authorName
-     * @param string|null $authorEmail
+     * @param string $authorName
+     * @param string $authorEmail
      */
     public function __construct($authorName = null, $authorEmail = null)
     {
@@ -41,7 +41,9 @@ class AuthorTag extends AbstractGenerator implements TagInterface
         return $tagManager->createTagFromReflection($reflectionTag);
     }
 
-    /** @return 'author' */
+    /**
+     * @return string
+     */
     public function getName()
     {
         return 'author';
@@ -57,7 +59,9 @@ class AuthorTag extends AbstractGenerator implements TagInterface
         return $this;
     }
 
-    /** @return string|null */
+    /**
+     * @return string
+     */
     public function getAuthorEmail()
     {
         return $this->authorEmail;
@@ -73,13 +77,17 @@ class AuthorTag extends AbstractGenerator implements TagInterface
         return $this;
     }
 
-    /** @return string|null */
+    /**
+     * @return string
+     */
     public function getAuthorName()
     {
         return $this->authorName;
     }
 
-    /** @return non-empty-string */
+    /**
+     * @return string
+     */
     public function generate()
     {
         return '@author'

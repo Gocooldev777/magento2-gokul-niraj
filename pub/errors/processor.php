@@ -20,7 +20,6 @@ use Magento\Framework\App\Response\Http;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * phpcs:ignoreFile
  */
-#[\AllowDynamicProperties]
 class Processor
 {
     const MAGE_ERRORS_LOCAL_XML = 'local.xml';
@@ -596,7 +595,7 @@ class Processor
      */
     private function isReportIdValid(string $reportId): bool
     {
-        return (bool)preg_match('/^[a-fA-F0-9]{64}$/', $reportId);
+        return (bool)preg_match('/[a-fA-F0-9]{64}/', $reportId);
     }
 
     /**

@@ -1,38 +1,31 @@
 <?php
 /**
+ * Storage for timers statistics
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Framework\Profiler\Driver\Standard;
 
 use Magento\Framework\Profiler;
 
-/**
- * Storage for timers statistics
- *
- * @api
- */
 class Stat
 {
     /**
      * #@+ Timer statistics data keys
      */
-    public const ID = 'id';
-    public const START = 'start';
-    public const TIME = 'sum';
-    public const COUNT = 'count';
-    public const AVG = 'avg';
-    public const REALMEM = 'realmem';
-    public const REALMEM_START = 'realmem_start';
-    public const EMALLOC = 'emalloc';
-    public const EMALLOC_START = 'emalloc_start';
+    const ID = 'id';
+    const START = 'start';
+    const TIME = 'sum';
+    const COUNT = 'count';
+    const AVG = 'avg';
+    const REALMEM = 'realmem';
+    const REALMEM_START = 'realmem_start';
+    const EMALLOC = 'emalloc';
+    const EMALLOC_START = 'emalloc_start';
     /**#@-*/
 
-    /**
-     * @var array
-     */
+    /**#@-*/
     protected $_timers = [];
 
     /**
@@ -207,8 +200,7 @@ class Stat
 
         $prevTimerId = $timerIds[0];
         $result = [$prevTimerId];
-        $numberTimerIds = count($timerIds);
-        for ($i = 1; $i < $numberTimerIds; $i++) {
+        for ($i = 1; $i < count($timerIds); $i++) {
             $timerId = $timerIds[$i];
             /* Skip already added timer */
             if (!$timerId) {
@@ -217,10 +209,7 @@ class Stat
             /* Loop over all timers that need to be closed under previous timer */
             while (strpos($timerId, $prevTimerId . Profiler::NESTING_SEPARATOR) !== 0) {
                 /* Add to result all timers nested in the previous timer */
-                for ($j = $i + 1; $j < $numberTimerIds; $j++) {
-                    if (!$timerIds[$j]) {
-                        continue;
-                    }
+                for ($j = $i + 1; $j < count($timerIds); $j++) {
                     if (strpos($timerIds[$j], $prevTimerId . Profiler::NESTING_SEPARATOR) === 0) {
                         $result[] = $timerIds[$j];
                         /* Mark timer as already added */

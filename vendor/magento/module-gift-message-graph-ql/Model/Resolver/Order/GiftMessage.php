@@ -7,17 +7,14 @@ declare(strict_types=1);
 
 namespace Magento\GiftMessageGraphQl\Model\Resolver\Order;
 
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
 use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
-use Magento\Framework\GraphQl\Query\Uid;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\GiftMessage\Api\OrderRepositoryInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class for getting GiftMessage from CustomerOrder
@@ -27,29 +24,15 @@ class GiftMessage implements ResolverInterface
     /**
      * @var OrderRepositoryInterface
      */
-    private OrderRepositoryInterface $orderRepository;
-
-    /**
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
-
-    /** @var Uid */
-    private $uidEncoder;
+    private $orderRepository;
 
     /**
      * @param OrderRepositoryInterface $orderRepository
-     * @param LoggerInterface|null $logger
-     * @param Uid|null $uidEncoder
      */
     public function __construct(
-        OrderRepositoryInterface $orderRepository,
-        LoggerInterface $logger = null,
-        Uid $uidEncoder = null
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->orderRepository = $orderRepository;
-        $this->logger = $logger ?? ObjectManager::getInstance()->get(LoggerInterface::class);
-        $this->uidEncoder = $uidEncoder ?? ObjectManager::getInstance()->get(Uid::class);
     }
 
     /**
@@ -75,20 +58,12 @@ class GiftMessage implements ResolverInterface
         if (!isset($value['id'])) {
             throw new GraphQlInputException(__('"id" value should be specified'));
         }
-
         // phpcs:ignore Magento2.Functions.DiscouragedFunction
         $orderId = (int)base64_decode($value['id']) ?: (int)$value['id'];
-
         try {
             $orderGiftMessage = $this->orderRepository->get($orderId);
         } catch (LocalizedException $e) {
-            $this->logger->error(__('Can\'t load gift message for order'));
-
-            return null;
-        }
-
-        if (!$orderGiftMessage->getGiftMessageId()) {
-            return null;
+            throw new GraphQlInputException(__('Can\'t load gift message for order'));
         }
 
         return [

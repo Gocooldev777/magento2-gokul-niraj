@@ -11,7 +11,7 @@ use Rector\Core\Contract\PHPStan\Reflection\TypeToCallReflectionResolver\TypeToC
 final class TypeToCallReflectionResolverRegistry
 {
     /**
-     * @var TypeToCallReflectionResolverInterface[]
+     * @var \Rector\Core\Contract\PHPStan\Reflection\TypeToCallReflectionResolver\TypeToCallReflectionResolverInterface[]
      * @readonly
      */
     private $resolvers;
@@ -23,9 +23,9 @@ final class TypeToCallReflectionResolverRegistry
         $this->resolvers = $resolvers;
     }
     /**
-     * @return \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection|null
+     * @return FunctionReflection|MethodReflection|null
      */
-    public function resolve(Type $type, Scope $scope)
+    public function resolve(\PHPStan\Type\Type $type, \PHPStan\Analyser\Scope $scope)
     {
         foreach ($this->resolvers as $resolver) {
             if (!$resolver->supports($type)) {

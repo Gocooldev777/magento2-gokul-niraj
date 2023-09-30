@@ -4,9 +4,7 @@
             "id": true,
             "entity": true,
             "behavior": true,
-            "data": true,
-            "is_processed": true,
-            "updated_at": true
+            "data": true
         },
         "constraint": {
             "PRIMARY": true

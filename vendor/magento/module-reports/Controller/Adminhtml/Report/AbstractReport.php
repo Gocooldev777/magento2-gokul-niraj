@@ -13,7 +13,6 @@
 namespace Magento\Reports\Controller\Adminhtml\Report;
 
 use Magento\Backend\Helper\Data as BackendHelper;
-use Magento\Framework\Filter\FilterInput;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 /**
@@ -184,7 +183,7 @@ abstract class AbstractReport extends \Magento\Backend\App\Action
         );
 
         $filterRules = ['from' => $this->_dateFilter, 'to' => $this->_dateFilter];
-        $inputFilter = new FilterInput($filterRules, [], $requestData);
+        $inputFilter = new \Zend_Filter_Input($filterRules, [], $requestData);
 
         $requestData = $inputFilter->getUnescaped();
         $requestData['store_ids'] = $this->getRequest()->getParam('store_ids');

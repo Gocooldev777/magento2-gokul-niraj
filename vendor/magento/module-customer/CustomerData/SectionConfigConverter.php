@@ -5,17 +5,15 @@
  */
 namespace Magento\Customer\CustomerData;
 
-use Magento\Framework\Config\ConverterInterface;
-
 /**
  * Class that receives xml merged source and process it.
  */
-class SectionConfigConverter implements ConverterInterface
+class SectionConfigConverter implements \Magento\Framework\Config\ConverterInterface
 {
     /**
      * Invalidate all sections marker
      */
-    public const INVALIDATE_ALL_SECTIONS_MARKER = '*';
+    const INVALIDATE_ALL_SECTIONS_MARKER = '*';
 
     /**
      * @inheritdoc
@@ -24,11 +22,9 @@ class SectionConfigConverter implements ConverterInterface
     {
         $sections = [];
         foreach ($source->getElementsByTagName('action') as $action) {
-            $actionName = $action->getAttribute('name') === null ? '' : strtolower($action->getAttribute('name'));
+            $actionName = strtolower($action->getAttribute('name'));
             foreach ($action->getElementsByTagName('section') as $section) {
-                $sections[$actionName][] = $section->getAttribute('name') === null ?
-                    ''
-                    : strtolower($section->getAttribute('name'));
+                $sections[$actionName][] = strtolower($section->getAttribute('name'));
             }
             if (!isset($sections[$actionName])) {
                 $sections[$actionName][] = self::INVALIDATE_ALL_SECTIONS_MARKER;

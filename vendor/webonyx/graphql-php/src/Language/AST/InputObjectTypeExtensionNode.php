@@ -1,21 +1,20 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class InputObjectTypeExtensionNode extends Node implements TypeExtensionNode
 {
-    public string $kind = NodeKind::INPUT_OBJECT_TYPE_EXTENSION;
+    /** @var string */
+    public $kind = NodeKind::INPUT_OBJECT_TYPE_EXTENSION;
 
-    public NameNode $name;
+    /** @var NameNode */
+    public $name;
 
     /** @var NodeList<DirectiveNode> */
-    public NodeList $directives;
+    public $directives;
 
     /** @var NodeList<InputValueDefinitionNode> */
-    public NodeList $fields;
-
-    public function getName(): NameNode
-    {
-        return $this->name;
-    }
+    public $fields;
 }

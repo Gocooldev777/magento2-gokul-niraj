@@ -23,7 +23,6 @@ use Magento\Framework\Api\Filter;
  *          AND
  *          (CustomCondition_2 OR CustomCondition_3)
  *
- * @api
  */
 interface CustomConditionInterface
 {

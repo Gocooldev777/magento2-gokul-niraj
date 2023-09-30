@@ -112,15 +112,13 @@ class Collection
 
         $productTable = $optionsCollection->getTable('catalog_product_entity');
         $linkField = $optionsCollection->getConnection()->getAutoIncrementField($productTable);
-        $entityIds = array_column($this->skuMap, 'entity_id');
-
         $optionsCollection->getSelect()->join(
             ['cpe' => $productTable],
             'cpe.' . $linkField . ' = main_table.parent_id',
             []
         )->where(
             "cpe.entity_id IN (?)",
-            $entityIds
+            $this->skuMap
         );
         $optionsCollection->setPositionOrder();
 

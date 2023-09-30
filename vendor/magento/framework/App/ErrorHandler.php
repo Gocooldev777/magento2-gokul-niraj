@@ -46,7 +46,7 @@ class ErrorHandler
      */
     public function handler($errorNo, $errorStr, $errorFile, $errorLine)
     {
-        if ($errorStr !== null && strpos($errorStr, 'DateTimeZone::__construct') !== false) {
+        if (strpos($errorStr, 'DateTimeZone::__construct') !== false) {
             // there's no way to distinguish between caught system exceptions and warnings
             return false;
         }
@@ -58,7 +58,6 @@ class ErrorHandler
 
         $msg = isset($this->errorPhrases[$errorNo]) ? $this->errorPhrases[$errorNo] : "Unknown error ({$errorNo})";
         $msg .= ": {$errorStr} in {$errorFile} on line {$errorLine}";
-        // phpcs:ignore Magento2.Exceptions.DirectThrow
         throw new \Exception($msg);
     }
 }

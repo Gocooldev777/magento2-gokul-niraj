@@ -10,8 +10,6 @@ use Magento\Framework\View\Element\UiComponentInterface;
 
 /**
  * Interface ActionPoolInterface
- *
- * @api
  */
 interface ActionPoolInterface
 {

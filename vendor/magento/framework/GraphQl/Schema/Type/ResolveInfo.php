@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl\Schema\Type;
 
 /**
  * Wrapper for GraphQl ResolveInfo
- *
- * @api
  */
 class ResolveInfo extends \GraphQL\Type\Definition\ResolveInfo
 {

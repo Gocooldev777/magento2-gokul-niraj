@@ -1,9 +1,9 @@
 <?php
-declare(strict_types=1);
 /**
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace Magento\Catalog\Model\Indexer\Product\Flat;
 
@@ -17,7 +17,6 @@ use Magento\TestFramework\ObjectManager;
 
 /**
  * Integration tests for \Magento\Catalog\Model\Indexer\Product\Flat\Processor.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ProcessorTest extends TestCase
 {
@@ -146,13 +145,7 @@ class ProcessorTest extends TestCase
             \Magento\Store\Model\Group::class
         );
         $storeGroup->setData(
-            [
-                'website_id' => 1,
-                'name' => 'New Store Group',
-                'root_category_id' => 2,
-                'group_id' => null,
-                'code' => 'newstoregroup'
-            ]
+            ['website_id' => 1, 'name' => 'New Store Group', 'root_category_id' => 2, 'group_id' => null]
         );
         $storeGroup->save();
         $this->assertTrue($this->processor->getIndexer()->isInvalid());

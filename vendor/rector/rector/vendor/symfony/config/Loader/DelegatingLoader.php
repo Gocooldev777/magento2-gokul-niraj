@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Loader;
+namespace RectorPrefix20211221\Symfony\Component\Config\Loader;
 
-use RectorPrefix202304\Symfony\Component\Config\Exception\LoaderLoadException;
+use RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException;
 /**
  * DelegatingLoader delegates loading to other loaders using a loader resolver.
  *
@@ -19,27 +19,27 @@ use RectorPrefix202304\Symfony\Component\Config\Exception\LoaderLoadException;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class DelegatingLoader extends Loader
+class DelegatingLoader extends \RectorPrefix20211221\Symfony\Component\Config\Loader\Loader
 {
-    public function __construct(LoaderResolverInterface $resolver)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\Config\Loader\LoaderResolverInterface $resolver)
     {
         $this->resolver = $resolver;
     }
     /**
-     * @param mixed $resource
-     * @return mixed
+     * {@inheritdoc}
+     * @param string|null $type
      */
-    public function load($resource, string $type = null)
+    public function load($resource, $type = null)
     {
         if (\false === ($loader = $this->resolver->resolve($resource, $type))) {
-            throw new LoaderLoadException($resource, null, 0, null, $type);
+            throw new \RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException($resource, null, 0, null, $type);
         }
         return $loader->load($resource, $type);
     }
     /**
-     * @param mixed $resource
+     * {@inheritdoc}
      */
-    public function supports($resource, string $type = null) : bool
+    public function supports($resource, string $type = null)
     {
         return \false !== $this->resolver->resolve($resource, $type);
     }

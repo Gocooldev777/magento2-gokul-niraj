@@ -22,7 +22,6 @@ use Magento\Framework\Pricing\Amount\AmountInterface;
 use Magento\Framework\Pricing\Price\PriceInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\Pricing\PriceInfo\Base;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -86,11 +85,6 @@ class TierPriceTest extends TestCase
     private $customerGroupRetriever;
 
     /**
-     * @var MockObject
-     */
-    private $scopeConfigMock;
-
-    /**
      * Initialize base dependencies
      */
     protected function setUp(): void
@@ -114,7 +108,6 @@ class TierPriceTest extends TestCase
         $this->groupManagement = $this->getMockForAbstractClass(GroupManagementInterface::class);
 
         $this->priceCurrencyMock = $this->getMockForAbstractClass(PriceCurrencyInterface::class);
-        $this->scopeConfigMock = $this->getMockForAbstractClass(ScopeConfigInterface::class);
 
         $this->model = new TierPrice(
             $this->product,
@@ -123,8 +116,7 @@ class TierPriceTest extends TestCase
             $this->priceCurrencyMock,
             $this->session,
             $this->groupManagement,
-            $this->customerGroupRetriever,
-            $this->scopeConfigMock
+            $this->customerGroupRetriever
         );
     }
 
@@ -250,8 +242,7 @@ class TierPriceTest extends TestCase
             $this->priceCurrencyMock,
             $this->session,
             $this->groupManagement,
-            $this->customerGroupRetriever,
-            $this->scopeConfigMock
+            $this->customerGroupRetriever
         );
         $group = $this->createMock(\Magento\Customer\Model\Data\Group::class);
         $group->expects($this->once())->method('getId')->willReturn(GroupManagement::CUST_GROUP_ALL);
@@ -314,21 +305,21 @@ class TierPriceTest extends TestCase
                 'tierPrices' => [
                     // will be ignored due to customer group
                     [
-                        'price'         => '21.3',
-                        'website_price' => '21.3',
+                        'price'         => '1.3',
+                        'website_price' => '1.3',
                         'price_qty'     => '1.3',
                         'cust_group'    => $this->customerGroup + 1
                     ],
                     [
-                        'price'         => '20.4',
-                        'website_price' => '20.4',
+                        'price'         => '25.4',
+                        'website_price' => '25.4',
                         'price_qty'     => '5.',
                         'cust_group'    => Group::CUST_GROUP_ALL
                     ],
                     // cases to calculate save percent
                     [
-                        'price'         => '20.1',
-                        'website_price' => '20.1',
+                        'price'         => '15.1',
+                        'website_price' => '15.1',
                         'price_qty'     => '5.',
                         'cust_group'    => Group::CUST_GROUP_ALL
                     ],
@@ -348,8 +339,8 @@ class TierPriceTest extends TestCase
                 'basePrice' => 20.,
                 'expectedResult' => [
                     [
-                        'price'          => '10.05',
-                        'website_price'  => '10.05',
+                        'price'          => '7.55',
+                        'website_price'  => '7.55',
                         'price_qty'      => '5.',
                         'cust_group'     => Group::CUST_GROUP_ALL,
                     ],
@@ -427,8 +418,7 @@ class TierPriceTest extends TestCase
             $this->priceCurrencyMock,
             $this->session,
             $this->groupManagement,
-            $this->customerGroupRetriever,
-            $this->scopeConfigMock
+            $this->customerGroupRetriever
         );
 
         $this->assertEquals($expectedValue, $tierPrice->getQuantity());

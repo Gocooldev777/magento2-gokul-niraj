@@ -13,14 +13,14 @@ final class SprintfStringAndArgs
      */
     private $string;
     /**
-     * @var Expr[]
+     * @var \PhpParser\Node\Expr[]
      * @readonly
      */
     private $arrayItems;
     /**
      * @param Expr[] $arrayItems
      */
-    public function __construct(String_ $string, array $arrayItems)
+    public function __construct(\PhpParser\Node\Scalar\String_ $string, array $arrayItems)
     {
         $this->string = $string;
         $this->arrayItems = $arrayItems;

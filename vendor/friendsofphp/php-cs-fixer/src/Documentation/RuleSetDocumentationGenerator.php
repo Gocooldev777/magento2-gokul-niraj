@@ -24,7 +24,10 @@ use PhpCsFixer\RuleSet\RuleSetDescriptionInterface;
  */
 final class RuleSetDocumentationGenerator
 {
-    private DocumentationLocator $locator;
+    /**
+     * @var DocumentationLocator
+     */
+    private $locator;
 
     public function __construct(DocumentationLocator $locator)
     {
@@ -50,45 +53,34 @@ final class RuleSetDocumentationGenerator
             $doc .= ' This set contains rules that are risky.';
         }
 
+        $doc .= "\n\n";
+
         $rules = $definition->getRules();
 
-        if ([] === $rules) {
-            $doc .= "\n\nThis is an empty set.";
+        if (\count($rules) < 1) {
+            $doc .= 'This is an empty set.';
         } else {
-            $enabledRules = array_filter($rules, static fn ($config) => false !== $config);
-            $disabledRules = array_filter($rules, static fn ($config) => false === $config);
+            $doc .= "Rules\n-----\n";
 
-            $listRules = function (array $rules) use (&$doc, $fixerNames): void {
-                foreach ($rules as $rule => $config) {
-                    if (str_starts_with($rule, '@')) {
-                        $ruleSetPath = $this->locator->getRuleSetsDocumentationFilePath($rule);
-                        $ruleSetPath = substr($ruleSetPath, strrpos($ruleSetPath, '/'));
+            foreach ($rules as $rule => $config) {
+                if (str_starts_with($rule, '@')) {
+                    $ruleSetPath = $this->locator->getRuleSetsDocumentationFilePath($rule);
+                    $ruleSetPath = substr($ruleSetPath, strrpos($ruleSetPath, '/'));
 
-                        $doc .= "\n- `{$rule} <.{$ruleSetPath}>`_";
-                    } else {
-                        $path = Preg::replace(
-                            '#^'.preg_quote($this->locator->getFixersDocumentationDirectoryPath(), '#').'/#',
-                            './../rules/',
-                            $this->locator->getFixerDocumentationFilePath($fixerNames[$rule])
-                        );
+                    $doc .= "\n- `{$rule} <.{$ruleSetPath}>`_";
+                } else {
+                    $path = Preg::replace(
+                        '#^'.preg_quote($this->locator->getFixersDocumentationDirectoryPath(), '#').'/#',
+                        './../rules/',
+                        $this->locator->getFixerDocumentationFilePath($fixerNames[$rule])
+                    );
 
-                        $doc .= "\n- `{$rule} <{$path}>`_";
-                    }
-
-                    if (!\is_bool($config)) {
-                        $doc .= "\n  config:\n  ``".HelpCommand::toString($config).'``';
-                    }
+                    $doc .= "\n- `{$rule} <{$path}>`_";
                 }
-            };
 
-            if ([] !== $enabledRules) {
-                $doc .= "\n\nRules\n-----\n";
-                $listRules($enabledRules);
-            }
-
-            if ([] !== $disabledRules) {
-                $doc .= "\n\nDisabled rules\n--------------\n";
-                $listRules($disabledRules);
+                if (!\is_bool($config)) {
+                    $doc .= "\n  config:\n  ``".HelpCommand::toString($config).'``';
+                }
             }
         }
 

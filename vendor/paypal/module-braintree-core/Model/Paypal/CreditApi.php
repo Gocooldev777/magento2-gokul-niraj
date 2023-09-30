@@ -170,7 +170,7 @@ class CreditApi
      */
     private function getAuthorizationUrl(): string
     {
-        $sandbox = $this->config->isSandbox() ? '.sandbox' : '';
+        $sandbox = $this->config->getSandbox() ? '.sandbox' : '';
         return sprintf('https://api%s.paypal.com/v1/oauth2/token', $sandbox);
     }
 
@@ -179,7 +179,7 @@ class CreditApi
      */
     private function getCalcUrl(): string
     {
-        $sandbox = $this->config->isSandbox() ? '.sandbox' : '';
+        $sandbox = $this->config->getSandbox() ? '.sandbox' : '';
         return sprintf('https://api%s.paypal.com/v1/credit/calculated-financing-options', $sandbox);
     }
 

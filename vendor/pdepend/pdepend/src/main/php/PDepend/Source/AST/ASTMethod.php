@@ -56,7 +56,7 @@ class ASTMethod extends AbstractASTCallable
     /**
      * The parent type object.
      *
-     * @var AbstractASTClassOrInterface
+     * @var AbstractASTType
      */
     protected $parent = null;
 
@@ -179,7 +179,7 @@ class ASTMethod extends AbstractASTCallable
     /**
      * Returns the parent type object or <b>null</b>
      *
-     * @return AbstractASTClassOrInterface|null
+     * @return AbstractASTType|null
      */
     public function getParent()
     {
@@ -188,8 +188,6 @@ class ASTMethod extends AbstractASTCallable
 
     /**
      * Sets the parent type object.
-     *
-     * @param AbstractASTClassOrInterface|null $parent
      *
      * @return void
      */
@@ -214,6 +212,16 @@ class ASTMethod extends AbstractASTCallable
         }
 
         return $this->parent->getCompilationUnit();
+    }
+
+    /**
+     * ASTVisitor method for node tree traversal.
+     *
+     * @return void
+     */
+    public function accept(ASTVisitor $visitor)
+    {
+        $visitor->visitMethod($this);
     }
 
     /**

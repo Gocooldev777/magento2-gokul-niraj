@@ -3,76 +3,56 @@
 declare (strict_types=1);
 namespace Rector\Core\Console\Output;
 
-use Rector\Core\Console\Style\RectorConsoleOutputStyle;
 use Rector\Core\Contract\Console\OutputStyleInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * This services helps to abstract from Symfony, and allow custom output formatters to use this Rector internal class.
  * It is very helpful while scoping Rector from analysed project.
  */
-final class RectorOutputStyle implements OutputStyleInterface
+final class RectorOutputStyle implements \Rector\Core\Contract\Console\OutputStyleInterface
 {
     /**
      * @readonly
-     * @var \Rector\Core\Console\Style\RectorConsoleOutputStyle
+     * @var \Symfony\Component\Console\Style\SymfonyStyle
      */
-    private $rectorConsoleOutputStyle;
-    public function __construct(RectorConsoleOutputStyle $rectorConsoleOutputStyle)
+    private $symfonyStyle;
+    public function __construct(\RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle $symfonyStyle)
     {
-        $this->rectorConsoleOutputStyle = $rectorConsoleOutputStyle;
-    }
-    public function progressStart(int $fileCount) : void
-    {
-        $this->rectorConsoleOutputStyle->createProgressBar($fileCount);
-    }
-    public function progressAdvance(int $step = 1) : void
-    {
-        $this->rectorConsoleOutputStyle->progressAdvance($step);
+        $this->symfonyStyle = $symfonyStyle;
     }
     public function error(string $message) : void
     {
-        $this->rectorConsoleOutputStyle->error($message);
+        $this->symfonyStyle->error($message);
     }
     public function warning(string $message) : void
     {
-        $this->rectorConsoleOutputStyle->warning($message);
+        $this->symfonyStyle->warning($message);
     }
     public function success(string $message) : void
     {
-        $this->rectorConsoleOutputStyle->success($message);
+        $this->symfonyStyle->success($message);
     }
     public function note(string $message) : void
     {
-        $this->rectorConsoleOutputStyle->note($message);
+        $this->symfonyStyle->note($message);
     }
     public function title(string $message) : void
     {
-        $this->rectorConsoleOutputStyle->title($message);
+        $this->symfonyStyle->title($message);
     }
     public function writeln(string $message) : void
     {
-        $this->rectorConsoleOutputStyle->writeln($message);
+        $this->symfonyStyle->writeln($message);
     }
-    public function newLine(int $count = 1) : void
+    public function newline(int $count = 1) : void
     {
-        $this->rectorConsoleOutputStyle->newLine($count);
+        $this->symfonyStyle->newLine($count);
     }
     /**
      * @param string[] $elements
      */
     public function listing(array $elements) : void
     {
-        $this->rectorConsoleOutputStyle->listing($elements);
-    }
-    public function isVerbose() : bool
-    {
-        return $this->rectorConsoleOutputStyle->isVerbose();
-    }
-    public function isDebug() : bool
-    {
-        return $this->rectorConsoleOutputStyle->isDebug();
-    }
-    public function setVerbosity(int $level) : void
-    {
-        $this->rectorConsoleOutputStyle->setVerbosity($level);
+        $this->symfonyStyle->listing($elements);
     }
 }

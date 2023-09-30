@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/grid/cells/thumbnail/preview.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n\n<div class=\"thumbnail-preview\" data-role=\"thumbnail-preview\">\n    <div class=\"thumbnail-preview-image-block\">\n        <img class=\"thumbnail-preview-image\" src=\"<%- src %>\" alt=\"<%- alt %>\" />\n    </div>\n    <div class=\"thumbnail-preview-content\">\n        <a class=\"thumbnail-preview-link\" href=\"<%- link %>\"><%- linkText %></a>\n    </div>\n</div>\n"}
+}});

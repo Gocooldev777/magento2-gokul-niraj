@@ -373,6 +373,6 @@ class LocalFileAssertions extends Helper
      */
     private function expandPath($filePath): string
     {
-        return ($filePath && substr($filePath, 0, 1) === '/') ? $filePath : MAGENTO_BP . '/' . $filePath;
+        return (substr($filePath, 0, 1) === '/') ? $filePath : MAGENTO_BP . '/' . $filePath;
     }
 }

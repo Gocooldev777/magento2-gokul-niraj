@@ -64,8 +64,6 @@ final class PhpdocAlignFixer extends AbstractFixer implements ConfigurableFixerI
     private const TAGS_WITH_NAME = [
         'param',
         'property',
-        'property-read',
-        'property-write',
     ];
 
     private const TAGS_WITH_METHOD_SIGNATURE = [
@@ -113,7 +111,7 @@ final class PhpdocAlignFixer extends AbstractFixer implements ConfigurableFixerI
 
         // e.g. @method <hint> <signature>
         if ([] !== $tagsWithMethodSignatureToAlign) {
-            $types[] = '(?P<tag3>'.implode('|', $tagsWithMethodSignatureToAlign).')(\s+(?P<static>static))?(\s+(?P<hint3>[^\s(]+)|)\s+(?P<signature>.+\))';
+            $types[] = '(?P<tag3>'.implode('|', $tagsWithMethodSignatureToAlign).')(\s+(?P<hint3>[^\s(]+)|)\s+(?P<signature>.+\))';
         }
 
         // optional <desc>
@@ -154,7 +152,7 @@ EOF;
     /**
      * {@inheritdoc}
      *
-     * Must run after AlignMultilineCommentFixer, CommentToPhpdocFixer, GeneralPhpdocAnnotationRemoveFixer, GeneralPhpdocTagRenameFixer, NoBlankLinesAfterPhpdocFixer, NoEmptyPhpdocFixer, NoSuperfluousPhpdocTagsFixer, PhpdocAddMissingParamAnnotationFixer, PhpdocAnnotationWithoutDotFixer, PhpdocIndentFixer, PhpdocInlineTagNormalizerFixer, PhpdocLineSpanFixer, PhpdocNoAccessFixer, PhpdocNoAliasTagFixer, PhpdocNoEmptyReturnFixer, PhpdocNoPackageFixer, PhpdocNoUselessInheritdocFixer, PhpdocOrderByValueFixer, PhpdocOrderFixer, PhpdocReturnSelfReferenceFixer, PhpdocScalarFixer, PhpdocSeparationFixer, PhpdocSingleLineVarSpacingFixer, PhpdocSummaryFixer, PhpdocTagCasingFixer, PhpdocTagTypeFixer, PhpdocToCommentFixer, PhpdocToParamTypeFixer, PhpdocToPropertyTypeFixer, PhpdocToReturnTypeFixer, PhpdocTrimConsecutiveBlankLineSeparationFixer, PhpdocTrimFixer, PhpdocTypesFixer, PhpdocTypesOrderFixer, PhpdocVarAnnotationCorrectOrderFixer, PhpdocVarWithoutNameFixer.
+     * Must run after AlignMultilineCommentFixer, CommentToPhpdocFixer, CommentToPhpdocFixer, GeneralPhpdocAnnotationRemoveFixer, GeneralPhpdocTagRenameFixer, NoBlankLinesAfterPhpdocFixer, NoEmptyPhpdocFixer, NoSuperfluousPhpdocTagsFixer, PhpdocAddMissingParamAnnotationFixer, PhpdocAddMissingParamAnnotationFixer, PhpdocAnnotationWithoutDotFixer, PhpdocIndentFixer, PhpdocIndentFixer, PhpdocInlineTagNormalizerFixer, PhpdocLineSpanFixer, PhpdocNoAccessFixer, PhpdocNoAliasTagFixer, PhpdocNoEmptyReturnFixer, PhpdocNoPackageFixer, PhpdocNoUselessInheritdocFixer, PhpdocOrderByValueFixer, PhpdocOrderFixer, PhpdocReturnSelfReferenceFixer, PhpdocScalarFixer, PhpdocScalarFixer, PhpdocSeparationFixer, PhpdocSingleLineVarSpacingFixer, PhpdocSummaryFixer, PhpdocTagCasingFixer, PhpdocTagTypeFixer, PhpdocToCommentFixer, PhpdocToCommentFixer, PhpdocToParamTypeFixer, PhpdocToPropertyTypeFixer, PhpdocToReturnTypeFixer, PhpdocTrimConsecutiveBlankLineSeparationFixer, PhpdocTrimFixer, PhpdocTypesFixer, PhpdocTypesFixer, PhpdocTypesOrderFixer, PhpdocVarAnnotationCorrectOrderFixer, PhpdocVarWithoutNameFixer.
      */
     public function getPriority(): int
     {
@@ -231,6 +229,7 @@ EOF;
         $lineEnding = $this->whitespacesConfig->getLineEnding();
 
         for ($i = 0, $l = \count($docBlock->getLines()); $i < $l; ++$i) {
+            $items = [];
             $matches = $this->getMatches($docBlock->getLine($i)->getContent());
 
             if (null === $matches) {
@@ -238,7 +237,7 @@ EOF;
             }
 
             $current = $i;
-            $items = [$matches];
+            $items[] = $matches;
 
             while (true) {
                 if (null === $docBlock->getLine(++$i)) {
@@ -254,7 +253,6 @@ EOF;
             }
 
             // compute the max length of the tag, hint and variables
-            $hasStatic = false;
             $tagMax = 0;
             $hintMax = 0;
             $varMax = 0;
@@ -264,7 +262,6 @@ EOF;
                     continue;
                 }
 
-                $hasStatic = $hasStatic || $item['static'];
                 $tagMax = max($tagMax, \strlen($item['tag']));
                 $hintMax = max($hintMax, \strlen($item['hint']));
                 $varMax = max($varMax, \strlen($item['var']));
@@ -285,10 +282,6 @@ EOF;
 
                     if (\in_array($currTag, self::TAGS_WITH_NAME, true) || \in_array($currTag, self::TAGS_WITH_METHOD_SIGNATURE, true)) {
                         $extraIndent = 3;
-                    }
-
-                    if ($hasStatic) {
-                        $extraIndent += 7; // \strlen('static ');
                     }
 
                     $line =
@@ -312,24 +305,8 @@ EOF;
                     $item['indent']
                     .' * @'
                     .$item['tag']
-                ;
-
-                if ($hasStatic) {
-                    $line .=
-                        $this->getIndent(
-                            $tagMax - \strlen($item['tag']) + 1,
-                            $item['static'] ? 1 : 0
-                        )
-                        .($item['static'] ?: $this->getIndent(6 /* \strlen('static') */, 0))
-                    ;
-                    $hintVerticalAlignIndent = 1;
-                } else {
-                    $hintVerticalAlignIndent = $tagMax - \strlen($item['tag']) + 1;
-                }
-
-                $line .=
-                    $this->getIndent(
-                        $hintVerticalAlignIndent,
+                    .$this->getIndent(
+                        $tagMax - \strlen($item['tag']) + 1,
                         $item['hint'] ? 1 : 0
                     )
                     .$item['hint']
@@ -372,21 +349,10 @@ EOF;
                 $matches['tag'] = $matches['tag3'];
                 $matches['hint'] = $matches['hint3'];
                 $matches['var'] = $matches['signature'];
-
-                // Since static can be both a return type declaration & a keyword that defines static methods
-                // we assume it's a type declaration when only one value is present
-                if ('' === $matches['hint'] && '' !== $matches['static']) {
-                    $matches['hint'] = $matches['static'];
-                    $matches['static'] = '';
-                }
             }
 
             if (isset($matches['hint'])) {
                 $matches['hint'] = trim($matches['hint']);
-            }
-
-            if (!isset($matches['static'])) {
-                $matches['static'] = '';
             }
 
             return $matches;
@@ -396,7 +362,6 @@ EOF;
             $matches['tag'] = null;
             $matches['var'] = '';
             $matches['hint'] = '';
-            $matches['static'] = '';
 
             return $matches;
         }
@@ -436,7 +401,6 @@ EOF;
 
         // Indent according to existing values:
         return
-            $this->getSentenceIndent($item['static']) +
             $this->getSentenceIndent($item['tag']) +
             $this->getSentenceIndent($item['hint']) +
             $this->getSentenceIndent($item['var']);

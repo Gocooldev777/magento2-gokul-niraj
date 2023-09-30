@@ -1,24 +1,17 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Model;
 
-use function array_key_exists;
-
-/**
- * @deprecated
- */
 class ConsoleModel extends ViewModel
 {
-    public const RESULT = 'result';
+    const RESULT = 'result';
 
     /**
      * Console output doesn't support containers.
      *
-     * @var string|null
+     * @var string
      */
-    protected $captureTo;
+    protected $captureTo = null;
 
     /**
      * Console output should always be terminal.
@@ -53,7 +46,7 @@ class ConsoleModel extends ViewModel
      * Set result text.
      *
      * @param string  $text
-     * @return ConsoleModel
+     * @return \Laminas\View\Model\ConsoleModel
      */
     public function setResult($text)
     {

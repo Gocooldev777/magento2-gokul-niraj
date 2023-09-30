@@ -11,8 +11,6 @@ use Magento\Framework\App\Response\HttpInterface as HttpResponse;
 
 /**
  * Renders configured CSPs
- *
- * @api
  */
 interface CspRendererInterface
 {

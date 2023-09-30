@@ -8,23 +8,18 @@ declare(strict_types=1);
 namespace Magento\CatalogGraphQl\DataProvider\Product;
 
 use Magento\Catalog\Api\Data\EavAttributeInterface;
-use Magento\Catalog\Model\Product;
-use Magento\Catalog\Model\Product\Visibility;
-use Magento\Eav\Model\Config;
 use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\Search\FilterGroupBuilder;
 use Magento\Framework\Api\Search\SearchCriteriaInterface;
 use Magento\Framework\Api\SortOrder;
-use Magento\Framework\Api\SortOrderBuilder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\GraphQl\Query\Resolver\Argument\SearchCriteria\Builder;
+use Magento\Catalog\Model\Product\Visibility;
+use Magento\Framework\Api\SortOrderBuilder;
 
 /**
  * Build search criteria
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-
 class SearchCriteriaBuilder
 {
     /**
@@ -57,18 +52,12 @@ class SearchCriteriaBuilder
     private $sortOrderBuilder;
 
     /**
-     * @var Config
-     */
-    private Config $eavConfig;
-
-    /**
      * @param Builder $builder
      * @param ScopeConfigInterface $scopeConfig
      * @param FilterBuilder $filterBuilder
      * @param FilterGroupBuilder $filterGroupBuilder
      * @param Visibility $visibility
      * @param SortOrderBuilder $sortOrderBuilder
-     * @param Config $eavConfig
      */
     public function __construct(
         Builder $builder,
@@ -76,16 +65,14 @@ class SearchCriteriaBuilder
         FilterBuilder $filterBuilder,
         FilterGroupBuilder $filterGroupBuilder,
         Visibility $visibility,
-        SortOrderBuilder $sortOrderBuilder = null,
-        Config $eavConfig = null
+        SortOrderBuilder $sortOrderBuilder
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->filterBuilder = $filterBuilder;
         $this->filterGroupBuilder = $filterGroupBuilder;
         $this->builder = $builder;
         $this->visibility = $visibility;
-        $this->sortOrderBuilder = $sortOrderBuilder ?? ObjectManager::getInstance()->get(SortOrderBuilder::class);
-        $this->eavConfig = $eavConfig ?? ObjectManager::getInstance()->get(Config::class);
+        $this->sortOrderBuilder = $sortOrderBuilder;
     }
 
     /**
@@ -100,13 +87,9 @@ class SearchCriteriaBuilder
         $searchCriteria = $this->builder->build('products', $args);
         $isSearch = !empty($args['search']);
         $this->updateRangeFilters($searchCriteria);
-        if ($includeAggregation) {
-            $attributeData = $this->eavConfig->getAttribute(Product::ENTITY, 'price');
-            $priceOptions = $attributeData->getData();
 
-            if ($priceOptions['is_filterable'] != 0) {
-                $this->preparePriceAggregation($searchCriteria);
-            }
+        if ($includeAggregation) {
+            $this->preparePriceAggregation($searchCriteria);
             $requestName = 'graphql_product_search_with_aggregation';
         } else {
             $requestName = 'graphql_product_search';
@@ -121,7 +104,7 @@ class SearchCriteriaBuilder
             $this->addDefaultSortOrder($searchCriteria, $args, $isSearch);
         }
 
-        $this->addEntityIdSort($searchCriteria);
+        $this->addEntityIdSort($searchCriteria, $args);
         $this->addVisibilityFilter($searchCriteria, $isSearch, !empty($args['filter']));
 
         $searchCriteria->setCurrentPage($args['currentPage']);
@@ -154,22 +137,15 @@ class SearchCriteriaBuilder
      * Add sort by Entity ID
      *
      * @param SearchCriteriaInterface $searchCriteria
+     * @param array $args
      */
-    private function addEntityIdSort(SearchCriteriaInterface $searchCriteria): void
+    private function addEntityIdSort(SearchCriteriaInterface $searchCriteria, array $args): void
     {
+        $sortOrder = !empty($args['sort']) ? reset($args['sort']) : SortOrder::SORT_DESC;
         $sortOrderArray = $searchCriteria->getSortOrders();
-        $sortDir = SortOrder::SORT_DESC;
-        if (is_array($sortOrderArray) && count($sortOrderArray) > 0) {
-            $sortOrder = end($sortOrderArray);
-            // in the case the last sort order is by position, sort IDs in descendent order
-            $sortDir = $sortOrder->getField() === EavAttributeInterface::POSITION
-                ? SortOrder::SORT_DESC
-                : $sortOrder->getDirection();
-        }
-
         $sortOrderArray[] = $this->sortOrderBuilder
             ->setField('_id')
-            ->setDirection($sortDir)
+            ->setDirection($sortOrder)
             ->create();
         $searchCriteria->setSortOrders($sortOrderArray);
     }

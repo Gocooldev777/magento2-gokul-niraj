@@ -1,7 +1,6 @@
 # PromiseTimer
 
-[![CI status](https://github.com/reactphp/promise-timer/actions/workflows/ci.yml/badge.svg)](https://github.com/reactphp/promise-timer/actions)
-[![installs on Packagist](https://img.shields.io/packagist/dt/react/promise-timer?color=blue&label=installs%20on%20Packagist)](https://packagist.org/packages/react/promise-timer)
+[![CI status](https://github.com/reactphp/promise-timer/workflows/CI/badge.svg)](https://github.com/reactphp/promise-timer/actions)
 
 A trivial implementation of timeouts for `Promise`s, built on top of [ReactPHP](https://reactphp.org/).
 
@@ -47,7 +46,7 @@ Timer\timeout(…);
 
 ### timeout()
 
-The `timeout(PromiseInterface<mixed, Throwable|mixed> $promise, float $time, ?LoopInterface $loop = null): PromiseInterface<mixed, TimeoutException|Throwable|mixed>` function can be used to
+The `timeout(PromiseInterface<mixed, Exception|mixed> $promise, float $time, ?LoopInterface $loop = null): PromiseInterface<mixed, TimeoutException|Exception|mixed>` function can be used to
 cancel operations that take *too long*.
 
 You need to pass in an input `$promise` that represents a pending operation
@@ -104,16 +103,20 @@ React\Promise\Timer\timeout($promise, 10.0)->then(
 );
 ```
 
-Or if you're using [react/promise v3](https://github.com/reactphp/promise):
+Or if you're using [react/promise v2.2.0](https://github.com/reactphp/promise) or up:
 
 ```php
-React\Promise\Timer\timeout($promise, 10.0)->then(function ($value) {
-    // the operation finished within 10.0 seconds
-})->catch(function (React\Promise\Timer\TimeoutException $error) {
-    // the operation has failed due to a timeout
-})->catch(function (Throwable $error) {
-    // the input operation has failed due to some other error
-});
+React\Promise\Timer\timeout($promise, 10.0)
+    ->then(function ($value) {
+        // the operation finished within 10.0 seconds
+    })
+    ->otherwise(function (React\Promise\Timer\TimeoutException $error) {
+        // the operation has failed due to a timeout
+    })
+    ->otherwise(function ($error) {
+        // the input operation has failed due to some other error
+    })
+;
 ```
 
 As discussed above, the [`timeout()`](#timeout) function will take care of
@@ -288,7 +291,7 @@ This project follows [SemVer](https://semver.org/).
 This will install the latest supported version:
 
 ```bash
-$ composer require react/promise-timer:^1.9
+$ composer require react/promise-timer:^1.8
 ```
 
 See also the [CHANGELOG](CHANGELOG.md) for details about version upgrades.

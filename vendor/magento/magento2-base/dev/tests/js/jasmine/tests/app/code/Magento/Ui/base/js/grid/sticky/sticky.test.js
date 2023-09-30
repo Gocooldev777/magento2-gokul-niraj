@@ -3,7 +3,6 @@
  * See COPYING.txt for license details.
  */
 
-/* eslint-disable max-nested-callbacks */
 define([
     'underscore',
     'Magento_Ui/js/grid/sticky/sticky'
@@ -47,7 +46,6 @@ define([
                 expect(stickyObj.initListeners).toHaveBeenCalled();
             });
             it('has initOnScroll method', function () {
-                spyOn(document, 'addEventListener').and.callFake(function () {});
                 stickyObj.initOnScroll();
                 expect(stickyObj.lastHorizontalScrollPos).toBeDefined();
             });

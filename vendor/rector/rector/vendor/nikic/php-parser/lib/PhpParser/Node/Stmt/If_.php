@@ -4,8 +4,7 @@ declare (strict_types=1);
 namespace PhpParser\Node\Stmt;
 
 use PhpParser\Node;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-class If_ extends Node\Stmt implements StmtsAwareInterface
+class If_ extends \PhpParser\Node\Stmt
 {
     /** @var Node\Expr Condition expression */
     public $cond;
@@ -25,7 +24,7 @@ class If_ extends Node\Stmt implements StmtsAwareInterface
      *                              'else'    => null   : Else clause
      * @param array     $attributes Additional attributes
      */
-    public function __construct(Node\Expr $cond, array $subNodes = [], array $attributes = [])
+    public function __construct(\PhpParser\Node\Expr $cond, array $subNodes = [], array $attributes = [])
     {
         $this->attributes = $attributes;
         $this->cond = $cond;

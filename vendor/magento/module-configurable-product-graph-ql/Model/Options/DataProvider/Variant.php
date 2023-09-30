@@ -52,6 +52,8 @@ class Variant
         $collection
             ->addAttributeToSelect('*')
             ->addFilterByRequiredOptions();
+        $collection->addMediaGalleryData();
+        $collection->addTierPriceData();
 
         $stockFlag = 'has_stock_status_filter';
         if (!$collection->hasFlag($stockFlag)) {
@@ -59,8 +61,7 @@ class Variant
             $stockStatusResource->addStockDataToCollection($collection, true);
             $collection->setFlag($stockFlag, true);
         }
-        $collection->addMediaGalleryData();
-        $collection->addTierPriceData();
+        $collection->clear();
 
         return $collection->getItems() ?? [];
     }

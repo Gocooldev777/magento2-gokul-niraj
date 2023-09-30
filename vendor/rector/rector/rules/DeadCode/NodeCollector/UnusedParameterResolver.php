@@ -5,24 +5,23 @@ namespace Rector\DeadCode\NodeCollector;
 
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
-use Rector\Core\NodeAnalyzer\ParamAnalyzer;
+use Rector\Core\NodeManipulator\ClassMethodManipulator;
 final class UnusedParameterResolver
 {
     /**
      * @readonly
-     * @var \Rector\Core\NodeAnalyzer\ParamAnalyzer
+     * @var \Rector\Core\NodeManipulator\ClassMethodManipulator
      */
-    private $paramAnalyzer;
-    public function __construct(ParamAnalyzer $paramAnalyzer)
+    private $classMethodManipulator;
+    public function __construct(\Rector\Core\NodeManipulator\ClassMethodManipulator $classMethodManipulator)
     {
-        $this->paramAnalyzer = $paramAnalyzer;
+        $this->classMethodManipulator = $classMethodManipulator;
     }
     /**
-     * @return array<int, Param>
+     * @return Param[]
      */
-    public function resolve(ClassMethod $classMethod) : array
+    public function resolve(\PhpParser\Node\Stmt\ClassMethod $classMethod) : array
     {
-        /** @var array<int, Param> $unusedParameters */
         $unusedParameters = [];
         foreach ($classMethod->params as $i => $param) {
             // skip property promotion
@@ -30,7 +29,7 @@ final class UnusedParameterResolver
             if ($param->flags !== 0) {
                 continue;
             }
-            if ($this->paramAnalyzer->isParamUsedInClassMethod($classMethod, $param)) {
+            if ($this->classMethodManipulator->isParameterUsedInClassMethod($param, $classMethod)) {
                 continue;
             }
             $unusedParameters[$i] = $param;

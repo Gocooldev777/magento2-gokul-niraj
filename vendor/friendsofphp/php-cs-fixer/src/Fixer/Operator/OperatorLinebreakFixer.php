@@ -23,7 +23,6 @@ use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
 use PhpCsFixer\Preg;
-use PhpCsFixer\Tokenizer\Analyzer\AlternativeSyntaxAnalyzer;
 use PhpCsFixer\Tokenizer\Analyzer\Analysis\SwitchAnalysis;
 use PhpCsFixer\Tokenizer\Analyzer\ControlCaseStructuresAnalyzer;
 use PhpCsFixer\Tokenizer\Analyzer\GotoLabelAnalyzer;
@@ -38,12 +37,15 @@ final class OperatorLinebreakFixer extends AbstractFixer implements Configurable
 {
     private const BOOLEAN_OPERATORS = [[T_BOOLEAN_AND], [T_BOOLEAN_OR], [T_LOGICAL_AND], [T_LOGICAL_OR], [T_LOGICAL_XOR]];
 
-    private string $position = 'beginning';
+    /**
+     * @var string
+     */
+    private $position = 'beginning';
 
     /**
      * @var array<array<int|string>|string>
      */
-    private array $operators = [];
+    private $operators = [];
 
     /**
      * {@inheritdoc}
@@ -119,7 +121,6 @@ function foo() {
     {
         $referenceAnalyzer = new ReferenceAnalyzer();
         $gotoLabelAnalyzer = new GotoLabelAnalyzer();
-        $alternativeSyntaxAnalyzer = new AlternativeSyntaxAnalyzer();
 
         $excludedIndices = $this->getExcludedIndices($tokens);
 
@@ -136,10 +137,6 @@ function foo() {
             }
 
             if ($referenceAnalyzer->isReference($tokens, $index)) {
-                continue;
-            }
-
-            if ($alternativeSyntaxAnalyzer->belongsToAlternativeSyntax($tokens, $index)) {
                 continue;
             }
 
@@ -168,22 +165,23 @@ function foo() {
      */
     private function getExcludedIndices(Tokens $tokens): array
     {
-        $colonIndices = [];
+        $colonIndexes = [];
 
-        /** @var SwitchAnalysis $analysis */
         foreach (ControlCaseStructuresAnalyzer::findControlStructures($tokens, [T_SWITCH]) as $analysis) {
             foreach ($analysis->getCases() as $case) {
-                $colonIndices[] = $case->getColonIndex();
+                $colonIndexes[] = $case->getColonIndex();
             }
 
-            $defaultAnalysis = $analysis->getDefaultAnalysis();
+            if ($analysis instanceof SwitchAnalysis) {
+                $defaultAnalysis = $analysis->getDefaultAnalysis();
 
-            if (null !== $defaultAnalysis) {
-                $colonIndices[] = $defaultAnalysis->getColonIndex();
+                if (null !== $defaultAnalysis) {
+                    $colonIndexes[] = $defaultAnalysis->getColonIndex();
+                }
             }
         }
 
-        return $colonIndices;
+        return $colonIndexes;
     }
 
     /**
@@ -313,7 +311,7 @@ function foo() {
                 [T_POW_EQUAL], [T_SL], [T_SL_EQUAL], [T_SR], [T_SR_EQUAL], [T_XOR_EQUAL],
                 [T_COALESCE], [T_SPACESHIP],
             ],
-            array_map(static fn (int $id): array => [$id], Token::getObjectOperatorKinds()),
+            array_map(static function ($id): array { return [$id]; }, Token::getObjectOperatorKinds())
         );
     }
 }

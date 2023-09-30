@@ -203,10 +203,9 @@ define([
          * @returns {Filters} Chainable.
          */
         apply: function () {
-            if (typeof $('body').notification === 'function') {
-                $('body').notification('clear');
-            }
+            $('body').notification('clear');
             this.set('applied', removeEmpty(this.filters));
+
             return this;
         },
 

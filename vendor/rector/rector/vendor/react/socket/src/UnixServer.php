@@ -1,10 +1,10 @@
 <?php
 
-namespace RectorPrefix202304\React\Socket;
+namespace RectorPrefix20211221\React\Socket;
 
-use RectorPrefix202304\Evenement\EventEmitter;
-use RectorPrefix202304\React\EventLoop\Loop;
-use RectorPrefix202304\React\EventLoop\LoopInterface;
+use RectorPrefix20211221\Evenement\EventEmitter;
+use RectorPrefix20211221\React\EventLoop\Loop;
+use RectorPrefix20211221\React\EventLoop\LoopInterface;
 use InvalidArgumentException;
 use RuntimeException;
 /**
@@ -20,7 +20,7 @@ use RuntimeException;
  * @see ServerInterface
  * @see ConnectionInterface
  */
-final class UnixServer extends EventEmitter implements ServerInterface
+final class UnixServer extends \RectorPrefix20211221\Evenement\EventEmitter implements \RectorPrefix20211221\React\Socket\ServerInterface
 {
     private $master;
     private $loop;
@@ -48,29 +48,27 @@ final class UnixServer extends EventEmitter implements ServerInterface
      * @throws InvalidArgumentException if the listening address is invalid
      * @throws RuntimeException if listening on this address fails (already in use etc.)
      */
-    public function __construct($path, LoopInterface $loop = null, array $context = array())
+    public function __construct($path, \RectorPrefix20211221\React\EventLoop\LoopInterface $loop = null, array $context = array())
     {
-        $this->loop = $loop ?: Loop::get();
+        $this->loop = $loop ?: \RectorPrefix20211221\React\EventLoop\Loop::get();
         if (\strpos($path, '://') === \false) {
             $path = 'unix://' . $path;
         } elseif (\substr($path, 0, 7) !== 'unix://') {
             throw new \InvalidArgumentException('Given URI "' . $path . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22);
         }
-        $errno = 0;
-        $errstr = '';
-        \set_error_handler(function ($_, $error) use(&$errno, &$errstr) {
+        $this->master = @\stream_socket_server($path, $errno, $errstr, \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN, \stream_context_create(array('socket' => $context)));
+        if (\false === $this->master) {
             // PHP does not seem to report errno/errstr for Unix domain sockets (UDS) right now.
             // This only applies to UDS server sockets, see also https://3v4l.org/NAhpr.
             // Parse PHP warning message containing unknown error, HHVM reports proper info at least.
-            if (\preg_match('/\\(([^\\)]+)\\)|\\[(\\d+)\\]: (.*)/', $error, $match)) {
-                $errstr = isset($match[3]) ? $match['3'] : $match[1];
-                $errno = isset($match[2]) ? (int) $match[2] : 0;
+            if ($errno === 0 && $errstr === '') {
+                $error = \error_get_last();
+                if (\preg_match('/\\(([^\\)]+)\\)|\\[(\\d+)\\]: (.*)/', $error['message'], $match)) {
+                    $errstr = isset($match[3]) ? $match['3'] : $match[1];
+                    $errno = isset($match[2]) ? (int) $match[2] : 0;
+                }
             }
-        });
-        $this->master = \stream_socket_server($path, $errno, $errstr, \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN, \stream_context_create(array('socket' => $context)));
-        \restore_error_handler();
-        if (\false === $this->master) {
-            throw new \RuntimeException('Failed to listen on Unix domain socket "' . $path . '": ' . $errstr . SocketServer::errconst($errno), $errno);
+            throw new \RuntimeException('Failed to listen on Unix domain socket "' . $path . '": ' . $errstr . \RectorPrefix20211221\React\Socket\SocketServer::errconst($errno), $errno);
         }
         \stream_set_blocking($this->master, 0);
         $this->resume();
@@ -98,7 +96,7 @@ final class UnixServer extends EventEmitter implements ServerInterface
         $that = $this;
         $this->loop->addReadStream($this->master, function ($master) use($that) {
             try {
-                $newSocket = SocketServer::accept($master);
+                $newSocket = \RectorPrefix20211221\React\Socket\SocketServer::accept($master);
             } catch (\RuntimeException $e) {
                 $that->emit('error', array($e));
                 return;
@@ -119,7 +117,7 @@ final class UnixServer extends EventEmitter implements ServerInterface
     /** @internal */
     public function handleConnection($socket)
     {
-        $connection = new Connection($socket, $this->loop);
+        $connection = new \RectorPrefix20211221\React\Socket\Connection($socket, $this->loop);
         $connection->unix = \true;
         $this->emit('connection', array($connection));
     }

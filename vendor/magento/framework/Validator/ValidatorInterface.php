@@ -1,31 +1,30 @@
 <?php
 /**
+ * Validator interface
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Framework\Validator;
 
-use Laminas\Validator\Translator\TranslatorInterface;
-use Laminas\Validator\ValidatorInterface as LaminasValidatorInterface;
-
 /**
  * @api
  * @since 100.0.2
  */
-interface ValidatorInterface extends LaminasValidatorInterface
+interface ValidatorInterface extends \Zend_Validate_Interface
 {
     /**
      * Set translator instance.
      *
-     * @param TranslatorInterface|null $translator
-     * @return ValidatorInterface
+     * @param \Magento\Framework\Translate\AdapterInterface|null $translator
+     * @return \Magento\Framework\Validator\ValidatorInterface
      */
-    public function setTranslator(?TranslatorInterface $translator = null);
+    public function setTranslator($translator = null);
 
     /**
      * Get translator.
      *
-     * @return TranslatorInterface|null
+     * @return \Magento\Framework\Translate\AdapterInterface|null
      */
     public function getTranslator();
 

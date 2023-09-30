@@ -56,7 +56,6 @@
         </actionGroup>
 
         <actionGroup ref="ClickViewAndEditCartFromMiniCartActionGroup" stepKey="goToShoppingCartFromMinicart"/>
-        <waitForPageLoad stepKey="waitForGrandTotalToLoad"/>
         <grabTextFrom selector="{{CheckoutPaymentSection.orderSummaryTotal}}" stepKey="grabTotal"/>
 
         <actionGroup ref="StorefrontGoCheckoutWithMultipleAddressesActionGroup" stepKey="goCheckoutWithMultipleAddresses"/>

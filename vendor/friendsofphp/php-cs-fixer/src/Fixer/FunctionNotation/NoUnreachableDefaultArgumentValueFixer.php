@@ -62,7 +62,11 @@ function example($foo = "two words", $bar) {}
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isAnyTokenKindsFound([T_FUNCTION, T_FN]);
+        if (\PHP_VERSION_ID >= 70400 && $tokens->isTokenKindFound(T_FN)) {
+            return true;
+        }
+
+        return $tokens->isTokenKindFound(T_FUNCTION);
     }
 
     /**
@@ -78,10 +82,11 @@ function example($foo = "two words", $bar) {}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
-        $functionKinds = [T_FUNCTION, T_FN];
-
         for ($i = 0, $l = $tokens->count(); $i < $l; ++$i) {
-            if (!$tokens[$i]->isGivenKind($functionKinds)) {
+            if (
+                !$tokens[$i]->isGivenKind(T_FUNCTION)
+                && (\PHP_VERSION_ID < 70400 || !$tokens[$i]->isGivenKind(T_FN))
+            ) {
                 continue;
             }
 
@@ -113,7 +118,9 @@ function example($foo = "two words", $bar) {}
                 continue;
             }
 
-            $this->removeDefaultValue($tokens, $i, $this->getDefaultValueEndIndex($tokens, $lastArgumentIndex));
+            $endIndex = $tokens->getPrevTokenOfKind($lastArgumentIndex, [',']);
+            $endIndex = $tokens->getPrevMeaningfulToken($endIndex);
+            $this->removeDefaultArgument($tokens, $i, $endIndex);
         }
     }
 
@@ -141,20 +148,7 @@ function example($foo = "two words", $bar) {}
         return $tokens[$tokens->getPrevMeaningfulToken($variableIndex)]->isGivenKind(T_ELLIPSIS);
     }
 
-    private function getDefaultValueEndIndex(Tokens $tokens, int $index): int
-    {
-        do {
-            $index = $tokens->getPrevMeaningfulToken($index);
-
-            if ($tokens[$index]->isGivenKind(CT::T_ATTRIBUTE_CLOSE)) {
-                $index = $tokens->findBlockStart(Tokens::BLOCK_TYPE_ATTRIBUTE, $index);
-            }
-        } while (!$tokens[$index]->equals(','));
-
-        return $tokens->getPrevMeaningfulToken($index);
-    }
-
-    private function removeDefaultValue(Tokens $tokens, int $startIndex, int $endIndex): void
+    private function removeDefaultArgument(Tokens $tokens, int $startIndex, int $endIndex): void
     {
         for ($i = $startIndex; $i <= $endIndex;) {
             $tokens->clearTokenAndMergeSurroundingWhitespace($i);

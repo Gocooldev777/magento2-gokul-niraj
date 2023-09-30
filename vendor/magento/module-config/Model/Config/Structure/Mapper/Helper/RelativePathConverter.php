@@ -22,12 +22,11 @@ class RelativePathConverter
      * @param string $relativePath
      * @return string
      * @throws \InvalidArgumentException
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function convert($nodePath, $relativePath)
     {
-        $nodePath = $nodePath !== null ? trim($nodePath) : '';
-        $relativePath = $relativePath !== null ? trim($relativePath) : '';
+        $nodePath = trim($nodePath);
+        $relativePath = trim($relativePath);
 
         if (empty($nodePath) || empty($relativePath)) {
             throw new \InvalidArgumentException('Invalid arguments');

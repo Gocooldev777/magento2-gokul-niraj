@@ -20,9 +20,6 @@
 
         <before>
             <actionGroup ref="AdminLoginActionGroup" stepKey="login"/>
-            <actionGroup ref="AdminMediaGalleryEnhancedEnableActionGroup" stepKey="enableOldMediaGallery">
-                <argument name="enabled" value="0"/>
-            </actionGroup>
             <actionGroup ref="EnabledWYSIWYGActionGroup" stepKey="enableWYSIWYG"/>
             <actionGroup ref="CliEnableTinyMCEActionGroup" stepKey="enableTinyMCE" />
         </before>
@@ -38,9 +35,6 @@
             </actionGroup>
             <actionGroup ref="DeleteFolderActionGroup" stepKey="DeleteFolderFromMediaGallery">
                 <argument name="Image" value="{{ImageFolder.name}}"/>
-            </actionGroup>
-            <actionGroup ref="AdminMediaGalleryEnhancedEnableActionGroup" stepKey="disableOldMediaGallery">
-                <argument name="enabled" value="1"/>
             </actionGroup>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>

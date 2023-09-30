@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Analytics\Test\Unit\Model\Connector\Http;
 
-use Laminas\Http\Exception\RuntimeException;
-use Laminas\Http\Response;
 use Magento\Analytics\Model\Connector\Http\ConverterInterface;
 use Magento\Analytics\Model\Connector\Http\ResponseHandlerInterface;
 use Magento\Analytics\Model\Connector\Http\ResponseResolver;
@@ -68,18 +66,16 @@ class ResponseResolverTest extends TestCase
 
     /**
      * @return void
-     * @throws RuntimeException
+     * @throws \Zend_Http_Exception
      */
     public function testGetResultHandleResponseSuccess()
     {
         $expectedBody = ['test' => 'testValue'];
-        $response = new Response();
-        $response->setStatusCode(Response::STATUS_CODE_201);
-        $response->getHeaders()->addHeaderLine('Content-Type', 'application/json');
-        $response->setContent(json_encode($expectedBody));
+        $response = new \Zend_Http_Response(201, ['Content-Type' => 'application/json'], json_encode($expectedBody));
         $this->converterMock
             ->method('getContentMediaType')
             ->willReturn('application/json');
+
         $this->successResponseHandlerMock
             ->expects($this->once())
             ->method('handleResponse')
@@ -96,15 +92,12 @@ class ResponseResolverTest extends TestCase
 
     /**
      * @return void
-     * @throws RuntimeException
+     * @throws \Zend_Http_Exception
      */
     public function testGetResultHandleResponseUnexpectedContentType()
     {
         $expectedBody = 'testString';
-        $response = new Response();
-        $response->setStatusCode(Response::STATUS_CODE_201);
-        $response->getHeaders()->addHeaderLine('Content-Type', 'plain/text');
-        $response->setContent($expectedBody);
+        $response = new \Zend_Http_Response(201, ['Content-Type' => 'plain/text'], $expectedBody);
         $this->converterMock
             ->method('getContentMediaType')
             ->willReturn('application/json');

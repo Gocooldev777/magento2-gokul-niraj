@@ -4,7 +4,6 @@ declare (strict_types=1);
 namespace Rector\Transform\Rector\ClassMethod;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -14,19 +13,24 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\WrapReturn;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\ClassMethod\WrapReturnRector\WrapReturnRectorTest
  */
-final class WrapReturnRector extends AbstractRector implements ConfigurableRectorInterface
+final class WrapReturnRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const TYPE_METHOD_WRAPS = 'type_method_wraps';
     /**
      * @var WrapReturn[]
      */
     private $typeMethodWraps = [];
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Wrap return value of specific method', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Wrap return value of specific method', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function getItem()
@@ -44,25 +48,25 @@ final class SomeClass
     }
 }
 CODE_SAMPLE
-, [new WrapReturn('SomeClass', 'getItem', \true)])]);
+, [new \Rector\Transform\ValueObject\WrapReturn('SomeClass', 'getItem', \true)])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         foreach ($this->typeMethodWraps as $typeMethodWrap) {
-            if (!$this->isName($node, $typeMethodWrap->getMethod())) {
+            if (!$this->isObjectType($node, $typeMethodWrap->getObjectType())) {
                 continue;
             }
-            if (!$this->isObjectType($node, $typeMethodWrap->getObjectType())) {
+            if (!$this->isName($node, $typeMethodWrap->getMethod())) {
                 continue;
             }
             if ($node->stmts === null) {
@@ -70,25 +74,26 @@ CODE_SAMPLE
             }
             return $this->wrap($node, $typeMethodWrap->isArrayWrap());
         }
-        return null;
+        return $node;
     }
     /**
      * @param mixed[] $configuration
      */
     public function configure(array $configuration) : void
     {
-        Assert::allIsAOf($configuration, WrapReturn::class);
-        $this->typeMethodWraps = $configuration;
+        $typeMethodWraps = $configuration[self::TYPE_METHOD_WRAPS] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($typeMethodWraps, \Rector\Transform\ValueObject\WrapReturn::class);
+        $this->typeMethodWraps = $typeMethodWraps;
     }
-    private function wrap(ClassMethod $classMethod, bool $isArrayWrap) : ?ClassMethod
+    private function wrap(\PhpParser\Node\Stmt\ClassMethod $classMethod, bool $isArrayWrap) : ?\PhpParser\Node\Stmt\ClassMethod
     {
         if (!\is_iterable($classMethod->stmts)) {
             return null;
         }
         foreach ($classMethod->stmts as $key => $stmt) {
-            if ($stmt instanceof Return_ && $stmt->expr instanceof Expr) {
-                if ($isArrayWrap && !$stmt->expr instanceof Array_) {
-                    $stmt->expr = new Array_([new ArrayItem($stmt->expr)]);
+            if ($stmt instanceof \PhpParser\Node\Stmt\Return_ && $stmt->expr !== null) {
+                if ($isArrayWrap && !$stmt->expr instanceof \PhpParser\Node\Expr\Array_) {
+                    $stmt->expr = new \PhpParser\Node\Expr\Array_([new \PhpParser\Node\Expr\ArrayItem($stmt->expr)]);
                 }
                 $classMethod->stmts[$key] = $stmt;
             }

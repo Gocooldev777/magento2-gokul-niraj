@@ -24,7 +24,7 @@ class Repository
     /**
      * Scope separator for module notation of file ID
      */
-    public const FILE_ID_SEPARATOR = '::';
+    const FILE_ID_SEPARATOR = '::';
 
     /**
      * @var \Magento\Framework\UrlInterface
@@ -443,7 +443,7 @@ class Repository
      */
     public static function extractModule($fileId)
     {
-        if (!$fileId || strpos($fileId, self::FILE_ID_SEPARATOR) === false) {
+        if (strpos($fileId, self::FILE_ID_SEPARATOR) === false) {
             return ['', $fileId];
         }
         $result = explode(self::FILE_ID_SEPARATOR, $fileId, 2);

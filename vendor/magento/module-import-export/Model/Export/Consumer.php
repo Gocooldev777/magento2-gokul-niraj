@@ -11,9 +11,8 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
-use Magento\Framework\Locale\ResolverInterface;
-use Magento\ImportExport\Api\Data\LocalizedExportInfoInterface;
 use Magento\ImportExport\Api\ExportManagementInterface;
+use Magento\ImportExport\Api\Data\ExportInfoInterface;
 use Magento\Framework\Notification\NotifierInterface;
 
 /**
@@ -42,45 +41,32 @@ class Consumer
     private $filesystem;
 
     /**
-     * @var ResolverInterface
-     */
-    private $localeResolver;
-
-    /**
      * Consumer constructor.
      * @param \Psr\Log\LoggerInterface $logger
      * @param ExportManagementInterface $exportManager
      * @param Filesystem $filesystem
      * @param NotifierInterface $notifier
-     * @param ResolverInterface $localeResolver
      */
     public function __construct(
         \Psr\Log\LoggerInterface $logger,
         ExportManagementInterface $exportManager,
         Filesystem $filesystem,
-        NotifierInterface $notifier,
-        ResolverInterface $localeResolver
+        NotifierInterface $notifier
     ) {
         $this->logger = $logger;
         $this->exportManager = $exportManager;
         $this->filesystem = $filesystem;
         $this->notifier = $notifier;
-        $this->localeResolver = $localeResolver;
     }
 
     /**
      * Consumer logic.
      *
-     * @param LocalizedExportInfoInterface $exportInfo
+     * @param ExportInfoInterface $exportInfo
      * @return void
      */
-    public function process(LocalizedExportInfoInterface $exportInfo)
+    public function process(ExportInfoInterface $exportInfo)
     {
-        $currentLocale = $this->localeResolver->getLocale();
-        if ($exportInfo->getLocale()) {
-            $this->localeResolver->setLocale($exportInfo->getLocale());
-        }
-
         try {
             $data = $this->exportManager->export($exportInfo);
             $fileName = $exportInfo->getFileName();
@@ -97,8 +83,6 @@ class Consumer
                 __('Error during export process occurred. Please check logs for detail')
             );
             $this->logger->critical('Something went wrong while export process. ' . $exception->getMessage());
-        } finally {
-            $this->localeResolver->setLocale($currentLocale);
         }
     }
 }

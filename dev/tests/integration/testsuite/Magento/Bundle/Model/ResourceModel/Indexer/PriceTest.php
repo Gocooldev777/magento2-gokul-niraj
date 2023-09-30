@@ -6,7 +6,6 @@
 
 namespace Magento\Bundle\Model\ResourceModel\Indexer;
 
-use Magento\Bundle\Test\Fixture\Product as BundleProductFixture;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Indexer\Product\Price;
 use Magento\Customer\Model\Group;
@@ -15,7 +14,6 @@ use Magento\Framework\ObjectManagerInterface;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\TestFramework\Catalog\Model\Product\Price\GetPriceIndexDataByProductId;
 use Magento\CatalogInventory\Model\Indexer\Stock;
-use Magento\TestFramework\Fixture\DataFixture;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
@@ -91,18 +89,6 @@ class PriceTest extends TestCase
         $bundleProduct = $this->productRepository->get('bundle_product_with_dynamic_price');
         $this->indexer->executeRow($bundleProduct->getId());
         $this->assertIndexTableData($bundleProduct->getId(), $expectedPrices);
-    }
-
-    #[
-        DataFixture(
-            BundleProductFixture::class,
-            ['sku' => 'bundle1', 'extension_attributes' => ['website_ids' => []]]
-        ),
-    ]
-    public function testExecuteForBundleWithoutWebsites(): void
-    {
-        $bundleProduct = $this->productRepository->get('bundle1');
-        $this->indexer->executeRow($bundleProduct->getId());
     }
 
     /**

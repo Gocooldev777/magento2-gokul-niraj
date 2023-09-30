@@ -18,7 +18,6 @@
             <testCaseId value="MC-28500"/>
             <group value="customer"/>
             <group value="create"/>
-            <group value="cloud_smoke"/>
         </annotations>
 
         <before>

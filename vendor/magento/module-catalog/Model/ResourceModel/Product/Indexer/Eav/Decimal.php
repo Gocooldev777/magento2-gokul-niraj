@@ -6,9 +6,6 @@
 namespace Magento\Catalog\Model\ResourceModel\Product\Indexer\Eav;
 
 use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Framework\DB\Select;
-use Magento\Store\Model\Store;
-use Zend_Db;
 
 /**
  * Catalog Product Eav Decimal Attributes Indexer resource model
@@ -49,72 +46,37 @@ class Decimal extends AbstractEav
             return $this;
         }
 
-        $select = $connection->select()
-            ->union(
-                [
-                    $this->getSelect($attrIds, $entityIds),
-                    $this->getSelect($attrIds, $entityIds, true)
-                ]
-            );
-
-        $query = $select->insertFromSelect($idxTable);
-        $connection->query($query);
-
-        return $this;
-    }
-
-    /**
-     * Generate select with attribute values
-     *
-     * @param array $attributeIds
-     * @param array|null $entityIds
-     * @param bool $storeValuesOnly
-     * @return Select
-     * @throws \Exception
-     */
-    private function getSelect(array $attributeIds, ?array $entityIds, bool $storeValuesOnly = false): Select
-    {
         $productIdField = $this->getMetadataPool()->getMetadata(ProductInterface::class)->getLinkField();
-        $connection = $this->getConnection();
-        $select = $connection->select()
-            ->from(
-                ['cs' => $this->getTable('store')],
-                []
-            );
-        if ($storeValuesOnly) {
-            $select->join(
-                ['pdd' => $this->getTable('catalog_product_entity_decimal')],
-                'pdd.store_id = cs.store_id',
-                []
-            );
-            $productValueExpression = 'pdd.value';
-        } else {
-            $select->join(
-                ['pdd' => $this->getTable('catalog_product_entity_decimal')],
-                'pdd.store_id=' . Store::DEFAULT_STORE_ID,
-                []
-            )->joinLeft(
-                ['pds' => $this->getTable('catalog_product_entity_decimal')],
-                sprintf(
-                    'pds.%s = pdd.%s AND pds.attribute_id = pdd.attribute_id' . ' AND pds.store_id=cs.store_id',
-                    $productIdField,
-                    $productIdField
-                ),
-                []
-            );
-            $productValueExpression = $connection->getCheckSql('pds.value_id > 0', 'pds.value', 'pdd.value');
-        }
-        $select->joinLeft(
+        $productValueExpression = $connection->getCheckSql('pds.value_id > 0', 'pds.value', 'pdd.value');
+
+        $select = $connection->select()->from(
+            ['pdd' => $this->getTable('catalog_product_entity_decimal')],
+            []
+        )->join(
+            ['cs' => $this->getTable('store')],
+            '',
+            []
+        )->joinLeft(
+            ['pds' => $this->getTable('catalog_product_entity_decimal')],
+            sprintf(
+                'pds.%s = pdd.%s AND pds.attribute_id = pdd.attribute_id'.' AND pds.store_id=cs.store_id',
+                $productIdField,
+                $productIdField
+            ),
+            []
+        )->joinLeft(
             ['cpe' => $this->getTable('catalog_product_entity')],
             "cpe.{$productIdField} = pdd.{$productIdField}",
             []
         )->where(
+            'pdd.store_id=?',
+            \Magento\Store\Model\Store::DEFAULT_STORE_ID
+        )->where(
             'cs.store_id!=?',
-            Store::DEFAULT_STORE_ID
+            \Magento\Store\Model\Store::DEFAULT_STORE_ID
         )->where(
             'pdd.attribute_id IN(?)',
-            $attributeIds,
-            Zend_Db::INT_TYPE
+            $attrIds
         )->where(
             "{$productValueExpression} IS NOT NULL"
         )->columns(
@@ -143,11 +105,7 @@ class Decimal extends AbstractEav
         );
 
         if ($entityIds !== null) {
-            $select->where(
-                'cpe.entity_id IN(?)',
-                $entityIds,
-                Zend_Db::INT_TYPE
-            );
+            $select->where('cpe.entity_id IN(?)', $entityIds);
         }
 
         /**
@@ -163,7 +121,10 @@ class Decimal extends AbstractEav
             ]
         );
 
-        return $select;
+        $query = $select->insertFromSelect($idxTable);
+        $connection->query($query);
+
+        return $this;
     }
 
     /**

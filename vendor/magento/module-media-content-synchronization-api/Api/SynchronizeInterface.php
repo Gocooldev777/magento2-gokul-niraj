@@ -9,7 +9,6 @@ namespace Magento\MediaContentSynchronizationApi\Api;
 
 /**
  * Synchronize assets and contents
- * @api
  */
 interface SynchronizeInterface
 {

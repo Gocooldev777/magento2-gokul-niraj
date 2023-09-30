@@ -11,19 +11,24 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\FuncCall\FuncCallToNewRector\FuncCallToNewRectorTest
  */
-final class FuncCallToNewRector extends AbstractRector implements ConfigurableRectorInterface
+final class FuncCallToNewRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const FUNCTIONS_TO_NEWS = 'functions_to_news';
     /**
      * @var string[]
      */
     private $functionToNew = [];
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Change configured function calls to new Instance', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change configured function calls to new Instance', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -48,18 +53,18 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [FuncCall::class];
+        return [\PhpParser\Node\Expr\FuncCall::class];
     }
     /**
      * @param FuncCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         foreach ($this->functionToNew as $function => $new) {
             if (!$this->isName($node, $function)) {
                 continue;
             }
-            return new New_(new FullyQualified($new), $node->args);
+            return new \PhpParser\Node\Expr\New_(new \PhpParser\Node\Name\FullyQualified($new), $node->args);
         }
         return null;
     }
@@ -68,7 +73,9 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        Assert::allString($configuration);
-        $this->functionToNew = $configuration;
+        $functionsToNews = $configuration[self::FUNCTIONS_TO_NEWS] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($functionsToNews);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($functionsToNews);
+        $this->functionToNew = $functionsToNews;
     }
 }

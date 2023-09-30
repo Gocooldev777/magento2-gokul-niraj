@@ -16,15 +16,15 @@ use function is_string;
  */
 abstract class AbstractTypeableTag extends AbstractGenerator
 {
-    /** @var string|null */
+    /** @var string */
     protected $description;
 
-    /** @var string[] */
+    /** @var array */
     protected $types = [];
 
     /**
      * @param string|string[] $types
-     * @param string|null     $description
+     * @param string          $description
      */
     public function __construct($types = [], $description = null)
     {
@@ -48,7 +48,7 @@ abstract class AbstractTypeableTag extends AbstractGenerator
     }
 
     /**
-     * @return string|null
+     * @return string
      */
     public function getDescription()
     {
@@ -59,7 +59,7 @@ abstract class AbstractTypeableTag extends AbstractGenerator
      * Array of types or string with types delimited by pipe (|)
      * e.g. array('int', 'null') or "int|null"
      *
-     * @param string[]|string $types
+     * @param array|string $types
      * @return AbstractTypeableTag
      */
     public function setTypes($types)
@@ -72,7 +72,7 @@ abstract class AbstractTypeableTag extends AbstractGenerator
     }
 
     /**
-     * @return string[]
+     * @return array
      */
     public function getTypes()
     {

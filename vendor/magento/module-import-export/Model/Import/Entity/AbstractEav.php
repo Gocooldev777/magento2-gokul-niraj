@@ -22,14 +22,18 @@ abstract class AbstractEav extends \Magento\ImportExport\Model\Import\AbstractEn
      *
      * Name of collection class
      */
-    public const ATTRIBUTE_COLLECTION_NAME = \Magento\Framework\Data\Collection::class;
+    const ATTRIBUTE_COLLECTION_NAME = \Magento\Framework\Data\Collection::class;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
+     * Entity type id
+     *
      * @var int
      */
     protected $_entityTypeId;
@@ -42,6 +46,8 @@ abstract class AbstractEav extends \Magento\ImportExport\Model\Import\AbstractEn
     protected $_indexValueAttributes = [];
 
     /**
+     * Website code-to-ID
+     *
      * @var array
      */
     protected $_websiteCodeToId = [];
@@ -68,6 +74,8 @@ abstract class AbstractEav extends \Magento\ImportExport\Model\Import\AbstractEn
     protected $_attributes = [];
 
     /**
+     * Attributes collection
+     *
      * @var \Magento\Framework\Data\Collection
      */
     protected $_attributeCollection;
@@ -101,7 +109,9 @@ abstract class AbstractEav extends \Magento\ImportExport\Model\Import\AbstractEn
         parent::__construct($string, $scopeConfig, $importFactory, $resourceHelper, $resource, $errorAggregator, $data);
 
         $this->_storeManager = $storeManager;
-        $this->_attributeCollection = $data['attribute_collection'] ?? $collectionFactory->create(
+        $this->_attributeCollection = isset(
+            $data['attribute_collection']
+        ) ? $data['attribute_collection'] : $collectionFactory->create(
             static::ATTRIBUTE_COLLECTION_NAME
         );
 
@@ -219,8 +229,8 @@ abstract class AbstractEav extends \Magento\ImportExport\Model\Import\AbstractEn
                     $value = is_array($option['value']) ? $option['value'] : [$option];
                     foreach ($value as $innerOption) {
                         // skip ' -- Please Select -- ' option
-                        if (strlen($innerOption['value'] ?? '')) {
-                            $options[mb_strtolower($innerOption[$index] ?? '')] = $innerOption['value'];
+                        if (strlen($innerOption['value'])) {
+                            $options[mb_strtolower($innerOption[$index])] = $innerOption['value'];
                         }
                     }
                 }

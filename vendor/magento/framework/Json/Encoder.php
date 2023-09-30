@@ -5,11 +5,7 @@
  */
 namespace Magento\Framework\Json;
 
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
-use Magento\Framework\Translate\InlineInterface;
-
 /**
- * phpcs:ignore Magento2.Commenting.ClassAndInterfacePHPDocFormatting
  * @deprecated 101.0.0 @see \Magento\Framework\Serialize\Serializer\Json::serialize
  */
 class Encoder implements EncoderInterface
@@ -17,44 +13,27 @@ class Encoder implements EncoderInterface
     /**
      * Translator
      *
-     * @var InlineInterface
+     * @var \Magento\Framework\Translate\InlineInterface
      */
-    protected InlineInterface $translateInline;
+    protected $translateInline;
 
     /**
-     * @var JsonSerializer
+     * @param \Magento\Framework\Translate\InlineInterface $translateInline
      */
-    private JsonSerializer $jsonSerializer;
-
-    /**
-     * @param InlineInterface $translateInline
-     * @param JsonSerializer $serializer
-     */
-    public function __construct(InlineInterface $translateInline, JsonSerializer $serializer)
+    public function __construct(\Magento\Framework\Translate\InlineInterface $translateInline)
     {
         $this->translateInline = $translateInline;
-        $this->jsonSerializer = $serializer;
     }
 
     /**
      * Encode the mixed $data into the JSON format.
      *
-     * @param mixed $valueToEncode
+     * @param mixed $data
      * @return string
      */
-    public function encode($valueToEncode)
+    public function encode($data)
     {
-        if (is_object($valueToEncode)) {
-            if (method_exists($valueToEncode, 'toJson')) {
-                return $valueToEncode->toJson();
-            }
-
-            if (method_exists($valueToEncode, 'toArray')) {
-                return self::encode($valueToEncode->toArray());
-            }
-        }
-        $this->translateInline->processResponseBody($valueToEncode);
-
-        return $this->jsonSerializer->serialize($valueToEncode);
+        $this->translateInline->processResponseBody($data);
+        return \Zend_Json::encode($data);
     }
 }

@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config;
+namespace RectorPrefix20211221\Symfony\Component\Config;
 
-use RectorPrefix202304\Symfony\Component\Config\Resource\SelfCheckingResourceChecker;
+use RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceChecker;
 /**
  * ConfigCache caches arbitrary content in files on disk.
  *
@@ -21,11 +21,8 @@ use RectorPrefix202304\Symfony\Component\Config\Resource\SelfCheckingResourceChe
  * @author Fabien Potencier <fabien@symfony.com>
  * @author Matthias Pigulla <mp@webfactory.de>
  */
-class ConfigCache extends ResourceCheckerConfigCache
+class ConfigCache extends \RectorPrefix20211221\Symfony\Component\Config\ResourceCheckerConfigCache
 {
-    /**
-     * @var bool
-     */
     private $debug;
     /**
      * @param string $file  The absolute cache path
@@ -36,7 +33,7 @@ class ConfigCache extends ResourceCheckerConfigCache
         $this->debug = $debug;
         $checkers = [];
         if (\true === $this->debug) {
-            $checkers = [new SelfCheckingResourceChecker()];
+            $checkers = [new \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceChecker()];
         }
         parent::__construct($file, $checkers);
     }
@@ -45,8 +42,10 @@ class ConfigCache extends ResourceCheckerConfigCache
      *
      * This implementation always returns true when debug is off and the
      * cache file exists.
+     *
+     * @return bool
      */
-    public function isFresh() : bool
+    public function isFresh()
     {
         if (!$this->debug && \is_file($this->getPath())) {
             return \true;

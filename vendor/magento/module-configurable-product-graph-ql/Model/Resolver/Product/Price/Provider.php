@@ -7,13 +7,13 @@ declare(strict_types=1);
 
 namespace Magento\ConfigurableProductGraphQl\Model\Resolver\Product\Price;
 
-use Magento\Catalog\Model\Product\Attribute\Source\Status as ProductStatus;
 use Magento\Catalog\Pricing\Price\FinalPrice;
 use Magento\Catalog\Pricing\Price\RegularPrice;
-use Magento\CatalogGraphQl\Model\Resolver\Product\Price\ProviderInterface;
-use Magento\ConfigurableProduct\Pricing\Price\ConfigurableOptionsProviderInterface;
+use Magento\ConfigurableProduct\Pricing\Price\ConfigurableRegularPrice;
 use Magento\Framework\Pricing\Amount\AmountInterface;
 use Magento\Framework\Pricing\SaleableInterface;
+use Magento\CatalogGraphQl\Model\Resolver\Product\Price\ProviderInterface;
+use Magento\ConfigurableProduct\Pricing\Price\ConfigurableOptionsProviderInterface;
 
 /**
  * Provides product prices for configurable products
@@ -28,18 +28,12 @@ class Provider implements ProviderInterface
     /**
      * @var array
      */
-    private $minimalPrice = [
-        FinalPrice::PRICE_CODE => [],
-        RegularPrice::PRICE_CODE => []
-    ];
+    private $minimumFinalAmounts = [];
 
     /**
      * @var array
      */
-    private $maximalPrice = [
-        FinalPrice::PRICE_CODE => [],
-        RegularPrice::PRICE_CODE => []
-    ];
+    private $maximumFinalAmounts = [];
 
     /**
      * @param ConfigurableOptionsProviderInterface $optionsProvider
@@ -55,7 +49,18 @@ class Provider implements ProviderInterface
      */
     public function getMinimalFinalPrice(SaleableInterface $product): AmountInterface
     {
-        return $this->getMinimalPrice($product, FinalPrice::PRICE_CODE);
+        if (!isset($this->minimumFinalAmounts[$product->getId()])) {
+            $minimumAmount = null;
+            foreach ($this->optionsProvider->getProducts($product) as $variant) {
+                $variantAmount = $variant->getPriceInfo()->getPrice(FinalPrice::PRICE_CODE)->getAmount();
+                if (!$minimumAmount || ($variantAmount->getValue() < $minimumAmount->getValue())) {
+                    $minimumAmount = $variantAmount;
+                    $this->minimumFinalAmounts[$product->getId()] = $variantAmount;
+                }
+            }
+        }
+
+        return $this->minimumFinalAmounts[$product->getId()];
     }
 
     /**
@@ -63,7 +68,9 @@ class Provider implements ProviderInterface
      */
     public function getMinimalRegularPrice(SaleableInterface $product): AmountInterface
     {
-        return $this->getMinimalPrice($product, RegularPrice::PRICE_CODE);
+        /** @var ConfigurableRegularPrice $regularPrice */
+        $regularPrice = $product->getPriceInfo()->getPrice(RegularPrice::PRICE_CODE);
+        return $regularPrice->getMinRegularAmount();
     }
 
     /**
@@ -71,7 +78,18 @@ class Provider implements ProviderInterface
      */
     public function getMaximalFinalPrice(SaleableInterface $product): AmountInterface
     {
-        return $this->getMaximalPrice($product, FinalPrice::PRICE_CODE);
+        if (!isset($this->maximumFinalAmounts[$product->getId()])) {
+            $maximumAmount = null;
+            foreach ($this->optionsProvider->getProducts($product) as $variant) {
+                $variantAmount = $variant->getPriceInfo()->getPrice(FinalPrice::PRICE_CODE)->getAmount();
+                if (!$maximumAmount || ($variantAmount->getValue() > $maximumAmount->getValue())) {
+                    $maximumAmount = $variantAmount;
+                    $this->maximumFinalAmounts[$product->getId()] = $variantAmount;
+                }
+            }
+        }
+
+        return $this->maximumFinalAmounts[$product->getId()];
     }
 
     /**
@@ -79,7 +97,9 @@ class Provider implements ProviderInterface
      */
     public function getMaximalRegularPrice(SaleableInterface $product): AmountInterface
     {
-        return $this->getMaximalPrice($product, RegularPrice::PRICE_CODE);
+        /** @var ConfigurableRegularPrice $regularPrice */
+        $regularPrice = $product->getPriceInfo()->getPrice(RegularPrice::PRICE_CODE);
+        return $regularPrice->getMaxRegularAmount();
     }
 
     /**
@@ -88,64 +108,5 @@ class Provider implements ProviderInterface
     public function getRegularPrice(SaleableInterface $product): AmountInterface
     {
         return $product->getPriceInfo()->getPrice(RegularPrice::PRICE_CODE)->getAmount();
-    }
-
-    /**
-     * Get minimal price from child products
-     *
-     * @param SaleableInterface $product
-     * @param string $code
-     * @return AmountInterface
-     */
-    private function getMinimalPrice(SaleableInterface $product, string $code): AmountInterface
-    {
-        if (!isset($this->minimalPrice[$code][$product->getId()])) {
-            $minimumAmount = null;
-            foreach ($this->filterDisabledProducts($this->optionsProvider->getProducts($product)) as $variant) {
-                $variantAmount = $variant->getPriceInfo()->getPrice($code)->getAmount();
-                if (!$minimumAmount || ($variantAmount->getValue() < $minimumAmount->getValue())) {
-                    $minimumAmount = $variantAmount;
-                    $this->minimalPrice[$code][$product->getId()] = $variantAmount;
-                }
-            }
-        }
-
-        return $this->minimalPrice[$code][$product->getId()];
-    }
-
-    /**
-     * Get maximal price from child products
-     *
-     * @param SaleableInterface $product
-     * @param string $code
-     * @return AmountInterface
-     */
-    private function getMaximalPrice(SaleableInterface $product, string $code): AmountInterface
-    {
-        if (!isset($this->maximalPrice[$code][$product->getId()])) {
-            $maximumAmount = null;
-            foreach ($this->optionsProvider->getProducts($product) as $variant) {
-                $variantAmount = $variant->getPriceInfo()->getPrice($code)->getAmount();
-                if (!$maximumAmount || ($variantAmount->getValue() > $maximumAmount->getValue())) {
-                    $maximumAmount = $variantAmount;
-                    $this->maximalPrice[$code][$product->getId()] = $variantAmount;
-                }
-            }
-        }
-
-        return $this->maximalPrice[$code][$product->getId()];
-    }
-
-    /**
-     * Filter out disabled products
-     *
-     * @param array $products
-     * @return array
-     */
-    private function filterDisabledProducts(array $products): array
-    {
-        return array_filter($products, function ($product) {
-            return (int)$product->getStatus() === ProductStatus::STATUS_ENABLED;
-        });
     }
 }

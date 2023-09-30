@@ -35,7 +35,7 @@ class Processor
     public function process($css)
     {
         $matches = [];
-        if ($css !== null && preg_match_all(Variable::VAR_REGEX, $css, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all(Variable::VAR_REGEX, $css, $matches, PREG_SET_ORDER)) {
             $replacements = [];
             foreach ($matches as $match) {
                 if (!isset($replacements[$match[0]])) {

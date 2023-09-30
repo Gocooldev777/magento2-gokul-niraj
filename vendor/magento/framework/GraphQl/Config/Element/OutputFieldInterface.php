@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl\Config\Element;
 
 /**
  * Defines contract for output fields data as GraphQL objects.
- *
- * @api
  */
 interface OutputFieldInterface extends FieldInterface
 {
@@ -19,12 +17,12 @@ interface OutputFieldInterface extends FieldInterface
      *
      * @return string
      */
-    public function getResolver(): string;
+    public function getResolver() : string;
 
     /**
      * Get the list of arguments configured for the field. Return an empty array if no arguments are configured.
      *
      * @return Argument[]
      */
-    public function getArguments(): array;
+    public function getArguments() : array;
 }

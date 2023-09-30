@@ -3,48 +3,30 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\Catch_;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\TryCatch;
-use PHPStan\Type\ObjectType;
 use Rector\Core\Rector\AbstractRector;
-use Rector\Naming\Naming\AliasNameResolver;
-use Rector\Naming\Naming\PropertyNaming;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector\CatchExceptionNameMatchingTypeRectorTest
  */
-final class CatchExceptionNameMatchingTypeRector extends AbstractRector
+final class CatchExceptionNameMatchingTypeRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var string
      * @see https://regex101.com/r/xmfMAX/1
      */
     private const STARTS_WITH_ABBREVIATION_REGEX = '#^([A-Za-z]+?)([A-Z]{1}[a-z]{1})([A-Za-z]*)#';
-    /**
-     * @readonly
-     * @var \Rector\Naming\Naming\PropertyNaming
-     */
-    private $propertyNaming;
-    /**
-     * @readonly
-     * @var \Rector\Naming\Naming\AliasNameResolver
-     */
-    private $aliasNameResolver;
-    public function __construct(PropertyNaming $propertyNaming, AliasNameResolver $aliasNameResolver)
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        $this->propertyNaming = $propertyNaming;
-        $this->aliasNameResolver = $aliasNameResolver;
-    }
-    public function getRuleDefinition() : RuleDefinition
-    {
-        return new RuleDefinition('Type and name of catch exception should match', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Type and name of catch exception should match', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -77,17 +59,17 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Catch_::class];
+        return [\PhpParser\Node\Stmt\Catch_::class];
     }
     /**
      * @param Catch_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (\count($node->types) !== 1) {
             return null;
         }
-        if (!$node->var instanceof Variable) {
+        if ($node->var === null) {
             return null;
         }
         $oldVariableName = $this->getName($node->var);
@@ -96,24 +78,19 @@ CODE_SAMPLE
         }
         $type = $node->types[0];
         $typeShortName = $this->nodeNameResolver->getShortName($type);
-        $aliasName = $this->aliasNameResolver->resolveByName($type);
-        if (\is_string($aliasName)) {
-            $typeShortName = $aliasName;
-        }
-        $newVariableName = Strings::replace(\lcfirst($typeShortName), self::STARTS_WITH_ABBREVIATION_REGEX, static function (array $matches) : string {
+        $newVariableName = \RectorPrefix20211221\Nette\Utils\Strings::replace(\lcfirst($typeShortName), self::STARTS_WITH_ABBREVIATION_REGEX, function (array $matches) : string {
             $output = '';
-            $output .= isset($matches[1]) ? \strtolower((string) $matches[1]) : '';
+            $output .= isset($matches[1]) ? \strtolower($matches[1]) : '';
             $output .= $matches[2] ?? '';
-            return $output . ($matches[3] ?? '');
+            $output .= $matches[3] ?? '';
+            return $output;
         });
-        $objectType = new ObjectType($newVariableName);
-        $newVariableName = $this->propertyNaming->fqnToVariableName($objectType);
         if ($oldVariableName === $newVariableName) {
             return null;
         }
-        $newVariable = new Variable($newVariableName);
-        $isFoundInPrevious = (bool) $this->betterNodeFinder->findFirstPrevious($node, function (Node $subNode) use($newVariable) : bool {
-            return $this->nodeComparator->areNodesEqual($subNode, $newVariable);
+        $newVariable = new \PhpParser\Node\Expr\Variable($newVariableName);
+        $isFoundInPrevious = (bool) $this->betterNodeFinder->findFirstPrevious($node, function (\PhpParser\Node $n) use($newVariable) : bool {
+            return $this->nodeComparator->areNodesEqual($n, $newVariable);
         });
         if ($isFoundInPrevious) {
             return null;
@@ -122,40 +99,39 @@ CODE_SAMPLE
         $this->renameVariableInStmts($node, $oldVariableName, $newVariableName);
         return $node;
     }
-    private function renameVariableInStmts(Catch_ $catch, string $oldVariableName, string $newVariableName) : void
+    private function renameVariableInStmts(\PhpParser\Node\Stmt\Catch_ $catch, string $oldVariableName, string $newVariableName) : void
     {
-        $this->traverseNodesWithCallable($catch->stmts, function (Node $node) use($oldVariableName, $newVariableName) {
-            if (!$node instanceof Variable) {
-                return null;
+        $this->traverseNodesWithCallable($catch->stmts, function (\PhpParser\Node $node) use($oldVariableName, $newVariableName) : void {
+            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
+                return;
             }
             if (!$this->nodeNameResolver->isName($node, $oldVariableName)) {
-                return null;
+                return;
             }
             $node->name = $newVariableName;
-            return null;
         });
         /** @var TryCatch $tryCatch */
-        $tryCatch = $catch->getAttribute(AttributeKey::PARENT_NODE);
-        $nextNode = $tryCatch->getAttribute(AttributeKey::NEXT_NODE);
-        $this->replaceNextUsageVariable($tryCatch, $nextNode, $oldVariableName, $newVariableName);
+        $tryCatch = $catch->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        $next = $tryCatch->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+        $this->replaceNextUsageVariable($tryCatch, $next, $oldVariableName, $newVariableName);
     }
-    private function replaceNextUsageVariable(Node $currentNode, ?Node $nextNode, string $oldVariableName, string $newVariableName) : void
+    private function replaceNextUsageVariable(\PhpParser\Node $currentNode, ?\PhpParser\Node $nextNode, string $oldVariableName, string $newVariableName) : void
     {
-        if (!$nextNode instanceof Node) {
-            $parentNode = $currentNode->getAttribute(AttributeKey::PARENT_NODE);
-            if (!$parentNode instanceof Node) {
+        if (!$nextNode instanceof \PhpParser\Node) {
+            $parent = $currentNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+            if (!$parent instanceof \PhpParser\Node) {
                 return;
             }
-            if ($parentNode instanceof FunctionLike) {
+            if ($parent instanceof \PhpParser\Node\FunctionLike) {
                 return;
             }
-            $nextNode = $parentNode->getAttribute(AttributeKey::NEXT_NODE);
-            $this->replaceNextUsageVariable($parentNode, $nextNode, $oldVariableName, $newVariableName);
+            $nextNode = $parent->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+            $this->replaceNextUsageVariable($parent, $nextNode, $oldVariableName, $newVariableName);
             return;
         }
         /** @var Variable[] $variables */
-        $variables = $this->betterNodeFinder->find($nextNode, function (Node $node) use($oldVariableName) : bool {
-            if (!$node instanceof Variable) {
+        $variables = $this->betterNodeFinder->find($nextNode, function (\PhpParser\Node $node) use($oldVariableName) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
                 return \false;
             }
             return $this->nodeNameResolver->isName($node, $oldVariableName);
@@ -165,7 +141,7 @@ CODE_SAMPLE
             return;
         }
         $currentNode = $nextNode;
-        $nextNode = $nextNode->getAttribute(AttributeKey::NEXT_NODE);
+        $nextNode = $nextNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
         $this->replaceNextUsageVariable($currentNode, $nextNode, $oldVariableName, $newVariableName);
     }
     /**
@@ -174,8 +150,8 @@ CODE_SAMPLE
     private function processRenameVariable(array $variables, string $oldVariableName, string $newVariableName) : bool
     {
         foreach ($variables as $variable) {
-            $parentNode = $variable->getAttribute(AttributeKey::PARENT_NODE);
-            if ($parentNode instanceof Assign && $this->nodeComparator->areNodesEqual($parentNode->var, $variable) && $this->nodeNameResolver->isName($parentNode->var, $oldVariableName) && !$this->nodeComparator->areNodesEqual($parentNode->expr, $variable)) {
+            $parent = $variable->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+            if ($parent instanceof \PhpParser\Node\Expr\Assign && $this->nodeComparator->areNodesEqual($parent->var, $variable) && $this->nodeNameResolver->isName($parent->var, $oldVariableName) && !$this->nodeComparator->areNodesEqual($parent->expr, $variable)) {
                 return \false;
             }
             $variable->name = $newVariableName;

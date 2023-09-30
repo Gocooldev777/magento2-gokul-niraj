@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Builder;
+namespace RectorPrefix20211221\Symfony\Component\Config\Builder;
 
 /**
  * Build PHP classes to generate config.
@@ -19,33 +19,17 @@ namespace RectorPrefix202304\Symfony\Component\Config\Builder;
  */
 class ClassBuilder
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     private $namespace;
-    /**
-     * @var string
-     */
+    /** @var string */
     private $name;
     /** @var Property[] */
     private $properties = [];
     /** @var Method[] */
     private $methods = [];
-    /**
-     * @var mixed[]
-     */
     private $require = [];
-    /**
-     * @var mixed[]
-     */
     private $use = [];
-    /**
-     * @var mixed[]
-     */
     private $implements = [];
-    /**
-     * @var bool
-     */
     private $allowExtraKeys = \false;
     public function __construct(string $namespace, string $name)
     {
@@ -76,7 +60,7 @@ class ClassBuilder
             }
             $require .= \sprintf('require_once __DIR__.\\DIRECTORY_SEPARATOR.\'%s\';', \implode('\'.\\DIRECTORY_SEPARATOR.\'', $path)) . "\n";
         }
-        $use = $require ? "\n" : '';
+        $use = '';
         foreach (\array_keys($this->use) as $statement) {
             $use .= \sprintf('use %s;', $statement) . "\n";
         }
@@ -88,16 +72,18 @@ class ClassBuilder
         foreach ($this->methods as $method) {
             $lines = \explode("\n", $method->getContent());
             foreach ($lines as $line) {
-                $body .= ($line ? '    ' . $line : '') . "\n";
+                $body .= '    ' . $line . "\n";
             }
         }
         $content = \strtr('<?php
 
 namespace NAMESPACE;
 
-REQUIREUSE
+REQUIRE
+USE
+
 /**
- * This class is automatically generated to help in creating a config.
+ * This class is automatically generated to help creating config.
  */
 class CLASS IMPLEMENTS
 {
@@ -120,17 +106,16 @@ BODY
     }
     public function addMethod(string $name, string $body, array $params = []) : void
     {
-        $this->methods[] = new Method(\strtr($body, ['NAME' => $this->camelCase($name)] + $params));
+        $this->methods[] = new \RectorPrefix20211221\Symfony\Component\Config\Builder\Method(\strtr($body, ['NAME' => $this->camelCase($name)] + $params));
     }
-    public function addProperty(string $name, string $classType = null, string $defaultValue = null) : Property
+    public function addProperty(string $name, string $classType = null) : \RectorPrefix20211221\Symfony\Component\Config\Builder\Property
     {
-        $property = new Property($name, '_' !== $name[0] ? $this->camelCase($name) : $name);
+        $property = new \RectorPrefix20211221\Symfony\Component\Config\Builder\Property($name, '_' !== $name[0] ? $this->camelCase($name) : $name);
         if (null !== $classType) {
             $property->setType($classType);
         }
         $this->properties[] = $property;
-        $defaultValue = null !== $defaultValue ? \sprintf(' = %s', $defaultValue) : '';
-        $property->setContent(\sprintf('private $%s%s;', $property->getName(), $defaultValue));
+        $property->setContent(\sprintf('private $%s;', $property->getName()));
         return $property;
     }
     public function getProperties() : array

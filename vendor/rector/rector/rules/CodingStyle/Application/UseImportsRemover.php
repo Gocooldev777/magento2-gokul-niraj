@@ -4,46 +4,59 @@ declare (strict_types=1);
 namespace Rector\CodingStyle\Application;
 
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
-use Rector\NodeRemoval\NodeRemover;
 final class UseImportsRemover
 {
     /**
-     * @readonly
-     * @var \Rector\NodeRemoval\NodeRemover
-     */
-    private $nodeRemover;
-    public function __construct(NodeRemover $nodeRemover)
-    {
-        $this->nodeRemover = $nodeRemover;
-    }
-    /**
      * @param Stmt[] $stmts
-     * @param string[] $removedUses
+     * @param string[] $removedShortUses
+     * @return Stmt[]
      */
-    public function removeImportsFromStmts(array $stmts, array $removedUses) : void
+    public function removeImportsFromStmts(array $stmts, array $removedShortUses) : array
     {
-        foreach ($stmts as $stmt) {
-            if (!$stmt instanceof Use_) {
+        foreach ($stmts as $stmtKey => $stmt) {
+            if (!$stmt instanceof \PhpParser\Node\Stmt\Use_) {
                 continue;
             }
-            $this->removeUseFromUse($removedUses, $stmt);
+            $this->removeUseFromUse($removedShortUses, $stmt);
+            // nothing left → remove
+            if ($stmt->uses === []) {
+                unset($stmts[$stmtKey]);
+            }
+        }
+        return $stmts;
+    }
+    /**
+     * @param string[] $removedShortUses
+     */
+    public function removeImportsFromNamespace(\PhpParser\Node\Stmt\Namespace_ $namespace, array $removedShortUses) : void
+    {
+        foreach ($namespace->stmts as $namespaceKey => $stmt) {
+            if (!$stmt instanceof \PhpParser\Node\Stmt\Use_) {
+                continue;
+            }
+            $this->removeUseFromUse($removedShortUses, $stmt);
+            // nothing left → remove
+            if ($stmt->uses === []) {
+                unset($namespace->stmts[$namespaceKey]);
+            }
         }
     }
     /**
-     * @param string[] $removedUses
+     * @param string[] $removedShortUses
      */
-    private function removeUseFromUse(array $removedUses, Use_ $use) : void
+    private function removeUseFromUse(array $removedShortUses, \PhpParser\Node\Stmt\Use_ $use) : void
     {
         foreach ($use->uses as $usesKey => $useUse) {
-            foreach ($removedUses as $removedUse) {
-                if ($useUse->name->toString() === $removedUse) {
+            foreach ($removedShortUses as $removedShortUse) {
+                if ($useUse->name->getLast() === $removedShortUse) {
+                    unset($use->uses[$usesKey]);
+                }
+                if ($useUse->name->toString() === $removedShortUse) {
                     unset($use->uses[$usesKey]);
                 }
             }
-        }
-        if ($use->uses === []) {
-            $this->nodeRemover->removeNode($use);
         }
     }
 }

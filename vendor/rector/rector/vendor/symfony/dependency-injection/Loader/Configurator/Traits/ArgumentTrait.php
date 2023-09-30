@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Loader\Configurator\Traits;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\Traits;
 
 trait ArgumentTrait
 {
@@ -17,7 +17,7 @@ trait ArgumentTrait
      *
      * @return $this
      */
-    public final function args(array $arguments)
+    public final function args(array $arguments) : self
     {
         $this->definition->setArguments(static::processValue($arguments, \true));
         return $this;
@@ -25,11 +25,12 @@ trait ArgumentTrait
     /**
      * Sets one argument to pass to the service constructor/factory method.
      *
-     * @return $this
      * @param string|int $key
-     * @param mixed $value
+     * @param mixed      $value
+     *
+     * @return $this
      */
-    public final function arg($key, $value)
+    public final function arg($key, $value) : self
     {
         $this->definition->setArgument($key, static::processValue($value, \true));
         return $this;

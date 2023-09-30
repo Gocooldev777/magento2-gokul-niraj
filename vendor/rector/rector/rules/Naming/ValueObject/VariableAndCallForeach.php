@@ -19,7 +19,7 @@ final class VariableAndCallForeach
     private $variable;
     /**
      * @readonly
-     * @var \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall
+     * @var \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall
      */
     private $expr;
     /**
@@ -29,21 +29,21 @@ final class VariableAndCallForeach
     private $variableName;
     /**
      * @readonly
-     * @var \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure
+     * @var \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_
      */
     private $functionLike;
     /**
-     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall $expr
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
+     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $expr
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
-    public function __construct(Variable $variable, $expr, string $variableName, $functionLike)
+    public function __construct(\PhpParser\Node\Expr\Variable $variable, $expr, string $variableName, $functionLike)
     {
         $this->variable = $variable;
         $this->expr = $expr;
         $this->variableName = $variableName;
         $this->functionLike = $functionLike;
     }
-    public function getVariable() : Variable
+    public function getVariable() : \PhpParser\Node\Expr\Variable
     {
         return $this->variable;
     }

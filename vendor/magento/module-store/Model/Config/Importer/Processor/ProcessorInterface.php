@@ -9,8 +9,6 @@ use Magento\Framework\Exception\RuntimeException;
 
 /**
  * The processor for store manipulations.
- *
- * @api
  */
 interface ProcessorInterface
 {

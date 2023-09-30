@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/element/radio.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div class=\"admin__field admin__field-option\">\n    <input type=\"radio\"\n           class=\"admin__control-radio\"\n           data-bind=\"checkedValue: value, checked: checked\"\n           ko-disable=\"disabled\"\n           hasFocus=\"focused\"\n           attr=\"id: uid, name: inputName\"/>\n\n    <label class=\"admin__field-label\" text=\"label\" attr=\"for: uid\"></label>\n\n    <div class=\"admin__field-note\"\n         if=\"notice\"\n         attr=\"id: noticeId\">\n        <span text=\"notice\"></span>\n    </div>\n</div>\n"}
+}});

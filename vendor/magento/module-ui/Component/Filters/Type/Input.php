@@ -13,13 +13,13 @@ use Magento\Ui\Component\Form\Element\Input as ElementInput;
  */
 class Input extends AbstractFilter
 {
-    public const NAME = 'filter_input';
+    const NAME = 'filter_input';
 
-    public const COMPONENT = 'input';
-
-    private const CONDITION_LIKE = 'like';
+    const COMPONENT = 'input';
 
     /**
+     * Wrapped component
+     *
      * @var ElementInput
      */
     protected $wrappedComponent;
@@ -64,29 +64,17 @@ class Input extends AbstractFilter
      */
     protected function applyFilter(): void
     {
-        $value = $this->filterData[$this->getName()] ?? '';
-        if (strlen($value) > 0) {
-            $conditionType = self::CONDITION_LIKE;
-            $valueExpression = null;
-            $filterConfig = $this->getData('config/filter');
-            if (is_array($filterConfig)) {
-                $conditionType = $filterConfig['conditionType'] ?? null;
-                $valueExpression = $filterConfig['valueExpression'] ?? null;
-            }
-            if ($conditionType === self::CONDITION_LIKE) {
-                $value = str_replace(['%', '_'], ['\%', '\_'], $value);
-                $valueExpression = $valueExpression ?? '%%%s%%';
-            }
-            if ($valueExpression) {
-                $value = sprintf($valueExpression, $value);
-            }
+        if (isset($this->filterData[$this->getName()])) {
+            $value = str_replace(['%', '_'], ['\%', '\_'], $this->filterData[$this->getName()]);
 
-            $filter = $this->filterBuilder->setConditionType($conditionType)
-                ->setField($this->getName())
-                ->setValue($value)
-                ->create();
+            if ($value || $value === '0') {
+                $filter = $this->filterBuilder->setConditionType('like')
+                    ->setField($this->getName())
+                    ->setValue(sprintf('%%%s%%', $value))
+                    ->create();
 
-            $this->getContext()->getDataProvider()->addFilter($filter);
+                $this->getContext()->getDataProvider()->addFilter($filter);
+            }
         }
     }
 }

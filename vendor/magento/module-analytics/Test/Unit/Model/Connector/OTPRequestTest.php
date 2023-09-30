@@ -7,13 +7,12 @@ declare(strict_types=1);
 
 namespace Magento\Analytics\Test\Unit\Model\Connector;
 
-use Laminas\Http\Request;
-use Laminas\Http\Response;
 use Magento\Analytics\Model\AnalyticsToken;
 use Magento\Analytics\Model\Connector\Http\ClientInterface;
 use Magento\Analytics\Model\Connector\Http\ResponseResolver;
 use Magento\Analytics\Model\Connector\OTPRequest;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\HTTP\ZendClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -88,7 +87,7 @@ class OTPRequestTest extends TestCase
             'otp' => 'thisisotp',
             'url' => 'http://www.mystore.com',
             'access-token' => 'thisisaccesstoken',
-            'method' => Request::METHOD_POST,
+            'method' => ZendClient::POST,
             'body'=> ['access-token' => 'thisisaccesstoken','url' => 'http://www.mystore.com'],
         ];
     }
@@ -111,8 +110,6 @@ class OTPRequestTest extends TestCase
             ->method('getValue')
             ->willReturn($data['url']);
 
-        $response = new Response();
-        $response->setStatusCode(Response::STATUS_CODE_201);
         $this->httpClientMock->expects($this->once())
             ->method('request')
             ->with(
@@ -120,7 +117,7 @@ class OTPRequestTest extends TestCase
                 $data['url'],
                 $data['body']
             )
-            ->willReturn($response);
+            ->willReturn(new \Zend_Http_Response(201, []));
         $this->responseResolverMock->expects($this->once())
             ->method('getResult')
             ->willReturn($data['otp']);
@@ -164,8 +161,6 @@ class OTPRequestTest extends TestCase
             ->method('getValue')
             ->willReturn($data['url']);
 
-        $response = new Response();
-        $response->setCustomStatusCode(Response::STATUS_CODE_CUSTOM);
         $this->httpClientMock->expects($this->once())
             ->method('request')
             ->with(
@@ -173,7 +168,7 @@ class OTPRequestTest extends TestCase
                 $data['url'],
                 $data['body']
             )
-            ->willReturn($response);
+            ->willReturn(new \Zend_Http_Response(0, []));
 
         $this->responseResolverMock->expects($this->once())
             ->method('getResult')

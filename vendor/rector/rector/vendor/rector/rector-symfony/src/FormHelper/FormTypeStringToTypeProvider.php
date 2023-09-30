@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Symfony\FormHelper;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use Rector\Symfony\Contract\Tag\TagInterface;
 use Rector\Symfony\DataProvider\ServiceMapProvider;
 final class FormTypeStringToTypeProvider
@@ -17,11 +17,10 @@ final class FormTypeStringToTypeProvider
      */
     private $customServiceFormTypeByAlias = [];
     /**
-     * @readonly
      * @var \Rector\Symfony\DataProvider\ServiceMapProvider
      */
     private $serviceMapProvider;
-    public function __construct(ServiceMapProvider $serviceMapProvider)
+    public function __construct(\Rector\Symfony\DataProvider\ServiceMapProvider $serviceMapProvider)
     {
         $this->serviceMapProvider = $serviceMapProvider;
     }
@@ -29,7 +28,7 @@ final class FormTypeStringToTypeProvider
     {
         $nameToTypeMap = $this->getNameToTypeMap();
         if (\strncmp($name, 'form.type.', \strlen('form.type.')) === 0) {
-            $name = Strings::substring($name, \strlen('form.type.'));
+            $name = \RectorPrefix20211221\Nette\Utils\Strings::substring($name, \strlen('form.type.'));
         }
         return $nameToTypeMap[$name] ?? null;
     }
@@ -39,8 +38,7 @@ final class FormTypeStringToTypeProvider
     private function getNameToTypeMap() : array
     {
         $customServiceFormTypeByAlias = $this->provideCustomServiceFormTypeByAliasFromContainerXml();
-        $item0Unpacked = self::SYMFONY_CORE_NAME_TO_TYPE_MAP;
-        return \array_merge($item0Unpacked, $customServiceFormTypeByAlias);
+        return \array_merge(self::SYMFONY_CORE_NAME_TO_TYPE_MAP, $customServiceFormTypeByAlias);
     }
     /**
      * @return array<string, string>
@@ -54,7 +52,7 @@ final class FormTypeStringToTypeProvider
         $formTypeServiceDefinitions = $serviceMap->getServicesByTag('form.type');
         foreach ($formTypeServiceDefinitions as $formTypeServiceDefinition) {
             $formTypeTag = $formTypeServiceDefinition->getTag('form.type');
-            if (!$formTypeTag instanceof TagInterface) {
+            if (!$formTypeTag instanceof \Rector\Symfony\Contract\Tag\TagInterface) {
                 continue;
             }
             $alias = $formTypeTag->getData()['alias'] ?? null;

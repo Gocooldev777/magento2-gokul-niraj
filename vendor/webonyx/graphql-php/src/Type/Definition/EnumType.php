@@ -1,123 +1,128 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type\Definition;
 
+use ArrayObject;
+use Exception;
 use GraphQL\Error\Error;
 use GraphQL\Error\InvariantViolation;
-use GraphQL\Error\SerializationError;
 use GraphQL\Language\AST\EnumTypeDefinitionNode;
 use GraphQL\Language\AST\EnumTypeExtensionNode;
-use GraphQL\Language\AST\EnumValueDefinitionNode;
 use GraphQL\Language\AST\EnumValueNode;
 use GraphQL\Language\AST\Node;
-use GraphQL\Language\Printer;
 use GraphQL\Utils\MixedStore;
 use GraphQL\Utils\Utils;
+use function is_array;
+use function is_int;
+use function is_string;
+use function sprintf;
 
-/**
- * @see EnumValueDefinitionNode
- *
- * @phpstan-type PartialEnumValueConfig array{
- *   name?: string,
- *   value?: mixed,
- *   deprecationReason?: string|null,
- *   description?: string|null,
- *   astNode?: EnumValueDefinitionNode|null
- * }
- * @phpstan-type EnumValues iterable<string, PartialEnumValueConfig>|iterable<string, mixed>|iterable<int, string>
- * @phpstan-type EnumTypeConfig array{
- *   name?: string|null,
- *   description?: string|null,
- *   values: EnumValues|callable(): EnumValues,
- *   astNode?: EnumTypeDefinitionNode|null,
- *   extensionASTNodes?: array<int, EnumTypeExtensionNode>|null
- * }
- */
 class EnumType extends Type implements InputType, OutputType, LeafType, NullableType, NamedType
 {
-    use NamedTypeImplementation;
-
-    public ?EnumTypeDefinitionNode $astNode;
-
-    /** @var array<int, EnumTypeExtensionNode> */
-    public array $extensionASTNodes;
-
-    /** @phpstan-var EnumTypeConfig */
-    public array $config;
+    /** @var EnumTypeDefinitionNode|null */
+    public $astNode;
 
     /**
      * Lazily initialized.
      *
-     * @var array<int, EnumValueDefinition>
+     * @var EnumValueDefinition[]
      */
-    private array $values;
+    private $values;
 
     /**
      * Lazily initialized.
      *
-     * @var MixedStore<EnumValueDefinition>
-     */
-    private MixedStore $valueLookup;
-
-    /** @var array<string, EnumValueDefinition> */
-    private array $nameLookup;
-
-    /**
-     * @throws InvariantViolation
+     * Actually a MixedStore<mixed, EnumValueDefinition>, PHPStan won't let us type it that way.
      *
-     * @phpstan-param EnumTypeConfig $config
+     * @var MixedStore
      */
-    public function __construct(array $config)
-    {
-        $this->name = $config['name'] ?? $this->inferName();
-        $this->description = $config['description'] ?? null;
-        $this->astNode = $config['astNode'] ?? null;
-        $this->extensionASTNodes = $config['extensionASTNodes'] ?? [];
+    private $valueLookup;
 
-        $this->config = $config;
-    }
+    /** @var ArrayObject<string, EnumValueDefinition> */
+    private $nameLookup;
 
-    /** @throws InvariantViolation */
-    public function getValue(string $name): ?EnumValueDefinition
+    /** @var EnumTypeExtensionNode[] */
+    public $extensionASTNodes;
+
+    public function __construct($config)
     {
-        if (! isset($this->nameLookup)) {
-            $this->initializeNameLookup();
+        if (! isset($config['name'])) {
+            $config['name'] = $this->tryInferName();
         }
 
-        return $this->nameLookup[$name] ?? null;
+        Utils::invariant(is_string($config['name']), 'Must provide name.');
+
+        $this->name              = $config['name'];
+        $this->description       = $config['description'] ?? null;
+        $this->astNode           = $config['astNode'] ?? null;
+        $this->extensionASTNodes = $config['extensionASTNodes'] ?? null;
+        $this->config            = $config;
     }
 
     /**
-     * @throws InvariantViolation
+     * @param string|mixed[] $name
      *
-     * @return array<int, EnumValueDefinition>
+     * @return EnumValueDefinition|null
      */
-    public function getValues(): array
+    public function getValue($name)
+    {
+        $lookup = $this->getNameLookup();
+
+        if (! is_string($name)) {
+            return null;
+        }
+
+        return $lookup[$name] ?? null;
+    }
+
+    private function getNameLookup() : ArrayObject
+    {
+        if (! $this->nameLookup) {
+            /** @var ArrayObject<string, EnumValueDefinition> $lookup */
+            $lookup = new ArrayObject();
+            foreach ($this->getValues() as $value) {
+                $lookup[$value->name] = $value;
+            }
+            $this->nameLookup = $lookup;
+        }
+
+        return $this->nameLookup;
+    }
+
+    /**
+     * @return EnumValueDefinition[]
+     */
+    public function getValues() : array
     {
         if (! isset($this->values)) {
             $this->values = [];
+            $config       = $this->config;
 
-            $values = $this->config['values'];
-            if (\is_callable($values)) {
-                $values = $values();
-            }
-
-            // We are just assuming the config option is set correctly here, validation happens in assertValid()
-            foreach ($values as $name => $value) {
-                if (\is_string($name)) {
-                    if (\is_array($value)) {
-                        $value += ['name' => $name, 'value' => $name];
-                    } else {
-                        $value = ['name' => $name, 'value' => $value];
-                    }
-                } elseif (\is_string($value)) {
-                    $value = ['name' => $value, 'value' => $value];
-                } else {
-                    throw new InvariantViolation("{$this->name} values must be an array with value names as keys or values.");
+            if (isset($config['values'])) {
+                if (! is_array($config['values'])) {
+                    throw new InvariantViolation(sprintf('%s values must be an array', $this->name));
                 }
-
-                // @phpstan-ignore-next-line assume the config matches
-                $this->values[] = new EnumValueDefinition($value);
+                foreach ($config['values'] as $name => $value) {
+                    if (is_string($name)) {
+                        if (is_array($value)) {
+                            $value += ['name' => $name, 'value' => $name];
+                        } else {
+                            $value = ['name' => $name, 'value' => $value];
+                        }
+                    } elseif (is_int($name) && is_string($value)) {
+                        $value = ['name' => $value, 'value' => $value];
+                    } else {
+                        throw new InvariantViolation(
+                            sprintf(
+                                '%s values must be an array with value names as keys.',
+                                $this->name
+                            )
+                        );
+                    }
+                    $this->values[] = new EnumValueDefinition($value);
+                }
             }
         }
 
@@ -125,9 +130,11 @@ class EnumType extends Type implements InputType, OutputType, LeafType, Nullable
     }
 
     /**
-     * @throws \InvalidArgumentException
-     * @throws InvariantViolation
-     * @throws SerializationError
+     * @param mixed $value
+     *
+     * @return mixed
+     *
+     * @throws Error
      */
     public function serialize($value)
     {
@@ -136,22 +143,18 @@ class EnumType extends Type implements InputType, OutputType, LeafType, Nullable
             return $lookup[$value]->name;
         }
 
-        $safeValue = Utils::printSafe($value);
-        throw new SerializationError("Cannot serialize value as enum: {$safeValue}");
+        throw new Error('Cannot serialize value as enum: ' . Utils::printSafe($value));
     }
 
     /**
-     * @throws \InvalidArgumentException
-     * @throws InvariantViolation
-     *
-     * @return MixedStore<EnumValueDefinition>
+     * Actually returns a MixedStore<mixed, EnumValueDefinition>, PHPStan won't let us type it that way
      */
-    private function getValueLookup(): MixedStore
+    private function getValueLookup() : MixedStore
     {
         if (! isset($this->valueLookup)) {
             $this->valueLookup = new MixedStore();
 
-            foreach ($this->getValues() as $value) {
+            foreach ($this->getValues() as $valueName => $value) {
                 $this->valueLookup->offsetSet($value->value, $value);
             }
         }
@@ -160,105 +163,67 @@ class EnumType extends Type implements InputType, OutputType, LeafType, Nullable
     }
 
     /**
+     * @param mixed $value
+     *
+     * @return mixed
+     *
      * @throws Error
-     * @throws InvariantViolation
      */
     public function parseValue($value)
     {
-        if (! \is_string($value)) {
-            $safeValue = Utils::printSafeJson($value);
-            throw new Error("Enum \"{$this->name}\" cannot represent non-string value: {$safeValue}.{$this->didYouMean($safeValue)}");
+        $lookup = $this->getNameLookup();
+        if (isset($lookup[$value])) {
+            return $lookup[$value]->value;
         }
 
-        if (! isset($this->nameLookup)) {
-            $this->initializeNameLookup();
-        }
-
-        if (! isset($this->nameLookup[$value])) {
-            throw new Error("Value \"{$value}\" does not exist in \"{$this->name}\" enum.{$this->didYouMean($value)}");
-        }
-
-        return $this->nameLookup[$value]->value;
+        throw new Error('Cannot represent value as enum: ' . Utils::printSafe($value));
     }
 
     /**
-     * @throws Error
-     * @throws InvariantViolation
+     * @param mixed[]|null $variables
+     *
+     * @return null
+     *
+     * @throws Exception
      */
     public function parseLiteral(Node $valueNode, ?array $variables = null)
     {
-        if (! $valueNode instanceof EnumValueNode) {
-            $valueStr = Printer::doPrint($valueNode);
-            throw new Error(
-                "Enum \"{$this->name}\" cannot represent non-enum value: {$valueStr}.{$this->didYouMean($valueStr)}",
-                $valueNode
-            );
+        if ($valueNode instanceof EnumValueNode) {
+            $lookup = $this->getNameLookup();
+            if (isset($lookup[$valueNode->value])) {
+                $enumValue = $lookup[$valueNode->value];
+                if ($enumValue !== null) {
+                    return $enumValue->value;
+                }
+            }
         }
 
-        $name = $valueNode->value;
-
-        if (! isset($this->nameLookup)) {
-            $this->initializeNameLookup();
-        }
-
-        if (isset($this->nameLookup[$name])) {
-            return $this->nameLookup[$name]->value;
-        }
-
-        $valueStr = Printer::doPrint($valueNode);
-        throw new Error("Value \"{$valueStr}\" does not exist in \"{$this->name}\" enum.{$this->didYouMean($valueStr)}", $valueNode);
+        // Intentionally without message, as all information already in wrapped Exception
+        throw new Error();
     }
 
     /**
-     * @throws Error
      * @throws InvariantViolation
      */
-    public function assertValid(): void
+    public function assertValid()
     {
-        Utils::assertValidName($this->name);
+        parent::assertValid();
 
-        $values = $this->config['values'] ?? null;
-        if (! \is_iterable($values) && ! \is_callable($values)) {
-            $notIterable = Utils::printSafe($values);
-            throw new InvariantViolation("{$this->name} values must be an iterable or callable, got: {$notIterable}");
-        }
-
-        $this->getValues();
-    }
-
-    /** @throws InvariantViolation */
-    private function initializeNameLookup(): void
-    {
-        $this->nameLookup = [];
-        foreach ($this->getValues() as $value) {
-            $this->nameLookup[$value->name] = $value;
-        }
-    }
-
-    /** @throws InvariantViolation */
-    protected function didYouMean(string $unknownValue): ?string
-    {
-        $suggestions = Utils::suggestionList(
-            $unknownValue,
-            array_map(
-                static fn (EnumValueDefinition $value): string => $value->name,
-                $this->getValues()
-            )
+        Utils::invariant(
+            isset($this->config['values']),
+            sprintf('%s values must be an array.', $this->name)
         );
 
-        return $suggestions === []
-            ? null
-            : ' Did you mean the enum value ' . Utils::quotedOrList($suggestions) . '?';
-    }
-
-    public function astNode(): ?EnumTypeDefinitionNode
-    {
-        return $this->astNode;
-    }
-
-    /** @return array<int, EnumTypeExtensionNode> */
-    public function extensionASTNodes(): array
-    {
-        return $this->extensionASTNodes;
+        $values = $this->getValues();
+        foreach ($values as $value) {
+            Utils::invariant(
+                ! isset($value->config['isDeprecated']),
+                sprintf(
+                    '%s.%s should provide "deprecationReason" instead of "isDeprecated".',
+                    $this->name,
+                    $value->name
+                )
+            );
+        }
     }
 }

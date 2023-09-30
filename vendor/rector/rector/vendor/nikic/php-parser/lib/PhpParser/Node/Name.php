@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace PhpParser\Node;
 
 use PhpParser\NodeAbstract;
-class Name extends NodeAbstract
+class Name extends \PhpParser\NodeAbstract
 {
     /** @var string[] Parts of the name */
     public $parts;
@@ -154,7 +154,7 @@ class Name extends NodeAbstract
             $realLength = $numParts - $realOffset;
         } else {
             $realLength = $length < 0 ? $length + $numParts - $realOffset : $length;
-            if ($realLength < 0 || $realLength > $numParts - $realOffset) {
+            if ($realLength < 0 || $realLength > $numParts) {
                 throw new \OutOfBoundsException(\sprintf('Length %d is out of bounds', $length));
             }
         }

@@ -10,8 +10,6 @@ use Magento\Framework\ObjectManagerInterface;
 
 /**
  * Factory class for @see \Magento\Framework\Data\Tree
- *
- * @api
  */
 class TreeFactory
 {

@@ -8,19 +8,16 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Definition\Builder;
+namespace RectorPrefix20211221\Symfony\Component\Config\Definition\Builder;
 
-use RectorPrefix202304\Symfony\Component\Config\Definition\EnumNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\EnumNode;
 /**
  * Enum Node Definition.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class EnumNodeDefinition extends ScalarNodeDefinition
+class EnumNodeDefinition extends \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition
 {
-    /**
-     * @var mixed[]
-     */
     private $values;
     /**
      * @return $this
@@ -28,7 +25,7 @@ class EnumNodeDefinition extends ScalarNodeDefinition
     public function values(array $values)
     {
         $values = \array_unique($values);
-        if (!$values) {
+        if (empty($values)) {
             throw new \InvalidArgumentException('->values() must be called with at least one value.');
         }
         $this->values = $values;
@@ -37,13 +34,15 @@ class EnumNodeDefinition extends ScalarNodeDefinition
     /**
      * Instantiate a Node.
      *
+     * @return EnumNode
+     *
      * @throws \RuntimeException
      */
-    protected function instantiateNode() : \RectorPrefix202304\Symfony\Component\Config\Definition\ScalarNode
+    protected function instantiateNode()
     {
-        if (!isset($this->values)) {
+        if (null === $this->values) {
             throw new \RuntimeException('You must call ->values() on enum nodes.');
         }
-        return new EnumNode($this->name, $this->parent, $this->values, $this->pathSeparator);
+        return new \RectorPrefix20211221\Symfony\Component\Config\Definition\EnumNode($this->name, $this->parent, $this->values, $this->pathSeparator);
     }
 }

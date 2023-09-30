@@ -87,9 +87,8 @@ class ASTFormalParameter extends AbstractASTNode
      */
     public function getType()
     {
-        $child = $this->getChild(0);
-        if ($child instanceof ASTType) {
-            return $child;
+        if ($this->hasType()) {
+            return $this->getChild(0);
         }
 
         throw new OutOfBoundsException('The parameter does not have a type specification.');
@@ -138,6 +137,19 @@ class ASTFormalParameter extends AbstractASTNode
     public function setPassedByReference()
     {
         $this->setMetadataBoolean(5, true);
+    }
+
+    /**
+     * Accept method of the visitor design pattern. This method will be called
+     * by a visitor during tree traversal.
+     *
+     * @param ASTVisitor $visitor The calling visitor instance.
+     *
+     * @since  0.9.12
+     */
+    public function accept(ASTVisitor $visitor, $data = null)
+    {
+        return $visitor->visitFormalParameter($this, $data);
     }
 
     /**

@@ -21,9 +21,15 @@ namespace PhpCsFixer\FixerConfiguration;
  */
 final class AliasedFixerOption implements FixerOptionInterface
 {
-    private FixerOptionInterface $fixerOption;
+    /**
+     * @var FixerOptionInterface
+     */
+    private $fixerOption;
 
-    private string $alias;
+    /**
+     * @var string
+     */
+    private $alias;
 
     public function __construct(FixerOptionInterface $fixerOption, string $alias)
     {

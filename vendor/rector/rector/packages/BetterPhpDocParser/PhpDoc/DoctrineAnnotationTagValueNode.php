@@ -7,16 +7,16 @@ use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\AbstractValuesAwareNode;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 use Stringable;
-final class DoctrineAnnotationTagValueNode extends AbstractValuesAwareNode
+final class DoctrineAnnotationTagValueNode extends \Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\AbstractValuesAwareNode
 {
     /**
      * @var \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode
      */
     public $identifierTypeNode;
     /**
-     * @param ArrayItemNode[] $values
+     * @param array<mixed, mixed> $values
      */
-    public function __construct(IdentifierTypeNode $identifierTypeNode, ?string $originalContent = null, array $values = [], ?string $silentKey = null)
+    public function __construct(\PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode $identifierTypeNode, ?string $originalContent = null, array $values = [], ?string $silentKey = null)
     {
         $this->identifierTypeNode = $identifierTypeNode;
         $this->hasChanged = \true;
@@ -40,6 +40,18 @@ final class DoctrineAnnotationTagValueNode extends AbstractValuesAwareNode
         $itemContents = $this->printValuesContent($this->values);
         return \sprintf('(%s)', $itemContents);
     }
+    /**
+     * @param string[] $classNames
+     */
+    public function hasClassNames(array $classNames) : bool
+    {
+        foreach ($classNames as $className) {
+            if ($this->hasClassName($className)) {
+                return \true;
+            }
+        }
+        return \false;
+    }
     public function hasClassName(string $className) : bool
     {
         $annotationName = \trim($this->identifierTypeNode->name, '@');
@@ -47,7 +59,7 @@ final class DoctrineAnnotationTagValueNode extends AbstractValuesAwareNode
             return \true;
         }
         // the name is not fully qualified in the original name, look for resolved class attribute
-        $resolvedClass = $this->identifierTypeNode->getAttribute(PhpDocAttributeKey::RESOLVED_CLASS);
+        $resolvedClass = $this->identifierTypeNode->getAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::RESOLVED_CLASS);
         return $resolvedClass === $className;
     }
 }

@@ -31,11 +31,9 @@ class Main extends \Magento\Eav\Block\Adminhtml\Attribute\Edit\Main\AbstractMain
         $fieldsToRemove = ['attribute_code', 'is_unique', 'frontend_class'];
 
         foreach ($fieldset->getElements() as $element) {
-            $elementId = $element->getId() ?? '';
-
             /** @var \Magento\Framework\Data\Form\AbstractForm $element  */
-            if (substr($elementId, 0, strlen('default_value')) == 'default_value') {
-                $fieldsToRemove[] = $elementId;
+            if (substr($element->getId(), 0, strlen('default_value')) == 'default_value') {
+                $fieldsToRemove[] = $element->getId();
             }
         }
         foreach ($fieldsToRemove as $id) {

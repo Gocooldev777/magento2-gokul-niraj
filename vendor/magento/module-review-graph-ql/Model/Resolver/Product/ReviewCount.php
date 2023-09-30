@@ -75,10 +75,6 @@ class ReviewCount implements ResolverInterface
         /** @var Product $product */
         $product = $value['model'];
 
-        return (int) $this->review->getTotalReviews(
-            $product->getId(),
-            true,
-            (int) $context->getExtensionAttributes()->getStore()->getId()
-        );
+        return (int) $this->review->getTotalReviews($product->getId(), true);
     }
 }

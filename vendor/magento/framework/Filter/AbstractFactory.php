@@ -5,8 +5,6 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-
 /**
  * Magento filter factory abstract
  */
@@ -39,7 +37,7 @@ abstract class AbstractFactory implements FactoryInterface
     protected $objectManager;
 
     /**
-     * @var FilterInterface[]
+     * @var \Zend_Filter_Interface[]
      */
     protected $sharedInstances = [];
 
@@ -78,7 +76,7 @@ abstract class AbstractFactory implements FactoryInterface
      *
      * @param string $alias
      * @param array $arguments
-     * @return FilterInterface
+     * @return \Zend_Filter_Interface
      */
     public function createFilter($alias, array $arguments = [])
     {

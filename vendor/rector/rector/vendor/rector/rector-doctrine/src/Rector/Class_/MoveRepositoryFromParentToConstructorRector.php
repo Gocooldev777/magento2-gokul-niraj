@@ -4,7 +4,6 @@ declare (strict_types=1);
 namespace Rector\Doctrine\Rector\Class_;
 
 use PhpParser\Node;
-use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\ObjectType;
@@ -18,38 +17,34 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Doctrine\Tests\Set\DoctrineRepositoryAsServiceSet\DoctrineRepositoryAsServiceSetTest
  */
-final class MoveRepositoryFromParentToConstructorRector extends AbstractRector
+final class MoveRepositoryFromParentToConstructorRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @readonly
      * @var \Rector\Core\NodeManipulator\ClassDependencyManipulator
      */
     private $classDependencyManipulator;
     /**
-     * @readonly
      * @var \Rector\Core\NodeManipulator\ClassInsertManipulator
      */
     private $classInsertManipulator;
     /**
-     * @readonly
      * @var \Rector\Doctrine\NodeFactory\RepositoryAssignFactory
      */
     private $repositoryAssignFactory;
     /**
-     * @readonly
      * @var \Rector\Doctrine\NodeAnalyzer\EntityObjectTypeResolver
      */
     private $entityObjectTypeResolver;
-    public function __construct(ClassDependencyManipulator $classDependencyManipulator, ClassInsertManipulator $classInsertManipulator, RepositoryAssignFactory $repositoryAssignFactory, EntityObjectTypeResolver $entityObjectTypeResolver)
+    public function __construct(\Rector\Core\NodeManipulator\ClassDependencyManipulator $classDependencyManipulator, \Rector\Core\NodeManipulator\ClassInsertManipulator $classInsertManipulator, \Rector\Doctrine\NodeFactory\RepositoryAssignFactory $repositoryAssignFactory, \Rector\Doctrine\NodeAnalyzer\EntityObjectTypeResolver $entityObjectTypeResolver)
     {
         $this->classDependencyManipulator = $classDependencyManipulator;
         $this->classInsertManipulator = $classInsertManipulator;
         $this->repositoryAssignFactory = $repositoryAssignFactory;
         $this->entityObjectTypeResolver = $entityObjectTypeResolver;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Turns parent EntityRepository class to constructor dependency', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns parent EntityRepository class to constructor dependency', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 namespace App\Repository;
 
 use Doctrine\ORM\EntityRepository;
@@ -85,28 +80,28 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        if (!$this->isObjectType($node, new ObjectType('Doctrine\\ORM\\EntityRepository'))) {
+        if (!$this->isObjectType($node, new \PHPStan\Type\ObjectType('Doctrine\\ORM\\EntityRepository'))) {
             return null;
         }
-        if (!$node->extends instanceof Name) {
+        if ($node->extends === null) {
             return null;
         }
         // remove parent class
         $node->extends = null;
-        $subtractableType = $this->entityObjectTypeResolver->resolveFromRepositoryClass($node);
-        $genericObjectType = new GenericObjectType('Doctrine\\ORM\\EntityRepository', [$subtractableType]);
+        $entityObjectType = $this->entityObjectTypeResolver->resolveFromRepositoryClass($node);
+        $genericObjectType = new \PHPStan\Type\Generic\GenericObjectType('Doctrine\\ORM\\EntityRepository', [$entityObjectType]);
         // add $repository property
         $this->classInsertManipulator->addPropertyToClass($node, 'repository', $genericObjectType);
         // add $entityManager and assign to constuctor
         $repositoryAssign = $this->repositoryAssignFactory->create($node);
-        $this->classDependencyManipulator->addConstructorDependencyWithCustomAssign($node, 'entityManager', new ObjectType('Doctrine\\ORM\\EntityManagerInterface'), $repositoryAssign);
+        $this->classDependencyManipulator->addConstructorDependencyWithCustomAssign($node, 'entityManager', new \PHPStan\Type\ObjectType('Doctrine\\ORM\\EntityManagerInterface'), $repositoryAssign);
         return $node;
     }
 }

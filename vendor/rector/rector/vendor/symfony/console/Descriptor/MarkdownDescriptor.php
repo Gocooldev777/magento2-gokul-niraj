@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Descriptor;
+namespace RectorPrefix20211221\Symfony\Component\Console\Descriptor;
 
-use RectorPrefix202304\Symfony\Component\Console\Application;
-use RectorPrefix202304\Symfony\Component\Console\Command\Command;
-use RectorPrefix202304\Symfony\Component\Console\Helper\Helper;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputArgument;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputOption;
-use RectorPrefix202304\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Application;
+use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
+use RectorPrefix20211221\Symfony\Component\Console\Helper\Helper;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
 /**
  * Markdown descriptor.
  *
@@ -24,24 +24,37 @@ use RectorPrefix202304\Symfony\Component\Console\Output\OutputInterface;
  *
  * @internal
  */
-class MarkdownDescriptor extends Descriptor
+class MarkdownDescriptor extends \RectorPrefix20211221\Symfony\Component\Console\Descriptor\Descriptor
 {
-    public function describe(OutputInterface $output, object $object, array $options = [])
+    /**
+     * {@inheritdoc}
+     * @param object $object
+     */
+    public function describe(\RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output, $object, array $options = [])
     {
         $decorated = $output->isDecorated();
         $output->setDecorated(\false);
         parent::describe($output, $object, $options);
         $output->setDecorated($decorated);
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function write(string $content, bool $decorated = \true)
     {
         parent::write($content, $decorated);
     }
-    protected function describeInputArgument(InputArgument $argument, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputArgument(\RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument $argument, array $options = [])
     {
         $this->write('#### `' . ($argument->getName() ?: '<none>') . "`\n\n" . ($argument->getDescription() ? \preg_replace('/\\s*[\\r\\n]\\s*/', "\n", $argument->getDescription()) . "\n\n" : '') . '* Is required: ' . ($argument->isRequired() ? 'yes' : 'no') . "\n" . '* Is array: ' . ($argument->isArray() ? 'yes' : 'no') . "\n" . '* Default: `' . \str_replace("\n", '', \var_export($argument->getDefault(), \true)) . '`');
     }
-    protected function describeInputOption(InputOption $option, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputOption(\RectorPrefix20211221\Symfony\Component\Console\Input\InputOption $option, array $options = [])
     {
         $name = '--' . $option->getName();
         if ($option->isNegatable()) {
@@ -52,7 +65,10 @@ class MarkdownDescriptor extends Descriptor
         }
         $this->write('#### `' . $name . '`' . "\n\n" . ($option->getDescription() ? \preg_replace('/\\s*[\\r\\n]\\s*/', "\n", $option->getDescription()) . "\n\n" : '') . '* Accept value: ' . ($option->acceptValue() ? 'yes' : 'no') . "\n" . '* Is value required: ' . ($option->isValueRequired() ? 'yes' : 'no') . "\n" . '* Is multiple: ' . ($option->isArray() ? 'yes' : 'no') . "\n" . '* Is negatable: ' . ($option->isNegatable() ? 'yes' : 'no') . "\n" . '* Default: `' . \str_replace("\n", '', \var_export($option->getDefault(), \true)) . '`');
     }
-    protected function describeInputDefinition(InputDefinition $definition, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputDefinition(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition, array $options = [])
     {
         if ($showArguments = \count($definition->getArguments()) > 0) {
             $this->write('### Arguments');
@@ -76,16 +92,19 @@ class MarkdownDescriptor extends Descriptor
             }
         }
     }
-    protected function describeCommand(Command $command, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeCommand(\RectorPrefix20211221\Symfony\Component\Console\Command\Command $command, array $options = [])
     {
         if ($options['short'] ?? \false) {
-            $this->write('`' . $command->getName() . "`\n" . \str_repeat('-', Helper::width($command->getName()) + 2) . "\n\n" . ($command->getDescription() ? $command->getDescription() . "\n\n" : '') . '### Usage' . "\n\n" . \array_reduce($command->getAliases(), function ($carry, $usage) {
+            $this->write('`' . $command->getName() . "`\n" . \str_repeat('-', \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($command->getName()) + 2) . "\n\n" . ($command->getDescription() ? $command->getDescription() . "\n\n" : '') . '### Usage' . "\n\n" . \array_reduce($command->getAliases(), function ($carry, $usage) {
                 return $carry . '* `' . $usage . '`' . "\n";
             }));
             return;
         }
         $command->mergeApplicationDefinition(\false);
-        $this->write('`' . $command->getName() . "`\n" . \str_repeat('-', Helper::width($command->getName()) + 2) . "\n\n" . ($command->getDescription() ? $command->getDescription() . "\n\n" : '') . '### Usage' . "\n\n" . \array_reduce(\array_merge([$command->getSynopsis()], $command->getAliases(), $command->getUsages()), function ($carry, $usage) {
+        $this->write('`' . $command->getName() . "`\n" . \str_repeat('-', \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($command->getName()) + 2) . "\n\n" . ($command->getDescription() ? $command->getDescription() . "\n\n" : '') . '### Usage' . "\n\n" . \array_reduce(\array_merge([$command->getSynopsis()], $command->getAliases(), $command->getUsages()), function ($carry, $usage) {
             return $carry . '* `' . $usage . '`' . "\n";
         }));
         if ($help = $command->getProcessedHelp()) {
@@ -98,14 +117,17 @@ class MarkdownDescriptor extends Descriptor
             $this->describeInputDefinition($definition);
         }
     }
-    protected function describeApplication(Application $application, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeApplication(\RectorPrefix20211221\Symfony\Component\Console\Application $application, array $options = [])
     {
         $describedNamespace = $options['namespace'] ?? null;
-        $description = new ApplicationDescription($application, $describedNamespace);
+        $description = new \RectorPrefix20211221\Symfony\Component\Console\Descriptor\ApplicationDescription($application, $describedNamespace);
         $title = $this->getApplicationTitle($application);
-        $this->write($title . "\n" . \str_repeat('=', Helper::width($title)));
+        $this->write($title . "\n" . \str_repeat('=', \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($title)));
         foreach ($description->getNamespaces() as $namespace) {
-            if (ApplicationDescription::GLOBAL_NAMESPACE !== $namespace['id']) {
+            if (\RectorPrefix20211221\Symfony\Component\Console\Descriptor\ApplicationDescription::GLOBAL_NAMESPACE !== $namespace['id']) {
                 $this->write("\n\n");
                 $this->write('**' . $namespace['id'] . ':**');
             }
@@ -121,7 +143,7 @@ class MarkdownDescriptor extends Descriptor
             }
         }
     }
-    private function getApplicationTitle(Application $application) : string
+    private function getApplicationTitle(\RectorPrefix20211221\Symfony\Component\Console\Application $application) : string
     {
         if ('UNKNOWN' !== $application->getName()) {
             if ('UNKNOWN' !== $application->getVersion()) {

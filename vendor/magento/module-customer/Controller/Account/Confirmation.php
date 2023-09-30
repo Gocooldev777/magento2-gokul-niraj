@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Customer\Controller\Account;
 
 use Magento\Customer\Api\AccountManagementInterface;
@@ -15,26 +13,22 @@ use Magento\Framework\App\Action\HttpGetActionInterface as HttpGetActionInterfac
 use Magento\Framework\App\Action\HttpPostActionInterface as HttpPostActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Controller\Result\Redirect;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\State\InvalidTransitionException;
-use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
- * Send confirmation link to specified email
+ * Class Confirmation. Send confirmation link to specified email
  */
 class Confirmation extends AbstractAccount implements HttpGetActionInterface, HttpPostActionInterface
 {
     /**
-     * @var StoreManagerInterface
+     * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $storeManager;
 
     /**
-     * @var AccountManagementInterface
+     * @var \Magento\Customer\Api\AccountManagementInterface
      */
     protected $customerAccountManagement;
 
@@ -59,7 +53,7 @@ class Confirmation extends AbstractAccount implements HttpGetActionInterface, Ht
      * @param PageFactory $resultPageFactory
      * @param StoreManagerInterface $storeManager
      * @param AccountManagementInterface $customerAccountManagement
-     * @param Url|null $customerUrl
+     * @param Url $customerUrl
      */
     public function __construct(
         Context $context,
@@ -80,52 +74,48 @@ class Confirmation extends AbstractAccount implements HttpGetActionInterface, Ht
     /**
      * Send confirmation link to specified email
      *
-     * @return Redirect|Page
-     * @throws LocalizedException
+     * @return \Magento\Framework\Controller\Result\Redirect|\Magento\Framework\View\Result\Page
      */
     public function execute()
     {
         if ($this->session->isLoggedIn()) {
-            return $this->getRedirect('*/*/');
+            /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
+            $resultRedirect = $this->resultRedirectFactory->create();
+            $resultRedirect->setPath('*/*/');
+            return $resultRedirect;
         }
 
+        // try to confirm by email
         $email = $this->getRequest()->getPost('email');
-
         if ($email) {
+            /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
+            $resultRedirect = $this->resultRedirectFactory->create();
+
             try {
                 $this->customerAccountManagement->resendConfirmation(
                     $email,
                     $this->storeManager->getStore()->getWebsiteId()
                 );
                 $this->messageManager->addSuccessMessage(__('Please check your email for confirmation key.'));
-                return $this->getRedirect('*/*/index', ['_secure' => true]);
             } catch (InvalidTransitionException $e) {
                 $this->messageManager->addSuccessMessage(__('This email does not require confirmation.'));
-                return $this->getRedirect('*/*/index', ['_secure' => true]);
-            } catch (NoSuchEntityException $e) {
-                $this->messageManager->addErrorMessage(__('Wrong email.'));
+            } catch (\Exception $e) {
+                $this->messageManager->addExceptionMessage($e, __('Wrong email.'));
+                $resultRedirect->setPath('*/*/*', ['email' => $email, '_secure' => true]);
+                return $resultRedirect;
             }
+            $this->session->setUsername($email);
+            $resultRedirect->setPath('*/*/index', ['_secure' => true]);
+            return $resultRedirect;
         }
 
+        /** @var \Magento\Framework\View\Result\Page $resultPage */
         $resultPage = $this->resultPageFactory->create();
-        $resultPage->getLayout()->getBlock('accountConfirmation')
-            ->setEmail($email)
-            ->setLoginUrl($this->customerUrl->getLoginUrl());
+        $resultPage->getLayout()->getBlock('accountConfirmation')->setEmail(
+            $this->getRequest()->getParam('email', $email)
+        )->setLoginUrl(
+            $this->customerUrl->getLoginUrl()
+        );
         return $resultPage;
-    }
-
-    /**
-     * Returns redirect object
-     *
-     * @param string $path
-     * @param array $params
-     * @return Redirect
-     */
-    private function getRedirect(string $path, array $params = []): Redirect
-    {
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath($path, $params);
-
-        return $resultRedirect;
     }
 }

@@ -8,7 +8,6 @@ namespace Magento\Framework\View\Element\UiComponent\Factory;
 /**
  * Interface \Magento\Framework\View\Element\UiComponent\Factory\ComponentFactoryInterface
  *
- * @api
  */
 interface ComponentFactoryInterface
 {

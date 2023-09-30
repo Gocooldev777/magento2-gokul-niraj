@@ -17,13 +17,12 @@ use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\TypeComparator\TypeComparator;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
-use Rector\Privatization\TypeManipulator\TypeNormalizer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\ClassConst\VarConstantCommentRector\VarConstantCommentRectorTest
  */
-final class VarConstantCommentRector extends AbstractRector
+final class VarConstantCommentRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @readonly
@@ -35,20 +34,14 @@ final class VarConstantCommentRector extends AbstractRector
      * @var \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger
      */
     private $phpDocTypeChanger;
-    /**
-     * @readonly
-     * @var \Rector\Privatization\TypeManipulator\TypeNormalizer
-     */
-    private $typeNormalizer;
-    public function __construct(TypeComparator $typeComparator, PhpDocTypeChanger $phpDocTypeChanger, TypeNormalizer $typeNormalizer)
+    public function __construct(\Rector\NodeTypeResolver\TypeComparator\TypeComparator $typeComparator, \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger $phpDocTypeChanger)
     {
         $this->typeComparator = $typeComparator;
         $this->phpDocTypeChanger = $phpDocTypeChanger;
-        $this->typeNormalizer = $typeNormalizer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Constant should have a @var comment with type', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Constant should have a @var comment with type', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     const HI = 'hi';
@@ -70,22 +63,20 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassConst::class];
+        return [\PhpParser\Node\Stmt\ClassConst::class];
     }
     /**
      * @param ClassConst $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (\count($node->consts) > 1) {
             return null;
         }
         $constType = $this->getType($node->consts[0]->value);
-        if ($constType instanceof MixedType) {
+        if ($constType instanceof \PHPStan\Type\MixedType) {
             return null;
         }
-        // generalize false/true type to bool, as mostly default value but accepts both
-        $constType = $this->typeNormalizer->generalizeConstantBoolTypes($constType);
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         if ($this->shouldSkipConstantArrayType($constType, $phpDocInfo)) {
             return null;
@@ -94,23 +85,20 @@ CODE_SAMPLE
             return null;
         }
         $this->phpDocTypeChanger->changeVarType($phpDocInfo, $constType);
-        if (!$phpDocInfo->hasChanged()) {
-            return null;
-        }
         return $node;
     }
-    private function hasTwoAndMoreGenericClassStringTypes(ConstantArrayType $constantArrayType) : bool
+    private function hasTwoAndMoreGenericClassStringTypes(\PHPStan\Type\Constant\ConstantArrayType $constantArrayType) : bool
     {
-        $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPHPStanPhpDocTypeNode($constantArrayType, TypeKind::RETURN);
-        if (!$typeNode instanceof ArrayTypeNode) {
+        $typeNode = $this->staticTypeMapper->mapPHPStanTypeToPHPStanPhpDocTypeNode($constantArrayType, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind::RETURN());
+        if (!$typeNode instanceof \PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode) {
             return \false;
         }
-        if (!$typeNode->type instanceof UnionTypeNode) {
+        if (!$typeNode->type instanceof \PHPStan\PhpDocParser\Ast\Type\UnionTypeNode) {
             return \false;
         }
         $genericTypeNodeCount = 0;
         foreach ($typeNode->type->types as $unionedTypeNode) {
-            if ($unionedTypeNode instanceof GenericTypeNode) {
+            if ($unionedTypeNode instanceof \PHPStan\PhpDocParser\Ast\Type\GenericTypeNode) {
                 ++$genericTypeNodeCount;
             }
         }
@@ -119,13 +107,13 @@ CODE_SAMPLE
     /**
      * Skip big arrays and mixed[] constants
      */
-    private function shouldSkipConstantArrayType(Type $constType, PhpDocInfo $phpDocInfo) : bool
+    private function shouldSkipConstantArrayType(\PHPStan\Type\Type $constType, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo) : bool
     {
-        if (!$constType instanceof ConstantArrayType) {
+        if (!$constType instanceof \PHPStan\Type\Constant\ConstantArrayType) {
             return \false;
         }
         $currentVarType = $phpDocInfo->getVarType();
-        if ($currentVarType instanceof ArrayType && $currentVarType->getItemType() instanceof MixedType) {
+        if ($currentVarType instanceof \PHPStan\Type\ArrayType && $currentVarType->getItemType() instanceof \PHPStan\Type\MixedType) {
             return \true;
         }
         if ($this->hasTwoAndMoreGenericClassStringTypes($constType)) {
@@ -133,13 +121,13 @@ CODE_SAMPLE
         }
         return $this->isHugeNestedConstantArrayTyp($constType);
     }
-    private function isHugeNestedConstantArrayTyp(ConstantArrayType $constantArrayType) : bool
+    private function isHugeNestedConstantArrayTyp(\PHPStan\Type\Constant\ConstantArrayType $constantArrayType) : bool
     {
         if (\count($constantArrayType->getValueTypes()) <= 3) {
             return \false;
         }
         foreach ($constantArrayType->getValueTypes() as $constValueType) {
-            if ($constValueType instanceof ConstantArrayType) {
+            if ($constValueType instanceof \PHPStan\Type\Constant\ConstantArrayType) {
                 return \true;
             }
         }

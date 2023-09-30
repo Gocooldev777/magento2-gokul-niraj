@@ -5,8 +5,6 @@
  */
 namespace Magento\Framework\View\Design\Theme\Image;
 
-use Magento\Framework\File\Http;
-
 /**
  * Theme Image Uploader
  */
@@ -20,16 +18,22 @@ class Uploader
     protected $_allowedExtensions = ['jpg', 'jpeg', 'gif', 'png', 'xbm', 'wbmp'];
 
     /**
+     * File system
+     *
      * @var \Magento\Framework\Filesystem
      */
     protected $_filesystem;
 
     /**
-     * @var Http
+     * Transfer adapter
+     *
+     * @var \Zend_File_Transfer_Adapter_Http
      */
     protected $_transferAdapter;
 
     /**
+     * Uploader factory
+     *
      * @var \Magento\Framework\File\UploaderFactory
      */
     protected $_uploaderFactory;

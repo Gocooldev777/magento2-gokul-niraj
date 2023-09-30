@@ -42,9 +42,6 @@
             <actionGroup ref="DeleteProductAttributeActionGroup" stepKey="deleteCreatedAttribute">
                 <argument name="ProductAttribute" value="newProductAttribute"/>
             </actionGroup>
-            <actionGroup ref="CliIndexerReindexActionGroup" stepKey="reindex">
-                <argument name="indices" value=""/>
-            </actionGroup>
 
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
@@ -59,9 +56,7 @@
         <click stepKey="openFirstProduct" selector="{{AdminProductGridSection.productRowBySku($$createConfigProduct.sku$$)}}"/>
         <waitForPageLoad stepKey="waitForProductToLoad"/>
 
-        <actionGroup ref="AdminFillProductQtyOnProductFormActionGroup" stepKey="fillProductQty">
-            <argument name="productQty" value="100"/>
-        </actionGroup>
+        <fillField selector="{{AdminProductFormSection.productQuantity}}" userInput="100" stepKey="fillProductQty"/>
         <selectOption selector="{{AdminProductFormSection.productStockStatus}}" userInput="In Stock" stepKey="selectStockStatus"/>
 
         <!-- Create New Product Attribute -->
@@ -126,9 +121,7 @@
         <waitForPageLoad stepKey="waitForPageToLoad"/>
         <click selector="{{StorefrontCategoryMainSection.productLink}}" stepKey="openSearchedProduct"/>
         <waitForPageLoad  stepKey="waitForProductToLoad1"/>
-        <actionGroup ref="AssertStorefrontProductInfoMainProductNameActionGroup" stepKey="seeProductNameInStoreFront">
-            <argument name="value" value="$$createConfigProduct.name$$"/>
-        </actionGroup>
+        <see selector="{{StorefrontProductInfoMainSection.productName}}" userInput="$$createConfigProduct.name$$" stepKey="seeProductNameInStoreFront"/>
         <see selector="{{StorefrontProductInfoMainSection.productPrice}}" userInput="$$createConfigProduct.price$$" stepKey="seeProductPriceInStoreFront"/>
         <actionGroup ref="StorefrontAssertProductSkuOnProductPageActionGroup" stepKey="seeProductSkuInStoreFront">
             <argument name="productSku" value="$$createConfigProduct.sku$$"/>

@@ -24,10 +24,11 @@ use Magento\FunctionalTestingFramework\DataGenerator\Handlers\CredentialStore;
 use Magento\FunctionalTestingFramework\Module\Util\ModuleUtils;
 use Magento\FunctionalTestingFramework\Util\Path\UrlFormatter;
 use Magento\FunctionalTestingFramework\Util\ConfigSanitizerUtil;
-use Qameta\Allure\Allure;
+use Yandex\Allure\Adapter\AllureException;
 use Magento\FunctionalTestingFramework\DataTransport\Protocol\CurlTransport;
-use Qameta\Allure\Io\DataSourceFactory;
+use Yandex\Allure\Adapter\Support\AttachmentSupport;
 use Magento\FunctionalTestingFramework\Exceptions\TestFrameworkException;
+use Magento\FunctionalTestingFramework\DataGenerator\Handlers\PersistedObjectHandler;
 
 /**
  * MagentoWebDriver module provides common Magento web actions through Selenium WebDriver.
@@ -53,6 +54,7 @@ use Magento\FunctionalTestingFramework\Exceptions\TestFrameworkException;
  */
 class MagentoWebDriver extends WebDriver
 {
+    use AttachmentSupport;
     use Pause {
         pause as codeceptPause;
     }
@@ -74,6 +76,19 @@ class MagentoWebDriver extends WebDriver
         '//div[contains(@class,"file-uploader-spinner")]',
         '//div[contains(@class,"image-uploader-spinner")]',
         '//div[contains(@class,"uploader")]//div[@class="file-row"]',
+    ];
+
+    /**
+     * The module required fields, to be set in the suite .yml configuration file.
+     *
+     * @var array
+     */
+    protected $requiredFields = [
+        'url',
+        'backend_name',
+        'username',
+        'password',
+        'browser',
     ];
 
     /**
@@ -133,7 +148,6 @@ class MagentoWebDriver extends WebDriver
     public function _initialize()
     {
         $this->config = ConfigSanitizerUtil::sanitizeWebDriverConfig($this->config);
-
         parent::_initialize();
         $this->cleanJsError();
     }
@@ -143,7 +157,7 @@ class MagentoWebDriver extends WebDriver
      *
      * @return void
      */
-    public function _resetConfig():void
+    public function _resetConfig()
     {
         parent::_resetConfig();
         $this->config = ConfigSanitizerUtil::sanitizeWebDriverConfig($this->config);
@@ -209,14 +223,14 @@ class MagentoWebDriver extends WebDriver
      * @throws ModuleException
      * @api
      */
-    public function _getCurrentUri():string
+    public function _getCurrentUri()
     {
         $url = $this->webDriver->getCurrentURL();
         if ($url === 'about:blank') {
             throw new ModuleException($this, 'Current url is blank, no page was opened');
         }
 
-        return Uri::retrieveUri((string)$url);
+        return Uri::retrieveUri($url);
     }
 
     /**
@@ -224,8 +238,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $url
      * @return void
+     * @throws AllureException
      */
-    public function dontSeeCurrentUrlEquals($url):void
+    public function dontSeeCurrentUrlEquals($url)
     {
         $actualUrl = $this->webDriver->getCurrentURL();
         $comparison = "Expected: $url\nActual: $actualUrl";
@@ -238,8 +253,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $regex
      * @return void
+     * @throws AllureException
      */
-    public function dontSeeCurrentUrlMatches($regex):void
+    public function dontSeeCurrentUrlMatches($regex)
     {
         $actualUrl = $this->webDriver->getCurrentURL();
         $comparison = "Expected: $regex\nActual: $actualUrl";
@@ -252,8 +268,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $needle
      * @return void
+     * @throws AllureException
      */
-    public function dontSeeInCurrentUrl($needle):void
+    public function dontSeeInCurrentUrl($needle)
     {
         $actualUrl = $this->webDriver->getCurrentURL();
         $comparison = "Expected: $needle\nActual: $actualUrl";
@@ -267,7 +284,7 @@ class MagentoWebDriver extends WebDriver
      * @param string|null $regex
      * @return string
      */
-    public function grabFromCurrentUrl($regex = null):string
+    public function grabFromCurrentUrl($regex = null)
     {
         $fullUrl = $this->webDriver->getCurrentURL();
         if (!$regex) {
@@ -290,8 +307,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $url
      * @return void
+     * @throws AllureException
      */
-    public function seeCurrentUrlEquals($url):void
+    public function seeCurrentUrlEquals($url)
     {
         $actualUrl = $this->webDriver->getCurrentURL();
         $comparison = "Expected: $url\nActual: $actualUrl";
@@ -304,8 +322,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $regex
      * @return void
+     * @throws AllureException
      */
-    public function seeCurrentUrlMatches($regex):void
+    public function seeCurrentUrlMatches($regex)
     {
         $actualUrl = $this->webDriver->getCurrentURL();
         $comparison = "Expected: $regex\nActual: $actualUrl";
@@ -318,8 +337,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $needle
      * @return void
+     * @throws AllureException
      */
-    public function seeInCurrentUrl($needle):void
+    public function seeInCurrentUrl($needle)
     {
         $actualUrl = $this->webDriver->getCurrentURL();
         $comparison = "Expected: $needle\nActual: $actualUrl";
@@ -437,7 +457,7 @@ class MagentoWebDriver extends WebDriver
     public function waitForLoadingMaskToDisappear($timeout = null)
     {
         $timeout = $timeout ?? $this->_getConfig()['pageload_timeout'];
-
+        
         foreach ($this->loadingMasksLocators as $maskLocator) {
             // Get count of elements found for looping.
             // Elements are NOT useful for interaction, as they cannot be fed to codeception actions.
@@ -694,7 +714,7 @@ class MagentoWebDriver extends WebDriver
      * @param string $selector
      * @return void
      */
-    public function clearField($selector):void
+    public function clearField($selector)
     {
         $this->fillField($selector, "");
     }
@@ -744,7 +764,7 @@ class MagentoWebDriver extends WebDriver
      * @param integer $yOffset
      * @return void
      */
-    public function dragAndDrop($source, $target, $xOffset = null, $yOffset = null):void
+    public function dragAndDrop($source, $target, $xOffset = null, $yOffset = null)
     {
         $snodes = $this->matchFirstOrFail($this->baseElement, $source);
         $tnodes = $this->matchFirstOrFail($this->baseElement, $target);
@@ -772,7 +792,7 @@ class MagentoWebDriver extends WebDriver
             $action->release($tnodes)->perform();
         }
     }
-
+    
     /**
      * Simple rapid click as per given count number.
      *
@@ -788,15 +808,15 @@ class MagentoWebDriver extends WebDriver
         }
     }
 
-    /**
-     * Grabs a cookie attributes value.
-     * You can set additional cookie params like `domain`, `path` in array passed as last argument.
-     * If the cookie is set by an ajax request (XMLHttpRequest),
-     * there might be some delay caused by the browser, so try `$I->wait(0.1)`.
-     * @param  string $cookie
-     * @param array  $params
-     * @return mixed
-     */
+  /**
+   * Grabs a cookie attributes value.
+   * You can set additional cookie params like `domain`, `path` in array passed as last argument.
+   * If the cookie is set by an ajax request (XMLHttpRequest),
+   * there might be some delay caused by the browser, so try `$I->wait(0.1)`.
+   * @param  string $cookie
+   * @param array  $params
+   * @return mixed
+   */
     public function grabCookieAttributes(string $cookie, array $params = []): array
     {
         $params['name'] = $cookie;
@@ -884,20 +904,12 @@ class MagentoWebDriver extends WebDriver
         }
 
         if ($this->current_test === null) {
-            throw new \RuntimeException("Suite condition failure: \n"
-                . " Something went wrong with selenium server/chrome driver : \n .  
-                    {$fail->getMessage()}\n{$fail->getTraceAsString()}");
+            throw new \RuntimeException("Suite condition failure: \n" . $fail->getMessage());
         }
-        AllureHelper::doAddAttachment(
-            DataSourceFactory::fromFile($this->pngReport),
-            $test->getMetadata()->getName() . '.png',
-            'image/png'
-        );
-        AllureHelper::doAddAttachment(
-            DataSourceFactory::fromFile($this->htmlReport),
-            $test->getMetadata()->getName() . '.html',
-            'text/html'
-        );
+
+        $this->addAttachment($this->pngReport, $test->getMetadata()->getName() . '.png', 'image/png');
+        $this->addAttachment($this->htmlReport, $test->getMetadata()->getName() . '.html', 'text/html');
+
         $this->debug("Failure due to : {$fail->getMessage()}");
         $this->debug("Screenshot saved to {$this->pngReport}");
         $this->debug("Html saved to {$this->htmlReport}");
@@ -928,7 +940,7 @@ class MagentoWebDriver extends WebDriver
      * @return void
      * @throws \Exception
      */
-    public function amOnPage($page):void
+    public function amOnPage($page)
     {
         (0 === strpos($page, 'http')) ? parent::amOnUrl($page) : parent::amOnPage($page);
         $this->waitForPageLoad();
@@ -992,8 +1004,9 @@ class MagentoWebDriver extends WebDriver
      *
      * @param string $name
      * @return void
+     * @throws AllureException
      */
-    public function makeScreenshot($name = null):void
+    public function makeScreenshot($name = null)
     {
         if (empty($name)) {
             $name = uniqid(date("Y-m-d_H-i-s_"));
@@ -1059,7 +1072,7 @@ class MagentoWebDriver extends WebDriver
      * @return void
      * @throws \Exception
      */
-    public function switchToIFrame($locator = null):void
+    public function switchToIFrame($locator = null)
     {
         try {
             parent::switchToIFrame($locator);
@@ -1079,7 +1092,7 @@ class MagentoWebDriver extends WebDriver
      * @param boolean $pauseOnFail
      * @return void
      */
-    public function pause($pauseOnFail = false):void
+    public function pause($pauseOnFail = false)
     {
         if (\Composer\InstalledVersions::isInstalled('hoa/console') === false) {
             $message = "<pause /> action is unavailable." . PHP_EOL;
@@ -1096,67 +1109,5 @@ class MagentoWebDriver extends WebDriver
         }
 
         $this->codeceptPause();
-    }
-
-    /**
-     * @param string $selector
-     * @param string $expected
-     * @return void
-     */
-    public function seeNumberOfElements($selector, $expected): void
-    {
-        $counted = count($this->matchVisible($selector));
-        if (is_array($expected)) {
-            [$floor, $ceil] = $expected;
-            $this->assertTrue(
-                $floor <= $counted && $ceil >= $counted,
-                'Number of elements counted differs from expected range'
-            );
-        } else {
-            $this->assertSame(
-                (int)$expected,
-                (int)$counted,
-                'Number of elements counted differs from expected number'
-            );
-        }
-    }
-
-    /**
-     * @param string $text
-     * @param string $selector
-     * @return void
-     */
-    public function see($text, $selector = null): void
-    {
-        $text = (isset($text))
-            ? (string)$text
-            : "";
-        if (!$selector) {
-            $this->assertPageContains($text);
-            return;
-        }
-
-        $this->enableImplicitWait();
-        $nodes = $this->matchVisible($selector);
-        $this->disableImplicitWait();
-        $this->assertNodesContain($text, $nodes, $selector);
-    }
-
-    /**
-     * @param string $text
-     * @param string $selector
-     * @return void
-     */
-    public function dontSee($text, $selector = null): void
-    {
-        $text = (isset($text))
-            ? (string)$text
-            : "";
-        if (!$selector) {
-            $this->assertPageNotContains($text);
-        } else {
-            $nodes = $this->matchVisible($selector);
-            $this->assertNodesNotContain($text, $nodes, $selector);
-        }
     }
 }

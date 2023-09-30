@@ -1,21 +1,26 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class FieldDefinitionNode extends Node
 {
-    public string $kind = NodeKind::FIELD_DEFINITION;
+    /** @var string */
+    public $kind = NodeKind::FIELD_DEFINITION;
 
-    public NameNode $name;
+    /** @var NameNode */
+    public $name;
 
     /** @var NodeList<InputValueDefinitionNode> */
-    public NodeList $arguments;
+    public $arguments;
 
     /** @var NamedTypeNode|ListTypeNode|NonNullTypeNode */
-    public TypeNode $type;
+    public $type;
 
     /** @var NodeList<DirectiveNode> */
-    public NodeList $directives;
+    public $directives;
 
-    public ?StringValueNode $description = null;
+    /** @var StringValueNode|null */
+    public $description;
 }

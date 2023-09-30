@@ -8,13 +8,11 @@ declare(strict_types=1);
 namespace Magento\CustomerGraphQl\Model\Resolver;
 
 use Magento\Customer\Api\Data\CustomerInterface;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
-use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Magento\Newsletter\Model\SubscriberFactory;
-use Psr\Log\LoggerInterface;
 
 /**
  * Customer is_subscribed field resolver
@@ -24,23 +22,15 @@ class IsSubscribed implements ResolverInterface
     /**
      * @var SubscriberFactory
      */
-    private SubscriberFactory $subscriberFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
+    private $subscriberFactory;
 
     /**
      * @param SubscriberFactory $subscriberFactory
-     * @param LoggerInterface|null $logger
      */
     public function __construct(
-        SubscriberFactory $subscriberFactory,
-        LoggerInterface $logger = null
+        SubscriberFactory $subscriberFactory
     ) {
         $this->subscriberFactory = $subscriberFactory;
-        $this->logger = $logger ?? ObjectManager::getInstance()->get(LoggerInterface::class);
     }
 
     /**
@@ -59,34 +49,9 @@ class IsSubscribed implements ResolverInterface
         /** @var CustomerInterface $customer */
         $customer = $value['model'];
         $customerId = (int)$customer->getId();
+        $websiteId = (int)$customer->getWebsiteId();
+        $status = $this->subscriberFactory->create()->loadByCustomer($customerId, $websiteId)->isSubscribed();
 
-        $extensionAttributes = $context->getExtensionAttributes();
-        if (!$extensionAttributes) {
-            return false;
-        }
-
-        $store = $extensionAttributes->getStore();
-        if (!$store) {
-            $this->logger->error(__('Store not found'));
-
-            return false;
-        }
-
-        return $this->isSubscribed($customerId, (int)$store->getWebsiteId());
-    }
-
-    /**
-     * Get customer subscription status
-     *
-     * @param int $customerId
-     * @param int $websiteId
-     * @return bool
-     */
-    public function isSubscribed(int $customerId, int $websiteId): bool
-    {
-        $subscriberFactory = $this->subscriberFactory->create();
-        $subscriptionData = $subscriberFactory->loadByCustomer($customerId, $websiteId);
-
-        return $subscriptionData->isSubscribed() ?? false;
+        return (bool)$status;
     }
 }

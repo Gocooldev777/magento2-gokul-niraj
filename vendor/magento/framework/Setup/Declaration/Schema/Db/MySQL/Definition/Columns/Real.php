@@ -57,6 +57,7 @@ class Real implements DbDefinitionProcessorInterface
     }
 
     /**
+     * @param \Magento\Framework\Setup\Declaration\Schema\Dto\Columns\Real $column
      * @inheritdoc
      */
     public function toDefinition(ElementInterface $column)
@@ -85,7 +86,7 @@ class Real implements DbDefinitionProcessorInterface
     public function fromDefinition(array $data)
     {
         $matches = [];
-        if (preg_match('/^(float|decimal|double)\s*\((\d+)\s*,\s*(\d+)\)/i', $data['definition'] ?? '', $matches)) {
+        if (preg_match('/^(float|decimal|double)\s*\((\d+)\s*,\s*(\d+)\)/i', $data['definition'], $matches)) {
             /**
              * match[1] - type
              * match[2] - precision
@@ -95,7 +96,7 @@ class Real implements DbDefinitionProcessorInterface
             $data['scale'] = $matches[3];
             $data = $this->nullable->fromDefinition($data);
             $data = $this->unsigned->fromDefinition($data);
-        } elseif (preg_match('/^decimal\s*\(\s*(\d+)\s*\)/i', $data['definition'] ?? '', $matches)) {
+        } elseif (preg_match('/^decimal\s*\(\s*(\d+)\s*\)/i', $data['definition'], $matches)) {
             $data['precision'] = $matches[1];
             $data['scale'] = 0;
         }

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Ui/js/form/element/website.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/**\n * @api\n */\ndefine([\n    'underscore',\n    'uiRegistry',\n    './select'\n], function (_, registry, Select) {\n    'use strict';\n\n    return Select.extend({\n        defaults: {\n            customerId: null,\n            isGlobalScope: 0\n        },\n\n        /**\n         * Website component constructor.\n         * @returns {exports}\n         */\n        initialize: function () {\n            this._super();\n\n            return this;\n        }\n    });\n});\n"}
+}});

@@ -6,7 +6,7 @@
 define([
     'jquery',
     'mage/mage',
-    'js-cookie/cookie-wrapper'
+    'jquery/jquery.cookie'
 ], function ($) {
     'use strict';
 

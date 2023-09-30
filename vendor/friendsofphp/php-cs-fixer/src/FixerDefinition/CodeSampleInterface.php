@@ -21,8 +21,5 @@ interface CodeSampleInterface
 {
     public function getCode(): string;
 
-    /**
-     * @return null|array<string, mixed>
-     */
     public function getConfiguration(): ?array;
 }

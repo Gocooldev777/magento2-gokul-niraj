@@ -29,6 +29,8 @@ use PHPUnit\Framework\TestCase;
 class AdjustmentTest extends TestCase
 {
     /**
+     * Context mock
+     *
      * @var \Magento\Framework\View\Element\Template\Context
      */
     protected $contextMock;
@@ -51,11 +53,6 @@ class AdjustmentTest extends TestCase
      * @var Adjustment
      */
     protected $model;
-
-    /**
-     * @var AmountRenderInterface
-     */
-    protected $amountRender;
 
     /**
      * Init mocks and model
@@ -352,34 +349,5 @@ class AdjustmentTest extends TestCase
             ->method('setPriceWrapperCss');
 
         $this->model->render($amountRender, $arguments);
-    }
-
-    /**
-     * test for method getDataPriceType
-     * @dataProvider dataPriceTypeDataProvider
-     */
-    public function testGetDataPriceType(?string $priceType, string $priceTypeValue): void
-    {
-        $amountRender = $this->getMockBuilder(Amount::class)
-            ->addMethods(['getPriceType'])
-            ->disableOriginalConstructor()
-            ->getMock();
-        $amountRender->expects($this->atLeastOnce())
-            ->method('getPriceType')
-            ->willReturn($priceType);
-        $this->model->render($amountRender, []);
-        //no exception is thrown
-        $this->assertEquals($priceTypeValue, $this->model->getDataPriceType());
-        $this->assertIsString($this->model->getDataPriceType());
-    }
-
-    /**
-     * data provider for testGetDataPriceType
-     *
-     * @return array
-     */
-    public function dataPriceTypeDataProvider(): array
-    {
-        return [['finalPrice', 'basePrice'], [null, '']];
     }
 }

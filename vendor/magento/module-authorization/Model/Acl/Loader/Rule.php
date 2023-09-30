@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Authorization\Model\Acl\Loader;
 
-use Magento\Framework\Acl;
 use Magento\Framework\Acl\Data\CacheInterface;
 use Magento\Framework\Acl\LoaderInterface;
 use Magento\Framework\Acl\RootResource;
@@ -22,12 +21,7 @@ class Rule implements LoaderInterface
     /**
      * Rules array cache key
      */
-    public const ACL_RULE_CACHE_KEY = 'authorization_rule_cached_data';
-
-    /**
-     * Allow everything resource id
-     */
-    private const ALLOW_EVERYTHING = 'Magento_Backend::all';
+    const ACL_RULE_CACHE_KEY = 'authorization_rule_cached_data';
 
     /**
      * @var ResourceConnection
@@ -81,71 +75,24 @@ class Rule implements LoaderInterface
     /**
      * Populate ACL with rules from external storage
      *
-     * @param Acl $acl
+     * @param \Magento\Framework\Acl $acl
      * @return void
      */
-    public function populateAcl(Acl $acl)
+    public function populateAcl(\Magento\Framework\Acl $acl)
     {
-        $result = $this->applyPermissionsAccordingToRules($acl);
-        $this->applyDenyPermissionsForMissingRules($acl, ...$result);
-    }
-
-    /**
-     * Apply ACL with rules
-     *
-     * @param Acl $acl
-     * @return array[]
-     */
-    private function applyPermissionsAccordingToRules(Acl $acl): array
-    {
-        $foundResources = $foundDeniedRoles = [];
         foreach ($this->getRulesArray() as $rule) {
             $role = $rule['role_id'];
             $resource = $rule['resource_id'];
             $privileges = !empty($rule['privileges']) ? explode(',', $rule['privileges']) : null;
 
-            if ($acl->hasResource($resource)) {
-                $foundResources[$resource] = $resource;
+            if ($acl->has($resource)) {
                 if ($rule['permission'] == 'allow') {
                     if ($resource === $this->_rootResource->getId()) {
                         $acl->allow($role, null, $privileges);
                     }
                     $acl->allow($role, $resource, $privileges);
                 } elseif ($rule['permission'] == 'deny') {
-                    $foundDeniedRoles[$role] = $role;
                     $acl->deny($role, $resource, $privileges);
-                }
-            }
-        }
-        return [$foundResources, $foundDeniedRoles];
-    }
-
-    /**
-     * Apply deny permissions for missing rules
-     *
-     * For all rules that were not regenerated in authorization_rule table,
-     * when adding a new module and without re-saving all roles,
-     * consider not present rules with deny permissions
-     *
-     * @param Acl $acl
-     * @param array $resources
-     * @param array $deniedRoles
-     * @return void
-     */
-    private function applyDenyPermissionsForMissingRules(
-        Acl $acl,
-        array $resources,
-        array $deniedRoles
-    ) {
-        if (count($resources) && count($deniedRoles)
-            //ignore denying missing permission if all are allowed
-            && !(count($resources) === 1 && isset($resources[static::ALLOW_EVERYTHING]))
-        ) {
-            foreach ($acl->getResources() as $resource) {
-                if (!isset($resources[$resource])) {
-                    foreach ($deniedRoles as $role) {
-                        $acl->deny($role, $resource, null);
-                    }
                 }
             }
         }

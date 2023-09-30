@@ -24,26 +24,34 @@ final class Token
 {
     /**
      * Content of token prototype.
+     *
+     * @var string
      */
-    private string $content;
+    private $content;
 
     /**
      * ID of token prototype, if available.
+     *
+     * @var null|int
      */
-    private ?int $id = null;
+    private $id;
 
     /**
      * If token prototype is an array.
+     *
+     * @var bool
      */
-    private bool $isArray;
+    private $isArray;
 
     /**
      * Flag is token was changed.
+     *
+     * @var bool
      */
-    private bool $changed = false;
+    private $changed = false;
 
     /**
-     * @param array{int, string}|string $token token prototype
+     * @param array|string $token token prototype
      */
     public function __construct($token)
     {
@@ -51,14 +59,14 @@ final class Token
             if (!\is_int($token[0])) {
                 throw new \InvalidArgumentException(sprintf(
                     'Id must be an int, got "%s".',
-                    get_debug_type($token[0])
+                    \is_object($token[0]) ? \get_class($token[0]) : \gettype($token[0])
                 ));
             }
 
             if (!\is_string($token[1])) {
                 throw new \InvalidArgumentException(sprintf(
                     'Content must be a string, got "%s".',
-                    get_debug_type($token[1])
+                    \is_object($token[1]) ? \get_class($token[1]) : \gettype($token[1])
                 ));
             }
 
@@ -73,12 +81,16 @@ final class Token
             $this->isArray = false;
             $this->content = $token;
         } else {
-            throw new \InvalidArgumentException(sprintf('Cannot recognize input value as valid Token prototype, got "%s".', get_debug_type($token)));
+            throw new \InvalidArgumentException(sprintf(
+                'Cannot recognize input value as valid Token prototype, got "%s".',
+                // @phpstan-ignore-next-line due to lack of strong typing of method parameter
+                \is_object($token) ? \get_class($token) : \gettype($token)
+            ));
         }
     }
 
     /**
-     * @return list<int>
+     * @return int[]
      */
     public static function getCastTokenKinds(): array
     {
@@ -90,19 +102,11 @@ final class Token
     /**
      * Get classy tokens kinds: T_CLASS, T_INTERFACE and T_TRAIT.
      *
-     * @return list<int>
+     * @return int[]
      */
     public static function getClassyTokenKinds(): array
     {
-        static $classTokens;
-
-        if (null === $classTokens) {
-            $classTokens = [T_CLASS, T_TRAIT, T_INTERFACE];
-
-            if (\defined('T_ENUM')) { // @TODO: drop condition when PHP 8.1+ is required
-                $classTokens[] = T_ENUM;
-            }
-        }
+        static $classTokens = [T_CLASS, T_TRAIT, T_INTERFACE];
 
         return $classTokens;
     }
@@ -110,7 +114,7 @@ final class Token
     /**
      * Get object operator tokens kinds: T_OBJECT_OPERATOR and (if available) T_NULLSAFE_OBJECT_OPERATOR.
      *
-     * @return list<int>
+     * @return int[]
      */
     public static function getObjectOperatorKinds(): array
     {
@@ -131,20 +135,11 @@ final class Token
      *
      * If tokens are arrays, then only keys defined in parameter token are checked.
      *
-     * @param array{0: int, 1?: string}|string|Token $other         token or it's prototype
-     * @param bool                                   $caseSensitive perform a case sensitive comparison
+     * @param array|string|Token $other         token or it's prototype
+     * @param bool               $caseSensitive perform a case sensitive comparison
      */
     public function equals($other, bool $caseSensitive = true): bool
     {
-        if (\defined('T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG')) { // @TODO: drop condition with new MAJOR release 4.0
-            if ('&' === $other) {
-                return '&' === $this->content && (null === $this->id || $this->isGivenKind([T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG, T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG]));
-            }
-            if (null === $this->id && '&' === $this->content) {
-                return $other instanceof self && '&' === $other->content && (null === $other->id || $other->isGivenKind([T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG, T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG]));
-            }
-        }
-
         if ($other instanceof self) {
             // Inlined getPrototype() on this very hot path.
             // We access the private properties of $other directly to save function call overhead.
@@ -186,19 +181,14 @@ final class Token
         // detect unknown keys
         unset($otherPrototype[0], $otherPrototype[1]);
 
-        /*
-         * @phpstan-ignore-next-line This validation is required when the method
-         *                           is called in a codebase that does not use
-         *                           static analysis.
-         */
         return empty($otherPrototype);
     }
 
     /**
      * Check if token is equals to one of given.
      *
-     * @param list<array{0: int, 1?: string}|string|Token> $others        array of tokens or token prototypes
-     * @param bool                                         $caseSensitive perform a case sensitive comparison
+     * @param array $others        array of tokens or token prototypes
+     * @param bool  $caseSensitive perform a case sensitive comparison
      */
     public function equalsAny(array $others, bool $caseSensitive = true): bool
     {
@@ -214,10 +204,10 @@ final class Token
     /**
      * A helper method used to find out whether a certain input token has to be case-sensitively matched.
      *
-     * @param bool|list<bool> $caseSensitive global case sensitiveness or an array of booleans, whose keys should match
-     *                                       the ones used in $sequence. If any is missing, the default case-sensitive
-     *                                       comparison is used
-     * @param int             $key           the key of the token that has to be looked up
+     * @param array<int, bool>|bool $caseSensitive global case sensitiveness or an array of booleans, whose keys should match
+     *                                             the ones used in $others. If any is missing, the default case-sensitive
+     *                                             comparison is used
+     * @param int                   $key           the key of the token that has to be looked up
      */
     public static function isKeyCaseSensitive($caseSensitive, int $key): bool
     {
@@ -229,7 +219,7 @@ final class Token
     }
 
     /**
-     * @return array{int, string}|string
+     * @return array|string token prototype
      */
     public function getPrototype()
     {
@@ -371,7 +361,7 @@ final class Token
     }
 
     /**
-     * Check if token is one of classy tokens: T_CLASS, T_INTERFACE, T_TRAIT or T_ENUM.
+     * Check if token is one of classy tokens: T_CLASS, T_INTERFACE or T_TRAIT.
      */
     public function isClassy(): bool
     {
@@ -399,7 +389,7 @@ final class Token
     /**
      * Check if token is one of given kind.
      *
-     * @param int|list<int> $possibleKind kind or array of kinds
+     * @param int|int[] $possibleKind kind or array of kinds
      */
     public function isGivenKind($possibleKind): bool
     {
@@ -456,15 +446,6 @@ final class Token
         return '' === trim($this->content, $whitespaces);
     }
 
-    /**
-     * @return array{
-     *     id: int|null,
-     *     name: string|null,
-     *     content: string,
-     *     isArray: bool,
-     *     changed: bool,
-     * }
-     */
     public function toArray(): array
     {
         return [
@@ -494,7 +475,7 @@ final class Token
     }
 
     /**
-     * @param list<string> $tokenNames
+     * @param string[] $tokenNames
      *
      * @return array<int, int>
      */

@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\LazyProxy;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy;
 
 /**
  * @author Nicolas Grekas <p@tchwork.com>
@@ -30,15 +30,11 @@ class ProxyHelper
         if (!$type) {
             return null;
         }
-        return self::getTypeHintForType($type, $r, $noBuiltin);
-    }
-    private static function getTypeHintForType(\ReflectionType $type, \ReflectionFunctionAbstract $r, bool $noBuiltin) : ?string
-    {
         $types = [];
         $glue = '|';
         if ($type instanceof \ReflectionUnionType) {
             $reflectionTypes = $type->getTypes();
-        } elseif ($type instanceof \ReflectionIntersectionType) {
+        } elseif ($type instanceof \RectorPrefix20211221\ReflectionIntersectionType) {
             $reflectionTypes = $type->getTypes();
             $glue = '&';
         } elseif ($type instanceof \ReflectionNamedType) {
@@ -47,14 +43,6 @@ class ProxyHelper
             return null;
         }
         foreach ($reflectionTypes as $type) {
-            if ($type instanceof \ReflectionIntersectionType) {
-                $typeHint = self::getTypeHintForType($type, $r, $noBuiltin);
-                if (null === $typeHint) {
-                    return null;
-                }
-                $types[] = \sprintf('(%s)', $typeHint);
-                continue;
-            }
             if ($type->isBuiltin()) {
                 if (!$noBuiltin) {
                     $types[] = $type->getName();

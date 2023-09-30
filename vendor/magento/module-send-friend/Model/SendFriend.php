@@ -11,8 +11,6 @@ use Magento\Framework\Exception\LocalizedException as CoreException;
 use Magento\Framework\Stdlib\Cookie\CookieMetadata;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Validator\EmailAddress;
-use Magento\Framework\Validator\ValidatorChain;
 
 /**
  * SendFriend Log
@@ -259,7 +257,7 @@ class SendFriend extends \Magento\Framework\Model\AbstractModel
         }
 
         $email = $this->getSender()->getEmail();
-        if (empty($email) || !ValidatorChain::is($email, EmailAddress::class)) {
+        if (empty($email) || !\Zend_Validate::is($email, \Magento\Framework\Validator\EmailAddress::class)) {
             $errors[] = __('Invalid Sender Email');
         }
 
@@ -274,7 +272,7 @@ class SendFriend extends \Magento\Framework\Model\AbstractModel
 
         // validate recipients email addresses
         foreach ($this->getRecipients()->getEmails() as $email) {
-            if (!ValidatorChain::is($email, EmailAddress::class)) {
+            if (!\Zend_Validate::is($email, \Magento\Framework\Validator\EmailAddress::class)) {
                 $errors[] = __('Please enter a correct recipient email address.');
                 break;
             }

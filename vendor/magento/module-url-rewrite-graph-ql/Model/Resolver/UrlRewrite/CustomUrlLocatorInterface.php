@@ -11,8 +11,6 @@ namespace Magento\UrlRewriteGraphQl\Model\Resolver\UrlRewrite;
  * Interface for resolution of custom URLs.
  *
  * It can be used, for example, to resolve '\' URL path to a 'Home' page.
- *
- * @api
  */
 interface CustomUrlLocatorInterface
 {

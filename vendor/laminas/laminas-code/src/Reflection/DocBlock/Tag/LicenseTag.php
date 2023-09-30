@@ -7,24 +7,30 @@ use function trim;
 
 class LicenseTag implements TagInterface
 {
-    /** @var string|null */
+    /** @var string */
     protected $url;
 
-    /** @var string|null */
+    /** @var string */
     protected $licenseName;
 
-    /** @return 'license' */
+    /**
+     * @return string
+     */
     public function getName()
     {
         return 'license';
     }
 
-    /** @inheritDoc */
-    public function initialize($content)
+    /**
+     * Initializer
+     *
+     * @param  string $tagDocblockLine
+     */
+    public function initialize($tagDocblockLine)
     {
         $match = [];
 
-        if (! preg_match('#^([\S]*)(?:\s+(.*))?$#m', $content, $match)) {
+        if (! preg_match('#^([\S]*)(?:\s+(.*))?$#m', $tagDocblockLine, $match)) {
             return;
         }
 
@@ -37,19 +43,26 @@ class LicenseTag implements TagInterface
         }
     }
 
-    /** @return null|string */
+    /**
+     * @return null|string
+     */
     public function getUrl()
     {
         return $this->url;
     }
 
-    /** @return null|string */
+    /**
+     * @return null|string
+     */
     public function getLicenseName()
     {
         return $this->licenseName;
     }
 
-    /** @return non-empty-string */
+    /**
+     * @return string
+     * @psalm-return non-empty-string
+     */
     public function __toString()
     {
         return 'DocBlock Tag [ * @' . $this->getName() . ' ]' . "\n";

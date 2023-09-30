@@ -9,8 +9,6 @@ namespace Magento\Ui\Model\UrlInput;
 
 /**
  * Config interface for url link types
- *
- * @api
  */
 interface ConfigInterface
 {

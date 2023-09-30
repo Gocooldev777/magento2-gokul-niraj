@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 namespace PayPal\Braintree\Model\Config\Source;
 
@@ -18,8 +14,8 @@ class Shape implements ArrayInterface
     public function toOptionArray(): array
     {
         return [
-            ['value' => 'pill', 'label' => __('Pill')],
-            ['value' => 'rect', 'label' => __('Rectangle')]
+            ['value' => 0, 'label' => __('Pill')],
+            ['value' => 1, 'label' => __('Rectangle')]
         ];
     }
 
@@ -31,8 +27,8 @@ class Shape implements ArrayInterface
     public function toArray(): array
     {
         return [
-            'pill' => __('Pill'),
-            'rect' => __('Rectangle')
+            0 => __('Pill'),
+            1 => __('Rectangle')
         ];
     }
 
@@ -44,8 +40,8 @@ class Shape implements ArrayInterface
     public function toRawValues(): array
     {
         return [
-            'pill' => 'pill',
-            'rect' => 'rect',
+            0 => 'pill',
+            1 => 'rect',
         ];
     }
 }

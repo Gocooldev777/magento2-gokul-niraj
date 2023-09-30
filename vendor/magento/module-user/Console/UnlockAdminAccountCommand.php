@@ -5,7 +5,6 @@
  */
 namespace Magento\User\Console;
 
-use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,11 +16,11 @@ use Magento\User\Model\ResourceModel\User as AdminUser;
  */
 class UnlockAdminAccountCommand extends Command
 {
-    public const ARGUMENT_ADMIN_USERNAME = 'username';
-    public const ARGUMENT_ADMIN_USERNAME_DESCRIPTION = 'The admin username to unlock';
-    public const COMMAND_ADMIN_ACCOUNT_UNLOCK = 'admin:user:unlock';
-    public const COMMAND_DESCRIPTION = 'Unlock Admin Account';
-    public const USER_ID = 'user_id';
+    const ARGUMENT_ADMIN_USERNAME = 'username';
+    const ARGUMENT_ADMIN_USERNAME_DESCRIPTION = 'The admin username to unlock';
+    const COMMAND_ADMIN_ACCOUNT_UNLOCK = 'admin:user:unlock';
+    const COMMAND_DESCRIPTION = 'Unlock Admin Account';
+    const USER_ID = 'user_id';
 
     /**
      * @var AdminUser
@@ -29,10 +28,9 @@ class UnlockAdminAccountCommand extends Command
     private $adminUser;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
-     * @param AdminUser $adminUser
-     * @param ?string $name
+     * @param AdminUser $userResource
      */
     public function __construct(
         AdminUser $adminUser,
@@ -43,7 +41,7 @@ class UnlockAdminAccountCommand extends Command
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -61,12 +59,10 @@ class UnlockAdminAccountCommand extends Command
             }
         }
         $output->writeln('<info>' . $outputMessage . '</info>');
-
-        return Cli::RETURN_SUCCESS;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function configure()
     {

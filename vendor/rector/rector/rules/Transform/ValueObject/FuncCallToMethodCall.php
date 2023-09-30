@@ -4,7 +4,6 @@ declare (strict_types=1);
 namespace Rector\Transform\ValueObject;
 
 use PHPStan\Type\ObjectType;
-use Rector\Core\Validation\RectorAssert;
 final class FuncCallToMethodCall
 {
     /**
@@ -27,17 +26,14 @@ final class FuncCallToMethodCall
         $this->oldFuncName = $oldFuncName;
         $this->newClassName = $newClassName;
         $this->newMethodName = $newMethodName;
-        RectorAssert::functionName($oldFuncName);
-        RectorAssert::className($newClassName);
-        RectorAssert::methodName($newMethodName);
     }
     public function getOldFuncName() : string
     {
         return $this->oldFuncName;
     }
-    public function getNewObjectType() : ObjectType
+    public function getNewObjectType() : \PHPStan\Type\ObjectType
     {
-        return new ObjectType($this->newClassName);
+        return new \PHPStan\Type\ObjectType($this->newClassName);
     }
     public function getNewMethodName() : string
     {

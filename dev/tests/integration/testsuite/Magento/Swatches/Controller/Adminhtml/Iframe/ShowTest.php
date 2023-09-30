@@ -6,8 +6,6 @@
 
 namespace Magento\Swatches\Controller\Adminhtml\Iframe;
 
-use Magento\TestFramework\Bootstrap;
-
 /**
  * @magentoAppArea adminhtml
  */
@@ -23,10 +21,7 @@ class ShowTest extends \Magento\TestFramework\TestCase\AbstractBackendController
             ->get(\Magento\Framework\Acl\Builder::class)
             ->getAcl();
 
-        $acl->allow(
-            Bootstrap::ADMIN_ROLE_ID,
-            \Magento\Swatches\Controller\Adminhtml\Iframe\Show::ADMIN_RESOURCE
-        );
+        $acl->allow(null, \Magento\Swatches\Controller\Adminhtml\Iframe\Show::ADMIN_RESOURCE);
 
         $this->dispatch('backend/swatches/iframe/show/');
 
@@ -47,10 +42,7 @@ class ShowTest extends \Magento\TestFramework\TestCase\AbstractBackendController
             ->get(\Magento\Framework\Acl\Builder::class)
             ->getAcl();
 
-        $acl->deny(
-            Bootstrap::ADMIN_ROLE_ID,
-            \Magento\Swatches\Controller\Adminhtml\Iframe\Show::ADMIN_RESOURCE
-        );
+        $acl->deny(null, \Magento\Swatches\Controller\Adminhtml\Iframe\Show::ADMIN_RESOURCE);
 
         $this->dispatch('backend/swatches/iframe/show/');
 

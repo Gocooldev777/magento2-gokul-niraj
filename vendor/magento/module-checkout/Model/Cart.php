@@ -535,8 +535,6 @@ class Cart extends DataObject implements CartInterface
 
             $qty = isset($itemInfo['qty']) ? (double)$itemInfo['qty'] : false;
             if ($qty > 0) {
-                $item->clearMessage();
-                $item->setHasError(false);
                 $item->setQty($qty);
 
                 if ($item->getHasError()) {
@@ -709,9 +707,6 @@ class Cart extends DataObject implements CartInterface
      */
     public function updateItem($itemId, $requestInfo = null, $updatingParams = null)
     {
-        $product = null;
-        $productId = null;
-
         try {
             $item = $this->getQuote()->getItemById($itemId);
             if (!$item) {
@@ -762,7 +757,6 @@ class Cart extends DataObject implements CartInterface
      * Getter for RequestInfoFilter
      *
      * @deprecated 100.1.2
-     * @see MAGETWO-60073
      * @return \Magento\Checkout\Model\Cart\RequestInfoFilterInterface
      */
     private function getRequestInfoFilter()

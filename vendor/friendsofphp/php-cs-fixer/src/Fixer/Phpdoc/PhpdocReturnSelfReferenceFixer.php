@@ -34,7 +34,7 @@ final class PhpdocReturnSelfReferenceFixer extends AbstractFixer implements Conf
     /**
      * @var string[]
      */
-    private static array $toTypes = [
+    private static $toTypes = [
         '$this',
         'static',
         'self',
@@ -102,7 +102,7 @@ class Sample
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return \count($tokens) > 10 && $tokens->isAllTokenKindsFound([T_DOC_COMMENT, T_FUNCTION]) && $tokens->isAnyTokenKindsFound(Token::getClassyTokenKinds());
+        return \count($tokens) > 10 && $tokens->isTokenKindFound(T_DOC_COMMENT) && $tokens->isAnyTokenKindsFound([T_CLASS, T_INTERFACE]);
     }
 
     /**

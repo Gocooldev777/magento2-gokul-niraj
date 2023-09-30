@@ -8,18 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Exception;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception;
 
 /**
  * This exception is thrown when a circular reference in a parameter is detected.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class ParameterCircularReferenceException extends RuntimeException
+class ParameterCircularReferenceException extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException
 {
-    /**
-     * @var mixed[]
-     */
     private $parameters;
     public function __construct(array $parameters, \Throwable $previous = null)
     {

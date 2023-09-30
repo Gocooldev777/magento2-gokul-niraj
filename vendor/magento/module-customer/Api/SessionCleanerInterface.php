@@ -9,8 +9,6 @@ namespace Magento\Customer\Api;
 
 /**
  * Interface for cleaning customer session data.
- *
- * @api
  */
 interface SessionCleanerInterface
 {

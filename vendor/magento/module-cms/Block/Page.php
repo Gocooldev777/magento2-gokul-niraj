@@ -27,11 +27,15 @@ class Page extends \Magento\Framework\View\Element\AbstractBlock implements
     protected $_page;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
+     * Page factory
+     *
      * @var \Magento\Cms\Model\PageFactory
      */
     protected $_pageFactory;
@@ -127,7 +131,7 @@ class Page extends \Magento\Framework\View\Element\AbstractBlock implements
             'web/default/cms_home_page',
             ScopeInterface::SCOPE_STORE
         );
-        $homePageDelimiterPosition = $homePageIdentifier === null ? false : strrpos($homePageIdentifier, '|');
+        $homePageDelimiterPosition = strrpos($homePageIdentifier, '|');
         if ($homePageDelimiterPosition) {
             $homePageIdentifier = substr($homePageIdentifier, 0, $homePageDelimiterPosition);
         }
@@ -135,7 +139,7 @@ class Page extends \Magento\Framework\View\Element\AbstractBlock implements
             'web/default/cms_no_route',
             ScopeInterface::SCOPE_STORE
         );
-        $noRouteDelimiterPosition = $noRouteIdentifier === null ? false : strrpos($noRouteIdentifier, '|');
+        $noRouteDelimiterPosition = strrpos($noRouteIdentifier, '|');
         if ($noRouteDelimiterPosition) {
             $noRouteIdentifier = substr($noRouteIdentifier, 0, $noRouteDelimiterPosition);
         }

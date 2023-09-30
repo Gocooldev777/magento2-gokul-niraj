@@ -1,23 +1,14 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
 use Laminas\Mvc\ModuleRouteListener;
+use Laminas\Mvc\Router\RouteMatch as LegacyRouteMatch;
+use Laminas\Mvc\Router\RouteStackInterface as LegacyRouteStackInterface;
 use Laminas\Router\RouteMatch;
 use Laminas\Router\RouteStackInterface;
 use Laminas\View\Exception;
 use Traversable;
-
-use function array_merge;
-use function func_num_args;
-use function gettype;
-use function is_array;
-use function is_bool;
-use function is_object;
-use function iterator_to_array;
-use function sprintf;
 
 /**
  * Helper for making easy links and getting urls that depend on the routes and router.
@@ -27,31 +18,34 @@ class Url extends AbstractHelper
     /**
      * Router instance.
      *
-     * @var RouteStackInterface|null
+     * @var LegacyRouteStackInterface|RouteStackInterface
      */
     protected $router;
 
     /**
      * Route matches returned by the router.
      *
-     * @var RouteMatch|null
+     * @var LegacyRouteMatch|RouteMatch.
      */
     protected $routeMatch;
 
     /**
-     * Generates an url given the name of a route.
+     * Generates a url given the name of a route.
      *
-     * @see \Laminas\Router\RouteInterface::assemble()
-     *
-     * @param  string|null $name Name of the route
+     * @see Laminas\Mvc\Router\RouteInterface::assemble()
+     * @see Laminas\Router\RouteInterface::assemble()
+     * @param  string $name Name of the route
      * @param  array $params Parameters for the link
      * @param  array|Traversable $options Options for the route
      * @param  bool $reuseMatchedParams Whether to reuse matched parameters
      * @return string Url For the link href attribute
-     * @throws Exception\RuntimeException If no RouteStackInterface was provided.
-     * @throws Exception\RuntimeException If no RouteMatch was provided.
-     * @throws Exception\RuntimeException If RouteMatch didn't contain a matched route name.
-     * @throws Exception\InvalidArgumentException If the params object was not an array or Traversable object.
+     * @throws Exception\RuntimeException If no RouteStackInterface was
+     *     provided
+     * @throws Exception\RuntimeException If no RouteMatch was provided
+     * @throws Exception\RuntimeException If RouteMatch didn't contain a
+     *     matched route name
+     * @throws Exception\InvalidArgumentException If the params object was not
+     *     an array or Traversable object.
      */
     public function __invoke($name = null, $params = [], $options = [], $reuseMatchedParams = false)
     {
@@ -59,9 +53,9 @@ class Url extends AbstractHelper
             throw new Exception\RuntimeException('No RouteStackInterface instance provided');
         }
 
-        if (3 === func_num_args() && is_bool($options)) {
+        if (3 == func_num_args() && is_bool($options)) {
             $reuseMatchedParams = $options;
-            $options            = [];
+            $options = [];
         }
 
         if ($name === null) {
@@ -69,10 +63,9 @@ class Url extends AbstractHelper
                 throw new Exception\RuntimeException('No RouteMatch instance provided');
             }
 
-            /** @psalm-suppress RedundantCastGivenDocblockType */
-            $name = (string) $this->routeMatch->getMatchedRouteName();
+            $name = $this->routeMatch->getMatchedRouteName();
 
-            if ($name === '') {
+            if ($name === null) {
                 throw new Exception\RuntimeException('RouteMatch does not contain a matched route name');
             }
         }
@@ -103,25 +96,27 @@ class Url extends AbstractHelper
 
         $options['name'] = $name;
 
-        return (string) $this->router->assemble($params, $options);
+        return $this->router->assemble($params, $options);
     }
 
     /**
      * Set the router to use for assembling.
      *
-     * @param RouteStackInterface $router
+     * @param LegacyRouteStackInterface|RouteStackInterface $router
      * @return Url
-     * @throws Exception\InvalidArgumentException For invalid router types.
-     * @psalm-suppress RedundantConditionGivenDocblockType, DocblockTypeContradiction
+     * @throws Exception\InvalidArgumentException for invalid router types.
      */
     public function setRouter($router)
     {
-        if (! $router instanceof RouteStackInterface) {
+        if (! $router instanceof RouteStackInterface
+            && ! $router instanceof LegacyRouteStackInterface
+        ) {
             throw new Exception\InvalidArgumentException(sprintf(
-                '%s expects a %s instance; received %s',
+                '%s expects a %s or %s instance; received %s',
                 __METHOD__,
                 RouteStackInterface::class,
-                is_object($router) ? $router::class : gettype($router)
+                LegacyRouteStackInterface::class,
+                (is_object($router) ? get_class($router) : gettype($router))
             ));
         }
 
@@ -132,18 +127,20 @@ class Url extends AbstractHelper
     /**
      * Set route match returned by the router.
      *
-     * @param  RouteMatch $routeMatch
+     * @param  LegacyRouteMatch|RouteMatch $routeMatch
      * @return Url
-     * @psalm-suppress RedundantConditionGivenDocblockType, DocblockTypeContradiction
      */
     public function setRouteMatch($routeMatch)
     {
-        if (! $routeMatch instanceof RouteMatch) {
+        if (! $routeMatch instanceof RouteMatch
+            && ! $routeMatch instanceof LegacyRouteMatch
+        ) {
             throw new Exception\InvalidArgumentException(sprintf(
-                '%s expects a %s instance; received %s',
+                '%s expects a %s or %s instance; received %s',
                 __METHOD__,
                 RouteMatch::class,
-                is_object($routeMatch) ? $routeMatch::class : gettype($routeMatch)
+                LegacyRouteMatch::class,
+                (is_object($routeMatch) ? get_class($routeMatch) : gettype($routeMatch))
             ));
         }
 

@@ -1,24 +1,23 @@
 <?php
 /**
+ * Magento profiler for requests to database
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Framework\Model\ResourceModel\Db;
 
-/**
- * Magento profiler for requests to database
- */
 class Profiler extends \Magento\Framework\DB\Profiler
 {
     /**
      * Default connection type for timer name creation
      */
-    public const TIMER_PREFIX = 'DB_QUERY';
+    const TIMER_PREFIX = 'DB_QUERY';
 
     /**
      * Default connection type for timer name creation
      */
-    public const DEFAULT_CONNECTION_TYPE = 'database';
+    const DEFAULT_CONNECTION_TYPE = 'database';
 
     /**
      * @var array Allowed query types
@@ -60,7 +59,7 @@ class Profiler extends \Magento\Framework\DB\Profiler
      */
     protected function _parseQueryType($queryText)
     {
-        $queryTypeParsed = $queryText !== null ? strtolower(substr(ltrim($queryText), 0, 6)) : '';
+        $queryTypeParsed = strtolower(substr(ltrim($queryText), 0, 6));
 
         if (!in_array($queryTypeParsed, $this->_queryTypes)) {
             $queryTypeParsed = 'query';

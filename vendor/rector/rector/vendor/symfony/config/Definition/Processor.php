@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Definition;
+namespace RectorPrefix20211221\Symfony\Component\Config\Definition;
 
 /**
  * This class is the entry point for config normalization/merging/finalization.
@@ -24,7 +24,7 @@ class Processor
      *
      * @param array $configs An array of configuration items to process
      */
-    public function process(NodeInterface $configTree, array $configs) : array
+    public function process(\RectorPrefix20211221\Symfony\Component\Config\Definition\NodeInterface $configTree, array $configs) : array
     {
         $currentConfig = [];
         foreach ($configs as $config) {
@@ -38,7 +38,7 @@ class Processor
      *
      * @param array $configs An array of configuration items to process
      */
-    public function processConfiguration(ConfigurationInterface $configuration, array $configs) : array
+    public function processConfiguration(\RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface $configuration, array $configs) : array
     {
         return $this->process($configuration->getConfigTreeBuilder()->buildTree(), $configs);
     }
@@ -59,13 +59,15 @@ class Processor
      *
      * extensions: ['twig.extension.foo', 'twig.extension.bar']
      *
-     * @param array       $config A config array
-     * @param string      $key    The key to normalize
-     * @param string|null $plural The plural form of the key if it is irregular
+     * @param array  $config A config array
+     * @param string $key    The key to normalize
+     * @param string $plural The plural form of the key if it is irregular
      */
     public static function normalizeConfig(array $config, string $key, string $plural = null) : array
     {
-        $plural = $plural ?? $key . 's';
+        if (null === $plural) {
+            $plural = $key . 's';
+        }
         if (isset($config[$plural])) {
             return $config[$plural];
         }

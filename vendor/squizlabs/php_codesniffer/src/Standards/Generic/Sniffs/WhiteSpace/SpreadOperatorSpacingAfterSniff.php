@@ -62,11 +62,6 @@ class SpreadOperatorSpacingAfterSniff implements Sniff
             return;
         }
 
-        if ($tokens[$nextNonEmpty]['code'] === T_CLOSE_PARENTHESIS) {
-            // Ignore PHP 8.1 first class callable syntax.
-            return;
-        }
-
         if ($this->ignoreNewlines === true
             && $tokens[$stackPtr]['line'] !== $tokens[$nextNonEmpty]['line']
         ) {

@@ -7,8 +7,6 @@ namespace Magento\Catalog\Model\Indexer\Product\Flat;
 
 /**
  * Interface TableDataInterface
- *
- * @api
  */
 interface TableDataInterface
 {

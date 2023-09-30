@@ -22,12 +22,16 @@ use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @changelog https://github.com/vimeo/psalm/blob/29b70442b11e3e66113935a2ee22e165a70c74a4/docs/fixing_code.md#possiblyundefinedvariable
- * @changelog https://3v4l.org/MZFel
+ * @see https://3v4l.org/MZFel
  *
  * @see \Rector\Tests\Php56\Rector\FunctionLike\AddDefaultValueForUndefinedVariableRector\AddDefaultValueForUndefinedVariableRectorTest
  */
-final class AddDefaultValueForUndefinedVariableRector extends AbstractRector implements MinPhpVersionInterface
+final class AddDefaultValueForUndefinedVariableRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
 {
+    /**
+     * @var string
+     */
+    private const ALREADY_ADDED_VARIABLE_NAMES = 'already_added_variable_names';
     /**
      * @readonly
      * @var \Rector\Php56\NodeAnalyzer\UndefinedVariableResolver
@@ -38,18 +42,18 @@ final class AddDefaultValueForUndefinedVariableRector extends AbstractRector imp
      * @var \Rector\Core\NodeAnalyzer\InlineHTMLAnalyzer
      */
     private $inlineHTMLAnalyzer;
-    public function __construct(UndefinedVariableResolver $undefinedVariableResolver, InlineHTMLAnalyzer $inlineHTMLAnalyzer)
+    public function __construct(\Rector\Php56\NodeAnalyzer\UndefinedVariableResolver $undefinedVariableResolver, \Rector\Core\NodeAnalyzer\InlineHTMLAnalyzer $inlineHTMLAnalyzer)
     {
         $this->undefinedVariableResolver = $undefinedVariableResolver;
         $this->inlineHTMLAnalyzer = $inlineHTMLAnalyzer;
     }
     public function provideMinPhpVersion() : int
     {
-        return PhpVersionFeature::REQUIRE_DEFAULT_VALUE;
+        return \Rector\Core\ValueObject\PhpVersionFeature::REQUIRE_DEFAULT_VALUE;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Adds default value for undefined variable', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Adds default value for undefined variable', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -81,74 +85,40 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class, Function_::class, Closure::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Expr\Closure::class];
     }
     /**
      * @param ClassMethod|Function_|Closure $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($this->inlineHTMLAnalyzer->hasInlineHTML($node)) {
             return null;
         }
-        if ($node->stmts === null) {
-            return null;
-        }
         $undefinedVariableNames = $this->undefinedVariableResolver->resolve($node);
+        // avoids adding same variable multiple tiemes
+        $alreadyAddedVariableNames = (array) $node->getAttribute(self::ALREADY_ADDED_VARIABLE_NAMES);
+        $undefinedVariableNames = \array_diff($undefinedVariableNames, $alreadyAddedVariableNames);
         if ($undefinedVariableNames === []) {
             return null;
         }
-        $variablesInitiation = $this->collectVariablesInitiation($undefinedVariableNames, $node->stmts);
-        if ($variablesInitiation === []) {
-            return null;
-        }
-        $node->stmts = \array_merge($variablesInitiation, $node->stmts);
-        return $node;
-    }
-    /**
-     * @param Stmt[] $stmts
-     * @return Expression[]
-     */
-    private function collectEarlyExpressionStmts(array $stmts) : array
-    {
-        $expressionStmts = [];
-        foreach ($stmts as $stmt) {
-            if (!$stmt instanceof Expression) {
-                break;
-            }
-            $expressionStmts[] = $stmt;
-        }
-        return $expressionStmts;
-    }
-    /**
-     * @param string[] $undefinedVariableNames
-     * @param Stmt[] $stmts
-     * @return Expression[]
-     */
-    private function collectVariablesInitiation(array $undefinedVariableNames, array $stmts) : array
-    {
         $variablesInitiation = [];
-        $expressionStmts = $this->collectEarlyExpressionStmts($stmts);
         foreach ($undefinedVariableNames as $undefinedVariableName) {
-            $value = $this->isArray($undefinedVariableName, $stmts) ? new Array_([]) : $this->nodeFactory->createNull();
-            $assign = new Assign(new Variable($undefinedVariableName), $value);
-            $expresssion = new Expression($assign);
-            foreach ($expressionStmts as $expressionStmt) {
-                if ($this->nodeComparator->areNodesEqual($expresssion, $expressionStmt)) {
-                    continue 2;
-                }
-            }
-            $variablesInitiation[] = $expresssion;
+            $value = $this->isArray($undefinedVariableName, (array) $node->stmts) ? new \PhpParser\Node\Expr\Array_([]) : $this->nodeFactory->createNull();
+            $assign = new \PhpParser\Node\Expr\Assign(new \PhpParser\Node\Expr\Variable($undefinedVariableName), $value);
+            $variablesInitiation[] = new \PhpParser\Node\Stmt\Expression($assign);
         }
-        return $variablesInitiation;
+        $node->setAttribute(self::ALREADY_ADDED_VARIABLE_NAMES, $undefinedVariableNames);
+        $node->stmts = \array_merge($variablesInitiation, (array) $node->stmts);
+        return $node;
     }
     /**
      * @param Stmt[] $stmts
      */
     private function isArray(string $undefinedVariable, array $stmts) : bool
     {
-        return (bool) $this->betterNodeFinder->findFirst($stmts, function (Node $node) use($undefinedVariable) : bool {
-            if (!$node instanceof ArrayDimFetch) {
+        return (bool) $this->betterNodeFinder->findFirst($stmts, function (\PhpParser\Node $node) use($undefinedVariable) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\ArrayDimFetch) {
                 return \false;
             }
             return $this->isName($node->var, $undefinedVariable);

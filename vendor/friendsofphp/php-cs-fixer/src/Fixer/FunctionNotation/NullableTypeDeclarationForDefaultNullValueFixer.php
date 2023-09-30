@@ -58,7 +58,15 @@ final class NullableTypeDeclarationForDefaultNullValueFixer extends AbstractFixe
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isTokenKindFound(T_VARIABLE) && $tokens->isAnyTokenKindsFound([T_FUNCTION, T_FN]);
+        if (!$tokens->isTokenKindFound(T_VARIABLE)) {
+            return false;
+        }
+
+        if (\PHP_VERSION_ID >= 70400 && $tokens->isTokenKindFound(T_FN)) {
+            return true;
+        }
+
+        return $tokens->isTokenKindFound(T_FUNCTION);
     }
 
     /**
@@ -90,7 +98,11 @@ final class NullableTypeDeclarationForDefaultNullValueFixer extends AbstractFixe
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
         $functionsAnalyzer = new FunctionsAnalyzer();
-        $tokenKinds = [T_FUNCTION, T_FN];
+
+        $tokenKinds = [T_FUNCTION];
+        if (\PHP_VERSION_ID >= 70400) {
+            $tokenKinds[] = T_FN;
+        }
 
         for ($index = $tokens->count() - 1; $index >= 0; --$index) {
             $token = $tokens[$index];
@@ -100,6 +112,7 @@ final class NullableTypeDeclarationForDefaultNullValueFixer extends AbstractFixe
             }
 
             $arguments = $functionsAnalyzer->getFunctionArguments($tokens, $index);
+
             $this->fixFunctionParameters($tokens, $arguments);
         }
     }
@@ -109,16 +122,6 @@ final class NullableTypeDeclarationForDefaultNullValueFixer extends AbstractFixe
      */
     private function fixFunctionParameters(Tokens $tokens, array $arguments): void
     {
-        $constructorPropertyModifiers = [
-            CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PUBLIC,
-            CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PROTECTED,
-            CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PRIVATE,
-        ];
-
-        if (\defined('T_READONLY')) { // @TODO: drop condition when PHP 8.1+ is required
-            $constructorPropertyModifiers[] = T_READONLY;
-        }
-
         foreach (array_reverse($arguments) as $argumentInfo) {
             if (
                 // Skip, if the parameter
@@ -134,10 +137,17 @@ final class NullableTypeDeclarationForDefaultNullValueFixer extends AbstractFixe
 
             $argumentTypeInfo = $argumentInfo->getTypeAnalysis();
 
-            if (\PHP_VERSION_ID >= 80000 && false === $this->configuration['use_nullable_type_declaration']) {
+            if (
+                \PHP_VERSION_ID >= 80000
+                && false === $this->configuration['use_nullable_type_declaration']
+            ) {
                 $visibility = $tokens[$tokens->getPrevMeaningfulToken($argumentTypeInfo->getStartIndex())];
 
-                if ($visibility->isGivenKind($constructorPropertyModifiers)) {
+                if ($visibility->isGivenKind([
+                    CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PUBLIC,
+                    CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PROTECTED,
+                    CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PRIVATE,
+                ])) {
                     continue;
                 }
             }

@@ -23,8 +23,10 @@ final class ShortDescription
 {
     /**
      * The docblock containing the short description.
+     *
+     * @var DocBlock
      */
-    private DocBlock $doc;
+    private $doc;
 
     public function __construct(DocBlock $doc)
     {

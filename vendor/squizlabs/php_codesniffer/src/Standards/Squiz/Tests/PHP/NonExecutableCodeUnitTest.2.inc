@@ -45,12 +45,6 @@ trait Something {
 	}
 }
 
-enum Something {
-    function getReturnType() {
-        echo 'no error';
-    }
-}
-
 $a = new class {
     public function log($msg)
     {

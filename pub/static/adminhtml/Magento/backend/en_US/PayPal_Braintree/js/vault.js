@@ -1,5 +1,5 @@
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 /*browser:true*/
@@ -140,7 +140,7 @@ define([
         createPublicHashSelector: function () {
             var $input;
 
-            if (this.$selector.find('[name="payment[payment_method_nonce]"]').length === 0) {
+            if (this.$selector.find('[name="payment[payment_method_nonce]"]').size() === 0) {
                 $input = $('<input>').attr(
                     {
                         type: 'hidden',

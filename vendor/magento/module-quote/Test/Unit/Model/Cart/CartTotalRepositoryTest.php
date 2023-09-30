@@ -231,7 +231,7 @@ class CartTotalRepositoryTest extends TestCase
             ->method('setCouponCode')
             ->with(self::STUB_COUPON)
             ->willReturnSelf();
-        $totalsMock->expects($this->never())
+        $totalsMock->expects($this->once())
             ->method('setGrandTotal')
             ->willReturnSelf();
         $totalsMock->expects($this->once())

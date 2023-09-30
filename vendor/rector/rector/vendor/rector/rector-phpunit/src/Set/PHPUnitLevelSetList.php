@@ -4,10 +4,7 @@ declare (strict_types=1);
 namespace Rector\PHPUnit\Set;
 
 use Rector\Set\Contract\SetListInterface;
-/**
- * @api
- */
-final class PHPUnitLevelSetList implements SetListInterface
+final class PHPUnitLevelSetList implements \Rector\Set\Contract\SetListInterface
 {
     /**
      * @var string

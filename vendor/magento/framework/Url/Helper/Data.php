@@ -24,8 +24,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Get encoded URL
-     *
      * @param string $url
      * @return string
      */
@@ -46,7 +44,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function addRequestParam($url, $param)
     {
-        $startDelimiter = false === strpos((string)$url, '?') ? '?' : '&';
+        $startDelimiter = false === strpos($url, '?') ? '?' : '&';
 
         $arrQueryParams = [];
         foreach ($param as $key => $value) {
@@ -55,7 +53,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
 
             if (is_array($value)) {
-                // ex: $key[]=$value1&$key[]=$value2 ...
+                // $key[]=$value1&$key[]=$value2 ...
                 $arrQueryParams[] = $key . '[]=' . implode('&' . $key . '[]=', $value);
             } elseif ($value === null) {
                 $arrQueryParams[] = $key;
@@ -72,7 +70,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Remove request parameter from url
-     *
      * @param string $url
      * @param string $paramKey
      * @param bool $caseSensitive
@@ -80,11 +77,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function removeRequestParam($url, $paramKey, $caseSensitive = false)
     {
-        $regExpression = '/\\?[^#]*?(' . preg_quote((string)$paramKey, '/') . '\\=[^#&]*&?)/' .
-            ($caseSensitive ? '' : 'i');
-        while (preg_match($regExpression, (string)$url, $matches) !== 0) {
-            $url = $url !== null ? $url : '';
-            $paramString = $matches[1] ?? '';
+        $regExpression = '/\\?[^#]*?(' . preg_quote($paramKey, '/') . '\\=[^#&]*&?)/' . ($caseSensitive ? '' : 'i');
+        while (preg_match($regExpression, $url, $matches) !== 0) {
+            $paramString = $matches[1];
             // if ampersand is at the end of $paramString
             if (substr($paramString, -1, 1) != '&') {
                 $url = preg_replace('/(&|\\?)?' . preg_quote($paramString, '/') . '/', '', $url);

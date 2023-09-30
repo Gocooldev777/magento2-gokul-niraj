@@ -5,12 +5,10 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-
 /**
  * Filter for standard strip_tags() function with extra functionality for html entities
  */
-class StripTags implements FilterInterface
+class StripTags implements \Zend_Filter_Interface
 {
     /**
      * @var \Magento\Framework\Escaper
@@ -47,7 +45,7 @@ class StripTags implements FilterInterface
      */
     public function filter($value)
     {
-        $result = strip_tags((string)$value, $this->allowableTags);
+        $result = strip_tags($value, $this->allowableTags);
         return $this->escape ? $this->escaper->escapeHtml($result, $this->allowableTags) : $result;
     }
 }

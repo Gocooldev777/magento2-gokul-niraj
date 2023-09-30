@@ -10,8 +10,6 @@ namespace Magento\Ui\Model\ColorPicker;
 
 /**
  * Mode interface for color modes
- *
- * @api
  */
 interface ModeInterface
 {
@@ -20,5 +18,5 @@ interface ModeInterface
      *
      * @return array
      */
-    public function getConfig(): array ;
+    public function getConfig() : array ;
 }

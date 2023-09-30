@@ -27,7 +27,6 @@ class Ftp
     protected function checkConnected()
     {
         if (!$this->_conn) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception(__CLASS__ . " - no connection established with server");
         }
     }
@@ -54,7 +53,7 @@ class Ftp
     public function mkdirRecursive($path, $mode = 0777)
     {
         $this->checkConnected();
-        $dir = explode("/", (string)$path);
+        $dir = explode("/", $path);
         $path = "";
         $ret = true;
         for ($i = 0, $count = count($dir); $i < $count; $i++) {
@@ -85,7 +84,6 @@ class Ftp
         $this->checkConnected();
         $res = @ftp_login($this->_conn, $login, $password);
         if (!$res) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Invalid login credentials");
         }
         return $res;
@@ -102,19 +100,17 @@ class Ftp
     {
         $data = parse_url($string);
         if (false === $data) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Connection string invalid: '{$string}'");
         }
         if ($data['scheme'] != 'ftp') {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Support for scheme unsupported: '{$data['scheme']}'");
         }
-
+        
         // Decode user & password strings from URL
         foreach (array_intersect(array_keys($data), ['user','pass']) as $key) {
             $data[$key] = urldecode($data[$key]);
         }
-
+        
         return $data;
     }
 
@@ -136,7 +132,6 @@ class Ftp
         $this->_conn = ftp_connect($params['host'], $port, $timeout);
 
         if (!$this->_conn) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Cannot connect to host: {$params['host']}");
         }
         if (isset($params['user']) && isset($params['pass'])) {
@@ -146,7 +141,6 @@ class Ftp
         }
         if (isset($params['path'])) {
             if (!$this->chdir($params['path'])) {
-                // phpcs:ignore Magento2.Exceptions.DirectThrow
                 throw new \Exception("Cannot chdir after login to: {$params['path']}");
             }
         }
@@ -157,7 +151,7 @@ class Ftp
      *
      * @param string $remoteFile
      * @param resource $handle
-     * @param int $mode FTP_BINARY | FTP_ASCII
+     * @param int $mode  FTP_BINARY | FTP_ASCII
      * @param int $startPos
      * @return bool
      */
@@ -190,7 +184,7 @@ class Ftp
     public function getcwd()
     {
         $d = $this->raw("pwd");
-        $data = explode(" ", $d[0] ?? '', 3);
+        $data = explode(" ", $d[0], 3);
         if (empty($data[1])) {
             return false;
         }
@@ -234,23 +228,19 @@ class Ftp
         $this->checkConnected();
 
         if (!file_exists($local)) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Local file doesn't exist: {$local}");
         }
         if (!is_readable($local)) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Local file is not readable: {$local}");
         }
         if (is_dir($local)) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Directory given instead of file: {$local}");
         }
 
-        $globalPathMode = substr((string)$remote, 0, 1) == "/";
+        $globalPathMode = substr($remote, 0, 1) == "/";
         $dirname = dirname($remote);
         $cwd = $this->getcwd();
         if (false === $cwd) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Server returns something awful on PWD command");
         }
 
@@ -272,7 +262,7 @@ class Ftp
      *
      * @param string $remote
      * @param string $local
-     * @param int $ftpMode FTP_BINARY|FTP_ASCII
+     * @param int $ftpMode  FTP_BINARY|FTP_ASCII
      * @return bool
      */
     public function download($remote, $local, $ftpMode = FTP_BINARY)
@@ -346,7 +336,7 @@ class Ftp
      *
      * @param string $localFile
      * @param string $remoteFile
-     * @param int $fileMode FTP_BINARY | FTP_ASCII
+     * @param int $fileMode         FTP_BINARY | FTP_ASCII
      * @param int $resumeOffset
      * @return bool
      * @SuppressWarnings(PHPMD.BooleanGetMethodName)
@@ -407,7 +397,7 @@ class Ftp
     public static function chmodnum($chmod)
     {
         $trans = ['-' => '0', 'r' => '4', 'w' => '2', 'x' => '1'];
-        $chmod = $chmod !== null ? substr(strtr($chmod, $trans), 1) : '';
+        $chmod = substr(strtr($chmod, $trans), 1);
         $array = str_split($chmod, 3);
         return array_sum(str_split($array[0])) . array_sum(str_split($array[1])) . array_sum(str_split($array[2]));
     }
@@ -487,10 +477,6 @@ class Ftp
      */
     public function correctFilePath($str)
     {
-        if ($str === null) {
-            return '';
-        }
-
         $str = str_replace("\\", "/", $str);
         $str = preg_replace("/^.\//", "", $str);
         return $str;

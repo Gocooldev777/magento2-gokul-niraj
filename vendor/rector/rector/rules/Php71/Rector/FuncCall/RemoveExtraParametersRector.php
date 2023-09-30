@@ -26,7 +26,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\Php71\Rector\FuncCall\RemoveExtraParametersRector\RemoveExtraParametersRectorTest
  */
-final class RemoveExtraParametersRector extends AbstractRector implements MinPhpVersionInterface
+final class RemoveExtraParametersRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
 {
     /**
      * @readonly
@@ -38,55 +38,49 @@ final class RemoveExtraParametersRector extends AbstractRector implements MinPhp
      * @var \Rector\Core\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
-    public function __construct(VariadicAnalyzer $variadicAnalyzer, ReflectionResolver $reflectionResolver)
+    public function __construct(\Rector\Core\NodeAnalyzer\VariadicAnalyzer $variadicAnalyzer, \Rector\Core\Reflection\ReflectionResolver $reflectionResolver)
     {
         $this->variadicAnalyzer = $variadicAnalyzer;
         $this->reflectionResolver = $reflectionResolver;
     }
     public function provideMinPhpVersion() : int
     {
-        return PhpVersionFeature::NO_EXTRA_PARAMETERS;
+        return \Rector\Core\ValueObject\PhpVersionFeature::NO_EXTRA_PARAMETERS;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Remove extra parameters', [new CodeSample('strlen("asdf", 1);', 'strlen("asdf");')]);
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove extra parameters', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('strlen("asdf", 1);', 'strlen("asdf");')]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [FuncCall::class, MethodCall::class, StaticCall::class];
+        return [\PhpParser\Node\Expr\FuncCall::class, \PhpParser\Node\Expr\MethodCall::class, \PhpParser\Node\Expr\StaticCall::class];
     }
     /**
      * @param FuncCall|MethodCall|StaticCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($this->shouldSkip($node)) {
             return null;
         }
         // unreliable count of arguments
         $functionLikeReflection = $this->reflectionResolver->resolveFunctionLikeReflectionFromCall($node);
-        if ($functionLikeReflection instanceof UnionTypeMethodReflection) {
+        if ($functionLikeReflection instanceof \PHPStan\Reflection\Type\UnionTypeMethodReflection) {
             return null;
         }
         if ($functionLikeReflection === null) {
             return null;
         }
-        if ($functionLikeReflection instanceof PhpMethodReflection) {
+        if ($functionLikeReflection instanceof \PHPStan\Reflection\Php\PhpMethodReflection) {
             $classReflection = $functionLikeReflection->getDeclaringClass();
             if ($classReflection->isInterface()) {
                 return null;
             }
         }
         $maximumAllowedParameterCount = $this->resolveMaximumAllowedParameterCount($functionLikeReflection);
-        if ($node->isFirstClassCallable()) {
-            return null;
-        }
-        if ($this->shouldSkipFunctionReflection($functionLikeReflection)) {
-            return null;
-        }
         $numberOfArguments = \count($node->getRawArgs());
         if ($numberOfArguments <= $maximumAllowedParameterCount) {
             return null;
@@ -97,19 +91,6 @@ final class RemoveExtraParametersRector extends AbstractRector implements MinPhp
         return $node;
     }
     /**
-     * @param \PHPStan\Reflection\MethodReflection|\PHPStan\Reflection\FunctionReflection $reflection
-     */
-    private function shouldSkipFunctionReflection($reflection) : bool
-    {
-        if ($reflection instanceof FunctionReflection) {
-            $fileName = (string) $reflection->getFileName();
-            if (\strpos($fileName, 'phpstan.phar') !== \false) {
-                return \true;
-            }
-        }
-        return \false;
-    }
-    /**
      * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $call
      */
     private function shouldSkip($call) : bool
@@ -117,18 +98,18 @@ final class RemoveExtraParametersRector extends AbstractRector implements MinPhp
         if ($call->args === []) {
             return \true;
         }
-        if ($call instanceof StaticCall) {
-            if (!$call->class instanceof Name) {
+        if ($call instanceof \PhpParser\Node\Expr\StaticCall) {
+            if (!$call->class instanceof \PhpParser\Node\Name) {
                 return \true;
             }
-            if ($this->isName($call->class, ObjectReference::PARENT)) {
+            if ($this->isName($call->class, \Rector\Core\Enum\ObjectReference::PARENT()->getValue())) {
                 return \true;
             }
         }
         return $this->variadicAnalyzer->hasVariadicParameters($call);
     }
     /**
-     * @param \PHPStan\Reflection\MethodReflection|\PHPStan\Reflection\FunctionReflection $functionLikeReflection
+     * @param \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection $functionLikeReflection
      */
     private function resolveMaximumAllowedParameterCount($functionLikeReflection) : int
     {
@@ -136,6 +117,6 @@ final class RemoveExtraParametersRector extends AbstractRector implements MinPhp
         foreach ($functionLikeReflection->getVariants() as $parametersAcceptor) {
             $parameterCounts[] = \count($parametersAcceptor->getParameters());
         }
-        return \max($parameterCounts);
+        return (int) \max($parameterCounts);
     }
 }

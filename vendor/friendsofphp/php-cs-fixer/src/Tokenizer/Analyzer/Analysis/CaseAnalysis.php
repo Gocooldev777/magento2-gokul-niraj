@@ -21,9 +21,15 @@ namespace PhpCsFixer\Tokenizer\Analyzer\Analysis;
  */
 final class CaseAnalysis
 {
-    private int $index;
+    /**
+     * @var int
+     */
+    private $index;
 
-    private int $colonIndex;
+    /**
+     * @var int
+     */
+    private $colonIndex;
 
     public function __construct(int $index, int $colonIndex)
     {

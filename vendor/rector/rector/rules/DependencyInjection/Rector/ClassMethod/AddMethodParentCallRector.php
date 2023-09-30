@@ -15,19 +15,24 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\MethodName;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\DependencyInjection\Rector\ClassMethod\AddMethodParentCallRector\AddMethodParentCallRectorTest
  */
-final class AddMethodParentCallRector extends AbstractRector implements ConfigurableRectorInterface
+final class AddMethodParentCallRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const METHODS_BY_PARENT_TYPES = 'methods_by_parent_type';
     /**
      * @var array<string, string>
      */
     private $methodByParentTypes = [];
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Add method parent call, in case new parent method is added', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add method parent call, in case new parent method is added', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SunshineCommand extends ParentClassWithNewConstructor
 {
     public function __construct()
@@ -47,34 +52,34 @@ class SunshineCommand extends ParentClassWithNewConstructor
     }
 }
 CODE_SAMPLE
-, ['ParentClassWithNewConstructor' => MethodName::CONSTRUCT])]);
+, ['ParentClassWithNewConstructor' => \Rector\Core\ValueObject\MethodName::CONSTRUCT])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        $classLike = $this->betterNodeFinder->findParentType($node, ClassLike::class);
-        if (!$classLike instanceof ClassLike) {
+        $classLike = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassLike::class);
+        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
             return null;
         }
         $className = (string) $this->nodeNameResolver->getName($classLike);
         foreach ($this->methodByParentTypes as $type => $method) {
+            if (!$this->isObjectType($classLike, new \PHPStan\Type\ObjectType($type))) {
+                continue;
+            }
             // not itself
             if ($className === $type) {
                 continue;
             }
             if ($this->shouldSkipMethod($node, $method)) {
-                continue;
-            }
-            if (!$this->isObjectType($classLike, new ObjectType($type))) {
                 continue;
             }
             $node->stmts[] = $this->createParentStaticCall($method);
@@ -87,33 +92,34 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        Assert::allString(\array_keys($configuration));
-        Assert::allString($configuration);
-        /** @var array<string, string> $configuration */
-        $this->methodByParentTypes = $configuration;
+        $methodsByParentTypes = $configuration[self::METHODS_BY_PARENT_TYPES] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString(\array_keys($methodsByParentTypes));
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($methodsByParentTypes);
+        /** @var array<string, string> $methodsByParentTypes */
+        $this->methodByParentTypes = $methodsByParentTypes;
     }
-    private function shouldSkipMethod(ClassMethod $classMethod, string $method) : bool
+    private function shouldSkipMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod, string $method) : bool
     {
         if (!$this->isName($classMethod, $method)) {
             return \true;
         }
         return $this->hasParentCallOfMethod($classMethod, $method);
     }
-    private function createParentStaticCall(string $method) : Expression
+    private function createParentStaticCall(string $method) : \PhpParser\Node\Stmt\Expression
     {
-        $staticCall = $this->nodeFactory->createStaticCall(ObjectReference::PARENT, $method);
-        return new Expression($staticCall);
+        $staticCall = $this->nodeFactory->createStaticCall(\Rector\Core\Enum\ObjectReference::PARENT(), $method);
+        return new \PhpParser\Node\Stmt\Expression($staticCall);
     }
     /**
      * Looks for "parent::<methodName>
      */
-    private function hasParentCallOfMethod(ClassMethod $classMethod, string $method) : bool
+    private function hasParentCallOfMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod, string $method) : bool
     {
-        return (bool) $this->betterNodeFinder->findFirst((array) $classMethod->stmts, function (Node $node) use($method) : bool {
-            if (!$node instanceof StaticCall) {
+        return (bool) $this->betterNodeFinder->findFirst((array) $classMethod->stmts, function (\PhpParser\Node $node) use($method) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\StaticCall) {
                 return \false;
             }
-            if (!$this->isName($node->class, ObjectReference::PARENT)) {
+            if (!$this->isName($node->class, \Rector\Core\Enum\ObjectReference::PARENT()->getValue())) {
                 return \false;
             }
             return $this->isName($node->name, $method);

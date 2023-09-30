@@ -3,75 +3,62 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Sales\CustomerData;
 
-use Magento\Catalog\Model\Product;
-use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Customer\CustomerData\SectionSourceInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Customer\Model\Session;
-use Magento\Framework\App\Http\Context;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Config;
-use Magento\Sales\Model\Order\Item;
-use Magento\Sales\Model\ResourceModel\Order\Collection;
-use Magento\Sales\Model\ResourceModel\Order\CollectionFactoryInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Returns information for "Recently Ordered" widget.
  * It contains list of 5 salable products from the last placed order.
  * Qty of products to display is limited by LastOrderedItems::SIDEBAR_ORDER_LIMIT constant.
- * @SuppressWarnings(PHPMD.CookieAndSessionMisuse)
  */
 class LastOrderedItems implements SectionSourceInterface
 {
     /**
-     * Limit of orders in sidebar
+     * Limit of orders in side bar
      */
-    public const SIDEBAR_ORDER_LIMIT = 5;
+    const SIDEBAR_ORDER_LIMIT = 5;
 
     /**
-     * @var CollectionFactoryInterface
+     * @var \Magento\Sales\Model\ResourceModel\Order\CollectionFactoryInterface
      */
     protected $_orderCollectionFactory;
 
     /**
-     * @var Config
+     * @var \Magento\Sales\Model\Order\Config
      */
     protected $_orderConfig;
 
     /**
-     * @var Session
+     * @var \Magento\Customer\Model\Session
      */
     protected $_customerSession;
 
     /**
-     * @var Context
+     * @var \Magento\Framework\App\Http\Context
      */
     protected $httpContext;
 
     /**
-     * @var Collection
+     * @var \Magento\Sales\Model\ResourceModel\Order\Collection
      */
     protected $orders;
 
     /**
-     * @var StockRegistryInterface
+     * @var \Magento\CatalogInventory\Api\StockRegistryInterface
      */
     protected $stockRegistry;
 
     /**
-     * @var StoreManagerInterface
+     * @var \Magento\Store\Model\StoreManagerInterface
      */
     private $_storeManager;
 
     /**
-     * @var ProductRepositoryInterface
+     * @var \Magento\Catalog\Api\ProductRepositoryInterface
      */
     private $productRepository;
 
@@ -81,20 +68,20 @@ class LastOrderedItems implements SectionSourceInterface
     private $logger;
 
     /**
-     * @param CollectionFactoryInterface $orderCollectionFactory
-     * @param Config $orderConfig
-     * @param Session $customerSession
-     * @param StockRegistryInterface $stockRegistry
-     * @param StoreManagerInterface $storeManager
+     * @param \Magento\Sales\Model\ResourceModel\Order\CollectionFactoryInterface $orderCollectionFactory
+     * @param \Magento\Sales\Model\Order\Config $orderConfig
+     * @param \Magento\Customer\Model\Session $customerSession
+     * @param \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param ProductRepositoryInterface $productRepository
      * @param LoggerInterface $logger
      */
     public function __construct(
-        CollectionFactoryInterface $orderCollectionFactory,
-        Config $orderConfig,
-        Session $customerSession,
-        StockRegistryInterface $stockRegistry,
-        StoreManagerInterface $storeManager,
+        \Magento\Sales\Model\ResourceModel\Order\CollectionFactoryInterface $orderCollectionFactory,
+        \Magento\Sales\Model\Order\Config $orderConfig,
+        \Magento\Customer\Model\Session $customerSession,
+        \Magento\CatalogInventory\Api\StockRegistryInterface $stockRegistry,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
         ProductRepositoryInterface $productRepository,
         LoggerInterface $logger
     ) {
@@ -112,7 +99,7 @@ class LastOrderedItems implements SectionSourceInterface
      *
      * @return void
      */
-    protected function initOrders(): void
+    protected function initOrders()
     {
         $customerId = $this->_customerSession->getCustomerId();
 
@@ -129,9 +116,8 @@ class LastOrderedItems implements SectionSourceInterface
      * Get list of last ordered products
      *
      * @return array
-     * @throws NoSuchEntityException
      */
-    protected function getItems(): array
+    protected function getItems()
     {
         $items = [];
         $order = $this->getLastOrder();
@@ -139,9 +125,9 @@ class LastOrderedItems implements SectionSourceInterface
 
         if ($order) {
             $website = $this->_storeManager->getStore()->getWebsiteId();
-            /** @var Item $item */
+            /** @var \Magento\Sales\Model\Order\Item $item */
             foreach ($order->getParentItemsRandomCollection($limit) as $item) {
-                /** @var Product $product */
+                /** @var \Magento\Catalog\Model\Product $product */
                 try {
                     $product = $this->productRepository->getById(
                         $item->getProductId(),
@@ -159,7 +145,6 @@ class LastOrderedItems implements SectionSourceInterface
                         'name' => $item->getName(),
                         'url' => $url,
                         'is_saleable' => $this->isItemAvailableForReorder($item),
-                        'product_id' => $item->getProductId(),
                     ];
                 }
             }
@@ -171,10 +156,10 @@ class LastOrderedItems implements SectionSourceInterface
     /**
      * Check item product availability for reorder
      *
-     * @param  Item $orderItem
+     * @param  \Magento\Sales\Model\Order\Item $orderItem
      * @return boolean
      */
-    protected function isItemAvailableForReorder(Item $orderItem)
+    protected function isItemAvailableForReorder(\Magento\Sales\Model\Order\Item $orderItem)
     {
         try {
             $stockItem = $this->stockRegistry->getStockItem(
@@ -190,7 +175,7 @@ class LastOrderedItems implements SectionSourceInterface
     /**
      * Last order getter
      *
-     * @return Order|void
+     * @return \Magento\Sales\Model\Order|void
      */
     protected function getLastOrder()
     {
@@ -205,7 +190,7 @@ class LastOrderedItems implements SectionSourceInterface
     /**
      * @inheritdoc
      */
-    public function getSectionData(): array
+    public function getSectionData()
     {
         return ['items' => $this->getItems()];
     }

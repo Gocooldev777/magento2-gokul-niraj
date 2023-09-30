@@ -1,19 +1,19 @@
 <?php
 
-namespace RectorPrefix202304\React\Socket;
+namespace RectorPrefix20211221\React\Socket;
 
-use RectorPrefix202304\React\EventLoop\Loop;
-use RectorPrefix202304\React\EventLoop\LoopInterface;
-use RectorPrefix202304\React\Promise;
+use RectorPrefix20211221\React\EventLoop\Loop;
+use RectorPrefix20211221\React\EventLoop\LoopInterface;
+use RectorPrefix20211221\React\Promise;
 use InvalidArgumentException;
 use RuntimeException;
-final class TcpConnector implements ConnectorInterface
+final class TcpConnector implements \RectorPrefix20211221\React\Socket\ConnectorInterface
 {
     private $loop;
     private $context;
-    public function __construct(LoopInterface $loop = null, array $context = array())
+    public function __construct(\RectorPrefix20211221\React\EventLoop\LoopInterface $loop = null, array $context = array())
     {
-        $this->loop = $loop ?: Loop::get();
+        $this->loop = $loop ?: \RectorPrefix20211221\React\EventLoop\Loop::get();
         $this->context = $context;
     }
     public function connect($uri)
@@ -23,11 +23,11 @@ final class TcpConnector implements ConnectorInterface
         }
         $parts = \parse_url($uri);
         if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) || $parts['scheme'] !== 'tcp') {
-            return Promise\reject(new \InvalidArgumentException('Given URI "' . $uri . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
+            return \RectorPrefix20211221\React\Promise\reject(new \InvalidArgumentException('Given URI "' . $uri . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
         }
         $ip = \trim($parts['host'], '[]');
-        if (@\inet_pton($ip) === \false) {
-            return Promise\reject(new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
+        if (\false === \filter_var($ip, \FILTER_VALIDATE_IP)) {
+            return \RectorPrefix20211221\React\Promise\reject(new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
         }
         // use context given in constructor
         $context = array('socket' => $this->context);
@@ -57,11 +57,11 @@ final class TcpConnector implements ConnectorInterface
         $remote = 'tcp://' . $parts['host'] . ':' . $parts['port'];
         $stream = @\stream_socket_client($remote, $errno, $errstr, 0, \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT, \stream_context_create($context));
         if (\false === $stream) {
-            return Promise\reject(new \RuntimeException('Connection to ' . $uri . ' failed: ' . $errstr . SocketServer::errconst($errno), $errno));
+            return \RectorPrefix20211221\React\Promise\reject(new \RuntimeException('Connection to ' . $uri . ' failed: ' . $errstr . \RectorPrefix20211221\React\Socket\SocketServer::errconst($errno), $errno));
         }
         // wait for connection
         $loop = $this->loop;
-        return new Promise\Promise(function ($resolve, $reject) use($loop, $stream, $uri) {
+        return new \RectorPrefix20211221\React\Promise\Promise(function ($resolve, $reject) use($loop, $stream, $uri) {
             $loop->addWriteStream($stream, function ($stream) use($loop, $resolve, $reject, $uri) {
                 $loop->removeWriteStream($stream);
                 // The following hack looks like the only way to
@@ -78,17 +78,12 @@ final class TcpConnector implements ConnectorInterface
                         // Linux reports socket errno and errstr again when trying to write to the dead socket.
                         // Suppress error reporting to get error message below and close dead socket before rejecting.
                         // This is only known to work on Linux, Mac and Windows are known to not support this.
-                        $errno = 0;
-                        $errstr = '';
-                        \set_error_handler(function ($_, $error) use(&$errno, &$errstr) {
-                            // Match errstr from PHP's warning message.
-                            // fwrite(): send of 1 bytes failed with errno=111 Connection refused
-                            \preg_match('/errno=(\\d+) (.+)/', $error, $m);
-                            $errno = isset($m[1]) ? (int) $m[1] : 0;
-                            $errstr = isset($m[2]) ? $m[2] : $error;
-                        });
-                        \fwrite($stream, \PHP_EOL);
-                        \restore_error_handler();
+                        @\fwrite($stream, \PHP_EOL);
+                        $error = \error_get_last();
+                        // fwrite(): send of 2 bytes failed with errno=111 Connection refused
+                        \preg_match('/errno=(\\d+) (.+)/', $error['message'], $m);
+                        $errno = isset($m[1]) ? (int) $m[1] : 0;
+                        $errstr = isset($m[2]) ? $m[2] : $error['message'];
                     } else {
                         // Not on Linux and ext-sockets not available? Too bad.
                         $errno = \defined('SOCKET_ECONNREFUSED') ? \SOCKET_ECONNREFUSED : 111;
@@ -96,9 +91,9 @@ final class TcpConnector implements ConnectorInterface
                     }
                     // @codeCoverageIgnoreEnd
                     \fclose($stream);
-                    $reject(new \RuntimeException('Connection to ' . $uri . ' failed: ' . $errstr . SocketServer::errconst($errno), $errno));
+                    $reject(new \RuntimeException('Connection to ' . $uri . ' failed: ' . $errstr . \RectorPrefix20211221\React\Socket\SocketServer::errconst($errno), $errno));
                 } else {
-                    $resolve(new Connection($stream, $loop));
+                    $resolve(new \RectorPrefix20211221\React\Socket\Connection($stream, $loop));
                 }
             });
         }, function () use($loop, $stream, $uri) {

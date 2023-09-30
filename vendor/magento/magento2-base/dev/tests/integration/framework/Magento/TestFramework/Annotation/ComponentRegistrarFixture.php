@@ -6,25 +6,13 @@
 
 namespace Magento\TestFramework\Annotation;
 
-use FilesystemIterator;
-use InvalidArgumentException;
-use Magento\Framework\Component\ComponentRegistrar;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\TestFramework\Annotation\Parser\Composite;
-use Magento\TestFramework\Fixture\ParserInterface;
-use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\TestCase;
+use Magento\TestFramework\Annotation\TestCaseAnnotation;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use ReflectionClass;
 use RegexIterator;
-use SplFileInfo;
-use Throwable;
 
 /**
  * Implementation of the @magentoComponentsDir DocBlock annotation
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ComponentRegistrarFixture
 {
@@ -33,8 +21,8 @@ class ComponentRegistrarFixture
     /**#@+
      * Properties of components registrar
      */
-    public const REGISTRAR_CLASS = ComponentRegistrar::class;
-    public const PATHS_FIELD = 'paths';
+    const REGISTRAR_CLASS = \Magento\Framework\Component\ComponentRegistrar::class;
+    const PATHS_FIELD = 'paths';
     /**#@-*/
 
     /**
@@ -64,10 +52,10 @@ class ComponentRegistrarFixture
     /**
      * Handler for 'startTest' event
      *
-     * @param TestCase $test
+     * @param \PHPUnit\Framework\TestCase $test
      * @return void
      */
-    public function startTest(TestCase $test)
+    public function startTest(\PHPUnit\Framework\TestCase $test)
     {
         $this->registerComponents($test);
     }
@@ -75,12 +63,12 @@ class ComponentRegistrarFixture
     /**
      * Handler for 'endTest' event
      *
-     * @param TestCase $test
+     * @param \PHPUnit\Framework\TestCase $test
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function endTest(TestCase $test)
+    public function endTest(\PHPUnit\Framework\TestCase $test)
     {
         $this->restoreComponents();
     }
@@ -88,27 +76,23 @@ class ComponentRegistrarFixture
     /**
      * Register fixture components
      *
-     * @param TestCase $test
+     * @param \PHPUnit\Framework\TestCase $test
      */
-    private function registerComponents(TestCase $test)
+    private function registerComponents(\PHPUnit\Framework\TestCase $test)
     {
-        $values = [];
-        try {
-            $values = $this->parse($test);
-        } catch (Throwable $exception) {
-            ExceptionHandler::handle(
-                'Unable to parse fixtures',
-                get_class($test),
-                $test->getName(false),
-                $exception
-            );
+        $annotations = TestCaseAnnotation::getInstance()->getAnnotations($test);
+        $componentAnnotations = [];
+        if (isset($annotations['class'][self::ANNOTATION_NAME])) {
+            $componentAnnotations = array_merge($componentAnnotations, $annotations['class'][self::ANNOTATION_NAME]);
         }
-        if (!$values) {
+        if (isset($annotations['method'][self::ANNOTATION_NAME])) {
+            $componentAnnotations = array_merge($componentAnnotations, $annotations['method'][self::ANNOTATION_NAME]);
+        }
+        if (empty($componentAnnotations)) {
             return;
         }
-
-        $componentAnnotations = array_unique(array_column($values, 'path'));
-        $reflection = new ReflectionClass(self::REGISTRAR_CLASS);
+        $componentAnnotations = array_unique($componentAnnotations);
+        $reflection = new \ReflectionClass(self::REGISTRAR_CLASS);
         $paths = $reflection->getProperty(self::PATHS_FIELD);
         $paths->setAccessible(true);
         $this->origComponents = $paths->getValue();
@@ -116,18 +100,18 @@ class ComponentRegistrarFixture
         foreach ($componentAnnotations as $fixturePath) {
             $fixturesDir = $this->fixtureBaseDir . '/' . $fixturePath;
             if (!file_exists($fixturesDir)) {
-                throw new InvalidArgumentException(
+                throw new \InvalidArgumentException(
                     self::ANNOTATION_NAME . " fixture '$fixturePath' does not exist"
                 );
             }
             $iterator = new RegexIterator(
                 new RecursiveIteratorIterator(
-                    new RecursiveDirectoryIterator($fixturesDir, FilesystemIterator::SKIP_DOTS)
+                    new RecursiveDirectoryIterator($fixturesDir, \FilesystemIterator::SKIP_DOTS)
                 ),
                 '/^.+\/registration\.php$/'
             );
             /**
-             * @var SplFileInfo $registrationFile
+             * @var \SplFileInfo $registrationFile
              */
             foreach ($iterator as $registrationFile) {
                 require $registrationFile->getRealPath();
@@ -141,38 +125,12 @@ class ComponentRegistrarFixture
     private function restoreComponents()
     {
         if (null !== $this->origComponents) {
-            $reflection = new ReflectionClass(self::REGISTRAR_CLASS);
+            $reflection = new \ReflectionClass(self::REGISTRAR_CLASS);
             $paths = $reflection->getProperty(self::PATHS_FIELD);
             $paths->setAccessible(true);
             $paths->setValue($this->origComponents);
             $paths->setAccessible(false);
             $this->origComponents = null;
         }
-    }
-
-    /**
-     * Returns ComponentsDir fixtures configuration
-     *
-     * @param TestCase $test
-     * @return array
-     * @throws LocalizedException
-     */
-    private function parse(TestCase $test): array
-    {
-        $objectManager = Bootstrap::getObjectManager();
-        $parsers = $objectManager
-            ->create(
-                Composite::class,
-                [
-                    'parsers' => [
-                        $objectManager->get(\Magento\TestFramework\Annotation\Parser\ComponentsDir::class),
-                        $objectManager->get(\Magento\TestFramework\Fixture\Parser\ComponentsDir::class)
-                    ]
-                ]
-            );
-        return array_merge(
-            $parsers->parse($test, ParserInterface::SCOPE_CLASS),
-            $parsers->parse($test, ParserInterface::SCOPE_METHOD)
-        );
     }
 }

@@ -5,7 +5,6 @@ namespace Rector\TypeDeclaration\NodeAnalyzer;
 
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
-use PhpParser\Node\IntersectionType;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\UnionType;
@@ -17,25 +16,23 @@ final class TypeNodeUnwrapper
      * @var \Rector\Core\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
-    public function __construct(NodeComparator $nodeComparator)
+    public function __construct(\Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator)
     {
         $this->nodeComparator = $nodeComparator;
     }
     /**
-     * @param array<UnionType|NullableType|Name|Identifier|IntersectionType> $typeNodes
+     * @param array<UnionType|NullableType|Name|Identifier> $typeNodes
      * @return array<Name|Identifier>
      */
     public function unwrapNullableUnionTypes(array $typeNodes) : array
     {
         $unwrappedTypeNodes = [];
         foreach ($typeNodes as $typeNode) {
-            if ($typeNode instanceof UnionType) {
-                $unwrappedTypeNodes = \array_merge($unwrappedTypeNodes, $this->unwrapNullableUnionTypes($typeNode->types));
-            } elseif ($typeNode instanceof NullableType) {
+            if ($typeNode instanceof \PhpParser\Node\UnionType) {
+                $unwrappedTypeNodes = \array_merge($unwrappedTypeNodes, $typeNode->types);
+            } elseif ($typeNode instanceof \PhpParser\Node\NullableType) {
                 $unwrappedTypeNodes[] = $typeNode->type;
-                $unwrappedTypeNodes[] = new Identifier('null');
-            } elseif ($typeNode instanceof IntersectionType) {
-                $unwrappedTypeNodes = \array_merge($unwrappedTypeNodes, $this->unwrapNullableUnionTypes($typeNode->types));
+                $unwrappedTypeNodes[] = new \PhpParser\Node\Identifier('null');
             } else {
                 $unwrappedTypeNodes[] = $typeNode;
             }
@@ -43,10 +40,8 @@ final class TypeNodeUnwrapper
         return $this->uniquateNodes($unwrappedTypeNodes);
     }
     /**
-     * @template TNode as Node
-     *
-     * @param TNode[] $nodes
-     * @return TNode[]
+     * @param Node[] $nodes
+     * @return Node[]
      */
     public function uniquateNodes(array $nodes) : array
     {

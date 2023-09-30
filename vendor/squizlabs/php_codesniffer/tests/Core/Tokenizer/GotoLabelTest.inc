@@ -51,6 +51,3 @@ switch (true) {
         // Do something.
         break;
 }
-
-/* testNotGotoDeclarationEnumWithType */
-enum Suit: string implements Colorful, CardGame {}

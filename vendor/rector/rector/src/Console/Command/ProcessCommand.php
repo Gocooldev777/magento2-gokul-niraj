@@ -3,25 +3,32 @@
 declare (strict_types=1);
 namespace Rector\Core\Console\Command;
 
+use PHPStan\Analyser\NodeScopeResolver;
 use Rector\Caching\Detector\ChangedFilesDetector;
+use Rector\ChangesReporting\Output\ConsoleOutputFormatter;
 use Rector\ChangesReporting\Output\JsonOutputFormatter;
 use Rector\Core\Application\ApplicationFileProcessor;
 use Rector\Core\Autoloading\AdditionalAutoloader;
-use Rector\Core\Configuration\ConfigInitializer;
+use Rector\Core\Autoloading\BootstrapFilesIncluder;
 use Rector\Core\Configuration\Option;
-use Rector\Core\Console\ExitCode;
 use Rector\Core\Console\Output\OutputFormatterCollector;
-use Rector\Core\Contract\Console\OutputStyleInterface;
+use Rector\Core\Contract\Rector\RectorInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
+use Rector\Core\Reporting\MissingRectorRulesReporter;
 use Rector\Core\StaticReflection\DynamicSourceLocatorDecorator;
-use Rector\Core\Util\MemoryLimiter;
 use Rector\Core\Validation\EmptyConfigurableRectorChecker;
+use Rector\Core\ValueObject\Application\File;
 use Rector\Core\ValueObject\Configuration;
 use Rector\Core\ValueObject\ProcessResult;
+use Rector\Core\ValueObjectFactory\Application\FileFactory;
 use Rector\Core\ValueObjectFactory\ProcessResultFactory;
-use RectorPrefix202304\Symfony\Component\Console\Application;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputInterface;
-use RectorPrefix202304\Symfony\Component\Console\Output\OutputInterface;
+use Rector\VersionBonding\Application\MissedRectorDueVersionChecker;
+use RectorPrefix20211221\Symfony\Component\Console\Application;
+use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle;
 final class ProcessCommand extends \Rector\Core\Console\Command\AbstractProcessCommand
 {
     /**
@@ -36,9 +43,9 @@ final class ProcessCommand extends \Rector\Core\Console\Command\AbstractProcessC
     private $changedFilesDetector;
     /**
      * @readonly
-     * @var \Rector\Core\Configuration\ConfigInitializer
+     * @var \Rector\Core\Reporting\MissingRectorRulesReporter
      */
-    private $configInitializer;
+    private $missingRectorRulesReporter;
     /**
      * @readonly
      * @var \Rector\Core\Application\ApplicationFileProcessor
@@ -46,14 +53,34 @@ final class ProcessCommand extends \Rector\Core\Console\Command\AbstractProcessC
     private $applicationFileProcessor;
     /**
      * @readonly
+     * @var \Rector\Core\ValueObjectFactory\Application\FileFactory
+     */
+    private $fileFactory;
+    /**
+     * @readonly
+     * @var \Rector\Core\Autoloading\BootstrapFilesIncluder
+     */
+    private $bootstrapFilesIncluder;
+    /**
+     * @readonly
      * @var \Rector\Core\ValueObjectFactory\ProcessResultFactory
      */
     private $processResultFactory;
     /**
      * @readonly
+     * @var \PHPStan\Analyser\NodeScopeResolver
+     */
+    private $nodeScopeResolver;
+    /**
+     * @readonly
      * @var \Rector\Core\StaticReflection\DynamicSourceLocatorDecorator
      */
     private $dynamicSourceLocatorDecorator;
+    /**
+     * @readonly
+     * @var \Rector\VersionBonding\Application\MissedRectorDueVersionChecker
+     */
+    private $missedRectorDueVersionChecker;
     /**
      * @readonly
      * @var \Rector\Core\Validation\EmptyConfigurableRectorChecker
@@ -66,113 +93,139 @@ final class ProcessCommand extends \Rector\Core\Console\Command\AbstractProcessC
     private $outputFormatterCollector;
     /**
      * @readonly
-     * @var \Rector\Core\Contract\Console\OutputStyleInterface
+     * @var \Symfony\Component\Console\Style\SymfonyStyle
      */
-    private $rectorOutputStyle;
+    private $symfonyStyle;
     /**
+     * @var \Rector\Core\Contract\Rector\RectorInterface[]
      * @readonly
-     * @var \Rector\Core\Util\MemoryLimiter
      */
-    private $memoryLimiter;
-    public function __construct(AdditionalAutoloader $additionalAutoloader, ChangedFilesDetector $changedFilesDetector, ConfigInitializer $configInitializer, ApplicationFileProcessor $applicationFileProcessor, ProcessResultFactory $processResultFactory, DynamicSourceLocatorDecorator $dynamicSourceLocatorDecorator, EmptyConfigurableRectorChecker $emptyConfigurableRectorChecker, OutputFormatterCollector $outputFormatterCollector, OutputStyleInterface $rectorOutputStyle, MemoryLimiter $memoryLimiter)
+    private $rectors;
+    /**
+     * @param RectorInterface[] $rectors
+     */
+    public function __construct(\Rector\Core\Autoloading\AdditionalAutoloader $additionalAutoloader, \Rector\Caching\Detector\ChangedFilesDetector $changedFilesDetector, \Rector\Core\Reporting\MissingRectorRulesReporter $missingRectorRulesReporter, \Rector\Core\Application\ApplicationFileProcessor $applicationFileProcessor, \Rector\Core\ValueObjectFactory\Application\FileFactory $fileFactory, \Rector\Core\Autoloading\BootstrapFilesIncluder $bootstrapFilesIncluder, \Rector\Core\ValueObjectFactory\ProcessResultFactory $processResultFactory, \PHPStan\Analyser\NodeScopeResolver $nodeScopeResolver, \Rector\Core\StaticReflection\DynamicSourceLocatorDecorator $dynamicSourceLocatorDecorator, \Rector\VersionBonding\Application\MissedRectorDueVersionChecker $missedRectorDueVersionChecker, \Rector\Core\Validation\EmptyConfigurableRectorChecker $emptyConfigurableRectorChecker, \Rector\Core\Console\Output\OutputFormatterCollector $outputFormatterCollector, \RectorPrefix20211221\Symfony\Component\Console\Style\SymfonyStyle $symfonyStyle, array $rectors)
     {
         $this->additionalAutoloader = $additionalAutoloader;
         $this->changedFilesDetector = $changedFilesDetector;
-        $this->configInitializer = $configInitializer;
+        $this->missingRectorRulesReporter = $missingRectorRulesReporter;
         $this->applicationFileProcessor = $applicationFileProcessor;
+        $this->fileFactory = $fileFactory;
+        $this->bootstrapFilesIncluder = $bootstrapFilesIncluder;
         $this->processResultFactory = $processResultFactory;
+        $this->nodeScopeResolver = $nodeScopeResolver;
         $this->dynamicSourceLocatorDecorator = $dynamicSourceLocatorDecorator;
+        $this->missedRectorDueVersionChecker = $missedRectorDueVersionChecker;
         $this->emptyConfigurableRectorChecker = $emptyConfigurableRectorChecker;
         $this->outputFormatterCollector = $outputFormatterCollector;
-        $this->rectorOutputStyle = $rectorOutputStyle;
-        $this->memoryLimiter = $memoryLimiter;
+        $this->symfonyStyle = $symfonyStyle;
+        $this->rectors = $rectors;
         parent::__construct();
     }
     protected function configure() : void
     {
-        $this->setName('process');
         $this->setDescription('Upgrades or refactors source code with provided rectors');
+        $names = $this->outputFormatterCollector->getNames();
+        $description = \sprintf('Select output format: "%s".', \implode('", "', $names));
+        $this->addOption(\Rector\Core\Configuration\Option::OUTPUT_FORMAT, \Rector\Core\Configuration\Option::OUTPUT_FORMAT_SHORT, \RectorPrefix20211221\Symfony\Component\Console\Input\InputOption::VALUE_OPTIONAL, $description, \Rector\ChangesReporting\Output\ConsoleOutputFormatter::NAME);
         parent::configure();
     }
-    protected function execute(InputInterface $input, OutputInterface $output) : int
+    protected function execute(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output) : int
     {
-        // missing config? add it :)
-        if (!$this->configInitializer->areSomeRectorsLoaded()) {
-            $this->configInitializer->createConfig(\getcwd());
-            return self::SUCCESS;
+        $exitCode = $this->missingRectorRulesReporter->reportIfMissing();
+        if ($exitCode !== null) {
+            return $exitCode;
         }
         $configuration = $this->configurationFactory->createFromInput($input);
-        $this->memoryLimiter->adjust($configuration);
         // disable console output in case of json output formatter
-        if ($configuration->getOutputFormat() === JsonOutputFormatter::NAME) {
-            $this->rectorOutputStyle->setVerbosity(OutputInterface::VERBOSITY_QUIET);
+        if ($configuration->getOutputFormat() === \Rector\ChangesReporting\Output\JsonOutputFormatter::NAME) {
+            $this->symfonyStyle->setVerbosity(\RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_QUIET);
         }
+        // register autoloaded and included files
+        $this->bootstrapFilesIncluder->includeBootstrapFiles();
         $this->additionalAutoloader->autoloadInput($input);
         $this->additionalAutoloader->autoloadPaths();
         $paths = $configuration->getPaths();
-        // 1. add files and directories to static locator
+        // 0. add files and directories to static locator
         $this->dynamicSourceLocatorDecorator->addPaths($paths);
+        // 1. inform user about non-runnable rules
+        $this->missedRectorDueVersionChecker->check($this->rectors);
         // 2. inform user about registering configurable rule without configuration
         $this->emptyConfigurableRectorChecker->check();
+        // 3. collect all files from files+dirs provided paths
+        $files = $this->fileFactory->createFromPaths($paths, $configuration);
+        // 4. PHPStan has to know about all files too
+        $this->configurePHPStanNodeScopeResolver($files);
         // MAIN PHASE
-        // 3. run Rector
-        $systemErrorsAndFileDiffs = $this->applicationFileProcessor->run($configuration, $input);
+        // 5. run Rector
+        $systemErrorsAndFileDiffs = $this->applicationFileProcessor->run($files, $configuration);
         // REPORTING PHASE
-        // 4. reporting phase
+        // 6. reporting phase
         // report diffs and errors
         $outputFormat = $configuration->getOutputFormat();
         $outputFormatter = $this->outputFormatterCollector->getByName($outputFormat);
         $processResult = $this->processResultFactory->create($systemErrorsAndFileDiffs);
         $outputFormatter->report($processResult, $configuration);
         // invalidate affected files
-        $this->invalidateCacheForChangedAndErroredFiles($processResult);
+        $this->invalidateCacheChangedFiles($processResult);
         return $this->resolveReturnCode($processResult, $configuration);
     }
-    protected function initialize(InputInterface $input, OutputInterface $output) : void
+    protected function initialize(\RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface $input, \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output) : void
     {
         $application = $this->getApplication();
-        if (!$application instanceof Application) {
-            throw new ShouldNotHappenException();
+        if (!$application instanceof \RectorPrefix20211221\Symfony\Component\Console\Application) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException();
         }
-        $optionDebug = (bool) $input->getOption(Option::DEBUG);
+        $optionDebug = (bool) $input->getOption(\Rector\Core\Configuration\Option::DEBUG);
         if ($optionDebug) {
             $application->setCatchExceptions(\false);
         }
         // clear cache
-        $optionClearCache = (bool) $input->getOption(Option::CLEAR_CACHE);
+        $optionClearCache = (bool) $input->getOption(\Rector\Core\Configuration\Option::CLEAR_CACHE);
         if ($optionDebug || $optionClearCache) {
             $this->changedFilesDetector->clear();
         }
     }
-    private function invalidateCacheForChangedAndErroredFiles(ProcessResult $processResult) : void
+    private function invalidateCacheChangedFiles(\Rector\Core\ValueObject\ProcessResult $processResult) : void
     {
-        foreach ($processResult->getChangedFilePaths() as $changedFilePath) {
-            $this->changedFilesDetector->invalidateFile($changedFilePath);
-        }
-        foreach ($processResult->getErrors() as $systemError) {
-            $errorFile = $systemError->getFile();
-            if (!\is_string($errorFile)) {
-                continue;
-            }
-            $this->changedFilesDetector->invalidateFile($errorFile);
+        foreach ($processResult->getChangedFileInfos() as $changedFileInfo) {
+            $this->changedFilesDetector->invalidateFile($changedFileInfo);
         }
     }
-    /**
-     * @return ExitCode::*
-     */
-    private function resolveReturnCode(ProcessResult $processResult, Configuration $configuration) : int
+    private function resolveReturnCode(\Rector\Core\ValueObject\ProcessResult $processResult, \Rector\Core\ValueObject\Configuration $configuration) : int
     {
-        // some system errors were found → fail
+        // some errors were found → fail
         if ($processResult->getErrors() !== []) {
-            return ExitCode::FAILURE;
+            return \RectorPrefix20211221\Symfony\Component\Console\Command\Command::FAILURE;
         }
         // inverse error code for CI dry-run
         if (!$configuration->isDryRun()) {
-            return ExitCode::SUCCESS;
+            return \RectorPrefix20211221\Symfony\Component\Console\Command\Command::SUCCESS;
         }
-        if ($processResult->getFileDiffs() !== []) {
-            return ExitCode::CHANGED_CODE;
+        return $processResult->getFileDiffs() === [] ? \RectorPrefix20211221\Symfony\Component\Console\Command\Command::SUCCESS : \RectorPrefix20211221\Symfony\Component\Console\Command\Command::FAILURE;
+    }
+    /**
+     * @param File[] $files
+     */
+    private function configurePHPStanNodeScopeResolver(array $files) : void
+    {
+        $filePaths = $this->resolvePhpFilePaths($files);
+        $this->nodeScopeResolver->setAnalysedFiles($filePaths);
+    }
+    /**
+     * @param File[] $files
+     * @return string[]
+     */
+    private function resolvePhpFilePaths(array $files) : array
+    {
+        $filePaths = [];
+        foreach ($files as $file) {
+            $smartFileInfo = $file->getSmartFileInfo();
+            $pathName = $smartFileInfo->getPathname();
+            if (\substr_compare($pathName, '.php', -\strlen('.php')) === 0) {
+                $filePaths[] = $pathName;
+            }
         }
-        return ExitCode::SUCCESS;
+        return $filePaths;
     }
 }

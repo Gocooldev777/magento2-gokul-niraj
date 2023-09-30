@@ -17,7 +17,7 @@ define([
         $inputEl.on('blur', function () {
             var inputVal = parseInt($inputEl.val(), 10);
 
-            if (inputVal < 256000) {
+            if (256000 > inputVal) {
                 confirm({
                     title: $t(config.modalTitleText),
                     content: $t(config.modalContentBody),

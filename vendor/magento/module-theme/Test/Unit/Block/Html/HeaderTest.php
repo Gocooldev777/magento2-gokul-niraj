@@ -14,7 +14,6 @@ use Magento\Store\Model\ScopeInterface;
 use Magento\Theme\Block\Html\Header;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Magento\Framework\Escaper;
 
 class HeaderTest extends TestCase
 {
@@ -28,11 +27,6 @@ class HeaderTest extends TestCase
      */
     protected $scopeConfig;
 
-    /**
-     * @var Escaper|MockObject
-     */
-    private $escaper;
-
     protected function setUp(): void
     {
         $context = $this->getMockBuilder(Context::class)
@@ -44,13 +38,10 @@ class HeaderTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
         $context->expects($this->once())->method('getScopeConfig')->willReturn($this->scopeConfig);
-        $this->escaper = $this->createPartialMock(Escaper::class, ['escapeQuote']);
+
         $this->unit = (new ObjectManager($this))->getObject(
             Header::class,
-            [
-               'context' => $context,
-               'escaper' => $this->escaper
-            ]
+            ['context' => $context]
         );
     }
 
@@ -58,11 +49,6 @@ class HeaderTest extends TestCase
     {
         $this->scopeConfig->expects($this->once())->method('getValue')
             ->with('design/header/welcome', ScopeInterface::SCOPE_STORE)
-            ->willReturn('Welcome Message');
-
-        $this->escaper->expects($this->once())
-            ->method('escapeQuote')
-            ->with('Welcome Message', true)
             ->willReturn('Welcome Message');
 
         $this->assertEquals('Welcome Message', $this->unit->getWelcome());

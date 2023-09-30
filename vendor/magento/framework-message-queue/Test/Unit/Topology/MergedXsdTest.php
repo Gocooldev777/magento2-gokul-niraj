@@ -44,9 +44,7 @@ class MergedXsdTest extends TestCase
         $actualErrors = [];
         $actualResult = $dom->validate($this->schemaFile, $actualErrors);
         $this->assertEquals(empty($expectedErrors), $actualResult, "Validation result is invalid.");
-        foreach ($expectedErrors as $error) {
-            $this->assertContains($error, $actualErrors, "Validation errors does not match.");
-        }
+        $this->assertEquals($expectedErrors, $actualErrors, "Validation errors does not match.");
     }
 
     /**
@@ -105,7 +103,8 @@ class MergedXsdTest extends TestCase
                     </exchange>
                 </config>',
                 [
-                    "Element 'binding', attribute 'destinationType': [facet 'enumeration'] The value 'topic' is not an element of the set {'queue'}."
+                    "Element 'binding', attribute 'destinationType': [facet 'enumeration'] The value 'topic' is not an element of the set {'queue'}.",
+                    "Element 'binding', attribute 'destinationType': 'topic' is not a valid value of the atomic type 'destinationType'."
                 ],
             ],
             'invalid-exchange-type-binding' => [
@@ -115,15 +114,19 @@ class MergedXsdTest extends TestCase
                     </exchange>
                 </config>',
                 [
-                    "Element 'exchange', attribute 'type': [facet 'enumeration'] The value 'exchange' is not an element of the set {'topic'}."
+                    "Element 'exchange', attribute 'type': [facet 'enumeration'] The value 'exchange' is not an element of the set {'topic'}.",
+                    "Element 'exchange', attribute 'type': 'exchange' is not a valid value of the atomic type 'exchangeType'."
                 ],
             ],
             'missed-required-attributes' => [
                 '<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/topology.xsd">
                         <exchange name="ex01" type="topic" />
-                        <exchange name="ex02" connection="amqp" />
+                        <exchange name="ex02" connection="amqp" />                        
                 </config>',
-                [],
+                [
+                    "Element 'exchange': The attribute 'connection' is required but missing.",
+                    "Element 'exchange': The attribute 'type' is required but missing."
+                ],
             ],
         ];
         // @codingStandardsIgnoreEnd

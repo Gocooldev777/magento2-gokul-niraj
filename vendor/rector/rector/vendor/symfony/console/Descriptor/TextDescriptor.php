@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Descriptor;
+namespace RectorPrefix20211221\Symfony\Component\Console\Descriptor;
 
-use RectorPrefix202304\Symfony\Component\Console\Application;
-use RectorPrefix202304\Symfony\Component\Console\Command\Command;
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatter;
-use RectorPrefix202304\Symfony\Component\Console\Helper\Helper;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputArgument;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix20211221\Symfony\Component\Console\Application;
+use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter;
+use RectorPrefix20211221\Symfony\Component\Console\Helper\Helper;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputOption;
 /**
  * Text descriptor.
  *
@@ -24,16 +24,19 @@ use RectorPrefix202304\Symfony\Component\Console\Input\InputOption;
  *
  * @internal
  */
-class TextDescriptor extends Descriptor
+class TextDescriptor extends \RectorPrefix20211221\Symfony\Component\Console\Descriptor\Descriptor
 {
-    protected function describeInputArgument(InputArgument $argument, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputArgument(\RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument $argument, array $options = [])
     {
         if (null !== $argument->getDefault() && (!\is_array($argument->getDefault()) || \count($argument->getDefault()))) {
             $default = \sprintf('<comment> [default: %s]</comment>', $this->formatDefaultValue($argument->getDefault()));
         } else {
             $default = '';
         }
-        $totalWidth = $options['total_width'] ?? Helper::width($argument->getName());
+        $totalWidth = $options['total_width'] ?? \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($argument->getName());
         $spacingWidth = $totalWidth - \strlen($argument->getName());
         $this->writeText(\sprintf(
             '  <info>%s</info>  %s%s%s',
@@ -44,7 +47,10 @@ class TextDescriptor extends Descriptor
             $default
         ), $options);
     }
-    protected function describeInputOption(InputOption $option, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputOption(\RectorPrefix20211221\Symfony\Component\Console\Input\InputOption $option, array $options = [])
     {
         if ($option->acceptValue() && null !== $option->getDefault() && (!\is_array($option->getDefault()) || \count($option->getDefault()))) {
             $default = \sprintf('<comment> [default: %s]</comment>', $this->formatDefaultValue($option->getDefault()));
@@ -60,7 +66,7 @@ class TextDescriptor extends Descriptor
         }
         $totalWidth = $options['total_width'] ?? $this->calculateTotalWidthForOptions([$option]);
         $synopsis = \sprintf('%s%s', $option->getShortcut() ? \sprintf('-%s, ', $option->getShortcut()) : '    ', \sprintf($option->isNegatable() ? '--%1$s|--no-%1$s' : '--%1$s%2$s', $option->getName(), $value));
-        $spacingWidth = $totalWidth - Helper::width($synopsis);
+        $spacingWidth = $totalWidth - \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($synopsis);
         $this->writeText(\sprintf(
             '  <info>%s</info>  %s%s%s%s',
             $synopsis,
@@ -71,11 +77,14 @@ class TextDescriptor extends Descriptor
             $option->isArray() ? '<comment> (multiple values allowed)</comment>' : ''
         ), $options);
     }
-    protected function describeInputDefinition(InputDefinition $definition, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputDefinition(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition, array $options = [])
     {
         $totalWidth = $this->calculateTotalWidthForOptions($definition->getOptions());
         foreach ($definition->getArguments() as $argument) {
-            $totalWidth = \max($totalWidth, Helper::width($argument->getName()));
+            $totalWidth = \max($totalWidth, \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($argument->getName()));
         }
         if ($definition->getArguments()) {
             $this->writeText('<comment>Arguments:</comment>', $options);
@@ -105,7 +114,10 @@ class TextDescriptor extends Descriptor
             }
         }
     }
-    protected function describeCommand(Command $command, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeCommand(\RectorPrefix20211221\Symfony\Component\Console\Command\Command $command, array $options = [])
     {
         $command->mergeApplicationDefinition(\false);
         if ($description = $command->getDescription()) {
@@ -117,7 +129,7 @@ class TextDescriptor extends Descriptor
         $this->writeText('<comment>Usage:</comment>', $options);
         foreach (\array_merge([$command->getSynopsis(\true)], $command->getAliases(), $command->getUsages()) as $usage) {
             $this->writeText("\n");
-            $this->writeText('  ' . OutputFormatter::escape($usage), $options);
+            $this->writeText('  ' . \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter::escape($usage), $options);
         }
         $this->writeText("\n");
         $definition = $command->getDefinition();
@@ -135,10 +147,13 @@ class TextDescriptor extends Descriptor
             $this->writeText("\n");
         }
     }
-    protected function describeApplication(Application $application, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeApplication(\RectorPrefix20211221\Symfony\Component\Console\Application $application, array $options = [])
     {
         $describedNamespace = $options['namespace'] ?? null;
-        $description = new ApplicationDescription($application, $describedNamespace);
+        $description = new \RectorPrefix20211221\Symfony\Component\Console\Descriptor\ApplicationDescription($application, $describedNamespace);
         if (isset($options['raw_text']) && $options['raw_text']) {
             $width = $this->getColumnWidth($description->getCommands());
             foreach ($description->getCommands() as $command) {
@@ -151,7 +166,7 @@ class TextDescriptor extends Descriptor
             }
             $this->writeText("<comment>Usage:</comment>\n", $options);
             $this->writeText("  command [options] [arguments]\n\n", $options);
-            $this->describeInputDefinition(new InputDefinition($application->getDefinition()->getOptions()), $options);
+            $this->describeInputDefinition(new \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition($application->getDefinition()->getOptions()), $options);
             $this->writeText("\n");
             $this->writeText("\n");
             $commands = $description->getCommands();
@@ -179,13 +194,13 @@ class TextDescriptor extends Descriptor
                 if (!$namespace['commands']) {
                     continue;
                 }
-                if (!$describedNamespace && ApplicationDescription::GLOBAL_NAMESPACE !== $namespace['id']) {
+                if (!$describedNamespace && \RectorPrefix20211221\Symfony\Component\Console\Descriptor\ApplicationDescription::GLOBAL_NAMESPACE !== $namespace['id']) {
                     $this->writeText("\n");
                     $this->writeText(' <comment>' . $namespace['id'] . '</comment>', $options);
                 }
                 foreach ($namespace['commands'] as $name) {
                     $this->writeText("\n");
-                    $spacingWidth = $width - Helper::width($name);
+                    $spacingWidth = $width - \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($name);
                     $command = $commands[$name];
                     $commandAliases = $name === $command->getName() ? $this->getCommandAliasesText($command) : '';
                     $this->writeText(\sprintf('  <info>%s</info>%s%s', $name, \str_repeat(' ', $spacingWidth), $commandAliases . $command->getDescription()), $options);
@@ -194,6 +209,9 @@ class TextDescriptor extends Descriptor
             $this->writeText("\n");
         }
     }
+    /**
+     * {@inheritdoc}
+     */
     private function writeText(string $content, array $options = [])
     {
         $this->write(isset($options['raw_text']) && $options['raw_text'] ? \strip_tags($content) : $content, isset($options['raw_output']) ? !$options['raw_output'] : \true);
@@ -201,7 +219,7 @@ class TextDescriptor extends Descriptor
     /**
      * Formats command aliases to show them in the command description.
      */
-    private function getCommandAliasesText(Command $command) : string
+    private function getCommandAliasesText(\RectorPrefix20211221\Symfony\Component\Console\Command\Command $command) : string
     {
         $text = '';
         $aliases = $command->getAliases();
@@ -220,11 +238,11 @@ class TextDescriptor extends Descriptor
             return 'INF';
         }
         if (\is_string($default)) {
-            $default = OutputFormatter::escape($default);
+            $default = \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter::escape($default);
         } elseif (\is_array($default)) {
             foreach ($default as $key => $value) {
                 if (\is_string($value)) {
-                    $default[$key] = OutputFormatter::escape($value);
+                    $default[$key] = \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter::escape($value);
                 }
             }
         }
@@ -237,13 +255,13 @@ class TextDescriptor extends Descriptor
     {
         $widths = [];
         foreach ($commands as $command) {
-            if ($command instanceof Command) {
-                $widths[] = Helper::width($command->getName());
+            if ($command instanceof \RectorPrefix20211221\Symfony\Component\Console\Command\Command) {
+                $widths[] = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($command->getName());
                 foreach ($command->getAliases() as $alias) {
-                    $widths[] = Helper::width($alias);
+                    $widths[] = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($alias);
                 }
             } else {
-                $widths[] = Helper::width($command);
+                $widths[] = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($command);
             }
         }
         return $widths ? \max($widths) + 2 : 0;
@@ -256,12 +274,12 @@ class TextDescriptor extends Descriptor
         $totalWidth = 0;
         foreach ($options as $option) {
             // "-" + shortcut + ", --" + name
-            $nameLength = 1 + \max(Helper::width($option->getShortcut()), 1) + 4 + Helper::width($option->getName());
+            $nameLength = 1 + \max(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($option->getShortcut()), 1) + 4 + \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($option->getName());
             if ($option->isNegatable()) {
-                $nameLength += 6 + Helper::width($option->getName());
+                $nameLength += 6 + \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($option->getName());
                 // |--no- + name
             } elseif ($option->acceptValue()) {
-                $valueLength = 1 + Helper::width($option->getName());
+                $valueLength = 1 + \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($option->getName());
                 // = + value
                 $valueLength += $option->isValueOptional() ? 2 : 0;
                 // [ + ]

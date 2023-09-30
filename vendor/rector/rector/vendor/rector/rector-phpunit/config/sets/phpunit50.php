@@ -1,10 +1,11 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
 use Rector\PHPUnit\Rector\StaticCall\GetMockRector;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->rule(GetMockRector::class);
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\PHPUnit\Rector\StaticCall\GetMockRector::class);
 };

@@ -13,7 +13,6 @@ class DataSize
 {
     /**
      * Converts a size value to bytes
-     *
      * Example input: 100 (bytes), 10K (kilobytes), 13M (megabytes), 2G (gigabytes)
      *
      * @param string $size
@@ -21,7 +20,7 @@ class DataSize
      */
     public function convertSizeToBytes($size)
     {
-        if ($size && !is_numeric($size)) {
+        if (!is_numeric($size)) {
             $type = strtoupper(substr($size, -1));
             $size = (int)$size;
 

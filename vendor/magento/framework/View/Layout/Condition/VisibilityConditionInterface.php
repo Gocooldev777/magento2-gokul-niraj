@@ -3,12 +3,10 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Framework\View\Layout\Condition;
 
 /**
- * Interface VisibilityConditionInterface
+ * Class VisibilityConditionInterface
  *
  * Introduces family of visibility conditions for layout elements.
  * By using this interface a developer can specify dynamic rule for ui component visibility.
@@ -25,8 +23,6 @@ namespace Magento\Framework\View\Layout\Condition;
  * </uiComponent>
  *
  * "visibilityCondition" just another optional child element of ui component declaration
- *
- * @api
  */
 interface VisibilityConditionInterface
 {

@@ -12,12 +12,12 @@ use Rector\PHPUnit\NodeFactory\ExpectExceptionMethodCallFactory;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @changelog https://thephp.cc/news/2016/02/questioning-phpunit-best-practices
- * @changelog https://github.com/sebastianbergmann/phpunit/commit/17c09b33ac5d9cad1459ace0ae7b1f942d1e9afd
+ * @see https://thephp.cc/news/2016/02/questioning-phpunit-best-practices
+ * @see https://github.com/sebastianbergmann/phpunit/commit/17c09b33ac5d9cad1459ace0ae7b1f942d1e9afd
  *
  * @see \Rector\PHPUnit\Tests\Rector\ClassMethod\ExceptionAnnotationRector\ExceptionAnnotationRectorTest
  */
-final class ExceptionAnnotationRector extends AbstractRector
+final class ExceptionAnnotationRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * In reversed order, which they should be called in code.
@@ -26,29 +26,26 @@ final class ExceptionAnnotationRector extends AbstractRector
      */
     private const ANNOTATION_TO_METHOD = ['expectedExceptionMessageRegExp' => 'expectExceptionMessageRegExp', 'expectedExceptionMessage' => 'expectExceptionMessage', 'expectedExceptionCode' => 'expectExceptionCode', 'expectedException' => 'expectException'];
     /**
-     * @readonly
      * @var \Rector\PHPUnit\NodeFactory\ExpectExceptionMethodCallFactory
      */
     private $expectExceptionMethodCallFactory;
     /**
-     * @readonly
      * @var \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTagRemover
      */
     private $phpDocTagRemover;
     /**
-     * @readonly
      * @var \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer
      */
     private $testsNodeAnalyzer;
-    public function __construct(ExpectExceptionMethodCallFactory $expectExceptionMethodCallFactory, PhpDocTagRemover $phpDocTagRemover, TestsNodeAnalyzer $testsNodeAnalyzer)
+    public function __construct(\Rector\PHPUnit\NodeFactory\ExpectExceptionMethodCallFactory $expectExceptionMethodCallFactory, \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTagRemover $phpDocTagRemover, \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer $testsNodeAnalyzer)
     {
         $this->expectExceptionMethodCallFactory = $expectExceptionMethodCallFactory;
         $this->phpDocTagRemover = $phpDocTagRemover;
         $this->testsNodeAnalyzer = $testsNodeAnalyzer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Changes `@expectedException annotations to `expectException*()` methods', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes `@expectedException annotations to `expectException*()` methods', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 /**
  * @expectedException Exception
  * @expectedExceptionMessage Message
@@ -73,18 +70,17 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (!$this->testsNodeAnalyzer->isInTestClass($node)) {
             return null;
         }
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
-        $hasChanged = \false;
         foreach (self::ANNOTATION_TO_METHOD as $annotationName => $methodName) {
             if (!$phpDocInfo->hasByName($annotationName)) {
                 continue;
@@ -92,10 +88,6 @@ CODE_SAMPLE
             $methodCallExpressions = $this->expectExceptionMethodCallFactory->createFromTagValueNodes($phpDocInfo->getTagsByName($annotationName), $methodName);
             $node->stmts = \array_merge($methodCallExpressions, (array) $node->stmts);
             $this->phpDocTagRemover->removeByName($phpDocInfo, $annotationName);
-            $hasChanged = \true;
-        }
-        if (!$hasChanged) {
-            return null;
         }
         return $node;
     }

@@ -7,9 +7,6 @@
 namespace Magento\Catalog\Model\Product\Gallery;
 
 use Magento\Catalog\Api\Data\ProductAttributeMediaGalleryEntryInterface;
-use Magento\Catalog\Api\Data\ProductInterfaceFactory;
-use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\StateException;
@@ -35,34 +32,17 @@ class GalleryManagement implements \Magento\Catalog\Api\ProductAttributeMediaGal
     protected $contentValidator;
 
     /**
-     * @var ProductInterfaceFactory
-     */
-    private $productInterfaceFactory;
-
-    /**
-     * @var DeleteValidator
-     */
-    private $deleteValidator;
-
-    /**
-     * @param ProductRepositoryInterface $productRepository
+     * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
      * @param ImageContentValidatorInterface $contentValidator
-     * @param ProductInterfaceFactory|null $productInterfaceFactory
-     * @param DeleteValidator|null $deleteValidator
+     *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
-        ProductRepositoryInterface $productRepository,
-        ImageContentValidatorInterface $contentValidator,
-        ?ProductInterfaceFactory $productInterfaceFactory = null,
-        ?DeleteValidator $deleteValidator = null
+        \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
+        ImageContentValidatorInterface $contentValidator
     ) {
         $this->productRepository = $productRepository;
         $this->contentValidator = $contentValidator;
-        $this->productInterfaceFactory = $productInterfaceFactory
-            ?? ObjectManager::getInstance()->get(ProductInterfaceFactory::class);
-        $this->deleteValidator = $deleteValidator
-            ?? ObjectManager::getInstance()->get(DeleteValidator::class);
     }
 
     /**
@@ -92,8 +72,6 @@ class GalleryManagement implements \Magento\Catalog\Api\ProductAttributeMediaGal
             }
             $existingMediaGalleryEntries[] = $entry;
         }
-        $product = $this->productInterfaceFactory->create();
-        $product->setSku($sku);
         $product->setMediaGalleryEntries($existingMediaGalleryEntries);
         try {
             $product = $this->productRepository->save($product);
@@ -141,8 +119,6 @@ class GalleryManagement implements \Magento\Catalog\Api\ProductAttributeMediaGal
                 __('No image with the provided ID was found. Verify the ID and try again.')
             );
         }
-        $product = $this->productInterfaceFactory->create();
-        $product->setSku($sku);
         $product->setMediaGalleryEntries($existingMediaGalleryEntries);
 
         try {
@@ -169,10 +145,6 @@ class GalleryManagement implements \Magento\Catalog\Api\ProductAttributeMediaGal
         foreach ($existingMediaGalleryEntries as $key => $entry) {
             if ($entry->getId() == $entryId) {
                 unset($existingMediaGalleryEntries[$key]);
-                $errors = $this->deleteValidator->validate($product, $entry->getFile());
-                if (!empty($errors)) {
-                    throw new StateException($errors[0]);
-                }
                 $found = true;
                 break;
             }
@@ -182,8 +154,6 @@ class GalleryManagement implements \Magento\Catalog\Api\ProductAttributeMediaGal
                 __('No image with the provided ID was found. Verify the ID and try again.')
             );
         }
-        $product = $this->productInterfaceFactory->create();
-        $product->setSku($sku);
         $product->setMediaGalleryEntries($existingMediaGalleryEntries);
         $this->productRepository->save($product);
         return true;

@@ -1,7 +1,7 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304\Doctrine\Inflector\Rules;
+namespace RectorPrefix20211221\Doctrine\Inflector\Rules;
 
 class Ruleset
 {
@@ -11,21 +11,21 @@ class Ruleset
     private $uninflected;
     /** @var Substitutions */
     private $irregular;
-    public function __construct(Transformations $regular, Patterns $uninflected, Substitutions $irregular)
+    public function __construct(\RectorPrefix20211221\Doctrine\Inflector\Rules\Transformations $regular, \RectorPrefix20211221\Doctrine\Inflector\Rules\Patterns $uninflected, \RectorPrefix20211221\Doctrine\Inflector\Rules\Substitutions $irregular)
     {
         $this->regular = $regular;
         $this->uninflected = $uninflected;
         $this->irregular = $irregular;
     }
-    public function getRegular() : Transformations
+    public function getRegular() : \RectorPrefix20211221\Doctrine\Inflector\Rules\Transformations
     {
         return $this->regular;
     }
-    public function getUninflected() : Patterns
+    public function getUninflected() : \RectorPrefix20211221\Doctrine\Inflector\Rules\Patterns
     {
         return $this->uninflected;
     }
-    public function getIrregular() : Substitutions
+    public function getIrregular() : \RectorPrefix20211221\Doctrine\Inflector\Rules\Substitutions
     {
         return $this->irregular;
     }

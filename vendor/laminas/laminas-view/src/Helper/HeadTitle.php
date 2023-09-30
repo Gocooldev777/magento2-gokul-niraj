@@ -1,13 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
 use Laminas\View\Exception;
-
-use function implode;
-use function in_array;
 
 /**
  * Helper for setting and retrieving title element for HTML head.
@@ -21,29 +16,30 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
     /**
      * Default title rendering order (i.e. order in which each title attached)
      *
-     * @var string|null
+     * @var string
      */
-    protected $defaultAttachOrder;
+    protected $defaultAttachOrder = null;
 
     /**
      * Retrieve placeholder for title element and optionally set state
      *
-     * @param  string|null $title
-     * @param  string|null $setType
+     * @param  string $title
+     * @param  string $setType
      * @return HeadTitle
      */
     public function __invoke($title = null, $setType = null)
     {
         if (null === $setType) {
-            $setType = $this->getDefaultAttachOrder()
-                ?? Placeholder\Container\AbstractContainer::APPEND;
+            $setType = (null === $this->getDefaultAttachOrder())
+                     ? Placeholder\Container\AbstractContainer::APPEND
+                     : $this->getDefaultAttachOrder();
         }
 
         $title = (string) $title;
         if ($title !== '') {
-            if ($setType === Placeholder\Container\AbstractContainer::SET) {
+            if ($setType == Placeholder\Container\AbstractContainer::SET) {
                 $this->set($title);
-            } elseif ($setType === Placeholder\Container\AbstractContainer::PREPEND) {
+            } elseif ($setType == Placeholder\Container\AbstractContainer::PREPEND) {
                 $this->prepend($title);
             } else {
                 $this->append($title);
@@ -61,7 +57,7 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
      */
     public function toString($indent = null)
     {
-        $indent = null !== $indent
+        $indent = (null !== $indent)
                 ? $this->getWhitespace($indent)
                 : $this->getIndent();
 
@@ -85,11 +81,11 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
         }
 
         $separator = $this->getSeparator();
-        $output    = '';
+        $output = '';
 
         $prefix = $this->getPrefix();
         if ($prefix) {
-            $output .= $prefix;
+            $output  .= $prefix;
         }
 
         $output .= implode($separator, $items);
@@ -99,7 +95,7 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
             $output .= $postfix;
         }
 
-        $output = $this->autoEscape ? $this->escape($output) : $output;
+        $output = ($this->autoEscape) ? $this->escape($output) : $output;
 
         return $output;
     }
@@ -113,13 +109,11 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
      */
     public function setDefaultAttachOrder($setType)
     {
-        if (
-            ! in_array($setType, [
-                Placeholder\Container\AbstractContainer::APPEND,
-                Placeholder\Container\AbstractContainer::SET,
-                Placeholder\Container\AbstractContainer::PREPEND,
-            ], true)
-        ) {
+        if (! in_array($setType, [
+            Placeholder\Container\AbstractContainer::APPEND,
+            Placeholder\Container\AbstractContainer::SET,
+            Placeholder\Container\AbstractContainer::PREPEND
+        ])) {
             throw new Exception\DomainException(
                 "You must use a valid attach order: 'PREPEND', 'APPEND' or 'SET'"
             );
@@ -132,12 +126,13 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
     /**
      * Get the default attach order, if any.
      *
-     * @return string|null
+     * @return mixed
      */
     public function getDefaultAttachOrder()
     {
         return $this->defaultAttachOrder;
     }
+
 
     /**
      * Create and return a callback for normalizing title items.
@@ -151,11 +146,15 @@ class HeadTitle extends Placeholder\Container\AbstractStandalone
     private function getTitleItemCallback()
     {
         if (! $this->isTranslatorEnabled() || ! $this->hasTranslator()) {
-            return static fn($item) => $item;
+            return function ($item) {
+                return $item;
+            };
         }
 
         $translator = $this->getTranslator();
         $textDomain = $this->getTranslatorTextDomain();
-        return static fn($item) => $translator->translate($item, $textDomain);
+        return function ($item) use ($translator, $textDomain) {
+            return $translator->translate($item, $textDomain);
+        };
     }
 }

@@ -12,8 +12,6 @@ use Magento\Framework\Api\Search\SearchCriteriaBuilder;
 
 /**
  * Provides extension point to add additional filters to search criteria.
- *
- * @api
  */
 interface AddFilterInterface
 {

@@ -17,30 +17,28 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Symfony\Tests\Rector\MethodCall\StringFormTypeToClassRector\StringFormTypeToClassRectorTest
  */
-final class StringFormTypeToClassRector extends AbstractRector
+final class StringFormTypeToClassRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var string
      */
-    private const DESCRIPTION = 'Turns string Form Type references to their CONSTANT alternatives in FormTypes in Form in Symfony. To enable custom types, add link to your container XML dump in "$rectorConfig->symfonyContainerXml(...)"';
+    private const DESCRIPTION = 'Turns string Form Type references to their CONSTANT alternatives in FormTypes in Form in Symfony. To enable custom types, add link to your container XML dump in "$parameters->set(Option::SYMFONY_CONTAINER_XML_PATH_PARAMETER, ...);"';
     /**
-     * @readonly
      * @var \Rector\Symfony\NodeAnalyzer\FormAddMethodCallAnalyzer
      */
     private $formAddMethodCallAnalyzer;
     /**
-     * @readonly
      * @var \Rector\Symfony\FormHelper\FormTypeStringToTypeProvider
      */
     private $formTypeStringToTypeProvider;
-    public function __construct(FormAddMethodCallAnalyzer $formAddMethodCallAnalyzer, FormTypeStringToTypeProvider $formTypeStringToTypeProvider)
+    public function __construct(\Rector\Symfony\NodeAnalyzer\FormAddMethodCallAnalyzer $formAddMethodCallAnalyzer, \Rector\Symfony\FormHelper\FormTypeStringToTypeProvider $formTypeStringToTypeProvider)
     {
         $this->formAddMethodCallAnalyzer = $formAddMethodCallAnalyzer;
         $this->formTypeStringToTypeProvider = $formTypeStringToTypeProvider;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition(self::DESCRIPTION, [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition(self::DESCRIPTION, [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 $formBuilder = new Symfony\Component\Form\FormBuilder;
 $formBuilder->add('name', 'form.type.text');
 CODE_SAMPLE
@@ -55,22 +53,22 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [MethodCall::class];
+        return [\PhpParser\Node\Expr\MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (!$this->formAddMethodCallAnalyzer->isMatching($node)) {
             return null;
         }
         // not a string
         $firstArg = $node->args[1];
-        if (!$firstArg instanceof Arg) {
+        if (!$firstArg instanceof \PhpParser\Node\Arg) {
             return null;
         }
-        if (!$firstArg->value instanceof String_) {
+        if (!$firstArg->value instanceof \PhpParser\Node\Scalar\String_) {
             return null;
         }
         /** @var String_ $stringNode */

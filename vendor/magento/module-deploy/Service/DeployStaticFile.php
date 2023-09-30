@@ -6,8 +6,6 @@
 namespace Magento\Deploy\Service;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Exception\FileSystemException;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\File\WriteInterface;
 use Magento\Framework\View\Asset\Minification;
@@ -82,14 +80,11 @@ class DeployStaticFile
     }
 
     /**
-     * Deploy static file
-     *
      * @param string $fileName
      * @param array $params ['area' =>, 'theme' =>, 'locale' =>, 'module' =>]
      * @return string
-     * @throws LocalizedException
      */
-    public function deployFile(string $fileName, array $params = []): string
+    public function deployFile($fileName, array $params = [])
     {
         $params['publish'] = true;
         $asset = $this->assetRepo->createAsset($this->resolveFile($fileName), $params);
@@ -100,14 +95,10 @@ class DeployStaticFile
     }
 
     /**
-     * Delete static file
-     *
      * @param string $path
      * @return void
-     * @throws FileSystemException
-     * phpcs:disable
      */
-    public function deleteFile(string $path)
+    public function deleteFile($path)
     {
         if ($this->pubStaticDir->isExist($path)) {
             $absolutePath = $this->pubStaticDir->getAbsolutePath($path);
@@ -129,10 +120,8 @@ class DeployStaticFile
      * @param string $fileName
      * @param string $filePath
      * @return string|false
-     * @throws FileSystemException
-     * phpcs:enable
      */
-    public function readFile(string $fileName, string $filePath): bool|string
+    public function readFile($fileName, $filePath)
     {
         $fileName = $this->minification->addMinifiedSign($fileName);
         $relativePath = $filePath . DIRECTORY_SEPARATOR . $this->resolveFile($fileName);
@@ -144,13 +133,11 @@ class DeployStaticFile
     }
 
     /**
-     * Open static file
-     *
      * @param string $fileName
      * @param string $filePath
      * @return WriteInterface
      */
-    public function openFile(string $fileName, string $filePath): WriteInterface
+    public function openFile($fileName, $filePath)
     {
         $relativePath = $filePath . DIRECTORY_SEPARATOR . $this->resolveFile($fileName);
         return $this->pubStaticDir->openFile($relativePath, 'w+');
@@ -163,9 +150,8 @@ class DeployStaticFile
      * @param string $filePath
      * @param string $content
      * @return int The number of bytes that were written.
-     * @throws FileSystemException
      */
-    public function writeFile(string $fileName, string $filePath, string $content): int
+    public function writeFile($fileName, $filePath, $content)
     {
         $relativePath = $filePath . DIRECTORY_SEPARATOR . $this->resolveFile($fileName);
         return $this->pubStaticDir->writeFile($relativePath, $content);
@@ -178,9 +164,8 @@ class DeployStaticFile
      * @param string $sourcePath
      * @param string $targetPath
      * @return bool
-     * @throws FileSystemException
      */
-    public function copyFile(string $fileName, string $sourcePath, string $targetPath): bool
+    public function copyFile($fileName, $sourcePath, $targetPath)
     {
         $fileName = $this->minification->addMinifiedSign($fileName);
         return $this->pubStaticDir->copyFile(
@@ -194,10 +179,9 @@ class DeployStaticFile
      *
      * @param string $fileName
      * @param string $filePath
-     * @return bool|string
-     * @throws FileSystemException
+     * @return string
      */
-    public function readTmpFile(string $fileName, string $filePath): bool|string
+    public function readTmpFile($fileName, $filePath)
     {
         $relativePath = $filePath . DIRECTORY_SEPARATOR . $fileName;
         return $this->tmpDir->isFile($relativePath) ? $this->tmpDir->readFile($relativePath) : false;
@@ -210,12 +194,10 @@ class DeployStaticFile
      * @param string $filePath
      * @param string $content
      * @return int The number of bytes that were written.
-     * @throws FileSystemException
      */
-    public function writeTmpFile(string $fileName, string $filePath, string $content): int
+    public function writeTmpFile($fileName, $filePath, $content)
     {
         $relativePath = $filePath . DIRECTORY_SEPARATOR . $this->resolveFile($fileName);
-
         return $this->tmpDir->writeFile($relativePath, $content);
     }
 
@@ -225,12 +207,14 @@ class DeployStaticFile
      * @param string $fileName
      * @return string
      */
-    private function resolveFile(string $fileName): string
+    private function resolveFile($fileName)
     {
-        return str_replace(
+        $compiledFile = str_replace(
             Repository::FILE_ID_SEPARATOR,
             '/',
             $this->fileNameResolver->resolve($fileName)
         );
+
+        return $compiledFile;
     }
 }

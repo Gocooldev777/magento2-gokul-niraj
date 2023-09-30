@@ -16,20 +16,20 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Tests\Php71\Rector\ClassConst\PublicConstantVisibilityRector\PublicConstantVisibilityRectorTest
  */
-final class PublicConstantVisibilityRector extends AbstractRector implements MinPhpVersionInterface
+final class PublicConstantVisibilityRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
 {
     /**
      * @readonly
      * @var \Rector\Privatization\NodeManipulator\VisibilityManipulator
      */
     private $visibilityManipulator;
-    public function __construct(VisibilityManipulator $visibilityManipulator)
+    public function __construct(\Rector\Privatization\NodeManipulator\VisibilityManipulator $visibilityManipulator)
     {
         $this->visibilityManipulator = $visibilityManipulator;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Add explicit public constant visibility.', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add explicit public constant visibility.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     const HEY = 'you';
@@ -48,17 +48,26 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassConst::class];
+        return [\PhpParser\Node\Stmt\ClassConst::class];
     }
     /**
      * @param ClassConst $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        return $this->visibilityManipulator->publicize($node);
+        // already non-public
+        if (!$node->isPublic()) {
+            return null;
+        }
+        // explicitly public
+        if ($node->flags !== 0) {
+            return null;
+        }
+        $this->visibilityManipulator->makePublic($node);
+        return $node;
     }
     public function provideMinPhpVersion() : int
     {
-        return PhpVersionFeature::CONSTANT_VISIBILITY;
+        return \Rector\Core\ValueObject\PhpVersionFeature::CONSTANT_VISIBILITY;
     }
 }

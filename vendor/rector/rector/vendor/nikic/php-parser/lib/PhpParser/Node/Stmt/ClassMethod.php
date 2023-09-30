@@ -5,8 +5,7 @@ namespace PhpParser\Node\Stmt;
 
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-class ClassMethod extends Node\Stmt implements FunctionLike, StmtsAwareInterface
+class ClassMethod extends \PhpParser\Node\Stmt implements \PhpParser\Node\FunctionLike
 {
     /** @var int Flags */
     public $flags;
@@ -22,7 +21,7 @@ class ClassMethod extends Node\Stmt implements FunctionLike, StmtsAwareInterface
     public $stmts;
     /** @var Node\AttributeGroup[] PHP attribute groups */
     public $attrGroups;
-    private static $magicNames = ['__construct' => \true, '__destruct' => \true, '__call' => \true, '__callstatic' => \true, '__get' => \true, '__set' => \true, '__isset' => \true, '__unset' => \true, '__sleep' => \true, '__wakeup' => \true, '__tostring' => \true, '__set_state' => \true, '__clone' => \true, '__invoke' => \true, '__debuginfo' => \true, '__serialize' => \true, '__unserialize' => \true];
+    private static $magicNames = ['__construct' => \true, '__destruct' => \true, '__call' => \true, '__callstatic' => \true, '__get' => \true, '__set' => \true, '__isset' => \true, '__unset' => \true, '__sleep' => \true, '__wakeup' => \true, '__tostring' => \true, '__set_state' => \true, '__clone' => \true, '__invoke' => \true, '__debuginfo' => \true];
     /**
      * Constructs a class method node.
      *
@@ -41,10 +40,10 @@ class ClassMethod extends Node\Stmt implements FunctionLike, StmtsAwareInterface
         $this->attributes = $attributes;
         $this->flags = $subNodes['flags'] ?? $subNodes['type'] ?? 0;
         $this->byRef = $subNodes['byRef'] ?? \false;
-        $this->name = \is_string($name) ? new Node\Identifier($name) : $name;
+        $this->name = \is_string($name) ? new \PhpParser\Node\Identifier($name) : $name;
         $this->params = $subNodes['params'] ?? [];
         $returnType = $subNodes['returnType'] ?? null;
-        $this->returnType = \is_string($returnType) ? new Node\Identifier($returnType) : $returnType;
+        $this->returnType = \is_string($returnType) ? new \PhpParser\Node\Identifier($returnType) : $returnType;
         $this->stmts = \array_key_exists('stmts', $subNodes) ? $subNodes['stmts'] : [];
         $this->attrGroups = $subNodes['attrGroups'] ?? [];
     }

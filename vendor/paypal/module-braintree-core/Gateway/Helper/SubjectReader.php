@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Helper;
@@ -112,24 +112,9 @@ class SubjectReader
     public function readPayPal(Transaction $transaction): array
     {
         if (!isset($transaction->paypal)) {
-            throw new InvalidArgumentException(__('Transaction has not paypal attribute'));
+            throw new InvalidArgumentException('Transaction has\'t paypal attribute');
         }
 
         return $transaction->paypal;
-    }
-
-    /**
-     * Reads Local Payment details from transaction object
-     *
-     * @param Transaction $transaction
-     * @return array
-     */
-    public function readLocalPayment(Transaction $transaction): array
-    {
-        if (!isset($transaction->localPayment)) {
-            throw new InvalidArgumentException(__('Transaction has not localPayment attribute'));
-        }
-
-        return $transaction->localPayment;
     }
 }

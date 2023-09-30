@@ -34,22 +34,12 @@ class DisabledProductOptionPriceModifier implements PriceModifierInterface
     /**
      * @var array
      */
+    private $isBundle = [];
+
+    /**
+     * @var array
+     */
     private $websiteIdsOfProduct = [];
-
-    /**
-     * @var BundleSelection
-     */
-    private BundleSelection $bundleSelection;
-
-    /**
-     * @var Config
-     */
-    private Config $config;
-
-    /**
-     * @var MetadataPool
-     */
-    private MetadataPool $metadataPool;
 
     /**
      * @param ResourceConnection $resourceConnection
@@ -82,12 +72,14 @@ class DisabledProductOptionPriceModifier implements PriceModifierInterface
      */
     public function modifyPrice(IndexTableStructure $priceTable, array $entityIds = []) : void
     {
-        foreach ($this->getBundleIds($entityIds) as $entityId) {
+        foreach ($entityIds as $entityId) {
             $entityId = (int) $entityId;
+            if (!$this->isBundle($entityId)) {
+                continue;
+            }
             foreach ($this->getWebsiteIdsOfProduct($entityId) as $websiteId) {
-                $websiteId = (int) $websiteId;
                 $productIdsDisabledRequired = $this->selectionProductsDisabledRequired
-                    ->getChildProductIds($entityId, $websiteId);
+                    ->getChildProductIds($entityId, (int)$websiteId);
                 if ($productIdsDisabledRequired) {
                     $connection = $this->resourceConnection->getConnection('indexer');
                     $select = $connection->select();
@@ -119,30 +111,31 @@ class DisabledProductOptionPriceModifier implements PriceModifierInterface
             ['product_in_websites' => $this->resourceConnection->getTableName('catalog_product_website')],
             ['website_id']
         )->where('product_in_websites.product_id = ?', $entityId);
-        $this->websiteIdsOfProduct[$entityId] = $connection->fetchCol($select);
-
+        foreach ($connection->fetchCol($select) as $websiteId) {
+            $this->websiteIdsOfProduct[$entityId][] = (int)$websiteId;
+        }
         return $this->websiteIdsOfProduct[$entityId];
     }
 
     /**
-     * Get Bundle Ids
+     * Is product bundle
      *
-     * @param array $entityIds
-     * @return \Traversable
+     * @param int $entityId
+     * @return bool
      */
-    private function getBundleIds(array $entityIds): \Traversable
+    private function isBundle(int $entityId): bool
     {
+        if (isset($this->isBundle[$entityId])) {
+            return $this->isBundle[$entityId];
+        }
         $connection = $this->resourceConnection->getConnection('indexer');
         $select = $connection->select();
         $select->from(
             ['cpe' => $this->resourceConnection->getTableName('catalog_product_entity')],
-            ['entity_id']
-        )->where('cpe.entity_id in ( ? )', !empty($entityIds) ? $entityIds : [0], \Zend_Db::INT_TYPE)
-        ->where('type_id = ?', Type::TYPE_BUNDLE);
-
-        $statement = $select->query();
-        while ($id = $statement->fetchColumn()) {
-            yield $id;
-        }
+            ['type_id']
+        )->where('cpe.entity_id = ?', $entityId);
+        $typeId = $connection->fetchOne($select);
+        $this->isBundle[$entityId] = $typeId === Type::TYPE_BUNDLE;
+        return $this->isBundle[$entityId];
     }
 }

@@ -15,19 +15,23 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  * @changelog https://wiki.php.net/rfc/flexible_heredoc_nowdoc_syntaxes
  * @see \Rector\Tests\Php73\Rector\String_\SensitiveHereNowDocRector\SensitiveHereNowDocRectorTest
  */
-final class SensitiveHereNowDocRector extends AbstractRector implements MinPhpVersionInterface
+final class SensitiveHereNowDocRector extends \Rector\Core\Rector\AbstractRector implements \Rector\VersionBonding\Contract\MinPhpVersionInterface
 {
     /**
      * @var string
      */
     private const WRAP_SUFFIX = '_WRAP';
+    /**
+     * @var string
+     */
+    private const ATTRIBUTE_DOC_LABEL = 'docLabel';
     public function provideMinPhpVersion() : int
     {
-        return PhpVersionFeature::SENSITIVE_HERE_NOW_DOC;
+        return \Rector\Core\ValueObject\PhpVersionFeature::SENSITIVE_HERE_NOW_DOC;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Changes heredoc/nowdoc that contains closing word to safe wrapper name', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes heredoc/nowdoc that contains closing word to safe wrapper name', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 $value = <<<A
     A
 A
@@ -44,26 +48,26 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [String_::class];
+        return [\PhpParser\Node\Scalar\String_::class];
     }
     /**
      * @param String_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        $kind = $node->getAttribute(AttributeKey::KIND);
-        if (!\in_array($kind, [String_::KIND_HEREDOC, String_::KIND_NOWDOC], \true)) {
+        $kind = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND);
+        if (!\in_array($kind, [\PhpParser\Node\Scalar\String_::KIND_HEREDOC, \PhpParser\Node\Scalar\String_::KIND_NOWDOC], \true)) {
             return null;
         }
         // the doc label is not in the string → ok
         /** @var string $docLabel */
-        $docLabel = $node->getAttribute(AttributeKey::DOC_LABEL);
+        $docLabel = $node->getAttribute(self::ATTRIBUTE_DOC_LABEL);
         if (\strpos($node->value, $docLabel) === \false) {
             return null;
         }
-        $node->setAttribute(AttributeKey::DOC_LABEL, $this->uniquateDocLabel($node->value, $docLabel));
+        $node->setAttribute(self::ATTRIBUTE_DOC_LABEL, $this->uniquateDocLabel($node->value, $docLabel));
         // invoke redraw
-        $node->setAttribute(AttributeKey::ORIGINAL_NODE, null);
+        $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::ORIGINAL_NODE, null);
         return $node;
     }
     private function uniquateDocLabel(string $value, string $docLabel) : string

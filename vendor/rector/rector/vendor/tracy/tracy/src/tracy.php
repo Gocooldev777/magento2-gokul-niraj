@@ -6,7 +6,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
 require __DIR__ . '/Tracy/Bar/IBarPanel.php';
 require __DIR__ . '/Tracy/Bar/Bar.php';
@@ -18,6 +18,7 @@ require __DIR__ . '/Tracy/Dumper/Dumper.php';
 require __DIR__ . '/Tracy/Dumper/Exposer.php';
 require __DIR__ . '/Tracy/Dumper/Renderer.php';
 require __DIR__ . '/Tracy/Logger/ILogger.php';
+require __DIR__ . '/Tracy/Logger/FireLogger.php';
 require __DIR__ . '/Tracy/Logger/Logger.php';
 require __DIR__ . '/Tracy/Debugger/Debugger.php';
 require __DIR__ . '/Tracy/Debugger/DeferredContent.php';

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"mage/adminhtml/wysiwyg/events.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([], function () {\n    'use strict';\n\n    return {\n        afterInitialization: 'afterInitialization',\n        afterChangeContent: 'afterChangeContent',\n        afterUndo: 'afterUndo',\n        afterPaste: 'afterPaste',\n        beforeSetContent: 'beforeSetContent',\n        afterSetContent: 'afterSetContent',\n        afterSave: 'afterSave',\n        afterOpenFileBrowser: 'afterOpenFileBrowser',\n        afterFormSubmit: 'afterFormSubmit',\n        afterBlur: 'afterBlur',\n        afterFocus: 'afterFocus'\n    };\n});\n"}
+}});

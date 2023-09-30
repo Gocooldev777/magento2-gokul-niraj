@@ -23,20 +23,17 @@ interface FixerOptionInterface
     public function hasDefault(): bool;
 
     /**
-     * @return mixed
-     *
      * @throws \LogicException when no default value is defined
+     *
+     * @return mixed
      */
     public function getDefault();
 
     /**
-     * @return null|list<string>
+     * @return null|string[]
      */
     public function getAllowedTypes(): ?array;
 
-    /**
-     * @return null|list<(callable(mixed): bool)|null|scalar>
-     */
     public function getAllowedValues(): ?array;
 
     public function getNormalizer(): ?\Closure;

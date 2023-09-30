@@ -274,8 +274,7 @@ class Topmenu extends Template implements IdentityInterface
     {
         $html = '';
         foreach ($this->_getMenuItemAttributes($item) as $attributeName => $attributeValue) {
-            $value = $attributeValue !== null ? str_replace('"', '\"', $attributeValue) : '';
-            $html .= ' ' . $attributeName . '="' . $value . '"';
+            $html .= ' ' . $attributeName . '="' . str_replace('"', '\"', $attributeValue) . '"';
         }
         return $html;
     }
@@ -354,6 +353,17 @@ class Topmenu extends Template implements IdentityInterface
     public function getIdentities()
     {
         return $this->identities;
+    }
+
+    /**
+     * Get tags array for saving cache
+     *
+     * @return array
+     * @since 100.1.0
+     */
+    protected function getCacheTags()
+    {
+        return array_merge(parent::getCacheTags(), $this->getIdentities());
     }
 
     /**

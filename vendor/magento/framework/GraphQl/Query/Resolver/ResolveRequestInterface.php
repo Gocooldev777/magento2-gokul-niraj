@@ -12,8 +12,6 @@ use Magento\Framework\GraphQl\Config\Element\Field;
 
 /**
  * Request for a resolver.
- *
- * @api
  */
 interface ResolveRequestInterface
 {

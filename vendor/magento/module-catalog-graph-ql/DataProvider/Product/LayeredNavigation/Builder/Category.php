@@ -7,22 +7,19 @@ declare(strict_types=1);
 
 namespace Magento\CatalogGraphQl\DataProvider\Product\LayeredNavigation\Builder;
 
-use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
-use Magento\CatalogGraphQl\DataProvider\Category\Query\CategoryAttributeQuery;
 use Magento\CatalogGraphQl\DataProvider\CategoryAttributesMapper;
-use Magento\CatalogGraphQl\DataProvider\Product\LayeredNavigation\Formatter\LayerFormatter;
+use Magento\CatalogGraphQl\DataProvider\Category\Query\CategoryAttributeQuery;
 use Magento\CatalogGraphQl\DataProvider\Product\LayeredNavigation\LayerBuilderInterface;
 use Magento\CatalogGraphQl\DataProvider\Product\LayeredNavigation\RootCategoryProvider;
 use Magento\Framework\Api\Search\AggregationInterface;
 use Magento\Framework\Api\Search\AggregationValueInterface;
 use Magento\Framework\Api\Search\BucketInterface;
 use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\GraphQl\Query\Uid;
+use Magento\CatalogGraphQl\DataProvider\Product\LayeredNavigation\Formatter\LayerFormatter;
+use Magento\CatalogGraphQl\DataProvider\Product\LayeredNavigation\Builder\Aggregations;
 
 /**
- * Category layer builder
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @inheritdoc
  */
 class Category implements LayerBuilderInterface
 {
@@ -36,7 +33,7 @@ class Category implements LayerBuilderInterface
      */
     private static $bucketMap = [
         self::CATEGORY_BUCKET => [
-            'request_name' => 'category_uid',
+            'request_name' => 'category_id',
             'label' => 'Category'
         ],
     ];
@@ -44,40 +41,32 @@ class Category implements LayerBuilderInterface
     /**
      * @var CategoryAttributeQuery
      */
-    private CategoryAttributeQuery $categoryAttributeQuery;
+    private $categoryAttributeQuery;
 
     /**
      * @var CategoryAttributesMapper
      */
-    private CategoryAttributesMapper $attributesMapper;
+    private $attributesMapper;
 
     /**
      * @var ResourceConnection
      */
-    private ResourceConnection $resourceConnection;
+    private $resourceConnection;
 
     /**
      * @var RootCategoryProvider
      */
-    private RootCategoryProvider $rootCategoryProvider;
+    private $rootCategoryProvider;
 
     /**
      * @var LayerFormatter
      */
-    private LayerFormatter $layerFormatter;
-
-    /**
-     * @var CollectionFactory
-     */
-    private CollectionFactory $categoryCollectionFactory;
+    private $layerFormatter;
 
     /**
      * @var Aggregations\Category\IncludeDirectChildrenOnly
      */
-    private Aggregations\Category\IncludeDirectChildrenOnly $includeDirectChildrenOnly;
-
-    /** @var Uid */
-    private Uid $uidEncoder;
+    private $includeDirectChildrenOnly;
 
     /**
      * @param CategoryAttributeQuery $categoryAttributeQuery
@@ -86,8 +75,6 @@ class Category implements LayerBuilderInterface
      * @param ResourceConnection $resourceConnection
      * @param LayerFormatter $layerFormatter
      * @param Aggregations\Category\IncludeDirectChildrenOnly $includeDirectChildrenOnly
-     * @param CollectionFactory $categoryCollectionFactory
-     * @param Uid $uidEncoder
      */
     public function __construct(
         CategoryAttributeQuery $categoryAttributeQuery,
@@ -95,9 +82,7 @@ class Category implements LayerBuilderInterface
         RootCategoryProvider $rootCategoryProvider,
         ResourceConnection $resourceConnection,
         LayerFormatter $layerFormatter,
-        Aggregations\Category\IncludeDirectChildrenOnly $includeDirectChildrenOnly,
-        CollectionFactory $categoryCollectionFactory,
-        Uid $uidEncoder
+        Aggregations\Category\IncludeDirectChildrenOnly $includeDirectChildrenOnly
     ) {
         $this->categoryAttributeQuery = $categoryAttributeQuery;
         $this->attributesMapper = $attributesMapper;
@@ -105,8 +90,6 @@ class Category implements LayerBuilderInterface
         $this->rootCategoryProvider = $rootCategoryProvider;
         $this->layerFormatter = $layerFormatter;
         $this->includeDirectChildrenOnly = $includeDirectChildrenOnly;
-        $this->categoryCollectionFactory = $categoryCollectionFactory;
-        $this->uidEncoder = $uidEncoder;
     }
 
     /**
@@ -128,11 +111,6 @@ class Category implements LayerBuilderInterface
             },
             $bucket->getValues()
         );
-
-        if ($storeId) {
-            $storeFilteredCategoryIds = $this->getStoreCategoryIds($storeId);
-            $categoryIds = \array_intersect($categoryIds, $storeFilteredCategoryIds);
-        }
 
         $categoryIds = \array_diff($categoryIds, [$this->rootCategoryProvider->getRootCategory($storeId)]);
         $categoryLabels = \array_column(
@@ -158,11 +136,11 @@ class Category implements LayerBuilderInterface
         foreach ($bucket->getValues() as $value) {
             $categoryId = $value->getValue();
             if (!\in_array($categoryId, $categoryIds, true)) {
-                continue;
+                continue ;
             }
             $result['options'][] = $this->layerFormatter->buildItem(
                 $categoryLabels[$categoryId] ?? $categoryId,
-                $this->uidEncoder->encode((string) $categoryId),
+                $categoryId,
                 $value->getMetrics()['count']
             );
         }
@@ -179,26 +157,5 @@ class Category implements LayerBuilderInterface
     private function isBucketEmpty(?BucketInterface $bucket): bool
     {
         return null === $bucket || !$bucket->getValues();
-    }
-
-    /**
-     * List of store categories
-     *
-     * @param int $storeId
-     * @return array
-     */
-    private function getStoreCategoryIds(int $storeId): array
-    {
-        $storeRootCategoryId = $this->rootCategoryProvider->getRootCategory($storeId);
-        $collection = $this->categoryCollectionFactory->create();
-        $select = $collection->getSelect();
-        $connection = $collection->getConnection();
-        $select->where(
-            $connection->quoteInto(
-                'e.path LIKE ? OR e.entity_id=' . $connection->quote($storeRootCategoryId, 'int'),
-                '%/' . $storeRootCategoryId . '/%'
-            )
-        );
-        return $collection->getAllIds();
     }
 }

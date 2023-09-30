@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Loader;
+namespace RectorPrefix20211221\Symfony\Component\Config\Loader;
 
 /**
  * LoaderResolver selects a loader for a given resource.
@@ -18,7 +18,7 @@ namespace RectorPrefix202304\Symfony\Component\Config\Loader;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class LoaderResolver implements LoaderResolverInterface
+class LoaderResolver implements \RectorPrefix20211221\Symfony\Component\Config\Loader\LoaderResolverInterface
 {
     /**
      * @var LoaderInterface[] An array of LoaderInterface objects
@@ -34,8 +34,7 @@ class LoaderResolver implements LoaderResolverInterface
         }
     }
     /**
-     * @return \Symfony\Component\Config\Loader\LoaderInterface|false
-     * @param mixed $resource
+     * {@inheritdoc}
      */
     public function resolve($resource, string $type = null)
     {
@@ -46,7 +45,7 @@ class LoaderResolver implements LoaderResolverInterface
         }
         return \false;
     }
-    public function addLoader(LoaderInterface $loader)
+    public function addLoader(\RectorPrefix20211221\Symfony\Component\Config\Loader\LoaderInterface $loader)
     {
         $this->loaders[] = $loader;
         $loader->setResolver($this);
@@ -56,7 +55,7 @@ class LoaderResolver implements LoaderResolverInterface
      *
      * @return LoaderInterface[]
      */
-    public function getLoaders() : array
+    public function getLoaders()
     {
         return $this->loaders;
     }

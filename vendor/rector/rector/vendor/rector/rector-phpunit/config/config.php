@@ -1,11 +1,11 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
-return static function (RectorConfig $rectorConfig) : void {
-    $services = $rectorConfig->services();
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
     $services->defaults()->public()->autowire()->autoconfigure();
-    $services->load('Rector\\PHPUnit\\', __DIR__ . '/../src')->exclude([__DIR__ . '/../src/Rector', __DIR__ . '/../src/ValueObject', __DIR__ . '/../src/PhpDoc/Node']);
+    $services->load('Rector\\PHPUnit\\', __DIR__ . '/../src')->exclude([__DIR__ . '/../src/{Rector,ValueObject,PhpDoc/Node}']);
 };

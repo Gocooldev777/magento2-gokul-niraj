@@ -9,10 +9,9 @@
  */
 namespace Magento\Directory\Model\Currency;
 
-use Laminas\Filter\FilterInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 
-class Filter implements FilterInterface
+class Filter implements \Zend_Filter_Interface
 {
     /**
      * Rate value
@@ -44,6 +43,8 @@ class Filter implements FilterInterface
     protected $_localeCurrency;
 
     /**
+     * Price currency
+     *
      * @var PriceCurrencyInterface
      */
     protected $priceCurrency;

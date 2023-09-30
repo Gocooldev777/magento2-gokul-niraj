@@ -1,5 +1,5 @@
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 define(
@@ -43,11 +43,8 @@ define(
             /**
              * @param token
              * @param currency
-             * @param env
-             * @param local
-             * @param lineItems
              */
-            init: function (token, currency, env, local, lineItems) {
+            init: function (token, currency, env, local) {
                 if ($('.action-braintree-paypal-message').length) {
                     $('.product-add-form form').on('keyup change paste', 'input, select, textarea', function () {
                         var currentPrice, currencySymbol;
@@ -66,7 +63,7 @@ define(
                 });
 
                 if (buttonIds.length > 0) {
-                    this.loadSDK(token, currency, env, local, lineItems);
+                    this.loadSDK(token, currency, env, local);
                 }
             },
 
@@ -74,11 +71,8 @@ define(
              * Load Braintree PayPal SDK
              * @param token
              * @param currency
-             * @param env
-             * @param local
-             * @param lineItems
              */
-            loadSDK: function (token, currency, env, local, lineItems) {
+            loadSDK: function (token, currency, env, local) {
                 braintree.create({
                     authorization: token
                 }, function (clientErr, clientInstance) {
@@ -98,7 +92,7 @@ define(
                         client: clientInstance
                     }, function (err, paypalCheckoutInstance) {
                         if (typeof paypal !== 'undefined' ) {
-                            this.renderPayPalButtons(buttonIds, paypalCheckoutInstance, lineItems);
+                            this.renderPayPalButtons(buttonIds, paypalCheckoutInstance);
                             this.renderPayPalMessages();
                         } else {
                             var configSDK = {
@@ -106,11 +100,11 @@ define(
                                 "enable-funding": "paylater",
                                 currency: currency
                             };
-                            if (env === 'sandbox' && local !== '') {
+                            if (env == 'sandbox' && local != '') {
                                 configSDK["buyer-country"] = local;
                             }
                             paypalCheckoutInstance.loadPayPalSDK(configSDK, function () {
-                                this.renderPayPalButtons(buttonIds, paypalCheckoutInstance, lineItems);
+                                this.renderPayPalButtons(buttonIds, paypalCheckoutInstance);
                                 this.renderPayPalMessages();
                             }.bind(this));
                         }
@@ -123,11 +117,10 @@ define(
              *
              * @param ids
              * @param paypalCheckoutInstance
-             * @param lineItems
              */
-            renderPayPalButtons: function (ids, paypalCheckoutInstance, lineItems) {
+            renderPayPalButtons: function (ids, paypalCheckoutInstance) {
                 _.each(ids, function (id) {
-                    this.payPalButton(id, paypalCheckoutInstance, lineItems);
+                    this.payPalButton(id, paypalCheckoutInstance);
                 }.bind(this));
             },
 
@@ -140,14 +133,7 @@ define(
                         amount: $(this).data('pp-amount'),
                         pageType: $(this).data('pp-type'),
                         style: {
-                            layout: $(this).data('messaging-layout'),
-                            text: {
-                              color:   $(this).data('messaging-text-color')
-                            },
-                            logo: {
-                                type: $(this).data('messaging-logo'),
-                                position: $(this).data('messaging-logo-position')
-                            }
+                            layout: 'text',
                         }
                     }).render('#' + $(this).attr('id'));
 
@@ -158,15 +144,13 @@ define(
             /**
              * @param id
              * @param paypalCheckoutInstance
-             * @param lineItems
              */
-            payPalButton: function (id, paypalCheckoutInstance, lineItems) {
+            payPalButton: function (id, paypalCheckoutInstance) {
                 let data = $('#' + id);
                 let style = {
                     color: data.data('color'),
                     shape: data.data('shape'),
                     size: data.data('size'),
-                    label: data.data('label')
                 };
 
                 if (data.data('fundingicons')) {
@@ -185,8 +169,7 @@ define(
                             currency: data.data('currency'),
                             flow: 'checkout',
                             enableShippingAddress: true,
-                            displayName: data.data('displayname'),
-                            lineItems: $.parseJSON(lineItems)
+                            displayName: data.data('displayname')
                         });
                     },
                     validate: function (actions) {

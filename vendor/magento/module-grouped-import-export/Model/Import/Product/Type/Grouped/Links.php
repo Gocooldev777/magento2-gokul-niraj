@@ -5,7 +5,6 @@
  */
 namespace Magento\GroupedImportExport\Model\Import\Product\Type\Grouped;
 
-use Magento\CatalogImportExport\Model\Import\Product as ProductImport;
 use Magento\Framework\App\ResourceConnection;
 
 /**
@@ -25,8 +24,6 @@ class Links
 
     /**
      * @var \Magento\ImportExport\Model\ImportFactory
-     * @deprecated
-     * @see no longer used
      */
     protected $importFactory;
 
@@ -58,19 +55,16 @@ class Links
     }
 
     /**
-     * Saves the linksData to database
-     *
      * @param array $linksData
-     * @param ProductImport $productImport
      * @return void
      */
-    public function saveLinksData(array $linksData, ProductImport $productImport)
+    public function saveLinksData($linksData)
     {
         $mainTable = $this->productLink->getMainTable();
         $relationTable = $this->productLink->getTable('catalog_product_relation');
         // save links and relations
         if ($linksData['product_ids']) {
-            $this->deleteOldLinks(array_keys($linksData['product_ids']), $productImport);
+            $this->deleteOldLinks(array_keys($linksData['product_ids']));
             $mainData = [];
             foreach ($linksData['relation'] as $productData) {
                 $mainData[] = [
@@ -82,6 +76,7 @@ class Links
             $this->connection->insertOnDuplicate($mainTable, $mainData);
             $this->connection->insertOnDuplicate($relationTable, $linksData['relation']);
         }
+
         $attributes = $this->getAttributes();
         // save positions and default quantity
         if ($linksData['attr_product_ids']) {
@@ -112,16 +107,13 @@ class Links
     }
 
     /**
-     * Deletes all the product links in database that are linked to productIds
-     *
      * @param array $productIds
-     * @param ProductImport $productImport
      * @throws \Magento\Framework\Exception\LocalizedException
      * @return void
      */
-    protected function deleteOldLinks($productIds, ProductImport $productImport)
+    protected function deleteOldLinks($productIds)
     {
-        if ($this->getBehavior($productImport) != \Magento\ImportExport\Model\Import::BEHAVIOR_APPEND) {
+        if ($this->getBehavior() != \Magento\ImportExport\Model\Import::BEHAVIOR_APPEND) {
             $this->connection->delete(
                 $this->productLink->getMainTable(),
                 $this->connection->quoteInto(
@@ -133,8 +125,6 @@ class Links
     }
 
     /**
-     * Gets all the attributes from database for the Grouped Link Type
-     *
      * @return array
      */
     public function getAttributes()
@@ -155,8 +145,6 @@ class Links
     }
 
     /**
-     * Returns the integer id for Link Type
-     *
      * @return int
      */
     protected function getLinkTypeId()
@@ -167,15 +155,12 @@ class Links
     /**
      * Retrieve model behavior
      *
-     * @param ProductImport $productImport
      * @return string
      */
-    protected function getBehavior(ProductImport $productImport)
+    protected function getBehavior()
     {
         if ($this->behavior === null) {
-            $ids = $productImport->getIds();
-            $dataSourceModel = $productImport->getDataSourceModel();
-            $this->behavior = $dataSourceModel->getBehavior($ids);
+            $this->behavior = $this->importFactory->create()->getDataSourceModel()->getBehavior();
         }
         return $this->behavior;
     }

@@ -10,7 +10,6 @@ use PayPal\Braintree\Gateway\Http\Client\TransactionSubmitForSettlement;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Payment\Model\Method\Logger;
-use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 
 class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
@@ -18,17 +17,17 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
     /**
      * @var TransactionSubmitForSettlement
      */
-    private TransactionSubmitForSettlement $client;
+    private $client;
 
     /**
-     * @var Logger|MockObject
+     * @var Logger|\PHPUnit\Framework\MockObject\MockObject
      */
-    private Logger|MockObject $logger;
+    private $logger;
 
     /**
-     * @var BraintreeAdapter|MockObject
+     * @var BraintreeAdapter|\PHPUnit\Framework\MockObject\MockObject
      */
-    private BraintreeAdapter|MockObject $adapter;
+    private $adapter;
 
     protected function setUp(): void
     {
@@ -63,7 +62,7 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
             ->method('submitForSettlement')
             ->willThrowException($exception);
 
-        /** @var TransferInterface|MockObject $transferObjectMock */
+        /** @var TransferInterface|\PHPUnit\Framework\MockObject\MockObject $transferObjectMock */
         $transferObjectMock = $this->getTransferObjectMock();
         $this->client->placeRequest($transferObjectMock);
     }
@@ -78,7 +77,7 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
             ->method('submitForSettlement')
             ->willReturn($data);
 
-        /** @var TransferInterface|MockObject $transferObjectMock */
+        /** @var TransferInterface|\PHPUnit\Framework\MockObject\MockObject $transferObjectMock */
         $transferObjectMock = $this->getTransferObjectMock();
         $response = $this->client->placeRequest($transferObjectMock);
         static::assertIsObject($response['object']);
@@ -86,7 +85,7 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return TransferInterface|MockObject
+     * @return TransferInterface|\PHPUnit\Framework\MockObject\MockObject
      */
     private function getTransferObjectMock()
     {
@@ -95,8 +94,7 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
             ->method('getBody')
             ->willReturn([
                 'transaction_id' => 'vb4c6b',
-                'amount' => 124.00,
-                'orderId' => '000000002'
+                'amount' => 124.00
             ]);
 
         return $mock;

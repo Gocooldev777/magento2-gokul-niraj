@@ -1,5 +1,7 @@
 <?php
 /**
+ * Rule for searching php file dependency
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -136,7 +138,7 @@ class PhpRule implements RuleInterface
      */
     public function getDependencyInfo($currentModule, $fileType, $file, &$contents)
     {
-        if (!in_array($fileType, ['php', 'template', 'fixture'])) {
+        if (!in_array($fileType, ['php', 'template'])) {
             return [];
         }
 

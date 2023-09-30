@@ -8,8 +8,6 @@ namespace Magento\Framework\App;
 
 /**
  * Interface AreaInterface
- *
- * @api
  */
 interface AreaInterface
 {

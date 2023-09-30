@@ -5,56 +5,37 @@ namespace Rector\Core\Application;
 
 use DateTime;
 use Rector\Core\Exception\VersionException;
+use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
+use RectorPrefix20211221\Symfony\Component\Process\Process;
 /**
- * @api
- *
  * Inspired by https://github.com/composer/composer/blob/master/src/Composer/Composer.php
  * See https://github.com/composer/composer/blob/6587715d0f8cae0cd39073b3bc5f018d0e6b84fe/src/Composer/Compiler.php#L208
- *
- * @see \Rector\Core\Tests\Application\VersionResolverTest
  */
 final class VersionResolver
 {
     /**
-     * @api
      * @var string
      */
-    public const PACKAGE_VERSION = '0.15.25';
+    public const PACKAGE_VERSION = '6861ae9a4fe8e52dd4633101d80c9c55c1093b9e';
     /**
-     * @api
      * @var string
      */
-    public const RELEASE_DATE = '2023-04-20 15:57:57';
-    /**
-     * @var int
-     */
-    private const SUCCESS_CODE = 0;
+    public const RELEASE_DATE = '2021-12-21 23:11:30';
     public static function resolvePackageVersion() : string
     {
-        // resolve current tag
-        \exec('git tag --points-at', $tagExecOutput, $tagExecResultCode);
-        if ($tagExecResultCode !== self::SUCCESS_CODE) {
-            throw new VersionException('Ensure to run compile from composer git repository clone and that git binary is available.');
+        $process = new \RectorPrefix20211221\Symfony\Component\Process\Process(['git', 'log', '--pretty="%H"', '-n1', 'HEAD'], __DIR__);
+        if ($process->run() !== \RectorPrefix20211221\Symfony\Component\Console\Command\Command::SUCCESS) {
+            throw new \Rector\Core\Exception\VersionException('You must ensure to run compile from composer git repository clone and that git binary is available.');
         }
-        if ($tagExecOutput !== []) {
-            $tag = $tagExecOutput[0];
-            if ($tag !== '') {
-                return $tag;
-            }
-        }
-        \exec('git log --pretty="%H" -n1 HEAD', $commitHashExecOutput, $commitHashResultCode);
-        if ($commitHashResultCode !== 0) {
-            throw new VersionException('Ensure to run compile from composer git repository clone and that git binary is available.');
-        }
-        $version = \trim($commitHashExecOutput[0]);
+        $version = \trim($process->getOutput());
         return \trim($version, '"');
     }
-    public static function resolverReleaseDateTime() : DateTime
+    public static function resolverReleaseDateTime() : \DateTime
     {
-        \exec('git log -n1 --pretty=%ci HEAD', $output, $resultCode);
-        if ($resultCode !== self::SUCCESS_CODE) {
-            throw new VersionException('You must ensure to run compile from composer git repository clone and that git binary is available.');
+        $process = new \RectorPrefix20211221\Symfony\Component\Process\Process(['git', 'log', '-n1', '--pretty=%ci', 'HEAD'], __DIR__);
+        if ($process->run() !== \RectorPrefix20211221\Symfony\Component\Console\Command\Command::SUCCESS) {
+            throw new \Rector\Core\Exception\VersionException('You must ensure to run compile from composer git repository clone and that git binary is available.');
         }
-        return new DateTime(\trim($output[0]));
+        return new \DateTime(\trim($process->getOutput()));
     }
 }

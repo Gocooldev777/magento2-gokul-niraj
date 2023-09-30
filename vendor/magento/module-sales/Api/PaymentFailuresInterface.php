@@ -9,7 +9,6 @@ namespace Magento\Sales\Api;
 
 /**
  * Interface for managing payment gateway failures.
- * @api
  */
 interface PaymentFailuresInterface
 {

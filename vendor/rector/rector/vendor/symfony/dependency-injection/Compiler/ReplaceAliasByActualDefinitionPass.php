@@ -8,34 +8,46 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
 /**
  * Replaces aliases with actual service definitions, effectively removing these
  * aliases.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class ReplaceAliasByActualDefinitionPass extends AbstractRecursivePass
+class ReplaceAliasByActualDefinitionPass extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AbstractRecursivePass
 {
-    /**
-     * @var mixed[]
-     */
     private $replacements;
+    private $autoAliasServicePass;
+    /**
+     * @internal to be removed in Symfony 6.0
+     *
+     * @return $this
+     */
+    public function setAutoAliasServicePass(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AutoAliasServicePass $autoAliasServicePass) : self
+    {
+        $this->autoAliasServicePass = $autoAliasServicePass;
+        return $this;
+    }
     /**
      * Process the Container to replace aliases with service definitions.
      *
      * @throws InvalidArgumentException if the service definition does not exist
      */
-    public function process(ContainerBuilder $container)
+    public function process(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
         // First collect all alias targets that need to be replaced
         $seenAliasTargets = [];
         $replacements = [];
+        $privateAliases = $this->autoAliasServicePass ? $this->autoAliasServicePass->getPrivateAliases() : [];
+        foreach ($privateAliases as $target) {
+            $target->setDeprecated('symfony/dependency-injection', '5.4', 'Accessing the "%alias_id%" service directly from the container is deprecated, use dependency injection instead.');
+        }
         foreach ($container->getAliases() as $definitionId => $target) {
             $targetId = (string) $target;
             // Special case: leave this target alone
@@ -57,9 +69,9 @@ class ReplaceAliasByActualDefinitionPass extends AbstractRecursivePass
             $seenAliasTargets[$targetId] = \true;
             try {
                 $definition = $container->getDefinition($targetId);
-            } catch (ServiceNotFoundException $e) {
+            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException $e) {
                 if ('' !== $e->getId() && '@' === $e->getId()[0]) {
-                    throw new ServiceNotFoundException($e->getId(), $e->getSourceId(), null, [\substr($e->getId(), 1)]);
+                    throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException($e->getId(), $e->getSourceId(), null, [\substr($e->getId(), 1)]);
                 }
                 throw $e;
             }
@@ -81,15 +93,13 @@ class ReplaceAliasByActualDefinitionPass extends AbstractRecursivePass
     }
     /**
      * {@inheritdoc}
-     * @param mixed $value
-     * @return mixed
      */
     protected function processValue($value, bool $isRoot = \false)
     {
-        if ($value instanceof Reference && isset($this->replacements[$referenceId = (string) $value])) {
+        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference && isset($this->replacements[$referenceId = (string) $value])) {
             // Perform the replacement
             $newId = $this->replacements[$referenceId];
-            $value = new Reference($newId, $value->getInvalidBehavior());
+            $value = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference($newId, $value->getInvalidBehavior());
             $this->container->log($this, \sprintf('Changed reference of service "%s" previously pointing to "%s" to "%s".', $this->currentId, $referenceId, $newId));
         }
         return parent::processValue($value, $isRoot);

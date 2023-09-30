@@ -12,9 +12,5 @@ use Magento\TestFramework\Helper\Bootstrap;
 $configFactory = Bootstrap::getObjectManager()->get(Factory::class);
 $config = $configFactory->create();
 $config->setScope('stores');
-
-$engine = $config->getConfigDataValue('catalog/search/engine');
-$portField = "catalog/search/{$engine}_server_port";
-
-$config->setDataByPath($portField, 2309);
+$config->setDataByPath('catalog/search/elasticsearch7_server_port', 2309);
 $config->save();

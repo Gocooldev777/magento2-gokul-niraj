@@ -9,7 +9,6 @@ namespace Magento\Catalog\Model\ProductLink;
 /**
  * Interface \Magento\Catalog\Model\ProductLink\CollectionProviderInterface
  *
- * @api
  */
 interface CollectionProviderInterface
 {

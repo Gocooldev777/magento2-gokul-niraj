@@ -10,7 +10,6 @@ namespace Magento\Framework\MessageQueue\Test\Unit\Config\Reader\Xml\Converter;
 use Magento\Framework\Communication\ConfigInterface;
 use Magento\Framework\MessageQueue\Config\Reader\Xml\Converter\TopicConfig;
 use Magento\Framework\MessageQueue\Config\Validator;
-use Magento\Framework\MessageQueue\DefaultValueProvider;
 use Magento\Framework\Reflection\MethodsMap;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -40,11 +39,6 @@ class TopicConverterTest extends TestCase
     protected $communicationConfigMock;
 
     /**
-     * @var DefaultValueProvider|MockObject
-     */
-    private $defaultValueProviderMock;
-
-    /**
      * Initialize parameters
      */
     protected function setUp(): void
@@ -65,12 +59,11 @@ class TopicConverterTest extends TestCase
         $this->communicationConfigMock->expects($this->once())->method('getTopics')->willReturn($topicsDefinitions);
 
         $this->communicationConfigMock->expects($this->any())->method('getTopic')->willReturnMap($topicsMap);
-        $this->defaultValueProviderMock = $this->createMock(DefaultValueProvider::class);
+
         $this->converter = new TopicConfig(
             $this->methodMapMock,
             $this->validatorMock,
-            $this->communicationConfigMock,
-            $this->defaultValueProviderMock
+            $this->communicationConfigMock
         );
     }
 

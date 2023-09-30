@@ -46,8 +46,16 @@ return [
         'autoDelete' => false,
         'internal' => false,
         'bindings' => [
-            'queue--queue01--top01' => [
-                'id' => 'queue--queue01--top01',
+            'bind01' => [
+                'id' => 'bind01',
+                'destinationType' => 'queue',
+                'destination' => 'queue01',
+                'disabled' => true,
+                'topic' => 'top01',
+                'arguments' => []
+            ],
+            'bind02' => [
+                'id' => 'bind02',
                 'destinationType' => 'queue',
                 'destination' => 'queue01',
                 'disabled' => false,

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Validator\Rules;
 
@@ -6,28 +8,29 @@ use GraphQL\Error\Error;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\AST\VariableDefinitionNode;
-use GraphQL\Validator\QueryValidationContext;
+use GraphQL\Validator\ValidationContext;
+use function sprintf;
 
 class UniqueVariableNames extends ValidationRule
 {
-    /** @var array<string, NameNode> */
-    protected array $knownVariableNames;
+    /** @var NameNode[] */
+    public $knownVariableNames;
 
-    public function getVisitor(QueryValidationContext $context): array
+    public function getVisitor(ValidationContext $context)
     {
         $this->knownVariableNames = [];
 
         return [
-            NodeKind::OPERATION_DEFINITION => function (): void {
+            NodeKind::OPERATION_DEFINITION => function () : void {
                 $this->knownVariableNames = [];
             },
-            NodeKind::VARIABLE_DEFINITION => function (VariableDefinitionNode $node) use ($context): void {
+            NodeKind::VARIABLE_DEFINITION  => function (VariableDefinitionNode $node) use ($context) : void {
                 $variableName = $node->variable->name->value;
                 if (! isset($this->knownVariableNames[$variableName])) {
                     $this->knownVariableNames[$variableName] = $node->variable->name;
                 } else {
                     $context->reportError(new Error(
-                        static::duplicateVariableMessage($variableName),
+                        self::duplicateVariableMessage($variableName),
                         [$this->knownVariableNames[$variableName], $node->variable->name]
                     ));
                 }
@@ -35,8 +38,8 @@ class UniqueVariableNames extends ValidationRule
         ];
     }
 
-    public static function duplicateVariableMessage(string $variableName): string
+    public static function duplicateVariableMessage($variableName)
     {
-        return "There can be only one variable named \"{$variableName}\".";
+        return sprintf('There can be only one variable named "%s".', $variableName);
     }
 }

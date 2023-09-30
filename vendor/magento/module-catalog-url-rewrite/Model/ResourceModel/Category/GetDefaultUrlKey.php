@@ -13,7 +13,6 @@ use Magento\Eav\Model\Config as EavConfig;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Select;
 use Magento\Framework\EntityManager\MetadataPool;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\Store;
 
 /**
@@ -54,11 +53,10 @@ class GetDefaultUrlKey
     /**
      * Retrieve 'url_key' value for default store.
      *
-     * @param int $id
+     * @param int $categoryId
      * @return string|null
-     * @throws LocalizedException
      */
-    public function execute(int $id): ?string
+    public function execute(int $categoryId): ?string
     {
         $metadata = $this->metadataPool->getMetadata(CategoryInterface::class);
         $entityTypeId = $this->eavConfig->getEntityType(Category::ENTITY)->getId();
@@ -66,7 +64,7 @@ class GetDefaultUrlKey
         $whereConditions = [
             'e.entity_type_id = ' . $entityTypeId,
             "e.attribute_code = 'url_key'",
-            'c.' . $linkField . ' = ' . $id,
+            'c.' . $linkField . ' = ' . $categoryId,
             'c.store_id = ' . Store::DEFAULT_STORE_ID,
         ];
         $connection = $this->resourceConnection->getConnection();

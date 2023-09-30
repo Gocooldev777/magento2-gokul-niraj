@@ -1,18 +1,19 @@
 <?php
 /**
+ * ACL Resource Loader
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\Framework\Acl\Loader;
 
-use Laminas\Permissions\Acl\Exception\InvalidArgumentException as AclInvalidArgumentException;
 use Magento\Framework\Acl;
 use Magento\Framework\Acl\AclResource;
 use Magento\Framework\Acl\AclResource\ProviderInterface;
 use Magento\Framework\Acl\AclResourceFactory;
 
 /**
- * ACL Resource Loader
+ * ACL Loader
  */
 class ResourceLoader implements \Magento\Framework\Acl\LoaderInterface
 {
@@ -24,6 +25,8 @@ class ResourceLoader implements \Magento\Framework\Acl\LoaderInterface
     protected $_resourceProvider;
 
     /**
+     * Resource factory
+     *
      * @var AclResourceFactory
      */
     protected $_resourceFactory;
@@ -43,7 +46,7 @@ class ResourceLoader implements \Magento\Framework\Acl\LoaderInterface
      *
      * @param Acl $acl
      * @return void
-     * @throws AclInvalidArgumentException
+     * @throws \Zend_Acl_Exception
      */
     public function populateAcl(Acl $acl)
     {
@@ -58,7 +61,7 @@ class ResourceLoader implements \Magento\Framework\Acl\LoaderInterface
      * @param AclResource $parent
      * @return void
      * @throws \InvalidArgumentException
-     * @throws AclInvalidArgumentException
+     * @throws \Zend_Acl_Exception
      */
     protected function _addResourceTree(Acl $acl, array $resources, AclResource $parent = null)
     {
@@ -66,6 +69,7 @@ class ResourceLoader implements \Magento\Framework\Acl\LoaderInterface
             if (!isset($resourceConfig['id'])) {
                 throw new \InvalidArgumentException('Missing ACL resource identifier');
             }
+            /** @var $resource AclResource */
             $resource = $this->_resourceFactory->createResource(['resourceId' => $resourceConfig['id']]);
             $acl->addResource($resource, $parent);
             if (isset($resourceConfig['children'])) {

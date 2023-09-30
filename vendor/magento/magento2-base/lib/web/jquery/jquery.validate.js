@@ -1040,7 +1040,7 @@
                 // 'aria-describedby' should directly reference the error element
                 if ( describer ) {
                     selector = selector + ", #" + this.escapeCssMeta( describer )
-                        .replace( /\s+/g, ", #" ) + ":visible";
+                        .replace( /\s+/g, ", #" );
                 }
 
                 return this

@@ -42,11 +42,11 @@ final class NoMultilineWhitespaceAroundDoubleArrowFixer extends AbstractFixer
     /**
      * {@inheritdoc}
      *
-     * Must run before BinaryOperatorSpacesFixer, MethodArgumentSpaceFixer.
+     * Must run before BinaryOperatorSpacesFixer, TrailingCommaInMultilineFixer.
      */
     public function getPriority(): int
     {
-        return 31;
+        return 1;
     }
 
     /**
@@ -67,10 +67,7 @@ final class NoMultilineWhitespaceAroundDoubleArrowFixer extends AbstractFixer
                 continue;
             }
 
-            if (!$tokens[$index - 2]->isComment() || str_starts_with($tokens[$index - 2]->getContent(), '/*')) {
-                $this->fixWhitespace($tokens, $index - 1);
-            }
-
+            $this->fixWhitespace($tokens, $index - 1);
             // do not move anything about if there is a comment following the whitespace
             if (!$tokens[$index + 2]->isComment()) {
                 $this->fixWhitespace($tokens, $index + 1);

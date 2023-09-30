@@ -13,9 +13,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Class covers process manager execution test logic
- *
- * @requires function pcntl_fork
- * @see \Magento\Indexer\Model\ProcessManager::isCanBeParalleled
  */
 class ProcessManagerTest extends TestCase
 {

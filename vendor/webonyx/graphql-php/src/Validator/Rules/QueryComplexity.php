@@ -1,59 +1,67 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Validator\Rules;
 
+use ArrayObject;
 use GraphQL\Error\Error;
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Values;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\FragmentSpreadNode;
 use GraphQL\Language\AST\InlineFragmentNode;
+use GraphQL\Language\AST\Node;
 use GraphQL\Language\AST\NodeKind;
-use GraphQL\Language\AST\NodeList;
 use GraphQL\Language\AST\OperationDefinitionNode;
-use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
-use GraphQL\Language\AST\VariableDefinitionNode;
 use GraphQL\Language\Visitor;
 use GraphQL\Language\VisitorOperation;
 use GraphQL\Type\Definition\Directive;
 use GraphQL\Type\Definition\FieldDefinition;
-use GraphQL\Validator\QueryValidationContext;
+use GraphQL\Validator\ValidationContext;
+use function array_map;
+use function count;
+use function implode;
+use function method_exists;
+use function sprintf;
 
-/**
- * @phpstan-import-type ASTAndDefs from QuerySecurityRule
- */
 class QueryComplexity extends QuerySecurityRule
 {
-    protected int $maxQueryComplexity;
+    /** @var int */
+    private $maxQueryComplexity;
 
-    /** @var array<string, mixed> */
-    protected array $rawVariableValues = [];
+    /** @var mixed[]|null */
+    private $rawVariableValues = [];
 
-    /** @var NodeList<VariableDefinitionNode> */
-    protected NodeList $variableDefs;
+    /** @var ArrayObject */
+    private $variableDefs;
 
-    /** @phpstan-var ASTAndDefs */
-    protected \ArrayObject $fieldNodeAndDefs;
+    /** @var ArrayObject */
+    private $fieldNodeAndDefs;
 
-    protected QueryValidationContext $context;
+    /** @var ValidationContext */
+    private $context;
 
-    /** @throws \InvalidArgumentException */
-    public function __construct(int $maxQueryComplexity)
+    /** @var int */
+    private $complexity;
+
+    public function __construct($maxQueryComplexity)
     {
         $this->setMaxQueryComplexity($maxQueryComplexity);
     }
 
-    public function getVisitor(QueryValidationContext $context): array
+    public function getVisitor(ValidationContext $context)
     {
         $this->context = $context;
-        $this->variableDefs = new NodeList([]);
-        $this->fieldNodeAndDefs = new \ArrayObject();
+
+        $this->variableDefs     = new ArrayObject();
+        $this->fieldNodeAndDefs = new ArrayObject();
+        $this->complexity       = 0;
 
         return $this->invokeIfNeeded(
             $context,
             [
-                NodeKind::SELECTION_SET => function (SelectionSetNode $selectionSet) use ($context): void {
+                NodeKind::SELECTION_SET        => function (SelectionSetNode $selectionSet) use ($context) : void {
                     $this->fieldNodeAndDefs = $this->collectFieldASTsAndDefs(
                         $context,
                         $context->getParentType(),
@@ -62,29 +70,29 @@ class QueryComplexity extends QuerySecurityRule
                         $this->fieldNodeAndDefs
                     );
                 },
-                NodeKind::VARIABLE_DEFINITION => function ($def): VisitorOperation {
+                NodeKind::VARIABLE_DEFINITION  => function ($def) : VisitorOperation {
                     $this->variableDefs[] = $def;
 
                     return Visitor::skipNode();
                 },
                 NodeKind::OPERATION_DEFINITION => [
-                    'leave' => function (OperationDefinitionNode $operationDefinition) use ($context): void {
+                    'leave' => function (OperationDefinitionNode $operationDefinition) use ($context, &$complexity) : void {
                         $errors = $context->getErrors();
 
-                        if ($errors !== []) {
+                        if (count($errors) > 0) {
                             return;
                         }
 
-                        $complexity = $this->fieldComplexity($operationDefinition->selectionSet);
+                        $this->complexity = $this->fieldComplexity($operationDefinition, $complexity);
 
-                        if ($complexity <= $this->maxQueryComplexity) {
+                        if ($this->getQueryComplexity() <= $this->getMaxQueryComplexity()) {
                             return;
                         }
 
                         $context->reportError(
-                            new Error(static::maxQueryComplexityErrorMessage(
-                                $this->maxQueryComplexity,
-                                $complexity
+                            new Error(self::maxQueryComplexityErrorMessage(
+                                $this->getMaxQueryComplexity(),
+                                $this->getQueryComplexity()
                             ))
                         );
                     },
@@ -93,142 +101,146 @@ class QueryComplexity extends QuerySecurityRule
         );
     }
 
-    /** @throws \Exception */
-    protected function fieldComplexity(SelectionSetNode $selectionSet): int
+    private function fieldComplexity($node, $complexity = 0)
     {
-        $complexity = 0;
-
-        foreach ($selectionSet->selections as $selection) {
-            $complexity += $this->nodeComplexity($selection);
+        if (isset($node->selectionSet) && $node->selectionSet instanceof SelectionSetNode) {
+            foreach ($node->selectionSet->selections as $childNode) {
+                $complexity = $this->nodeComplexity($childNode, $complexity);
+            }
         }
 
         return $complexity;
     }
 
-    /** @throws \Exception */
-    protected function nodeComplexity(SelectionNode $node): int
+    private function nodeComplexity(Node $node, $complexity = 0)
     {
         switch (true) {
             case $node instanceof FieldNode:
-                if ($this->directiveExcludesField($node)) {
-                    return 0;
+                // default values
+                $args         = [];
+                $complexityFn = FieldDefinition::DEFAULT_COMPLEXITY_FN;
+
+                // calculate children complexity if needed
+                $childrenComplexity = 0;
+
+                // node has children?
+                if (isset($node->selectionSet)) {
+                    $childrenComplexity = $this->fieldComplexity($node);
                 }
 
-                $childrenComplexity = isset($node->selectionSet)
-                    ? $this->fieldComplexity($node->selectionSet)
-                    : 0;
+                $astFieldInfo = $this->astFieldInfo($node);
+                $fieldDef     = $astFieldInfo[1];
 
-                $fieldDef = $this->fieldDefinition($node);
-                if ($fieldDef instanceof FieldDefinition && $fieldDef->complexityFn !== null) {
-                    $fieldArguments = $this->buildFieldArguments($node);
+                if ($fieldDef instanceof FieldDefinition) {
+                    if ($this->directiveExcludesField($node)) {
+                        break;
+                    }
 
-                    return ($fieldDef->complexityFn)($childrenComplexity, $fieldArguments);
+                    $args = $this->buildFieldArguments($node);
+                    //get complexity fn using fieldDef complexity
+                    if (method_exists($fieldDef, 'getComplexityFn')) {
+                        $complexityFn = $fieldDef->getComplexityFn();
+                    }
                 }
 
-                return $childrenComplexity + 1;
+                $complexity += $complexityFn($childrenComplexity, $args);
+                break;
 
             case $node instanceof InlineFragmentNode:
-                return $this->fieldComplexity($node->selectionSet);
+                // node has children?
+                if (isset($node->selectionSet)) {
+                    $complexity = $this->fieldComplexity($node, $complexity);
+                }
+                break;
 
             case $node instanceof FragmentSpreadNode:
                 $fragment = $this->getFragment($node);
 
                 if ($fragment !== null) {
-                    return $this->fieldComplexity($fragment->selectionSet);
+                    $complexity = $this->fieldComplexity($fragment, $complexity);
                 }
+                break;
         }
 
-        return 0;
+        return $complexity;
     }
 
-    protected function fieldDefinition(FieldNode $field): ?FieldDefinition
+    private function astFieldInfo(FieldNode $field)
     {
-        foreach ($this->fieldNodeAndDefs[$this->getFieldName($field)] ?? [] as [$node, $def]) {
-            if ($node === $field) {
-                return $def;
+        $fieldName    = $this->getFieldName($field);
+        $astFieldInfo = [null, null];
+        if (isset($this->fieldNodeAndDefs[$fieldName])) {
+            foreach ($this->fieldNodeAndDefs[$fieldName] as $astAndDef) {
+                if ($astAndDef[0] === $field) {
+                    $astFieldInfo = $astAndDef;
+                    break;
+                }
             }
         }
 
-        return null;
+        return $astFieldInfo;
     }
 
-    /**
-     * @throws \Exception
-     * @throws \ReflectionException
-     * @throws InvariantViolation
-     */
-    protected function directiveExcludesField(FieldNode $node): bool
+    private function directiveExcludesField(FieldNode $node)
     {
         foreach ($node->directives as $directiveNode) {
-            if ($directiveNode->name->value === Directive::DEPRECATED_NAME) {
+            if ($directiveNode->name->value === 'deprecated') {
                 return false;
             }
-
             [$errors, $variableValues] = Values::getVariableValues(
                 $this->context->getSchema(),
                 $this->variableDefs,
                 $this->getRawVariableValues()
             );
-            if ($errors !== null && $errors !== []) {
-                throw new Error(\implode(
+            if (count($errors ?? []) > 0) {
+                throw new Error(implode(
                     "\n\n",
-                    \array_map(
-                        static fn (Error $error): string => $error->getMessage(),
+                    array_map(
+                        static function ($error) {
+                            return $error->getMessage();
+                        },
                         $errors
                     )
                 ));
             }
+            if ($directiveNode->name->value === 'include') {
+                $directive = Directive::includeDirective();
+                /** @var bool $directiveArgsIf */
+                $directiveArgsIf = Values::getArgumentValues($directive, $directiveNode, $variableValues)['if'];
 
-            if ($directiveNode->name->value === Directive::INCLUDE_NAME) {
-                $includeArguments = Values::getArgumentValues(
-                    Directive::includeDirective(),
-                    $directiveNode,
-                    $variableValues
-                );
-                assert(is_bool($includeArguments['if']), 'ensured by query validation');
-
-                return ! $includeArguments['if'];
+                return ! $directiveArgsIf;
             }
-
             if ($directiveNode->name->value === Directive::SKIP_NAME) {
-                $skipArguments = Values::getArgumentValues(
-                    Directive::skipDirective(),
-                    $directiveNode,
-                    $variableValues
-                );
-                assert(is_bool($skipArguments['if']), 'ensured by query validation');
+                $directive = Directive::skipDirective();
+                /** @var bool $directiveArgsIf */
+                $directiveArgsIf = Values::getArgumentValues($directive, $directiveNode, $variableValues)['if'];
 
-                return $skipArguments['if'];
+                return $directiveArgsIf;
             }
         }
 
         return false;
     }
 
-    /** @return array<string, mixed> */
-    public function getRawVariableValues(): array
+    public function getRawVariableValues()
     {
         return $this->rawVariableValues;
     }
 
-    /** @param array<string, mixed>|null $rawVariableValues */
-    public function setRawVariableValues(?array $rawVariableValues = null): void
+    /**
+     * @param mixed[]|null $rawVariableValues
+     */
+    public function setRawVariableValues(?array $rawVariableValues = null)
     {
         $this->rawVariableValues = $rawVariableValues ?? [];
     }
 
-    /**
-     * @throws \Exception
-     * @throws Error
-     *
-     * @return array<string, mixed>
-     */
-    protected function buildFieldArguments(FieldNode $node): array
+    private function buildFieldArguments(FieldNode $node)
     {
         $rawVariableValues = $this->getRawVariableValues();
-        $fieldDef = $this->fieldDefinition($node);
+        $astFieldInfo      = $this->astFieldInfo($node);
+        $fieldDef          = $astFieldInfo[1];
 
-        /** @var array<string, mixed> $args */
         $args = [];
 
         if ($fieldDef instanceof FieldDefinition) {
@@ -238,11 +250,13 @@ class QueryComplexity extends QuerySecurityRule
                 $rawVariableValues
             );
 
-            if (is_array($errors) && $errors !== []) {
-                throw new Error(\implode(
+            if (count($errors ?? []) > 0) {
+                throw new Error(implode(
                     "\n\n",
-                    \array_map(
-                        static fn ($error) => $error->getMessage(),
+                    array_map(
+                        static function ($error) {
+                            return $error->getMessage();
+                        },
                         $errors
                     )
                 ));
@@ -254,30 +268,33 @@ class QueryComplexity extends QuerySecurityRule
         return $args;
     }
 
-    public function getMaxQueryComplexity(): int
+    public function getQueryComplexity()
+    {
+        return $this->complexity;
+    }
+
+    public function getMaxQueryComplexity()
     {
         return $this->maxQueryComplexity;
     }
 
     /**
      * Set max query complexity. If equal to 0 no check is done. Must be greater or equal to 0.
-     *
-     * @throws \InvalidArgumentException
      */
-    public function setMaxQueryComplexity(int $maxQueryComplexity): void
+    public function setMaxQueryComplexity($maxQueryComplexity)
     {
         $this->checkIfGreaterOrEqualToZero('maxQueryComplexity', $maxQueryComplexity);
 
-        $this->maxQueryComplexity = $maxQueryComplexity;
+        $this->maxQueryComplexity = (int) $maxQueryComplexity;
     }
 
-    public static function maxQueryComplexityErrorMessage(int $max, int $count): string
+    public static function maxQueryComplexityErrorMessage($max, $count)
     {
-        return "Max query complexity should be {$max} but got {$count}.";
+        return sprintf('Max query complexity should be %d but got %d.', $max, $count);
     }
 
-    protected function isEnabled(): bool
+    protected function isEnabled()
     {
-        return $this->maxQueryComplexity !== self::DISABLED;
+        return $this->getMaxQueryComplexity() !== self::DISABLED;
     }
 }

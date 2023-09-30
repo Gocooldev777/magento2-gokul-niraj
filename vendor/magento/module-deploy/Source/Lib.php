@@ -18,7 +18,7 @@ use Magento\Deploy\Package\PackageFileFactory;
  */
 class Lib implements SourceInterface
 {
-    public const TYPE = 'lib';
+    const TYPE = 'lib';
 
     /**
      * @var Files
@@ -59,7 +59,6 @@ class Lib implements SourceInterface
     {
         $files = [];
         foreach ($this->filesUtil->getStaticLibraryFiles() as $fileName) {
-            $fileName = $fileName === null ? '' : $fileName;
             if (strpos($fileName, 'css/docs') === 0) {
                 continue;
             }

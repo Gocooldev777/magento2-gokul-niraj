@@ -14,35 +14,31 @@ final class FormAddMethodCallAnalyzer
      */
     private $formObjectTypes = [];
     /**
-     * @readonly
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
     /**
-     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(NodeTypeResolver $nodeTypeResolver, NodeNameResolver $nodeNameResolver)
+    public function __construct(\Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
     {
         $this->nodeTypeResolver = $nodeTypeResolver;
         $this->nodeNameResolver = $nodeNameResolver;
-        $this->formObjectTypes = [new ObjectType('Symfony\\Component\\Form\\FormBuilderInterface'), new ObjectType('Symfony\\Component\\Form\\FormInterface')];
+        $this->formObjectTypes = [new \PHPStan\Type\ObjectType('Symfony\\Component\\Form\\FormBuilderInterface'), new \PHPStan\Type\ObjectType('Symfony\\Component\\Form\\FormInterface')];
     }
-    public function isMatching(MethodCall $methodCall) : bool
+    public function isMatching(\PhpParser\Node\Expr\MethodCall $methodCall) : bool
     {
-        if (!$this->nodeNameResolver->isName($methodCall->name, 'add')) {
-            return \false;
-        }
         if (!$this->nodeTypeResolver->isObjectTypes($methodCall->var, $this->formObjectTypes)) {
             return \false;
         }
-        // just one argument
-        $args = $methodCall->getArgs();
-        if (!isset($args[1])) {
+        if (!$this->nodeNameResolver->isName($methodCall->name, 'add')) {
             return \false;
         }
-        $firstArg = $args[1];
-        return $firstArg->value !== null;
+        // just one argument
+        if (!isset($methodCall->args[1])) {
+            return \false;
+        }
+        return $methodCall->args[1]->value !== null;
     }
 }

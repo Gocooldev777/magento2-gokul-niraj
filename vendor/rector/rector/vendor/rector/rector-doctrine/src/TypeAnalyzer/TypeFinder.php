@@ -14,34 +14,34 @@ final class TypeFinder
      * @template TType as Type
      * @param class-string<TType> $desiredTypeClass
      */
-    public function find(Type $type, string $desiredTypeClass) : Type
+    public function find(\PHPStan\Type\Type $type, string $desiredTypeClass) : \PHPStan\Type\Type
     {
-        if ($type instanceof $desiredTypeClass) {
+        if (\is_a($type, $desiredTypeClass, \true)) {
             return $type;
         }
-        if ($type instanceof ArrayType && $type->getItemType() instanceof $desiredTypeClass) {
+        if ($type instanceof \PHPStan\Type\ArrayType && \is_a($type->getItemType(), $desiredTypeClass, \true)) {
             return $type->getItemType();
         }
-        if ($type instanceof UnionType) {
+        if ($type instanceof \PHPStan\Type\UnionType) {
             return $this->findInJoinedType($type, $desiredTypeClass);
         }
-        if ($type instanceof IntersectionType) {
+        if ($type instanceof \PHPStan\Type\IntersectionType) {
             return $this->findInJoinedType($type, $desiredTypeClass);
         }
-        return new MixedType();
+        return new \PHPStan\Type\MixedType();
     }
     /**
      * @param class-string<Type> $desiredTypeClass
-     * @param \PHPStan\Type\UnionType|\PHPStan\Type\IntersectionType $compoundType
+     * @param \PHPStan\Type\IntersectionType|\PHPStan\Type\UnionType $compoundType
      */
-    private function findInJoinedType($compoundType, string $desiredTypeClass) : Type
+    private function findInJoinedType($compoundType, string $desiredTypeClass) : \PHPStan\Type\Type
     {
         foreach ($compoundType->getTypes() as $joinedType) {
             $foundType = $this->find($joinedType, $desiredTypeClass);
-            if (!$foundType instanceof MixedType) {
+            if (!$foundType instanceof \PHPStan\Type\MixedType) {
                 return $foundType;
             }
         }
-        return new MixedType();
+        return new \PHPStan\Type\MixedType();
     }
 }

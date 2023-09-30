@@ -1,28 +1,9 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
 use Laminas\View\Exception;
 use stdClass;
-
-use function array_intersect;
-use function array_keys;
-use function array_shift;
-use function call_user_func_array;
-use function count;
-use function func_get_args;
-use function get_object_vars;
-use function implode;
-use function is_array;
-use function is_string;
-use function method_exists;
-use function preg_match;
-use function sprintf;
-use function str_replace;
-
-use const PHP_EOL;
 
 // @codingStandardsIgnoreStart
 /**
@@ -84,11 +65,11 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
      * Allows calling $helper->headLink(), but, more importantly, chaining calls
      * like ->appendStylesheet()->headLink().
      *
-     * @param  array|null $attributes
-     * @param  string     $placement
+     * @param  array  $attributes
+     * @param  string $placement
      * @return HeadLink
      */
-    public function headLink(?array $attributes = null, $placement = Placeholder\Container\AbstractContainer::APPEND)
+    public function headLink(array $attributes = null, $placement = Placeholder\Container\AbstractContainer::APPEND)
     {
         return call_user_func_array([$this, '__invoke'], func_get_args());
     }
@@ -99,11 +80,11 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
      * Returns current object instance. Optionally, allows passing array of
      * values to build link.
      *
-     * @param  array|null $attributes
-     * @param  string     $placement
+     * @param  array  $attributes
+     * @param  string $placement
      * @return HeadLink
      */
-    public function __invoke(?array $attributes = null, $placement = Placeholder\Container\AbstractContainer::APPEND)
+    public function __invoke(array $attributes = null, $placement = Placeholder\Container\AbstractContainer::APPEND)
     {
         if (null !== $attributes) {
             $item = $this->createData($attributes);
@@ -145,26 +126,24 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
      *   - public function appendSection()
      *   - public function appendSubsection()
      *
-     * @param  string $method
+     * @param  mixed $method
      * @param  mixed $args
      * @throws Exception\BadMethodCallException
-     * @return $this|mixed
+     * @return void
      */
     public function __call($method, $args)
     {
-        if (
-            preg_match(
-                '/^(?P<action>set|(ap|pre)pend|offsetSet)(?P<type>Stylesheet|Alternate|Prev|Next)$/',
-                $method,
-                $matches
-            )
-        ) {
+        if (preg_match(
+            '/^(?P<action>set|(ap|pre)pend|offsetSet)(?P<type>Stylesheet|Alternate|Prev|Next)$/',
+            $method,
+            $matches
+        )) {
             $argc   = count($args);
             $action = $matches['action'];
             $type   = $matches['type'];
             $index  = null;
 
-            if ('offsetSet' === $action) {
+            if ('offsetSet' == $action) {
                 if (0 < $argc) {
                     $index = array_shift($args);
                     --$argc;
@@ -185,7 +164,7 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
             }
 
             if ($item) {
-                if ('offsetSet' === $action) {
+                if ('offsetSet' == $action) {
                     $this->offsetSet($index, $item);
                 } else {
                     $this->$action($item);
@@ -254,7 +233,7 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
             );
         }
 
-        $this->getContainer()->offsetSet($index, $value);
+        return $this->getContainer()->offsetSet($index, $value);
     }
 
     /**
@@ -296,6 +275,7 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
     /**
      * Create HTML link element from data item
      *
+     * @param  stdClass $item
      * @return string
      */
     public function itemToString(stdClass $item)
@@ -310,31 +290,30 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
                         $link .= sprintf(
                             ' %s="%s"',
                             $key,
-                            $this->autoEscape ? $this->escapeAttribute($value) : $value
+                            ($this->autoEscape) ? $this->escapeAttribute($value) : $value
                         );
                     }
                 } else {
                     $link .= sprintf(
                         ' %s="%s"',
                         $itemKey,
-                        $this->autoEscape ? $this->escapeAttribute($attributes[$itemKey]) : $attributes[$itemKey]
+                        ($this->autoEscape) ? $this->escapeAttribute($attributes[$itemKey]) : $attributes[$itemKey]
                     );
                 }
             }
         }
 
         if (method_exists($this->view, 'plugin')) {
-            $link .= $this->view->plugin('doctype')->isXhtml() ? ' />' : '>';
+            $link .= ($this->view->plugin('doctype')->isXhtml()) ? ' />' : '>';
         } else {
             $link .= ' />';
         }
 
-        if (($link === '<link />') || ($link === '<link>')) {
+        if (($link == '<link />') || ($link == '<link>')) {
             return '';
         }
 
-        if (
-            isset($attributes['conditionalStylesheet'])
+        if (isset($attributes['conditionalStylesheet'])
             && ! empty($attributes['conditionalStylesheet'])
             && is_string($attributes['conditionalStylesheet'])
         ) {
@@ -356,7 +335,7 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
      */
     public function toString($indent = null)
     {
-        $indent = null !== $indent
+        $indent = (null !== $indent)
                 ? $this->getWhitespace($indent)
                 : $this->getIndent();
 
@@ -422,14 +401,9 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
             $extras = [];
         }
 
-        return $this->createData([
-            'rel'                   => $rel,
-            'type'                  => $type,
-            'href'                  => $href,
-            'media'                 => $media,
-            'conditionalStylesheet' => $conditionalStylesheet,
-            'extras'                => $extras,
-        ]);
+        $attributes = compact('rel', 'type', 'href', 'media', 'conditionalStylesheet', 'extras');
+
+        return $this->createData($attributes);
     }
 
     /**
@@ -441,7 +415,7 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
     protected function isDuplicateStylesheet($uri)
     {
         foreach ($this->getContainer() as $item) {
-            if (($item->rel === 'stylesheet') && ($item->href === $uri)) {
+            if (($item->rel == 'stylesheet') && ($item->href == $uri)) {
                 return true;
             }
         }
@@ -481,13 +455,13 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
             $extras = [];
         }
 
-        return $this->createData([
-            'rel'    => $rel,
-            'href'   => (string) $href,
-            'type'   => (string) $type,
-            'title'  => (string) $title,
-            'extras' => $extras,
-        ]);
+        $href  = (string) $href;
+        $type  = (string) $type;
+        $title = (string) $title;
+
+        $attributes = compact('rel', 'href', 'type', 'title', 'extras');
+
+        return $this->createData($attributes);
     }
 
     /**
@@ -498,10 +472,12 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
      */
     public function createDataPrev(array $args)
     {
-        return $this->createData([
-            'rel'  => 'prev',
-            'href' => (string) array_shift($args),
-        ]);
+        $rel  = 'prev';
+        $href = (string) array_shift($args);
+
+        $attributes = compact('rel', 'href');
+
+        return $this->createData($attributes);
     }
 
     /**
@@ -512,9 +488,11 @@ class HeadLink extends Placeholder\Container\AbstractStandalone
      */
     public function createDataNext(array $args)
     {
-        return $this->createData([
-            'rel'  => 'next',
-            'href' => (string) array_shift($args),
-        ]);
+        $rel  = 'next';
+        $href = (string) array_shift($args);
+
+        $attributes = compact('rel', 'href');
+
+        return $this->createData($attributes);
     }
 }

@@ -11,8 +11,6 @@ use Magento\GraphQl\Model\Query\ContextInterface;
 
 /**
  * Process Cart Item Data
- *
- * @api
  */
 interface ItemDataProcessorInterface
 {

@@ -116,9 +116,6 @@ namespace Foo {
         $tokens->clearTokenAndMergeSurroundingWhitespace($openIndex);
     }
 
-    /**
-     * @return iterable<int>
-     */
     private function findCurlyBraceOpen(Tokens $tokens): iterable
     {
         for ($i = \count($tokens) - 1; $i > 0; --$i) {

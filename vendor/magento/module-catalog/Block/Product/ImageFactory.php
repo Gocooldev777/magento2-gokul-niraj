@@ -18,8 +18,6 @@ use Magento\Catalog\Helper\Image as ImageHelper;
 
 /**
  * Create imageBlock from product and view.xml
- *
- * @api
  */
 class ImageFactory
 {

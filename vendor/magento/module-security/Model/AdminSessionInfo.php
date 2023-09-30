@@ -27,27 +27,26 @@ class AdminSessionInfo extends \Magento\Framework\Model\AbstractModel
     /**
      * Admin logged in
      */
-    public const LOGGED_IN = 1;
+    const LOGGED_IN = 1;
 
     /**
      * Admin logged out
      */
-    public const LOGGED_OUT = 0;
+    const LOGGED_OUT = 0;
 
     /**
      * User has been logged out by another login with the same credentials
      */
-    public const LOGGED_OUT_BY_LOGIN = 2;
+    const LOGGED_OUT_BY_LOGIN = 2;
 
     /**
      * User has been logged out manually from another session
      */
-    public const LOGGED_OUT_MANUALLY = 3;
+    const LOGGED_OUT_MANUALLY = 3;
 
     /**
      * All other open sessions were terminated
      * @since 100.1.0
-     * @var bool
      */
     protected $isOtherSessionsTerminated = false;
 
@@ -134,10 +133,10 @@ class AdminSessionInfo extends \Magento\Framework\Model\AbstractModel
         $currentTime = $this->dateTime->gmtTimestamp();
         $lastUpdatedTime = $this->getUpdatedAt();
         if (!is_numeric($lastUpdatedTime)) {
-            $lastUpdatedTime = $lastUpdatedTime === null ? 0 : strtotime($lastUpdatedTime);
+            $lastUpdatedTime = strtotime($lastUpdatedTime);
         }
 
-        return $lastUpdatedTime <= ($currentTime - $lifetime);
+        return $lastUpdatedTime <= ($currentTime - $lifetime) ? true : false;
     }
 
     /**

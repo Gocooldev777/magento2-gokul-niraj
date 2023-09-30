@@ -4,22 +4,21 @@ declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\Assign;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Stmt\Expression;
 use Rector\Core\Rector\AbstractRector;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\Assign\SplitDoubleAssignRector\SplitDoubleAssignRectorTest
  */
-final class SplitDoubleAssignRector extends AbstractRector
+final class SplitDoubleAssignRector extends \Rector\Core\Rector\AbstractRector
 {
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Split multiple inline assigns to each own lines default value, to prevent undefined array issues', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Split multiple inline assigns to each own lines default value, to prevent undefined array issues', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -45,58 +44,27 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Expression::class];
+        return [\PhpParser\Node\Expr\Assign::class];
     }
     /**
-     * @param Expression $node
-     * @return Expression[]|null
+     * @param Assign $node
      */
-    public function refactor(Node $node) : ?array
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        if (!$node->expr instanceof Assign) {
+        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        if (!$parent instanceof \PhpParser\Node\Stmt\Expression) {
             return null;
         }
-        $firstAssign = $node->expr;
-        if (!$firstAssign->expr instanceof Assign) {
+        if (!$node->expr instanceof \PhpParser\Node\Expr\Assign) {
             return null;
         }
-        $lastAssignValue = $this->resolveLastAssignExpr($firstAssign);
-        $collectExpressions = $this->collectExpressions($firstAssign, $lastAssignValue);
-        if ($collectExpressions === []) {
-            return null;
+        $newAssign = new \PhpParser\Node\Expr\Assign($node->var, $node->expr->expr);
+        if (!$node->expr->expr instanceof \PhpParser\Node\Expr\CallLike) {
+            $this->nodesToAddCollector->addNodeAfterNode($node->expr, $node);
+            return $newAssign;
         }
-        return $collectExpressions;
-    }
-    /**
-     * @return Expression[]
-     */
-    private function collectExpressions(Assign $assign, Expr $expr) : array
-    {
-        /** @var Expression[] $expressions */
-        $expressions = [];
-        while ($assign instanceof Assign) {
-            if ($assign->var instanceof ArrayDimFetch) {
-                return [];
-            }
-            $expressions[] = new Expression(new Assign($assign->var, $expr));
-            // CallLike check need to be after first fill Expression
-            // so use existing variable defined to avoid repetitive call
-            if ($expr instanceof CallLike) {
-                $expr = $assign->var;
-            }
-            if (!$assign->expr instanceof Assign) {
-                break;
-            }
-            /** @var Expr $assign */
-            $assign = $assign->expr;
-        }
-        return $expressions;
-    }
-    private function resolveLastAssignExpr(Assign $assign) : Expr
-    {
-        if (!$assign->expr instanceof Assign) {
-            return $assign->expr;
-        }
-        return $this->resolveLastAssignExpr($assign->expr);
+        $varAssign = new \PhpParser\Node\Expr\Assign($node->expr->var, $node->var);
+        $this->nodesToAddCollector->addNodeBeforeNode(new \PhpParser\Node\Stmt\Expression($newAssign), $node);
+        return $varAssign;
     }
 }

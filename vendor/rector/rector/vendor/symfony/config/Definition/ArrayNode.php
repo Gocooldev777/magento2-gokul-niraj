@@ -8,17 +8,17 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Definition;
+namespace RectorPrefix20211221\Symfony\Component\Config\Definition;
 
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\InvalidTypeException;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\UnsetKeyException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidTypeException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException;
 /**
  * Represents an Array node in the config tree.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class ArrayNode extends BaseNode implements PrototypeNodeInterface
+class ArrayNode extends \RectorPrefix20211221\Symfony\Component\Config\Definition\BaseNode implements \RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypeNodeInterface
 {
     protected $xmlRemappings = [];
     protected $children = [];
@@ -34,13 +34,13 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
         $this->normalizeKeys = $normalizeKeys;
     }
     /**
+     * {@inheritdoc}
+     *
      * Namely, you mostly have foo_bar in YAML while you have foo-bar in XML.
      * After running this method, all keys are normalized to foo_bar.
      *
      * If you have a mixed key like foo-bar_moo, it will not be altered.
      * The key will also not be altered if the target key already exists.
-     * @param mixed $value
-     * @return mixed
      */
     protected function preNormalize($value)
     {
@@ -62,7 +62,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
      *
      * @return array<string, NodeInterface>
      */
-    public function getChildren() : array
+    public function getChildren()
     {
         return $this->children;
     }
@@ -80,7 +80,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
      *
      * @return array an array of the form [[string, string]]
      */
-    public function getXmlRemappings() : array
+    public function getXmlRemappings()
     {
         return $this->xmlRemappings;
     }
@@ -131,16 +131,22 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
     {
         return $this->ignoreExtraKeys;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function setName(string $name)
     {
         $this->name = $name;
     }
-    public function hasDefaultValue() : bool
+    /**
+     * {@inheritdoc}
+     */
+    public function hasDefaultValue()
     {
         return $this->addIfNotSet;
     }
     /**
-     * @return mixed
+     * {@inheritdoc}
      */
     public function getDefaultValue()
     {
@@ -161,7 +167,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
      * @throws \InvalidArgumentException when the child node has no name
      * @throws \InvalidArgumentException when the child node's name is not unique
      */
-    public function addChild(NodeInterface $node)
+    public function addChild(\RectorPrefix20211221\Symfony\Component\Config\Definition\NodeInterface $node)
     {
         $name = $node->getName();
         if ('' === $name) {
@@ -173,15 +179,15 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
         $this->children[$name] = $node;
     }
     /**
+     * {@inheritdoc}
+     *
      * @throws UnsetKeyException
      * @throws InvalidConfigurationException if the node doesn't have enough children
-     * @param mixed $value
-     * @return mixed
      */
     protected function finalizeValue($value)
     {
         if (\false === $value) {
-            throw new UnsetKeyException(\sprintf('Unsetting key for path "%s", value: %s.', $this->getPath(), \json_encode($value)));
+            throw new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException(\sprintf('Unsetting key for path "%s", value: %s.', $this->getPath(), \json_encode($value)));
         }
         foreach ($this->children as $name => $child) {
             if (!\array_key_exists($name, $value)) {
@@ -192,7 +198,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
                     } else {
                         $message .= '.';
                     }
-                    $ex = new InvalidConfigurationException($message);
+                    $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException($message);
                     $ex->setPath($this->getPath());
                     throw $ex;
                 }
@@ -203,23 +209,23 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
             }
             if ($child->isDeprecated()) {
                 $deprecation = $child->getDeprecation($name, $this->getPath());
-                \RectorPrefix202304\trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
+                trigger_deprecation($deprecation['package'], $deprecation['version'], $deprecation['message']);
             }
             try {
                 $value[$name] = $child->finalize($value[$name]);
-            } catch (UnsetKeyException $exception) {
+            } catch (\RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException $e) {
                 unset($value[$name]);
             }
         }
         return $value;
     }
     /**
-     * @param mixed $value
+     * {@inheritdoc}
      */
     protected function validateType($value)
     {
         if (!\is_array($value) && (!$this->allowFalse || \false !== $value)) {
-            $ex = new InvalidTypeException(\sprintf('Invalid type for path "%s". Expected "array", but got "%s"', $this->getPath(), \get_debug_type($value)));
+            $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidTypeException(\sprintf('Invalid type for path "%s". Expected "array", but got "%s"', $this->getPath(), \get_debug_type($value)));
             if ($hint = $this->getInfo()) {
                 $ex->addHint($hint);
             }
@@ -228,9 +234,9 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
         }
     }
     /**
+     * {@inheritdoc}
+     *
      * @throws InvalidConfigurationException
-     * @param mixed $value
-     * @return mixed
      */
     protected function normalizeValue($value)
     {
@@ -243,7 +249,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
             if (isset($this->children[$name])) {
                 try {
                     $normalized[$name] = $this->children[$name]->normalize($val);
-                } catch (UnsetKeyException $exception) {
+                } catch (\RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException $e) {
                 }
                 unset($value[$name]);
             } elseif (!$this->removeExtraKeys) {
@@ -272,7 +278,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
             } else {
                 $msg .= \sprintf('. Available option%s %s "%s".', 1 === \count($proposals) ? '' : 's', 1 === \count($proposals) ? 'is' : 'are', \implode('", "', $proposals));
             }
-            $ex = new InvalidConfigurationException($msg);
+            $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException($msg);
             $ex->setPath($this->getPath());
             throw $ex;
         }
@@ -280,24 +286,25 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
     }
     /**
      * Remaps multiple singular values to a single plural value.
+     *
+     * @return array
      */
-    protected function remapXml(array $value) : array
+    protected function remapXml(array $value)
     {
         foreach ($this->xmlRemappings as [$singular, $plural]) {
             if (!isset($value[$singular])) {
                 continue;
             }
-            $value[$plural] = Processor::normalizeConfig($value, $singular, $plural);
+            $value[$plural] = \RectorPrefix20211221\Symfony\Component\Config\Definition\Processor::normalizeConfig($value, $singular, $plural);
             unset($value[$singular]);
         }
         return $value;
     }
     /**
+     * {@inheritdoc}
+     *
      * @throws InvalidConfigurationException
      * @throws \RuntimeException
-     * @param mixed $leftSide
-     * @param mixed $rightSide
-     * @return mixed
      */
     protected function mergeValues($leftSide, $rightSide)
     {
@@ -313,7 +320,7 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
             // no conflict
             if (!\array_key_exists($k, $leftSide)) {
                 if (!$this->allowNewKeys) {
-                    $ex = new InvalidConfigurationException(\sprintf('You are not allowed to define new elements for path "%s". Please define all elements for this path in one config file. If you are trying to overwrite an element, make sure you redefine it with the same name.', $this->getPath()));
+                    $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException(\sprintf('You are not allowed to define new elements for path "%s". Please define all elements for this path in one config file. If you are trying to overwrite an element, make sure you redefine it with the same name.', $this->getPath()));
                     $ex->setPath($this->getPath());
                     throw $ex;
                 }
@@ -331,6 +338,9 @@ class ArrayNode extends BaseNode implements PrototypeNodeInterface
         }
         return $leftSide;
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function allowPlaceholders() : bool
     {
         return \false;

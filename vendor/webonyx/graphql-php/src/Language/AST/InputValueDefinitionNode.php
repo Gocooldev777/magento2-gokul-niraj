@@ -1,21 +1,26 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class InputValueDefinitionNode extends Node
 {
-    public string $kind = NodeKind::INPUT_VALUE_DEFINITION;
+    /** @var string */
+    public $kind = NodeKind::INPUT_VALUE_DEFINITION;
 
-    public NameNode $name;
+    /** @var NameNode */
+    public $name;
 
     /** @var NamedTypeNode|ListTypeNode|NonNullTypeNode */
-    public TypeNode $type;
+    public $type;
 
     /** @var VariableNode|NullValueNode|IntValueNode|FloatValueNode|StringValueNode|BooleanValueNode|EnumValueNode|ListValueNode|ObjectValueNode|null */
-    public ?ValueNode $defaultValue = null;
+    public $defaultValue;
 
     /** @var NodeList<DirectiveNode> */
-    public NodeList $directives;
+    public $directives;
 
-    public ?StringValueNode $description = null;
+    /** @var StringValueNode|null */
+    public $description;
 }

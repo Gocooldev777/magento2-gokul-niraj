@@ -77,7 +77,7 @@ class Structure extends DataStructure
      */
     protected function _generateAnonymousName($class)
     {
-        $position = $class !== null ? strpos($class, '\\Block\\') : '';
+        $position = strpos($class, '\\Block\\');
         $key = $position !== false ? substr($class, $position + 7) : $class;
         $key = strtolower(trim($key, '_'));
 

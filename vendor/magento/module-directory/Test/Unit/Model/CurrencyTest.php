@@ -7,10 +7,7 @@ declare(strict_types=1);
 
 namespace Magento\Directory\Test\Unit\Model;
 
-use Magento\Directory\Model\Currency as CurrencyModel;
-use Magento\Framework\Currency;
-use Magento\Framework\Currency\Data\Currency as CurrencyData;
-use Magento\Framework\Currency\Exception\CurrencyException;
+use Magento\Directory\Model\Currency;
 use Magento\Framework\Locale\CurrencyInterface;
 use Magento\Framework\Locale\ResolverInterface as LocalResolverInterface;
 use Magento\Framework\NumberFormatterFactory;
@@ -22,13 +19,14 @@ use PHPUnit\Framework\TestCase;
 class CurrencyTest extends TestCase
 {
     /**
-     * @var CurrencyModel
+     * @var Currency
      */
     protected $currency;
 
     /**
      * @var string
      */
+
     protected $currencyCode = 'USD';
 
     /**
@@ -69,7 +67,7 @@ class CurrencyTest extends TestCase
 
         $objectManager = new ObjectManager($this);
         $this->currency = $objectManager->getObject(
-            CurrencyModel::class,
+            Currency::class,
             [
                 'localeCurrency' => $this->localeCurrencyMock,
                 'currencyFilterFactory' => $currencyFilterFactory,
@@ -87,7 +85,7 @@ class CurrencyTest extends TestCase
     {
         $currencySymbol = '$';
 
-        $currencyMock = $this->getMockBuilder(Currency::class)
+        $currencyMock = $this->getMockBuilder(\Magento\Framework\Currency::class)
             ->disableOriginalConstructor()
             ->getMock();
         $currencyMock->expects(self::once())
@@ -103,31 +101,22 @@ class CurrencyTest extends TestCase
 
     /**
      * @dataProvider getOutputFormatDataProvider
-     * @param string $locale
-     * @param string $currency
-     * @param string $expected
+     * @param $expected
+     * @param $locale
      */
-    public function testGetOutputFormat(string $locale, string $currency, string $expected): void
+    public function testGetOutputFormat($expected, $locale): void
     {
-        $this->localeResolver->expects(self::atLeastOnce())
-            ->method('getLocale')
-            ->willReturn($locale);
+        $this->localeResolver->method('getLocale')->willReturn($locale);
         $this->numberFormatterFactory
-            ->expects(self::exactly(2))
             ->method('create')
-            ->willReturnCallback(
-                function (array $args) {
-                    return new \Magento\Framework\NumberFormatter($args['locale'], $args['style']);
-                }
-            );
+            ->with(['locale' => $locale, 'style' => 2])
+            ->willReturn(new \Magento\Framework\NumberFormatter($locale, 2));
         $this->serializer->method('serialize')->willReturnMap(
             [
                 [[], '[]'],
                 [['display' => 1], '{"display":1}']
             ]
         );
-
-        $this->currency->load($currency);
         self::assertEquals($expected, $this->currency->getOutputFormat());
     }
 
@@ -139,58 +128,50 @@ class CurrencyTest extends TestCase
     public function getOutputFormatDataProvider(): array
     {
         return [
-            'en_US:USD' => ['en_US', 'USD', '$%s'],
-            'en_US:PLN' => ['en_US', 'PLN', "PLN\u{00A0}%s"],
-            'en_US:PKR' => ['en_US', 'PKR', "PKR\u{00A0}%s"],
-            'af_ZA:VND' => ['af_ZA', 'VND', "\u{20AB}%s"],
-            'ar_DZ:EGP' => ['ar_DZ', 'EGP', "\u{062C}.\u{0645}.\u{200F}\u{00A0}%s"],
-            'ar_SA:USD' => ['ar_SA', 'USD', "%s\u{00A0}US$"],
-            'ar_SA:LBP' => ['ar_SA', 'LBP', "%s\u{00A0}\u{0644}.\u{0644}.\u{200F}"],
-            'fa_IR:USD' => ['fa_IR', 'USD', "\u{200E}$%s"],
-            'ar_KW:USD' => ['ar_KW', 'USD', "%s\u{00A0}US$"],
-            'bn_BD:IQD' => ['bn_BD', 'IQD', "%s\u{00A0}IQD"],
-            'ca_ES:VND' => ['ca_ES', 'VND', "%s\u{00A0}\u{20AB}"],
-            'de_DE:USD' => ['de_DE', 'USD', "%s\u{00A0}$"],
-            'de_DE:AED' => ['de_DE', 'AED', "%s\u{00A0}AED"],
-            'es_VE:VEF' => ['es_VE', 'VEF', "Bs.\u{00A0}%s"],
-            'pl_PL:USD' => ['pl_PL', 'USD', "%s\u{00A0}USD"],
-            'pl_PL:PLN' => ['pl_PL', 'PLN', "%s\u{00A0}z\u{0142}"],
+            'no_unicode' => [
+                'expected' => '$%s',
+                'locale' => 'en_US'
+            ],
+            'arabic_ar_SA' => [
+                'expected' =>  '%s' . json_decode('"\u00A0"') . 'US$',
+                'locale' => 'ar_SA'
+            ],
+            'arabic_fa_IR' => [
+                'expected' => json_decode('"\u200E"') . '$%s',
+                'locale' => 'fa_IR'
+            ],
+            'arabic_ar_KW' => [
+                'expected' => '%s' . json_decode('"\u00A0"') . 'US$',
+                'locale' => 'ar_KW'
+            ],
         ];
     }
 
     /**
      * @dataProvider getFormatTxtNumberFormatterDataProvider
-     * @param string $locale
-     * @param string $currency
      * @param string $price
      * @param array $options
+     * @param string $locale
      * @param string $expected
      */
     public function testFormatTxtWithNumberFormatter(
-        string $locale,
-        string $currency,
         string $price,
         array $options,
+        string $locale,
         string $expected
     ): void {
-        $this->localeResolver->expects(self::once())
-            ->method('getLocale')
-            ->willReturn($locale);
+        $this->localeResolver->expects(self::exactly(2))->method('getLocale')->willReturn($locale);
         $this->numberFormatterFactory
             ->expects(self::once())
             ->method('create')
-            ->willReturnCallback(
-                function (array $args) {
-                    return new \Magento\Framework\NumberFormatter($args['locale'], $args['style']);
-                }
-            );
+            ->with(['locale' => $locale, 'style' => 2])
+            ->willReturn(new \Magento\Framework\NumberFormatter($locale, 2));
         $this->serializer->method('serialize')->willReturnMap(
             [
                 [[], '[]']
             ]
         );
 
-        $this->currency->load($currency);
         self::assertEquals($expected, $this->currency->formatTxt($price, $options));
     }
 
@@ -202,39 +183,16 @@ class CurrencyTest extends TestCase
     public function getFormatTxtNumberFormatterDataProvider(): array
     {
         return [
-            ['en_US', 'USD', '9999', [], '$9,999.00'],
-            ['en_US', 'EUR', '9999', [], '€9,999.00'],
-            ['en_US', 'LBP', '9999', [], "LBP\u{00A0}9,999"],
-            ['ar_SA', 'USD', '9', [], "\u{0669}\u{066B}\u{0660}\u{0660}\u{00A0}US$"],
-            ['ar_SA', 'AED', '9', [], "\u{0669}\u{066B}\u{0660}\u{0660}\u{00A0}\u{062F}.\u{0625}.\u{200F}"],
-            ['de_DE', 'USD', '9999', [], "9.999,00\u{00A0}$"],
-            ['de_DE', 'EUR', '9999', [], "9.999,00\u{00A0}€"],
-            ['en_US', 'USD', '9999', ['display' => CurrencyData::NO_SYMBOL, 'precision' => 2], '9,999.00'],
-            ['en_US', 'USD', '9999', ['display' => CurrencyData::NO_SYMBOL], '9,999.00'],
-            ['en_US', 'PLN', '9999', ['display' => CurrencyData::NO_SYMBOL], '9,999.00'],
-            ['en_US', 'LBP', '9999', ['display' => CurrencyData::NO_SYMBOL], '9,999'],
+            ['9999', [], 'en_US', '$9,999.00'],
+            ['9999', ['display' => \Magento\Framework\Currency::NO_SYMBOL, 'precision' => 2], 'en_US', '9,999.00'],
+            ['9999', ['display' => \Magento\Framework\Currency::NO_SYMBOL], 'en_US', '9,999.00'],
+            [' 9999', ['display' => \Magento\Framework\Currency::NO_SYMBOL], 'en_US', '9,999.00'],
+            ['9999', ['precision' => 1], 'en_US', '$9,999.0'],
+            ['9999', ['precision' => 2, 'symbol' => '#'], 'en_US', '#9,999.00'],
             [
-                'ar_SA',
-                'USD',
-                '9999',
-                ['display' => CurrencyData::NO_SYMBOL],
-                "\u{0669}\u{066C}\u{0669}\u{0669}\u{0669}\u{066B}\u{0660}\u{0660}"
-            ],
-            [
-                'ar_SA',
-                'AED',
-                '9999',
-                ['display' => CurrencyData::NO_SYMBOL],
-                "\u{0669}\u{066C}\u{0669}\u{0669}\u{0669}\u{066B}\u{0660}\u{0660}"
-            ],
-            ['en_US', 'USD', ' 9999', ['display' => CurrencyData::NO_SYMBOL], '9,999.00'],
-            ['en_US', 'USD', '9999', ['precision' => 1], '$9,999.0'],
-            ['en_US', 'USD', '9999', ['precision' => 2, 'symbol' => '#'], '# 9,999.00'],
-            [
-                'en_US',
-                'USD',
                 '9999.99',
-                ['precision' => 2, 'symbol' => '#', 'display' => CurrencyData::NO_SYMBOL],
+                ['precision' => 2, 'symbol' => '#', 'display' => \Magento\Framework\Currency::NO_SYMBOL],
+                'en_US',
                 '9,999.99'
             ],
         ];
@@ -245,7 +203,7 @@ class CurrencyTest extends TestCase
      * @param string $price
      * @param array $options
      * @param string $expected
-     * @throws CurrencyException
+     * @throws \Zend_Currency_Exception
      */
     public function testFormatTxtWithZendCurrency(string $price, array $options, string $expected): void
     {
@@ -253,7 +211,7 @@ class CurrencyTest extends TestCase
             ->expects(self::once())
             ->method('getCurrency')
             ->with($this->currencyCode)
-            ->willReturn(new CurrencyData($options, 'en_US'));
+            ->willReturn(new \Zend_Currency($options, 'en_US'));
         $this->serializer->method('serialize')->willReturnMap(
             [
                 [[], '[]']
@@ -271,11 +229,11 @@ class CurrencyTest extends TestCase
     public function getFormatTxtZendCurrencyDataProvider(): array
     {
         return [
-            ['9999', ['display' => Currency::USE_SYMBOL, 'foo' => 'bar'], '$9,999.00'],
-            ['9999', ['display' => Currency::USE_SHORTNAME, 'foo' => 'bar'], 'USD9,999.00'],
+            ['9999', ['display' => \Magento\Framework\Currency::USE_SYMBOL, 'foo' => 'bar'], '$9,999.00'],
+            ['9999', ['display' => \Magento\Framework\Currency::USE_SHORTNAME, 'foo' => 'bar'], 'USD9,999.00'],
             ['9999', ['currency' => 'USD'], '$9,999.00'],
             ['9999', ['currency' => 'CNY'], 'CN¥9,999.00'],
-            ['9999', ['locale' => 'fr_FR'], "9\u{202F}999,00\u{00A0}$"]
+            ['9999', ['locale' => 'fr_FR'], '9 999,00 $']
         ];
     }
 }

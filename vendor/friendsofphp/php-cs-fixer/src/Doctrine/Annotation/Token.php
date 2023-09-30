@@ -23,9 +23,15 @@ use Doctrine\Common\Annotations\DocLexer;
  */
 final class Token
 {
-    private int $type;
+    /**
+     * @var int
+     */
+    private $type;
 
-    private string $content;
+    /**
+     * @var string
+     */
+    private $content;
 
     /**
      * @param int    $type    The type

@@ -7,10 +7,7 @@ if ($block->getFormKeyProvider()->isFullPageCacheEnabled()): ?>
     <script type="text/x-magento-init">
         {
             "*": {
-                "Magento_PageCache/js/form-key-provider": {
-                    "isPaginationCacheEnabled":
-                        <?= /* @noEscape */ (int)$block->getFormKeyProvider()->isPaginationCacheEnabled() ?>
-                }
+                "Magento_PageCache/js/form-key-provider": {}
             }
         }
     </script>

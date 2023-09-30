@@ -50,8 +50,8 @@ class InterfaceValidator
      */
     public function validate($pluginClass, $interceptedType)
     {
-        $interceptedType = '\\' . trim((string)$interceptedType, '\\');
-        $pluginClass = '\\' . trim((string)$pluginClass, '\\');
+        $interceptedType = '\\' . trim($interceptedType, '\\');
+        $pluginClass = '\\' . trim($pluginClass, '\\');
         $plugin = new \ReflectionClass($pluginClass);
         $type = new \ReflectionClass($interceptedType);
 

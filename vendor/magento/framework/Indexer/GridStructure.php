@@ -52,7 +52,9 @@ class GridStructure implements IndexStructureInterface
     }
 
     /**
-     * @inheritdoc
+     * @param string $index
+     * @param Dimension[] $dimensions
+     * @return void
      */
     public function delete($index, array $dimensions = [])
     {
@@ -64,7 +66,10 @@ class GridStructure implements IndexStructureInterface
     }
 
     /**
-     * @inheritdoc
+     * @param string $index
+     * @param array $fields
+     * @param Dimension[] $dimensions
+     * @return void
      */
     public function create($index, array $fields, array $dimensions = [])
     {
@@ -72,8 +77,6 @@ class GridStructure implements IndexStructureInterface
     }
 
     /**
-     * Creates index table with provided fields configuration
-     *
      * @param string $tableName
      * @param array $fields
      * @throws \Zend_Db_Exception
@@ -101,7 +104,7 @@ class GridStructure implements IndexStructureInterface
             $name = $field['name'];
             $type = $columnMap['type'];
             $size = $columnMap['size'];
-            if ($field['type'] === 'filterable' || (isset($field['index']) && $field['index'] === true)) {
+            if ($field['type'] === 'filterable') {
                 $table->addIndex(
                     $this->resource->getIdxName($tableName, $name, AdapterInterface::INDEX_TYPE_INDEX),
                     $name,
@@ -123,8 +126,6 @@ class GridStructure implements IndexStructureInterface
     }
 
     /**
-     * Returns an instance of the db connection
-     *
      * @return false|AdapterInterface
      */
     private function getAdapter()

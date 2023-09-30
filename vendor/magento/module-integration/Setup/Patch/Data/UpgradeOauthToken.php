@@ -22,6 +22,7 @@ use Psr\Log\LoggerInterface;
  */
 class UpgradeOauthToken implements DataPatchInterface, PatchVersionInterface
 {
+
     /**
      * @var TokenCollection
      */
@@ -89,7 +90,7 @@ class UpgradeOauthToken implements DataPatchInterface, PatchVersionInterface
             foreach ($this->tokenCollection as $token) {
                 $existingSecret = $token->getSecret();
                 $entityId = $token->getEntityId();
-                $type = $token->getType() !== null ? strtolower($token->getType()) : '';
+                $type = strtolower($token->getType());
 
                 if ($entityId && $existingSecret && $type === TokenModel::TYPE_ACCESS) {
                     if (strlen($existingSecret) <= OauthHelper::LENGTH_TOKEN_SECRET) {

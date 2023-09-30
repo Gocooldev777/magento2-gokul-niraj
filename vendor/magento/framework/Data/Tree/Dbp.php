@@ -17,13 +17,13 @@ use Magento\Framework\DB\Select;
  */
 class Dbp extends \Magento\Framework\Data\Tree
 {
-    public const ID_FIELD = 'id';
+    const ID_FIELD = 'id';
 
-    public const PATH_FIELD = 'path';
+    const PATH_FIELD = 'path';
 
-    public const ORDER_FIELD = 'order';
+    const ORDER_FIELD = 'order';
 
-    public const LEVEL_FIELD = 'level';
+    const LEVEL_FIELD = 'level';
 
     /**
      * DB connection
@@ -101,7 +101,6 @@ class Dbp extends \Magento\Framework\Data\Tree
         parent::__construct();
 
         if (!$connection) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception('Wrong "$connection" parametr');
         }
 
@@ -118,7 +117,6 @@ class Dbp extends \Magento\Framework\Data\Tree
             $fields[self::ORDER_FIELD]
         )
         ) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception('"$fields" tree configuratin array');
         }
 
@@ -200,7 +198,7 @@ class Dbp extends \Magento\Framework\Data\Tree
             $childrenItems = [];
 
             foreach ($arrNodes as $nodeInfo) {
-                $pathToParent = explode('/', $nodeInfo[$this->_pathField] ?? '');
+                $pathToParent = explode('/', $nodeInfo[$this->_pathField]);
                 array_pop($pathToParent);
                 $pathToParent = implode('/', $pathToParent);
                 $childrenItems[$pathToParent][] = $nodeInfo;
@@ -320,7 +318,7 @@ class Dbp extends \Magento\Framework\Data\Tree
         $newPath = $newParent->getData($this->_pathField);
 
         $newPath = $newPath . '/' . $node->getId();
-        $oldPathLength = $oldPath !== null ? strlen($oldPath) : 0;
+        $oldPathLength = strlen($oldPath);
 
         $newLevel = $newParent->getLevel() + 1;
         $levelDisposition = $newLevel - $node->getLevel();
@@ -365,7 +363,6 @@ class Dbp extends \Magento\Framework\Data\Tree
             $this->_conn->commit();
         } catch (\Exception $e) {
             $this->_conn->rollBack();
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception("Can't move tree node due to error: " . $e->getMessage());
         }
     }
@@ -401,7 +398,7 @@ class Dbp extends \Magento\Framework\Data\Tree
                     continue;
                 }
 
-                $pathToParent = explode('/', $nodeInfo[$this->_pathField] ?? '');
+                $pathToParent = explode('/', $nodeInfo[$this->_pathField]);
                 array_pop($pathToParent);
                 $pathToParent = implode('/', $pathToParent);
                 $childrenItems[$pathToParent][] = $nodeInfo;

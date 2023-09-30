@@ -11,8 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Interface for collection values from user input
- *
- * @api
  */
 interface CollectorInterface
 {

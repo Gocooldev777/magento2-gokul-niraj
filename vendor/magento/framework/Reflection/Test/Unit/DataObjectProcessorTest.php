@@ -27,11 +27,6 @@ class DataObjectProcessorTest extends TestCase
     private $dataObjectProcessor;
 
     /**
-     * @var MethodsMap
-     */
-    private $methodsMapProcessor;
-
-    /**
      * @var ExtensionAttributesProcessor|MockObject
      */
     private $extensionAttributesProcessorMock;
@@ -39,7 +34,7 @@ class DataObjectProcessorTest extends TestCase
     protected function setUp(): void
     {
         $objectManager = new ObjectManager($this);
-        $this->methodsMapProcessor = $objectManager->getObject(
+        $methodsMapProcessor = $objectManager->getObject(
             MethodsMap::class,
             [
                 'fieldNamer' => $objectManager->getObject(FieldNamer::class),
@@ -53,7 +48,7 @@ class DataObjectProcessorTest extends TestCase
             ->willReturn(['unserializedData']);
 
         $objectManager->setBackwardCompatibleProperty(
-            $this->methodsMapProcessor,
+            $methodsMapProcessor,
             'serializer',
             $serializerMock
         );
@@ -61,32 +56,27 @@ class DataObjectProcessorTest extends TestCase
         $this->extensionAttributesProcessorMock = $this->getMockBuilder(ExtensionAttributesProcessor::class)
             ->disableOriginalConstructor()
             ->getMock();
-    }
-
-    /**
-     * @param array $extensionAttributes
-     * @param array $excludedMethodsClassMap
-     * @param array $expectedOutput
-     * @dataProvider buildOutputDataArrayDataProvider
-     */
-    public function testBuildOutputDataArray(
-        array $extensionAttributes,
-        array $excludedMethodsClassMap,
-        array $expectedOutput
-    ) {
-        $objectManager = new ObjectManager($this);
 
         $this->dataObjectProcessor = $objectManager->getObject(
             DataObjectProcessor::class,
             [
-                'methodsMapProcessor' => $this->methodsMapProcessor,
+                'methodsMapProcessor' => $methodsMapProcessor,
                 'typeCaster' => $objectManager->getObject(TypeCaster::class),
                 'fieldNamer' => $objectManager->getObject(FieldNamer::class),
-                'extensionAttributesProcessor' => $this->extensionAttributesProcessorMock,
-                'excludedMethodsClassMap' => $excludedMethodsClassMap,
+                'extensionAttributesProcessor' => $this->extensionAttributesProcessorMock
             ]
         );
+    }
 
+    /**
+     * @param array $extensionAttributes
+     * @param array $expectedOutputDataArray
+     *
+     * @dataProvider buildOutputDataArrayDataProvider
+     */
+    public function testBuildOutputDataArray($extensionAttributes, $expectedOutputDataArray)
+    {
+        $objectManager =  new ObjectManager($this);
         /** @var TestDataObject $testDataObject */
         $testDataObject = $objectManager->getObject(
             TestDataObject::class,
@@ -97,19 +87,13 @@ class DataObjectProcessorTest extends TestCase
             ]
         );
 
-        if (in_array('getExtensionAttributes', $excludedMethodsClassMap[TestDataInterface::class] ?? [])) {
-            $expectedTimes = $this->never();
-        } else {
-            $expectedTimes = $this->once();
-        }
-
-        $this->extensionAttributesProcessorMock->expects($expectedTimes)
+        $this->extensionAttributesProcessorMock->expects($this->once())
             ->method('buildOutputDataArray')
             ->willReturn($extensionAttributes);
 
         $outputData = $this->dataObjectProcessor
             ->buildOutputDataArray($testDataObject, TestDataInterface::class);
-        $this->assertEquals($expectedOutput, $outputData);
+        $this->assertEquals($expectedOutputDataArray, $outputData);
     }
 
     /**
@@ -117,50 +101,26 @@ class DataObjectProcessorTest extends TestCase
      */
     public function buildOutputDataArrayDataProvider()
     {
-        $expectedOutput = [
+        $expectedOutputDataArray = [
             'id' => '1',
             'address' => 'someAddress',
             'default_shipping' => 'true',
             'required_billing' => 'false',
         ];
-
-        $extensionAttributes = [
+        $extensionAttributeArray = [
             'attribute1' => 'value1',
-            'attribute2' => 'value2',
+            'attribute2' => 'value2'
         ];
 
         return [
-            'No Extension Attributes or Excluded Methods' => [
-                [],
-                [],
-                $expectedOutput,
-            ],
-            'With Extension Attributes' => [
-                $extensionAttributes,
-                [],
+            'No Attributes' => [[], $expectedOutputDataArray],
+            'With Attributes' => [
+                $extensionAttributeArray,
                 array_merge(
-                    $expectedOutput,
-                    ['extension_attributes' => $extensionAttributes]
-                ),
-            ],
-            'With Excluded Method' => [
-                [],
-                [
-                    TestDataInterface::class => [
-                        'getAddress',
-                    ],
-                ],
-                array_diff_key($expectedOutput, array_flip(['address'])),
-            ],
-            'With getExtensionAttributes as Excluded Method' => [
-                $extensionAttributes,
-                [
-                    TestDataInterface::class => [
-                        'getExtensionAttributes',
-                    ],
-                ],
-                $expectedOutput,
-            ],
+                    $expectedOutputDataArray,
+                    ['extension_attributes' => $extensionAttributeArray]
+                )
+            ]
         ];
     }
 }

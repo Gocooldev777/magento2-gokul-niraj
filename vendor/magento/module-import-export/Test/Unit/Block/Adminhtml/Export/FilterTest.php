@@ -333,6 +333,6 @@ class FilterTest extends TestCase
      */
     public function testPrepareForm()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 }

@@ -11,6 +11,8 @@ use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorI
 
 /**
  * Import edit form block
+ *
+ * @author      Magento Core Team <core@magentocommerce.com>
  */
 class Form extends \Magento\Backend\Block\Widget\Form\Generic
 {
@@ -152,7 +154,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'required' => true,
                     'disabled' => true,
                     'value' => 10,
-                    'class' => $behaviorCode . ' validate-number validate-zero-or-greater input-text',
+                    'class' => $behaviorCode . ' validate-number validate-greater-than-zero input-text',
                     'note' => __(
                         'Please specify number of errors to halt import process'
                     ),
@@ -209,6 +211,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             );
             $fieldsets[$behaviorCode] = $fieldset;
         }
+
         // fieldset for file uploading
         $fieldset = $form->addFieldset(
             'upload_file_fieldset',
@@ -254,19 +257,11 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                 ),
             ]
         );
-        $fieldset->addField(
-            Import::FIELD_IMPORT_IDS,
-            'hidden',
-            [
-                'name' => Import::FIELD_IMPORT_IDS,
-                'label' => __('Import id'),
-                'title' => __('Import id'),
-                'value' => '',
-            ]
-        );
         $fieldsets['upload'] = $fieldset;
+
         $form->setUseContainer(true);
         $this->setForm($form);
+
         return parent::_prepareForm();
     }
 

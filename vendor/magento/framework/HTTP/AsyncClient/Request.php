@@ -10,8 +10,6 @@ namespace Magento\Framework\HTTP\AsyncClient;
 
 /**
  * Request to send.
- *
- * @api
  */
 class Request
 {

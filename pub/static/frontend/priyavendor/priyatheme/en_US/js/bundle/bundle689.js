@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Ui/js/dynamic-rows/action-delete.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/**\n * @api\n */\ndefine([\n    'Magento_Ui/js/form/element/abstract'\n], function (Abstract) {\n    'use strict';\n\n    return Abstract.extend({\n        defaults: {\n            links: {\n                value: false\n            }\n        },\n\n        /**\n         * Delete record handler.\n         *\n         * @param {Number} index\n         * @param {Number} id\n         */\n        deleteRecord: function (index, id) {\n            this.bubble('deleteRecord', index, id);\n        }\n    });\n});\n"}
+}});

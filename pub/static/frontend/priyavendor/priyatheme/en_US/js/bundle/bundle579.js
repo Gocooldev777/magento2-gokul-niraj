@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Payment/js/view/payment/payments.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/* @api */\ndefine([\n    'uiComponent',\n    'Magento_Checkout/js/model/payment/renderer-list'\n], function (Component, rendererList) {\n    'use strict';\n\n    rendererList.push(\n        {\n            type: 'free',\n            component: 'Magento_Payment/js/view/payment/method-renderer/free-method'\n        }\n    );\n\n    /** Add view logic here if needed */\n    return Component.extend({});\n});\n"}
+}});

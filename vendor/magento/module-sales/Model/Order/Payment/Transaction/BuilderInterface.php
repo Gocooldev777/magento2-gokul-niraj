@@ -14,7 +14,6 @@ use Magento\Sales\Api\Data\TransactionInterface;
  * Interface BuilderInterface
  * Create transaction,
  * prepare its insertion into hierarchy and add its information to payment and comments
- * @api
  */
 interface BuilderInterface
 {

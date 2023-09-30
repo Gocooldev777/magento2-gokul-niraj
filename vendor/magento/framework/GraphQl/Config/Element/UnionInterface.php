@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Config\ConfigElementInterface;
 
 /**
  * Defines the contract for the union configuration data type.
- *
- * @api
  */
 interface UnionInterface extends ConfigElementInterface
 {

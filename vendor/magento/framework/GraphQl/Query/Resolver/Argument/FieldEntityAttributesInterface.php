@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl\Query\Resolver\Argument;
 
 /**
  * Contract for the classes that retrieve attributes for a given entity configured in @see FieldEntityAttributesPool.
- *
- * @api
  */
 interface FieldEntityAttributesInterface
 {
@@ -19,5 +17,5 @@ interface FieldEntityAttributesInterface
      *
      * @return array
      */
-    public function getEntityAttributes(): array;
+    public function getEntityAttributes() : array;
 }

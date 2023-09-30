@@ -44,8 +44,9 @@ final class ArgumentAdder
     private $scope;
     /**
      * @param mixed|null $argumentDefaultValue
+     * @param \PHPStan\Type\Type|null $argumentType
      */
-    public function __construct(string $class, string $method, int $position, ?string $argumentName = null, $argumentDefaultValue = null, ?\PHPStan\Type\Type $argumentType = null, ?string $scope = null)
+    public function __construct(string $class, string $method, int $position, ?string $argumentName = null, $argumentDefaultValue = null, $argumentType = null, ?string $scope = null)
     {
         $this->class = $class;
         $this->method = $method;
@@ -54,11 +55,11 @@ final class ArgumentAdder
         $this->argumentDefaultValue = $argumentDefaultValue;
         $this->argumentType = $argumentType;
         $this->scope = $scope;
-        RectorAssert::className($class);
+        \Rector\Core\Validation\RectorAssert::className($class);
     }
-    public function getObjectType() : ObjectType
+    public function getObjectType() : \PHPStan\Type\ObjectType
     {
-        return new ObjectType($this->class);
+        return new \PHPStan\Type\ObjectType($this->class);
     }
     public function getMethod() : string
     {
@@ -79,7 +80,7 @@ final class ArgumentAdder
     {
         return $this->argumentDefaultValue;
     }
-    public function getArgumentType() : ?Type
+    public function getArgumentType() : ?\PHPStan\Type\Type
     {
         return $this->argumentType;
     }

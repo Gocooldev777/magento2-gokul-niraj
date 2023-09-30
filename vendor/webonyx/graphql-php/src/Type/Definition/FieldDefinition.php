@@ -1,156 +1,154 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type\Definition;
 
+use GraphQL\Error\Error;
 use GraphQL\Error\InvariantViolation;
-use GraphQL\Executor\Executor;
+use GraphQL\Error\Warning;
 use GraphQL\Language\AST\FieldDefinitionNode;
 use GraphQL\Type\Schema;
 use GraphQL\Utils\Utils;
+use function is_array;
+use function is_callable;
+use function is_iterable;
+use function is_string;
+use function sprintf;
 
 /**
- * @see Executor
- *
- * @phpstan-import-type FieldResolver from Executor
- * @phpstan-import-type ArgumentListConfig from Argument
- *
- * @phpstan-type FieldType (Type&OutputType)|callable(): (Type&OutputType)
- * @phpstan-type ComplexityFn callable(int, array<string, mixed>): int
- * @phpstan-type FieldDefinitionConfig array{
- *     name: string,
- *     type: FieldType,
- *     resolve?: FieldResolver|null,
- *     args?: ArgumentListConfig|null,
- *     description?: string|null,
- *     deprecationReason?: string|null,
- *     astNode?: FieldDefinitionNode|null,
- *     complexity?: ComplexityFn|null
- * }
- * @phpstan-type UnnamedFieldDefinitionConfig array{
- *     type: FieldType,
- *     resolve?: FieldResolver|null,
- *     args?: ArgumentListConfig|null,
- *     description?: string|null,
- *     deprecationReason?: string|null,
- *     astNode?: FieldDefinitionNode|null,
- *     complexity?: ComplexityFn|null
- * }
- * @phpstan-type FieldsConfig iterable<mixed>|callable(): iterable<mixed>
+ * @todo Move complexity-related code to it's own place
  */
-/*
- * TODO check if newer versions of PHPStan can handle the full definition, it currently crashes when it is used
- * @phpstan-type EagerListEntry FieldDefinitionConfig|(Type&OutputType)
- * @phpstan-type EagerMapEntry UnnamedFieldDefinitionConfig|FieldDefinition
- * @phpstan-type FieldsList iterable<EagerListEntry|(callable(): EagerListEntry)>
- * @phpstan-type FieldsMap iterable<string, EagerMapEntry|(callable(): EagerMapEntry)>
- * @phpstan-type FieldsIterable FieldsList|FieldsMap
- * @phpstan-type FieldsConfig FieldsIterable|(callable(): FieldsIterable)
- */
+#[\AllowDynamicProperties]
 class FieldDefinition
 {
-    public string $name;
+    public const DEFAULT_COMPLEXITY_FN = 'GraphQL\Type\Definition\FieldDefinition::defaultComplexity';
 
-    /** @var array<int, Argument> */
-    public array $args;
+    /** @var string */
+    public $name;
+
+    /** @var FieldArgument[] */
+    public $args;
 
     /**
      * Callback for resolving field value given parent value.
+     * Mutually exclusive with `map`
      *
      * @var callable|null
-     *
-     * @phpstan-var FieldResolver|null
      */
     public $resolveFn;
 
-    public ?string $description;
-
-    public ?string $deprecationReason;
-
-    public ?FieldDefinitionNode $astNode;
-
     /**
+     * Callback for mapping list of parent values to list of field values.
+     * Mutually exclusive with `resolve`
+     *
      * @var callable|null
-     *
-     * @phpstan-var ComplexityFn|null
      */
-    public $complexityFn;
+    public $mapFn;
+
+    /** @var string|null */
+    public $description;
+
+    /** @var string|null */
+    public $deprecationReason;
+
+    /** @var FieldDefinitionNode|null */
+    public $astNode;
 
     /**
-     * Original field definition config.
+     * Original field definition config
      *
-     * @phpstan-var FieldDefinitionConfig
+     * @var mixed[]
      */
-    public array $config;
+    public $config;
 
-    /** @var Type&OutputType */
-    private Type $type;
+    /** @var OutputType&Type */
+    private $type;
 
-    /** @param FieldDefinitionConfig $config */
-    public function __construct(array $config)
+    /** @var callable|string */
+    private $complexityFn;
+
+    /**
+     * @param mixed[] $config
+     */
+    protected function __construct(array $config)
     {
-        $this->name = $config['name'];
+        $this->name      = $config['name'];
         $this->resolveFn = $config['resolve'] ?? null;
-        $this->args = isset($config['args'])
-            ? Argument::listFromConfig($config['args'])
-            : [];
-        $this->description = $config['description'] ?? null;
+        $this->mapFn     = $config['map'] ?? null;
+        $this->args      = isset($config['args']) ? FieldArgument::createMap($config['args']) : [];
+
+        $this->description       = $config['description'] ?? null;
         $this->deprecationReason = $config['deprecationReason'] ?? null;
-        $this->astNode = $config['astNode'] ?? null;
-        $this->complexityFn = $config['complexity'] ?? null;
+        $this->astNode           = $config['astNode'] ?? null;
 
         $this->config = $config;
+
+        $this->complexityFn = $config['complexity'] ?? self::DEFAULT_COMPLEXITY_FN;
     }
 
     /**
-     * @param ObjectType|InterfaceType $parentType
-     * @param callable|iterable $fields
+     * @param (callable():mixed[])|mixed[] $fields
      *
-     * @phpstan-param FieldsConfig $fields
-     *
-     * @throws InvariantViolation
-     *
-     * @return array<string, self|UnresolvedFieldDefinition>
+     * @return array<string, self>
      */
-    public static function defineFieldMap(Type $parentType, $fields): array
+    public static function defineFieldMap(Type $type, $fields) : array
     {
-        if (\is_callable($fields)) {
+        if (is_callable($fields)) {
             $fields = $fields();
         }
-
-        if (! \is_iterable($fields)) {
-            throw new InvariantViolation("{$parentType->name} fields must be an iterable or a callable which returns such an iterable.");
+        if (! is_iterable($fields)) {
+            throw new InvariantViolation(
+                sprintf('%s fields must be an iterable or a callable which returns such an iterable.', $type->name)
+            );
         }
-
         $map = [];
-        foreach ($fields as $maybeName => $field) {
-            if (\is_array($field)) {
+        foreach ($fields as $name => $field) {
+            if (is_array($field)) {
                 if (! isset($field['name'])) {
-                    if (! \is_string($maybeName)) {
-                        throw new InvariantViolation("{$parentType->name} fields must be an associative array with field names as keys or a function which returns such an array.");
+                    if (! is_string($name)) {
+                        throw new InvariantViolation(
+                            sprintf(
+                                '%s fields must be an associative array with field names as keys or a function which returns such an array.',
+                                $type->name
+                            )
+                        );
                     }
 
-                    $field['name'] = $maybeName;
+                    $field['name'] = $name;
                 }
-
-                // @phpstan-ignore-next-line PHPStan won't let us define the whole type
-                $fieldDef = new self($field);
+                if (isset($field['args']) && ! is_array($field['args'])) {
+                    throw new InvariantViolation(
+                        sprintf('%s.%s args must be an array.', $type->name, $name)
+                    );
+                }
+                $fieldDef = self::create($field);
             } elseif ($field instanceof self) {
                 $fieldDef = $field;
-            } elseif (\is_callable($field)) {
-                if (! \is_string($maybeName)) {
-                    throw new InvariantViolation("{$parentType->name} lazy fields must be an associative array with field names as keys.");
+            } elseif (is_callable($field)) {
+                if (! is_string($name)) {
+                    throw new InvariantViolation(
+                        sprintf(
+                            '%s lazy fields must be an associative array with field names as keys.',
+                            $type->name
+                        )
+                    );
                 }
 
-                $fieldDef = new UnresolvedFieldDefinition($maybeName, $field);
-            } elseif ($field instanceof Type) {
-                // @phpstan-ignore-next-line PHPStan won't let us define the whole type
-                $fieldDef = new self([
-                    'name' => $maybeName,
-                    'type' => $field,
-                ]);
+                $fieldDef = new UnresolvedFieldDefinition($type, $name, $field);
             } else {
-                $invalidFieldConfig = Utils::printSafe($field);
-                throw new InvariantViolation("{$parentType->name}.{$maybeName} field config must be an array, but got: {$invalidFieldConfig}");
+                if (! is_string($name) || ! $field) {
+                    throw new InvariantViolation(
+                        sprintf(
+                            '%s.%s field config must be an array, but got: %s',
+                            $type->name,
+                            $name,
+                            Utils::printSafe($field)
+                        )
+                    );
+                }
+
+                $fieldDef = self::create(['name' => $name, 'type' => $field]);
             }
 
             $map[$fieldDef->getName()] = $fieldDef;
@@ -159,9 +157,35 @@ class FieldDefinition
         return $map;
     }
 
-    public function getArg(string $name): ?Argument
+    /**
+     * @param mixed[] $field
+     *
+     * @return FieldDefinition
+     */
+    public static function create($field)
     {
-        foreach ($this->args as $arg) {
+        return new self($field);
+    }
+
+    /**
+     * @param int $childrenComplexity
+     *
+     * @return mixed
+     */
+    public static function defaultComplexity($childrenComplexity)
+    {
+        return $childrenComplexity + 1;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return FieldArgument|null
+     */
+    public function getArg($name)
+    {
+        foreach ($this->args ?? [] as $arg) {
+            /** @var FieldArgument $arg */
             if ($arg->name === $name) {
                 return $arg;
             }
@@ -170,46 +194,135 @@ class FieldDefinition
         return null;
     }
 
-    public function getName(): string
+    public function getName() : string
     {
         return $this->name;
     }
 
-    /** @return Type&OutputType */
-    public function getType(): Type
+    public function getType() : Type
     {
-        return $this->type ??= Schema::resolveType($this->config['type']);
+        if (! isset($this->type)) {
+            /**
+             * TODO: replace this phpstan cast with native assert
+             *
+             * @var Type&OutputType
+             */
+            $type       = Schema::resolveType($this->config['type']);
+            $this->type = $type;
+        }
+
+        return $this->type;
     }
 
-    public function isDeprecated(): bool
+    public function __isset(string $name) : bool
+    {
+        switch ($name) {
+            case 'type':
+                Warning::warnOnce(
+                    "The public getter for 'type' on FieldDefinition has been deprecated and will be removed" .
+                    " in the next major version. Please update your code to use the 'getType' method.",
+                    Warning::WARNING_CONFIG_DEPRECATION
+                );
+
+                return isset($this->type);
+        }
+
+        return isset($this->$name);
+    }
+
+    public function __get(string $name)
+    {
+        switch ($name) {
+            case 'type':
+                Warning::warnOnce(
+                    "The public getter for 'type' on FieldDefinition has been deprecated and will be removed" .
+                    " in the next major version. Please update your code to use the 'getType' method.",
+                    Warning::WARNING_CONFIG_DEPRECATION
+                );
+
+                return $this->getType();
+            default:
+                return $this->$name;
+        }
+
+        return null;
+    }
+
+    public function __set(string $name, $value)
+    {
+        switch ($name) {
+            case 'type':
+                Warning::warnOnce(
+                    "The public setter for 'type' on FieldDefinition has been deprecated and will be removed" .
+                    ' in the next major version.',
+                    Warning::WARNING_CONFIG_DEPRECATION
+                );
+                $this->type = $value;
+                break;
+
+            default:
+                $this->$name = $value;
+                break;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeprecated()
     {
         return (bool) $this->deprecationReason;
     }
 
     /**
-     * @param Type&NamedType $parentType
-     *
+     * @return callable|callable
+     */
+    public function getComplexityFn()
+    {
+        return $this->complexityFn;
+    }
+
+    /**
      * @throws InvariantViolation
      */
-    public function assertValid(Type $parentType): void
+    public function assertValid(Type $parentType)
     {
-        $error = Utils::isValidNameError($this->name);
-        if ($error !== null) {
-            throw new InvariantViolation("{$parentType->name}.{$this->name}: {$error->getMessage()}");
+        try {
+            Utils::assertValidName($this->name);
+        } catch (Error $e) {
+            throw new InvariantViolation(sprintf('%s.%s: %s', $parentType->name, $this->name, $e->getMessage()));
         }
+        Utils::invariant(
+            ! isset($this->config['isDeprecated']),
+            sprintf(
+                '%s.%s should provide "deprecationReason" instead of "isDeprecated".',
+                $parentType->name,
+                $this->name
+            )
+        );
 
-        $type = Type::getNamedType($this->getType());
-
-        if (! $type instanceof OutputType) {
-            $safeType = Utils::printSafe($this->type);
-            throw new InvariantViolation("{$parentType->name}.{$this->name} field type must be Output Type but got: {$safeType}.");
+        $type = $this->getType();
+        if ($type instanceof WrappingType) {
+            $type = $type->getWrappedType(true);
         }
-
-        // @phpstan-ignore-next-line not necessary according to types, but can happen during runtime
-        if ($this->resolveFn !== null && ! \is_callable($this->resolveFn)) {
-            $safeResolveFn = Utils::printSafe($this->resolveFn);
-            throw new InvariantViolation("{$parentType->name}.{$this->name} field resolver must be a function if provided, but got: {$safeResolveFn}.");
-        }
+        Utils::invariant(
+            $type instanceof OutputType,
+            sprintf(
+                '%s.%s field type must be Output Type but got: %s',
+                $parentType->name,
+                $this->name,
+                Utils::printSafe($this->type)
+            )
+        );
+        Utils::invariant(
+            $this->resolveFn === null || is_callable($this->resolveFn),
+            sprintf(
+                '%s.%s field resolver must be a function if provided, but got: %s',
+                $parentType->name,
+                $this->name,
+                Utils::printSafe($this->resolveFn)
+            )
+        );
 
         foreach ($this->args as $fieldArgument) {
             $fieldArgument->assertValid($this, $type);

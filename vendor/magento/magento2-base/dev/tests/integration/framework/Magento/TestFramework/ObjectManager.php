@@ -23,17 +23,16 @@ class ObjectManager extends \Magento\Framework\App\ObjectManager
     /**
      * @var array
      */
-    protected $persistedInstances = [];
-
-    /**
-     * Set list of instances that should be persistent.
-     *
-     * @param array $persistedInstances
-     */
-    public function setPersistedInstances(array $persistedInstances): void
-    {
-        $this->persistedInstances = $persistedInstances;
-    }
+    protected $persistedInstances = [
+        \Magento\Framework\App\ResourceConnection::class,
+        \Magento\Framework\Config\Scope::class,
+        \Magento\Framework\ObjectManager\RelationsInterface::class,
+        \Magento\Framework\ObjectManager\ConfigInterface::class,
+        \Magento\Framework\Interception\DefinitionInterface::class,
+        \Magento\Framework\ObjectManager\DefinitionInterface::class,
+        \Magento\Framework\Session\Config::class,
+        \Magento\Framework\ObjectManager\Config\Mapper\Dom::class,
+    ];
 
     /**
      * Clear InstanceManager cache.

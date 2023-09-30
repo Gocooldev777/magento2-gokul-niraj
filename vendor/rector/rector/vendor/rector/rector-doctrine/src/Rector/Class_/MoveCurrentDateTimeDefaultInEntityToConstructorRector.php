@@ -6,13 +6,10 @@ namespace Rector\Doctrine\Rector\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
-use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\CurlyListNode;
 use Rector\Core\Rector\AbstractRector;
-use Rector\Core\ValueObject\MethodName;
 use Rector\Doctrine\NodeAnalyzer\ConstructorAssignPropertyAnalyzer;
 use Rector\Doctrine\NodeFactory\ValueAssignFactory;
 use Rector\Doctrine\NodeManipulator\ConstructorManipulator;
@@ -23,36 +20,29 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Doctrine\Tests\Rector\Class_\MoveCurrentDateTimeDefaultInEntityToConstructorRector\MoveCurrentDateTimeDefaultInEntityToConstructorRectorTest
  */
-final class MoveCurrentDateTimeDefaultInEntityToConstructorRector extends AbstractRector
+final class MoveCurrentDateTimeDefaultInEntityToConstructorRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @var bool
-     */
-    private $hasChanged = \false;
-    /**
-     * @readonly
      * @var \Rector\Doctrine\NodeManipulator\ConstructorManipulator
      */
     private $constructorManipulator;
     /**
-     * @readonly
      * @var \Rector\Doctrine\NodeFactory\ValueAssignFactory
      */
     private $valueAssignFactory;
     /**
-     * @readonly
      * @var \Rector\Doctrine\NodeAnalyzer\ConstructorAssignPropertyAnalyzer
      */
     private $constructorAssignPropertyAnalyzer;
-    public function __construct(ConstructorManipulator $constructorManipulator, ValueAssignFactory $valueAssignFactory, ConstructorAssignPropertyAnalyzer $constructorAssignPropertyAnalyzer)
+    public function __construct(\Rector\Doctrine\NodeManipulator\ConstructorManipulator $constructorManipulator, \Rector\Doctrine\NodeFactory\ValueAssignFactory $valueAssignFactory, \Rector\Doctrine\NodeAnalyzer\ConstructorAssignPropertyAnalyzer $constructorAssignPropertyAnalyzer)
     {
         $this->constructorManipulator = $constructorManipulator;
         $this->valueAssignFactory = $valueAssignFactory;
         $this->constructorAssignPropertyAnalyzer = $constructorAssignPropertyAnalyzer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Move default value for entity property to constructor, the safest place', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Move default value for entity property to constructor, the safest place', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -96,78 +86,57 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        $this->hasChanged = \false;
         foreach ($node->getProperties() as $property) {
             $this->refactorProperty($property, $node);
         }
-        if (!$this->hasChanged) {
-            return null;
-        }
         return $node;
     }
-    private function refactorProperty(Property $property, Class_ $class) : void
+    private function refactorProperty(\PhpParser\Node\Stmt\Property $property, \PhpParser\Node\Stmt\Class_ $class) : ?\PhpParser\Node\Stmt\Property
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
         $doctrineAnnotationTagValueNode = $phpDocInfo->getByAnnotationClass('Doctrine\\ORM\\Mapping\\Column');
-        if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
-            return;
+        if (!$doctrineAnnotationTagValueNode instanceof \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode) {
+            return null;
         }
-        $typeArrayItemNode = $doctrineAnnotationTagValueNode->getValue('type');
-        if (!$typeArrayItemNode instanceof ArrayItemNode) {
-            return;
+        $type = $doctrineAnnotationTagValueNode->getValueWithoutQuotes('type');
+        if ($type !== 'datetime') {
+            return null;
         }
-        if ($typeArrayItemNode->value !== 'datetime') {
-            return;
-        }
-        $node = $this->constructorAssignPropertyAnalyzer->resolveConstructorAssign($property);
+        $constructorAssign = $this->constructorAssignPropertyAnalyzer->resolveConstructorAssign($property);
         // 0. already has default
-        if ($node instanceof Node) {
-            return;
+        if ($constructorAssign !== null) {
+            return null;
         }
         // 1. remove default options from database level
-        $optionsArrayItemNode = $doctrineAnnotationTagValueNode->getValue('options');
-        if ($optionsArrayItemNode instanceof ArrayItemNode) {
-            if (!$optionsArrayItemNode->value instanceof CurlyListNode) {
-                return;
-            }
-            $optionsArrayItemNode->value->removeValue('default');
+        $options = $doctrineAnnotationTagValueNode->getValue('options');
+        if ($options instanceof \Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\CurlyListNode) {
+            $options->removeValue('default');
             // if empty, remove it completely
-            if ($optionsArrayItemNode->value->getValues() === []) {
+            if ($options->getValues() === []) {
                 $doctrineAnnotationTagValueNode->removeValue('options');
             }
-            $this->hasChanged = \true;
         }
-        if ($this->hasChanged) {
-            $phpDocInfo->markAsChanged();
-        }
-        $this->refactorClassWithRemovalDefault($class, $property);
-    }
-    private function refactorClassWithRemovalDefault(Class_ $class, Property $property) : void
-    {
+        $phpDocInfo->markAsChanged();
         $this->refactorClass($class, $property);
-        $classMethod = $class->getMethod(MethodName::CONSTRUCT);
-        if (!$classMethod instanceof ClassMethod && $property->type instanceof Node) {
-            return;
-        }
         // 3. remove default from property
         $onlyProperty = $property->props[0];
         $onlyProperty->default = null;
-        $this->hasChanged = \true;
+        return $property;
     }
-    private function refactorClass(Class_ $class, Property $property) : void
+    private function refactorClass(\PhpParser\Node\Stmt\Class_ $class, \PhpParser\Node\Stmt\Property $property) : void
     {
         /** @var string $propertyName */
         $propertyName = $this->getName($property);
         $onlyProperty = $property->props[0];
         $defaultExpr = $onlyProperty->default;
-        if (!$defaultExpr instanceof Expr) {
+        if (!$defaultExpr instanceof \PhpParser\Node\Expr) {
             return;
         }
         if ($this->valueResolver->isNull($defaultExpr)) {

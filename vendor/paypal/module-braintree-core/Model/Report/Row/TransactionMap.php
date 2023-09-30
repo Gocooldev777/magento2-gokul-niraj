@@ -7,9 +7,11 @@ namespace PayPal\Braintree\Model\Report\Row;
 
 use Braintree\Transaction;
 use DateTime;
+use LogicException;
 use Magento\Framework\Api\AttributeInterface;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Api\Search\DocumentInterface;
+use stdClass;
 
 class TransactionMap implements DocumentInterface
 {
@@ -185,7 +187,7 @@ class TransactionMap implements DocumentInterface
     /**
      * Convert value to text representation
      *
-     * @param mixed $val
+     * @param string|array|stdClass $val
      * @return string
      */
     private function convertToText($val): string

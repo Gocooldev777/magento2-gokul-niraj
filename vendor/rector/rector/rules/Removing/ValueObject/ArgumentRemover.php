@@ -22,10 +22,6 @@ final class ArgumentRemover
      * @var int
      */
     private $position;
-    /**
-     * @readonly
-     * @var mixed
-     */
     private $value;
     /**
      * @param mixed $value
@@ -36,11 +32,11 @@ final class ArgumentRemover
         $this->method = $method;
         $this->position = $position;
         $this->value = $value;
-        RectorAssert::className($class);
+        \Rector\Core\Validation\RectorAssert::className($class);
     }
-    public function getObjectType() : ObjectType
+    public function getObjectType() : \PHPStan\Type\ObjectType
     {
-        return new ObjectType($this->class);
+        return new \PHPStan\Type\ObjectType($this->class);
     }
     public function getMethod() : string
     {

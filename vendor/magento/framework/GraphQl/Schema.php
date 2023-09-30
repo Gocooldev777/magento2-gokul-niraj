@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl;
 
 /**
  * Schema object for a GraphQL endpoint describing queries and types for a client to consume.
- *
- * @api
  */
 class Schema extends \GraphQL\Type\Schema
 {

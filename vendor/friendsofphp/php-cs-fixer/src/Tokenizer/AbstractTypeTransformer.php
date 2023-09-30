@@ -21,16 +21,13 @@ namespace PhpCsFixer\Tokenizer;
  */
 abstract class AbstractTypeTransformer extends AbstractTransformer
 {
-    /**
-     * @param array{0: int, 1?: string}|string $originalToken
-     */
     protected function doProcess(Tokens $tokens, int $index, $originalToken): void
     {
         if (!$tokens[$index]->equals($originalToken)) {
             return;
         }
 
-        $prevIndex = $this->getPreviousTokenCandidate($tokens, $index);
+        $prevIndex = $tokens->getTokenNotOfKindsSibling($index, -1, [T_CALLABLE, T_NS_SEPARATOR, T_STRING, CT::T_ARRAY_TYPEHINT, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT]);
 
         /** @var Token $prevToken */
         $prevToken = $tokens[$prevIndex];
@@ -59,13 +56,17 @@ abstract class AbstractTypeTransformer extends AbstractTransformer
 
         $prevPrevTokenIndex = $tokens->getPrevMeaningfulToken($prevIndex);
 
-        if ($tokens[$prevPrevTokenIndex]->isGivenKind(T_CATCH)) {
+        if ($tokens[$prevPrevTokenIndex]->isGivenKind([T_CATCH])) {
             $this->replaceToken($tokens, $index);
 
             return;
         }
 
-        $functionKinds = [[T_FUNCTION], [T_FN]];
+        $functionKinds = [[T_FUNCTION]];
+        if (\defined('T_FN')) {
+            $functionKinds[] = [T_FN];
+        }
+
         $functionIndex = $tokens->getPrevTokenOfKind($prevIndex, $functionKinds);
 
         if (null === $functionIndex) {
@@ -83,14 +84,4 @@ abstract class AbstractTypeTransformer extends AbstractTransformer
     }
 
     abstract protected function replaceToken(Tokens $tokens, int $index): void;
-
-    private function getPreviousTokenCandidate(Tokens $tokens, int $index): int
-    {
-        $candidateIndex = $tokens->getTokenNotOfKindsSibling($index, -1, [T_CALLABLE, T_NS_SEPARATOR, T_STRING, CT::T_ARRAY_TYPEHINT, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT]);
-
-        return $tokens[$candidateIndex]->isGivenKind(CT::T_ATTRIBUTE_CLOSE)
-            ? $this->getPreviousTokenCandidate($tokens, $tokens->getPrevTokenOfKind($index, [[T_ATTRIBUTE]]))
-            : $candidateIndex
-        ;
-    }
 }

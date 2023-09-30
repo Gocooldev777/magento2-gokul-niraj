@@ -76,7 +76,7 @@
 
                                     $("#{$block->escapeJs($block->getSuffixId('period_date_range'))}").dateRange({
                                         dateFormat:"{$block->escapeJs($block->getDateFormat())}",
-                                        buttonText:"",
+                                        buttonText:"{$block->escapeJs(__('Select Date'))}",
                                         from:{
                                             id:"{$block->escapeJs($block->getSuffixId('period_date_from'))}"
                                         },

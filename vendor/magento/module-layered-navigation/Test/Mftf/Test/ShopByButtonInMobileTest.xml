@@ -17,7 +17,7 @@
             <severity value="CRITICAL"/>
             <testCaseId value="MC-6092"/>
             <group value="LayeredNavigation"/>
-            <group value="SearchEngine"/>
+            <group value="SearchEngineElasticsearch"/>
         </annotations>
         <before>
             <createData entity="productDropDownAttribute" stepKey="attribute"/>
@@ -33,9 +33,6 @@
         </before>
         <after>
             <deleteData createDataKey="attribute" stepKey="deleteAttribute"/>
-            <actionGroup ref="CliIndexerReindexActionGroup" stepKey="reindex">
-                <argument name="indices" value=""/>
-            </actionGroup>
             <deleteData createDataKey="simpleProduct1" stepKey="deleteSimpleProduct1"/>
             <deleteData createDataKey="simpleProduct2" stepKey="deleteSimpleProduct2"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logoutOfAdmin"/>

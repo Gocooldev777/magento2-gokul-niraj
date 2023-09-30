@@ -12,8 +12,6 @@ use Magento\Framework\App\ActionInterface;
 
 /**
  * Marker for actions processing PATCH requests.
- *
- * @api
  */
 interface HttpPatchActionInterface extends ActionInterface
 {

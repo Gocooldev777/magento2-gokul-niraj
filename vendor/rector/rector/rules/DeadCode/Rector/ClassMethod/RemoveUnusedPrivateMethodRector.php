@@ -8,36 +8,31 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use Rector\Core\Rector\AbstractRector;
-use Rector\Core\Reflection\ReflectionResolver;
 use Rector\Core\ValueObject\MethodName;
 use Rector\DeadCode\NodeAnalyzer\IsClassMethodUsedAnalyzer;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector\RemoveUnusedPrivateMethodRectorTest
  */
-final class RemoveUnusedPrivateMethodRector extends AbstractRector
+final class RemoveUnusedPrivateMethodRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @readonly
      * @var \Rector\DeadCode\NodeAnalyzer\IsClassMethodUsedAnalyzer
      */
     private $isClassMethodUsedAnalyzer;
-    /**
-     * @readonly
-     * @var \Rector\Core\Reflection\ReflectionResolver
-     */
-    private $reflectionResolver;
-    public function __construct(IsClassMethodUsedAnalyzer $isClassMethodUsedAnalyzer, ReflectionResolver $reflectionResolver)
+    public function __construct(\Rector\DeadCode\NodeAnalyzer\IsClassMethodUsedAnalyzer $isClassMethodUsedAnalyzer)
     {
         $this->isClassMethodUsedAnalyzer = $isClassMethodUsedAnalyzer;
-        $this->reflectionResolver = $reflectionResolver;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Remove unused private method', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove unused private method', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 final class SomeController
 {
     public function run()
@@ -67,12 +62,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($this->shouldSkip($node)) {
             return null;
@@ -80,16 +75,23 @@ CODE_SAMPLE
         if ($this->isClassMethodUsedAnalyzer->isClassMethodUsed($node)) {
             return null;
         }
+        if ($this->nodesToAddCollector->isActive()) {
+            return null;
+        }
         if ($this->hasDynamicMethodCallOnFetchThis($node)) {
             return null;
         }
         $this->removeNode($node);
-        return null;
+        return $node;
     }
-    private function shouldSkip(ClassMethod $classMethod) : bool
+    private function shouldSkip(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
     {
-        $classReflection = $this->reflectionResolver->resolveClassReflection($classMethod);
-        if (!$classReflection instanceof ClassReflection) {
+        $scope = $classMethod->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if (!$scope instanceof \PHPStan\Analyser\Scope) {
+            return \true;
+        }
+        $classReflection = $scope->getClassReflection();
+        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
             return \true;
         }
         // unreliable to detect trait, interface doesn't make sense
@@ -110,26 +112,26 @@ CODE_SAMPLE
         if ($classMethod->isMagic()) {
             return \true;
         }
-        return $classReflection->hasMethod(MethodName::CALL);
+        return $classReflection->hasMethod(\Rector\Core\ValueObject\MethodName::CALL);
     }
-    private function hasDynamicMethodCallOnFetchThis(ClassMethod $classMethod) : bool
+    private function hasDynamicMethodCallOnFetchThis(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
     {
-        $class = $this->betterNodeFinder->findParentType($classMethod, Class_::class);
-        if (!$class instanceof Class_) {
+        $class = $this->betterNodeFinder->findParentType($classMethod, \PhpParser\Node\Stmt\Class_::class);
+        if (!$class instanceof \PhpParser\Node\Stmt\Class_) {
             return \false;
         }
         foreach ($class->getMethods() as $method) {
-            $isFound = (bool) $this->betterNodeFinder->findFirst((array) $method->getStmts(), function (Node $subNode) : bool {
-                if (!$subNode instanceof MethodCall) {
+            $isFound = (bool) $this->betterNodeFinder->findFirst((array) $method->getStmts(), function (\PhpParser\Node $subNode) : bool {
+                if (!$subNode instanceof \PhpParser\Node\Expr\MethodCall) {
                     return \false;
                 }
-                if (!$subNode->var instanceof Variable) {
+                if (!$subNode->var instanceof \PhpParser\Node\Expr\Variable) {
                     return \false;
                 }
                 if (!$this->nodeNameResolver->isName($subNode->var, 'this')) {
                     return \false;
                 }
-                return $subNode->name instanceof Variable;
+                return $subNode->name instanceof \PhpParser\Node\Expr\Variable;
             });
             if ($isFound) {
                 return \true;

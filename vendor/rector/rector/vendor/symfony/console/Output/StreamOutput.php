@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Output;
+namespace RectorPrefix20211221\Symfony\Component\Console\Output;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatterInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface;
 /**
  * StreamOutput writes the output to a given stream.
  *
@@ -25,7 +25,7 @@ use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatterInterf
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class StreamOutput extends Output
+class StreamOutput extends \RectorPrefix20211221\Symfony\Component\Console\Output\Output
 {
     private $stream;
     /**
@@ -36,13 +36,15 @@ class StreamOutput extends Output
      *
      * @throws InvalidArgumentException When first argument is not a real stream
      */
-    public function __construct($stream, int $verbosity = self::VERBOSITY_NORMAL, bool $decorated = null, OutputFormatterInterface $formatter = null)
+    public function __construct($stream, int $verbosity = self::VERBOSITY_NORMAL, bool $decorated = null, \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface $formatter = null)
     {
         if (!\is_resource($stream) || 'stream' !== \get_resource_type($stream)) {
-            throw new InvalidArgumentException('The StreamOutput class needs a stream as its first argument.');
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException('The StreamOutput class needs a stream as its first argument.');
         }
         $this->stream = $stream;
-        $decorated = $decorated ?? $this->hasColorSupport();
+        if (null === $decorated) {
+            $decorated = $this->hasColorSupport();
+        }
         parent::__construct($verbosity, $decorated, $formatter);
     }
     /**
@@ -54,6 +56,9 @@ class StreamOutput extends Output
     {
         return $this->stream;
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function doWrite(string $message, bool $newline)
     {
         if ($newline) {
@@ -87,6 +92,21 @@ class StreamOutput extends Output
         if (\DIRECTORY_SEPARATOR === '\\') {
             return \function_exists('sapi_windows_vt100_support') && @\sapi_windows_vt100_support($this->stream) || \false !== \getenv('ANSICON') || 'ON' === \getenv('ConEmuANSI') || 'xterm' === \getenv('TERM');
         }
-        return \stream_isatty($this->stream);
+        $streamIsatty = function ($stream) {
+            if (\function_exists('stream_isatty')) {
+                return \stream_isatty($stream);
+            }
+            if (!\is_resource($stream)) {
+                \trigger_error('stream_isatty() expects parameter 1 to be resource, ' . \gettype($stream) . ' given', \E_USER_WARNING);
+                return \false;
+            }
+            if ('\\' === \DIRECTORY_SEPARATOR) {
+                $stat = @\fstat($stream);
+                // Check if formatted mode is S_IFCHR
+                return $stat ? 020000 === ($stat['mode'] & 0170000) : \false;
+            }
+            return \function_exists('posix_isatty') && @\posix_isatty($stream);
+        };
+        return $streamIsatty($this->stream);
     }
 }

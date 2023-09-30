@@ -615,6 +615,7 @@ define('collapsable', [
 define('js/theme', [
     'jquery',
     'mage/smart-keyboard-handler',
+    'mage/ie-class-fixer',
     'collapsable',
     'domReady!'
 ], function ($, keyboardHandler) {

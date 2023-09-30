@@ -70,7 +70,6 @@ define([
 
             delay = delay || this.messageDelay;
 
-            // eslint-disable-next-line no-unused-vars
             timerId = setTimeout(function () {
                 clearTimeout(timerId);
                 this.clear();

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Weee/js/tax-toggle.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([\n    'jquery'\n], function ($) {\n    'use strict';\n\n    /**\n     * @param {Object} config\n     * @param {jQuery.Event} e\n     */\n    function onToggle(config, e) {\n        var elem = $(e.currentTarget),\n            expandedClassName = config.expandedClassName || 'cart-tax-total-expanded';\n\n        elem.toggleClass(expandedClassName);\n\n        $(config.itemTaxId).toggle();\n    }\n\n    return function (data, el) {\n        $(el).on('click', onToggle.bind(null, data));\n    };\n});\n"}
+}});

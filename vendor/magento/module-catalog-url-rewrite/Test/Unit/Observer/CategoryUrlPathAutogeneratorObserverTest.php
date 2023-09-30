@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\CatalogUrlRewrite\Test\Unit\Observer;
 
-use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\ResourceModel\Category as CategoryResource;
 use Magento\CatalogUrlRewrite\Model\Category\ChildrenCategoriesProvider;
@@ -15,8 +14,6 @@ use Magento\CatalogUrlRewrite\Model\CategoryUrlPathGenerator;
 use Magento\CatalogUrlRewrite\Model\ResourceModel\Category\GetDefaultUrlKey;
 use Magento\CatalogUrlRewrite\Observer\CategoryUrlPathAutogeneratorObserver;
 use Magento\CatalogUrlRewrite\Service\V1\StoreViewService;
-use Magento\Framework\EntityManager\EntityMetadataInterface;
-use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager as ObjectManagerHelper;
@@ -27,8 +24,6 @@ use Magento\Backend\Model\Validator\UrlKey\CompositeUrlKey;
 
 /**
  * Unit tests for \Magento\CatalogUrlRewrite\Observer\CategoryUrlPathAutogeneratorObserver class.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CategoryUrlPathAutogeneratorObserverTest extends TestCase
 {
@@ -78,16 +73,6 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
     private $getDefaultUrlKey;
 
     /**
-     * @var MetadataPool|MockObject
-     */
-    private $metadataPool;
-
-    /**
-     * @var EntityMetadataInterface|MockObject
-     */
-    private $entityMetaDataInterface;
-
-    /**
      * @inheritDoc
      */
     protected function setUp(): void
@@ -98,21 +83,17 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
         $this->categoryResource = $this->createMock(CategoryResource::class);
-        $this->category = $this->getMockBuilder(Category::class)
-            ->onlyMethods(
-                [
-                    'dataHasChangedFor',
-                    'getResource',
-                    'getStoreId',
-                    'formatUrlKey',
-                    'hasChildren',
-                    'getData',
-                    'getUrlKey'
-                ]
-            )
-            ->addMethods(['getUrlPath'])
-            ->disableOriginalConstructor()
-            ->getMock();
+        $this->category = $this->createPartialMock(
+            Category::class,
+            [
+                'dataHasChangedFor',
+                'getResource',
+                'getStoreId',
+                'formatUrlKey',
+                'getId',
+                'hasChildren',
+            ]
+        );
         $this->category->expects($this->any())->method('getResource')->willReturn($this->categoryResource);
         $this->observer->expects($this->any())->method('getEvent')->willReturnSelf();
         $this->observer->expects($this->any())->method('getCategory')->willReturn($this->category);
@@ -131,14 +112,6 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
             ->onlyMethods(['execute'])
             ->getMock();
 
-        $this->metadataPool = $this->getMockBuilder(MetadataPool::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getMetadata'])
-            ->getMock();
-
-        $this->entityMetaDataInterface = $this->getMockBuilder(EntityMetadataInterface::class)
-            ->getMockForAbstractClass();
-
         $this->categoryUrlPathAutogeneratorObserver = (new ObjectManagerHelper($this))->getObject(
             CategoryUrlPathAutogeneratorObserver::class,
             [
@@ -147,7 +120,6 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
                 'storeViewService' => $this->storeViewService,
                 'compositeUrlValidator' => $this->compositeUrlValidator,
                 'getDefaultUrlKey' => $this->getDefaultUrlKey,
-                'metadataPool' => $this->metadataPool
             ]
         );
     }
@@ -162,20 +134,13 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
         $expectedUrlKey = 'formatted_url_key';
         $expectedUrlPath = 'generated_url_path';
         $categoryData = ['use_default' => ['url_key' => 0], 'url_key' => 'some_key', 'url_path' => ''];
-        $this->category->expects($this->any())
-            ->method('getUrlKey')
-            ->willReturnOnConsecutiveCalls($categoryData['url_key'], null, $expectedUrlKey);
-        $this->category->expects($this->any())
-            ->method('getUrlPath')
-            ->willReturnOnConsecutiveCalls($categoryData['url_path'], $expectedUrlPath);
         $this->category->setData($categoryData);
         $this->category->isObjectNew($isObjectNew);
         $this->categoryUrlPathGenerator->expects($this->once())->method('getUrlKey')->willReturn($expectedUrlKey);
         $this->categoryUrlPathGenerator->expects($this->once())->method('getUrlPath')->willReturn($expectedUrlPath);
         $this->assertEquals($categoryData['url_key'], $this->category->getUrlKey());
         $this->assertEquals($categoryData['url_path'], $this->category->getUrlPath());
-        $this->compositeUrlValidator->expects($this->once())->method('validate')
-            ->with('formatted_url_key')->willReturn([]);
+        $this->compositeUrlValidator->expects($this->once())->method('validate')->with('formatted_url_key')->willReturn([]);
         $this->categoryUrlPathAutogeneratorObserver->execute($this->observer);
         $this->assertEquals($expectedUrlKey, $this->category->getUrlKey());
         $this->assertEquals($expectedUrlPath, $this->category->getUrlPath());
@@ -214,32 +179,11 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
         $this->category->expects($this->once())
             ->method('hasChildren')
             ->willReturn(false);
-        $this->metadataPool->expects($this->any())
-            ->method('getMetadata')
-            ->with(CategoryInterface::class)
-            ->willReturn($this->entityMetaDataInterface);
-        $this->entityMetaDataInterface->expects($this->any())
-            ->method('getLinkField')
-            ->willReturn('row_id');
-        $this->category->expects($this->any())
-            ->method('getUrlKey')
-            ->willReturn($categoryData['url_key']);
-        $this->category->expects($this->any())
-            ->method('getUrlPath')
-            ->willReturn($categoryData['url_path']);
-        $this->category->expects($this->any())
-            ->method('getData')
-            ->willReturnMap(
-                [
-                    ['use_default', null, ['url_key' => 1]],
-                    ['row_id', null, null],
-                ]
-            );
         $this->assertEquals($categoryData['url_key'], $this->category->getUrlKey());
         $this->assertEquals($categoryData['url_path'], $this->category->getUrlPath());
         $this->categoryUrlPathAutogeneratorObserver->execute($this->observer);
-        $this->assertNotEmpty($this->category->getUrlKey());
-        $this->assertNotEmpty($this->category->getUrlPath());
+        $this->assertNull($this->category->getUrlKey());
+        $this->assertNull($this->category->getUrlPath());
     }
 
     /**
@@ -257,18 +201,15 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
 
     /**
      * @return void
-     * @throws LocalizedException
      */
     public function testShouldUpdateUrlPathForChildrenIfUrlKeyIsUsingDefaultValueForSpecificStore(): void
     {
         $storeId = 1;
         $categoryId = 1;
-        $rowId = 1;
         $categoryData = [
             'use_default' => ['url_key' => 1],
             'url_key' => null,
             'url_path' => 'some_path',
-            'row_id' => 1
         ];
 
         $this->category->setData($categoryData);
@@ -279,24 +220,9 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
         $this->category->expects($this->once())
             ->method('hasChildren')
             ->willReturn(true);
-        $this->metadataPool->expects($this->any())
-            ->method('getMetadata')
-            ->with(CategoryInterface::class)
-            ->willReturn($this->entityMetaDataInterface);
-        $this->entityMetaDataInterface->expects($this->any())
-            ->method('getLinkField')
-            ->willReturn('row_id');
-        $this->category->expects($this->any())
-            ->method('getUrlKey')
-            ->willReturn(false);
-        $this->category->expects($this->any())
-            ->method('getData')
-            ->willReturnMap(
-                [
-                    ['use_default', null, ['url_key' => 1]],
-                    ['row_id', null, $rowId],
-                ]
-            );
+        $this->category->expects($this->exactly(2))
+            ->method('getId')
+            ->willReturn($categoryId);
         $this->getDefaultUrlKey->expects($this->once())
             ->method('execute')
             ->with($categoryId)
@@ -336,7 +262,7 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
             ->willReturn([$childCategory]);
 
         $this->categoryUrlPathAutogeneratorObserver->execute($this->observer);
-        $this->assertFalse($this->category->getUrlKey());
+        $this->assertNull($this->category->getUrlKey());
         $this->assertNull($this->category->getUrlPath());
     }
 
@@ -386,8 +312,7 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
         $this->categoryUrlPathGenerator->expects($this->any())->method('getUrlPath')->willReturn($expectedUrlPath);
         $this->categoryResource->expects($this->once())->method('saveAttribute')->with($this->category, 'url_path');
         $this->category->expects($this->once())->method('dataHasChangedFor')->with('url_path')->willReturn(false);
-        $this->compositeUrlValidator->expects($this->once())->method('validate')
-            ->with('formatted_url_key')->willReturn([]);
+        $this->compositeUrlValidator->expects($this->once())->method('validate')->with('formatted_url_key')->willReturn([]);
         $this->categoryUrlPathAutogeneratorObserver->execute($this->observer);
     }
 
@@ -443,8 +368,7 @@ class CategoryUrlPathAutogeneratorObserverTest extends TestCase
         $this->childrenCategoriesProvider->expects($this->once())->method('getChildren')->willReturn([$childCategory]);
         $childCategory->expects($this->once())->method('setUrlPath')->with('generated_url_path')->willReturnSelf();
         $childCategoryResource->expects($this->once())->method('saveAttribute')->with($childCategory, 'url_path');
-        $this->compositeUrlValidator->expects($this->once())->method('validate')
-            ->with('generated_url_key')->willReturn([]);
+        $this->compositeUrlValidator->expects($this->once())->method('validate')->with('generated_url_key')->willReturn([]);
 
         $this->categoryUrlPathAutogeneratorObserver->execute($this->observer);
     }

@@ -10,7 +10,7 @@ namespace Magento\TestFramework\TestCase\HttpClient;
  */
 class CurlClient
 {
-    public const EMPTY_REQUEST_BODY = 'Empty body';
+    const EMPTY_REQUEST_BODY = 'Empty body';
 
     /**
      * Perform HTTP GET request
@@ -38,10 +38,9 @@ class CurlClient
      * @param string $url
      * @param array $data
      * @param array $headers
-     * @param bool $flushCookies
      * @return array
      */
-    public function getWithFullResponse($url, $data = [], $headers = [], $flushCookies = false): array
+    public function getWithFullResponse($url, $data = [], $headers = []): array
     {
         if (!empty($data)) {
             $url .= '?' . http_build_query($data);
@@ -49,9 +48,6 @@ class CurlClient
 
         $curlOpts = [];
         $curlOpts[CURLOPT_CUSTOMREQUEST] = \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_GET;
-        if ($flushCookies) {
-            $curlOpts[CURLOPT_COOKIELIST] = 'ALL';
-        }
         return $this->invokeApi($url, $curlOpts, $headers);
     }
 
@@ -61,18 +57,14 @@ class CurlClient
      * @param string $url
      * @param array|string $data
      * @param array $headers
-     * @param bool $flushCookies
      * @return array
      */
-    public function postWithFullResponse($url, $data, $headers = [], $flushCookies = false): array
+    public function postWithFullResponse($url, $data, $headers = []): array
     {
         $curlOpts = [];
         $curlOpts[CURLOPT_CUSTOMREQUEST] = \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_POST;
         $headers[] = 'Content-Length: ' . strlen($data);
         $curlOpts[CURLOPT_POSTFIELDS] = $data;
-        if ($flushCookies) {
-            $curlOpts[CURLOPT_COOKIELIST] = 'ALL';
-        }
 
         return $this->invokeApi($url, $curlOpts, $headers);
     }

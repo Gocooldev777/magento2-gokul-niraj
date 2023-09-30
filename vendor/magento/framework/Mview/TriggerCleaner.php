@@ -10,8 +10,6 @@ namespace Magento\Framework\Mview;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Mview\View\CollectionFactory;
 use Magento\Framework\Mview\View\StateInterface;
-use Magento\Framework\Mview\View\Subscription;
-use Magento\Framework\DB\Ddl\Trigger;
 
 /**
  * Class for removing old triggers that were created by mview
@@ -32,16 +30,6 @@ class TriggerCleaner
      * @var ViewFactory
      */
     private $viewFactory;
-
-    /**
-     * @var array
-     */
-    private $processedTriggers = [];
-
-    /**
-     * @var array
-     */
-    private $DbTriggers = [];
 
     /**
      * @param CollectionFactory $viewCollectionFactory
@@ -66,76 +54,48 @@ class TriggerCleaner
      */
     public function removeTriggers(): bool
     {
-        $this->getDbTriggers();
-
         // Get list of views that are enabled
         $viewCollection = $this->viewCollectionFactory->create();
         $viewList = $viewCollection->getViewsByStateMode(StateInterface::MODE_ENABLED);
 
-        // Check triggers declaration for the enabled views and update them if any changes
+        // Unsubscribe existing view to remove triggers from db
         foreach ($viewList as $view) {
-            $subscriptions = $view->getSubscriptions();
-            foreach ($subscriptions as $subscriptionConfig) {
-                /* @var $subscription Subscription */
-                $subscription = $view->initSubscriptionInstance($subscriptionConfig);
-                $viewTriggers = $subscription->create(false)->getTriggers();
-                $this->processViewTriggers($viewTriggers, $subscription);
-            }
+            $view->unsubscribe();
         }
 
         // Remove any remaining triggers from db that are not linked to a view
-        $remainingTriggers = array_diff_key($this->DbTriggers, $this->processedTriggers);
-        foreach ($remainingTriggers as $trigger) {
-            $view = $this->createViewByTableName($trigger['EVENT_OBJECT_TABLE']);
+        $triggerTableNames = $this->getTableNamesWithTriggers();
+        foreach ($triggerTableNames as $tableName) {
+            $view = $this->createViewByTableName($tableName);
             $view->unsubscribe();
             $view->getState()->delete();
+        }
+
+        // Restore the previous state of the views to add triggers back to db
+        foreach ($viewList as $view) {
+            $view->subscribe();
         }
 
         return true;
     }
 
     /**
-     * Process and update View Triggers if changes were made
+     * Retrieve list of table names that have triggers
      *
-     * @param array $viewTriggers
-     * @param Subscription $subscription
-     * @return void
+     * @return array
      */
-    private function processViewTriggers(array $viewTriggers, Subscription $subscription): void
-    {
-        foreach ($viewTriggers as $viewTrigger) {
-            if (array_key_exists($viewTrigger->getName(), $this->DbTriggers)) {
-                foreach ($this->getStatementsFromViewTrigger($viewTrigger) as $statement) {
-                    if (!empty($statement) &&
-                        !str_contains($this->DbTriggers[$viewTrigger->getName()]['ACTION_STATEMENT'], $statement)
-                    ) {
-                        $subscription->saveTrigger($viewTrigger);
-                        break;
-                    }
-                }
-            } else {
-                $subscription->saveTrigger($viewTrigger);
-            }
-            $this->processedTriggers[$viewTrigger->getName()] = true;
-        }
-    }
-
-    /**
-     * Retrieve list of all triggers from DB
-     *
-     * @return void
-     */
-    private function getDbTriggers(): void
+    private function getTableNamesWithTriggers(): array
     {
         $connection = $this->resource->getConnection();
         $dbName = $this->resource->getSchemaName(ResourceConnection::DEFAULT_CONNECTION);
         $sql = $connection->select()
             ->from(
                 ['information_schema.TRIGGERS'],
-                ['TRIGGER_NAME', 'ACTION_STATEMENT', 'EVENT_OBJECT_TABLE']
+                ['EVENT_OBJECT_TABLE']
             )
+            ->distinct(true)
             ->where('TRIGGER_SCHEMA = ?', $dbName);
-        $this->DbTriggers = $connection->fetchAssoc($sql);
+        return $connection->fetchCol($sql);
     }
 
     /**
@@ -163,27 +123,5 @@ class TriggerCleaner
         $view->getState()->setMode(StateInterface::MODE_ENABLED);
 
         return $view;
-    }
-
-    /**
-     * Get trigger statements for further analyze
-     *
-     * @param Trigger $trigger
-     * @return string[]
-     */
-    private function getStatementsFromViewTrigger(Trigger $trigger): array
-    {
-        $statements = $trigger->getStatements();
-
-        //Check for staged entity attribute subscription
-        $statement = array_shift($statements);
-        if (str_contains($statement, 'SET')) {
-            $splitStatements = explode(PHP_EOL, $statement);
-            $statements += $splitStatements;
-        } else {
-            array_unshift($statements, $statement);
-        }
-
-        return $statements;
     }
 }

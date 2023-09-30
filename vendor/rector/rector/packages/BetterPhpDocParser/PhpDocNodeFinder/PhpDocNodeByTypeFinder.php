@@ -3,10 +3,9 @@
 declare (strict_types=1);
 namespace Rector\BetterPhpDocParser\PhpDocNodeFinder;
 
-use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
-use Rector\PhpDocParser\PhpDocParser\PhpDocNodeTraverser;
+use RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser;
 /**
  * @template TNode as \PHPStan\PhpDocParser\Ast\Node
  */
@@ -16,12 +15,12 @@ final class PhpDocNodeByTypeFinder
      * @param class-string<TNode> $desiredType
      * @return array<TNode>
      */
-    public function findByType(PhpDocNode $phpDocNode, string $desiredType) : array
+    public function findByType(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode $phpDocNode, string $desiredType) : array
     {
-        $phpDocNodeTraverser = new PhpDocNodeTraverser();
+        $phpDocNodeTraverser = new \RectorPrefix20211221\Symplify\SimplePhpDocParser\PhpDocNodeTraverser();
         $foundNodes = [];
-        $phpDocNodeTraverser->traverseWithCallable($phpDocNode, '', static function (Node $node) use(&$foundNodes, $desiredType) : Node {
-            if (!$node instanceof $desiredType) {
+        $phpDocNodeTraverser->traverseWithCallable($phpDocNode, '', function ($node) use(&$foundNodes, $desiredType) {
+            if (!\is_a($node, $desiredType, \true)) {
                 return $node;
             }
             /** @var TNode $node */
@@ -31,10 +30,10 @@ final class PhpDocNodeByTypeFinder
         return $foundNodes;
     }
     /**
-     * @param string[] $classes
+     * @param class-string[] $classes
      * @return DoctrineAnnotationTagValueNode[]
      */
-    public function findDoctrineAnnotationsByClasses(PhpDocNode $phpDocNode, array $classes) : array
+    public function findDoctrineAnnotationsByClasses(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode $phpDocNode, array $classes) : array
     {
         $doctrineAnnotationTagValueNodes = [];
         foreach ($classes as $class) {
@@ -47,11 +46,11 @@ final class PhpDocNodeByTypeFinder
      * @param class-string $desiredClass
      * @return DoctrineAnnotationTagValueNode[]
      */
-    public function findDoctrineAnnotationsByClass(PhpDocNode $phpDocNode, string $desiredClass) : array
+    public function findDoctrineAnnotationsByClass(\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode $phpDocNode, string $desiredClass) : array
     {
         $desiredDoctrineTagValueNodes = [];
         /** @var DoctrineAnnotationTagValueNode[] $doctrineTagValueNodes */
-        $doctrineTagValueNodes = $this->findByType($phpDocNode, DoctrineAnnotationTagValueNode::class);
+        $doctrineTagValueNodes = $this->findByType($phpDocNode, \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode::class);
         foreach ($doctrineTagValueNodes as $doctrineTagValueNode) {
             if ($doctrineTagValueNode->hasClassName($desiredClass)) {
                 $desiredDoctrineTagValueNodes[] = $doctrineTagValueNode;

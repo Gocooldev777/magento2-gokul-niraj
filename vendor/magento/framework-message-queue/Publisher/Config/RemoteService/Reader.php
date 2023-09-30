@@ -58,15 +58,17 @@ class Reader implements ReaderInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
+     *
      * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      */
     public function read($scope = null)
     {
         $result = [];
+        $connectionName = $this->defaultValueProvider->getConnection();
         $connections = [
-            'amqp' => [
-                'name' => 'amqp',
+            $connectionName => [
+                'name' => $connectionName,
                 'exchange' => $this->defaultValueProvider->getExchange(),
                 'disabled' => false,
             ]

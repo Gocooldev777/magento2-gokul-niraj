@@ -13,11 +13,9 @@ use Magento\Catalog\Model\Indexer\Product\Price\ModeSwitcherConfiguration;
 use Magento\Catalog\Model\Indexer\Product\Price\Processor;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\TestFramework\Annotation\TestCaseAnnotation;
 use Magento\TestFramework\App\Config;
-use Magento\TestFramework\Fixture\ParserInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 use PHPUnit\Framework\TestCase;
 
@@ -83,11 +81,7 @@ class IndexerDimensionMode
             $this->modeSwitcher->switchMode($mode, $previousMode);
             $this->objectManager->get(Config::class)->clean();
         } else {
-            ExceptionHandler::handle(
-                'Dimensions mode for indexer has not been changed',
-                get_class($test),
-                $test->getName(false)
-            );
+            $this->fail('Dimensions mode for indexer has not been changed', $test);
         }
     }
 
@@ -100,32 +94,29 @@ class IndexerDimensionMode
      */
     public function startTest(TestCase $test)
     {
-        $values = [];
-        try {
-            $values = $this->parse($test);
-        } catch (\Throwable $exception) {
-            ExceptionHandler::handle(
-                'Unable to parse fixtures',
-                get_class($test),
-                $test->getName(false),
-                $exception
-            );
+        $source = TestCaseAnnotation::getInstance()->getAnnotations($test);
+
+        if (isset($source['method']['magentoIndexerDimensionMode'])) {
+            $annotations = $source['method']['magentoIndexerDimensionMode'];
+        } elseif (isset($source['class']['magentoIndexerDimensionMode'])) {
+            $annotations = $source['class']['magentoIndexerDimensionMode'];
+        } else {
+            return;
         }
 
-        if ($values) {
-            $dbIsolation = Bootstrap::getObjectManager()->get(DbIsolationState::class)->isEnabled($test);
-            if ($dbIsolation) {
-                ExceptionHandler::handle(
-                    '@magentoDbIsolation must be disabled when using @magentoIndexerDimensionMode',
-                    get_class($test),
-                    $test->getName(false)
-                );
-            }
+        $dbIsolation = $source['method']['magentoDbIsolation']
+            ?? $source['class']['magentoDbIsolation']
+            ?? ['disabled'];
 
-            if ($values[0]['indexer'] === Processor::INDEXER_ID) {
-                $this->isDimensionMode = true;
-                $this->setDimensionMode($values[0]['dimension'], $test);
-            }
+        if ($dbIsolation[0] != 'disabled') {
+            $this->fail("Invalid @magentoDbIsolation declaration: $dbIsolation[0]", $test);
+        }
+
+        list($indexerType, $indexerMode) = explode(' ', $annotations[0]);
+
+        if ($indexerType == Processor::INDEXER_ID) {
+            $this->isDimensionMode = true;
+            $this->setDimensionMode($indexerMode, $test);
         }
     }
 
@@ -143,26 +134,14 @@ class IndexerDimensionMode
     }
 
     /**
-     * Returns IndexerDimensionMode fixtures configuration
+     * Fails the test with specified error message
      *
+     * @param string $message
      * @param TestCase $test
-     * @return array
-     * @throws LocalizedException
+     * @throws \Exception
      */
-    private function parse(TestCase $test): array
+    private function fail($message, TestCase $test)
     {
-        $objectManager = Bootstrap::getObjectManager();
-        $parsers = $objectManager
-            ->create(
-                \Magento\TestFramework\Annotation\Parser\Composite::class,
-                [
-                    'parsers' => [
-                        $objectManager->get(\Magento\TestFramework\Annotation\Parser\IndexerDimensionMode::class),
-                        $objectManager->get(\Magento\TestFramework\Fixture\Parser\IndexerDimensionMode::class)
-                    ]
-                ]
-            );
-        return $parsers->parse($test, ParserInterface::SCOPE_METHOD)
-            ?: $parsers->parse($test, ParserInterface::SCOPE_CLASS);
+        $test->fail("{$message} in the test '{$test->toString()}'");
     }
 }

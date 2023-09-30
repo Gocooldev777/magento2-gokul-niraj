@@ -3,15 +3,20 @@
 declare (strict_types=1);
 namespace Rector\Core\StaticReflection;
 
-use Rector\Core\FileSystem\FileAndDirectoryFilter;
 use Rector\Core\FileSystem\PhpFilesFinder;
 use Rector\NodeTypeResolver\Reflection\BetterReflection\SourceLocatorProvider\DynamicSourceLocatorProvider;
+use RectorPrefix20211221\Symplify\SmartFileSystem\FileSystemFilter;
 /**
  * @see https://phpstan.org/blog/zero-config-analysis-with-static-reflection
  * @see https://github.com/rectorphp/rector/issues/3490
  */
 final class DynamicSourceLocatorDecorator
 {
+    /**
+     * @readonly
+     * @var \Symplify\SmartFileSystem\FileSystemFilter
+     */
+    private $fileSystemFilter;
     /**
      * @readonly
      * @var \Rector\NodeTypeResolver\Reflection\BetterReflection\SourceLocatorProvider\DynamicSourceLocatorProvider
@@ -22,16 +27,11 @@ final class DynamicSourceLocatorDecorator
      * @var \Rector\Core\FileSystem\PhpFilesFinder
      */
     private $phpFilesFinder;
-    /**
-     * @readonly
-     * @var \Rector\Core\FileSystem\FileAndDirectoryFilter
-     */
-    private $fileAndDirectoryFilter;
-    public function __construct(DynamicSourceLocatorProvider $dynamicSourceLocatorProvider, PhpFilesFinder $phpFilesFinder, FileAndDirectoryFilter $fileAndDirectoryFilter)
+    public function __construct(\RectorPrefix20211221\Symplify\SmartFileSystem\FileSystemFilter $fileSystemFilter, \Rector\NodeTypeResolver\Reflection\BetterReflection\SourceLocatorProvider\DynamicSourceLocatorProvider $dynamicSourceLocatorProvider, \Rector\Core\FileSystem\PhpFilesFinder $phpFilesFinder)
     {
+        $this->fileSystemFilter = $fileSystemFilter;
         $this->dynamicSourceLocatorProvider = $dynamicSourceLocatorProvider;
         $this->phpFilesFinder = $phpFilesFinder;
-        $this->fileAndDirectoryFilter = $fileAndDirectoryFilter;
     }
     /**
      * @param string[] $paths
@@ -41,11 +41,15 @@ final class DynamicSourceLocatorDecorator
         if ($paths === []) {
             return;
         }
-        $files = $this->fileAndDirectoryFilter->filterFiles($paths);
+        $files = $this->fileSystemFilter->filterFiles($paths);
         $this->dynamicSourceLocatorProvider->addFiles($files);
-        $directories = $this->fileAndDirectoryFilter->filterDirectories($paths);
+        $directories = $this->fileSystemFilter->filterDirectories($paths);
         foreach ($directories as $directory) {
-            $filesInDirectory = $this->phpFilesFinder->findInPaths([$directory]);
+            $filesInfosInDirectory = $this->phpFilesFinder->findInPaths([$directory]);
+            $filesInDirectory = [];
+            foreach ($filesInfosInDirectory as $fileInfoInDirectory) {
+                $filesInDirectory[] = $fileInfoInDirectory->getRealPath();
+            }
             $this->dynamicSourceLocatorProvider->addFilesByDirectory($directory, $filesInDirectory);
         }
     }

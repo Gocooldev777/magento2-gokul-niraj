@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Catalog/template/product/list/columns/image.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<if args=\"isAllowed()\">\n    <a class=\"product-item-photo\"\n       attr=\"href: $row().url\">\n        <img if=\"imageExists($row())\"\n             class=\"product-image-photo\"\n             attr=\"src: getImageUrl($row()),\n               alt: getLabel($row()),\n               title: getLabel($row()),\n               width: getResizedImageWidth($row()),\n               height: getResizedImageHeight($row())\"/>\n    </a>\n</if>\n\n"}
+}});

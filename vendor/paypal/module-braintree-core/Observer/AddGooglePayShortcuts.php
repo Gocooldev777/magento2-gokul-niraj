@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace PayPal\Braintree\Observer;
 
 use PayPal\Braintree\Block\GooglePay\Shortcut\Button;
@@ -11,7 +7,7 @@ use Magento\Checkout\Block\QuoteShortcutButtons;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
-use PayPal\Braintree\Model\GooglePay\Config;
+use PayPal\Braintree\Gateway\Config\Config;
 
 class AddGooglePayShortcuts implements ObserverInterface
 {
@@ -30,7 +26,7 @@ class AddGooglePayShortcuts implements ObserverInterface
     }
 
     /**
-     * Add Google Pay shortcut button
+     * Add google pay shortcut button
      *
      * @param Observer $observer
      * @return void

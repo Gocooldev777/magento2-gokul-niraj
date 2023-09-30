@@ -20,12 +20,12 @@ class Onepage implements LayoutProcessorInterface
     /**
      * @var UiConfigResolverInterface
      */
-    private UiConfigResolverInterface $captchaUiConfigResolver;
+    private $captchaUiConfigResolver;
 
     /**
      * @var IsCaptchaEnabledInterface
      */
-    private IsCaptchaEnabledInterface $isCaptchaEnabled;
+    private $isCaptchaEnabled;
 
     /**
      * @param UiConfigResolverInterface $captchaUiConfigResolver
@@ -46,18 +46,18 @@ class Onepage implements LayoutProcessorInterface
      * @return array
      * @throws InputException
      */
-    public function process($jsLayout): array
+    public function process($jsLayout)
     {
         $key = 'braintree';
         if ($this->isCaptchaEnabled->isCaptchaEnabledFor($key)) {
             $jsLayout['components']['checkout']['children']['steps']['children']['billing-step']['children']
-            ['payment']['children']['payments-list']['children']['braintree-recaptcha-container']['children']
-            ['braintree-recaptcha']['settings'] = $this->captchaUiConfigResolver->get($key);
+            ['payment']['children']['payments-list']['children']['braintree-recaptcha']['children']
+            ['recaptcha_braintree']['settings'] = $this->captchaUiConfigResolver->get($key);
         } else {
             if (isset($jsLayout['components']['checkout']['children']['steps']['children']['billing-step']['children']
-                ['payment']['children']['payments-list']['children']['braintree-recaptcha-container']['children']['braintree-recaptcha'])) {
+                ['payment']['children']['payments-list']['children']['braintree-recaptcha']['children']['recaptcha_braintree'])) {
                 unset($jsLayout['components']['checkout']['children']['steps']['children']['billing-step']['children']
-                    ['payment']['children']['payments-list']['children']['braintree-recaptcha-container']['children']['braintree-recaptcha']);
+                    ['payment']['children']['payments-list']['children']['braintree-recaptcha']['children']['recaptcha_braintree']);
             }
         }
 

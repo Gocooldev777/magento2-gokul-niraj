@@ -6,10 +6,9 @@
 namespace Magento\Checkout\Controller\Cart;
 
 use Magento\Framework;
-use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Checkout\Model\Cart as CustomerCart;
 
-class EstimatePost extends \Magento\Checkout\Controller\Cart implements HttpPostActionInterface
+class EstimatePost extends \Magento\Checkout\Controller\Cart
 {
     /**
      * @var \Magento\Quote\Api\CartRepositoryInterface
@@ -64,7 +63,9 @@ class EstimatePost extends \Magento\Checkout\Controller\Cart implements HttpPost
             ->setCity($city)
             ->setPostcode($postcode)
             ->setRegionId($regionId)
-            ->setRegion($region);
+            ->setRegion($region)
+            ->setCollectShippingRates(true);
+        $this->quoteRepository->save($this->cart->getQuote());
         $this->cart->save();
         return $this->_goBack();
     }

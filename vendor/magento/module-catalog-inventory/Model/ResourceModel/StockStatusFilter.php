@@ -19,7 +19,6 @@ use Magento\Framework\DB\Select;
 class StockStatusFilter implements StockStatusFilterInterface
 {
     private const TABLE_NAME = 'cataloginventory_stock_status';
-
     /**
      * @var ResourceConnection
      */
@@ -69,6 +68,7 @@ class StockStatusFilter implements StockStatusFilterInterface
             []
         );
         $select->where("{$stockStatusTableAlias}.stock_status = ?", StockStatusInterface::STATUS_IN_STOCK);
+
         return $select;
     }
 }

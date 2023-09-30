@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Checkout/js/empty-cart.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine(['Magento_Customer/js/customer-data'], function (customerData) {\n    'use strict';\n\n    return function () {\n        var cartData = customerData.get('cart');\n\n        customerData.getInitCustomerData().done(function () {\n            if (cartData().items && cartData().items.length !== 0) {\n                customerData.reload(['cart'], false);\n            }\n        });\n    };\n});\n"}
+}});

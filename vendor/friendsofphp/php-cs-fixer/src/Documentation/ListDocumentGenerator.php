@@ -30,7 +30,10 @@ use PhpCsFixer\Utils;
  */
 final class ListDocumentGenerator
 {
-    private DocumentationLocator $locator;
+    /**
+     * @var DocumentationLocator
+     */
+    private $locator;
 
     public function __construct(DocumentationLocator $locator)
     {
@@ -108,17 +111,19 @@ RST;
 
                     if (null === $allowed) {
                         $allowedKind = 'Allowed types';
-                        $allowed = array_map(
-                            static fn ($value): string => '``'.$value.'``',
-                            $option->getAllowedTypes(),
-                        );
+                        $allowed = array_map(static function ($value): string {
+                            return '``'.$value.'``';
+                        }, $option->getAllowedTypes());
                     } else {
                         $allowedKind = 'Allowed values';
-                        $allowed = array_map(static function ($value): string {
-                            return $value instanceof AllowedValueSubset
-                                ? 'a subset of ``'.HelpCommand::toString($value->getAllowedValues()).'``'
-                                : '``'.HelpCommand::toString($value).'``';
-                        }, $allowed);
+
+                        foreach ($allowed as &$value) {
+                            if ($value instanceof AllowedValueSubset) {
+                                $value = 'a subset of ``'.HelpCommand::toString($value->getAllowedValues()).'``';
+                            } else {
+                                $value = '``'.HelpCommand::toString($value).'``';
+                            }
+                        }
                     }
 
                     $allowed = implode(', ', $allowed);

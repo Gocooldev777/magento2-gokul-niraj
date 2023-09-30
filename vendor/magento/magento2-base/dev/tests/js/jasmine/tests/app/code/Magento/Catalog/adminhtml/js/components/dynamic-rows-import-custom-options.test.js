@@ -26,6 +26,7 @@ define([
             data = [{
                 'options': [
                     {
+                        'sort_order': 1,
                         'option_id': 1,
                         'option_type_id': 1,
                         'values': [{
@@ -35,6 +36,7 @@ define([
                         }]
                     },
                     {
+                        'sort_order': 2,
                         'option_id': 2,
                         'option_type_id': 2,
                         'values': [{

@@ -6,11 +6,15 @@
 namespace Magento\Paypal\Model\Config\Rules;
 
 use Magento\Framework\Config\FileResolverInterface;
-use Magento\Framework\Config\Reader\Filesystem;
 use Magento\Framework\Config\SchemaLocatorInterface;
 use Magento\Framework\Config\ValidationStateInterface;
+use Magento\Framework\DataObject;
+use Magento\Framework\Config\Reader\Filesystem;
 use Magento\Paypal\Helper\Backend;
 
+/**
+ * Class Reader
+ */
 class Reader extends Filesystem
 {
     /**
@@ -47,12 +51,7 @@ class Reader extends Filesystem
         $domDocumentClass = \Magento\Framework\Config\Dom::class,
         $defaultScope = 'primary'
     ) {
-        $configurationCountryCode = $helper->getConfigurationCountryCode();
-        $fileName = str_replace(
-            '{country}',
-            $configurationCountryCode !== null ? strtolower($configurationCountryCode) : '',
-            (string)$fileName
-        );
+        $fileName = str_replace('{country}', strtolower($helper->getConfigurationCountryCode()), $fileName);
         parent::__construct(
             $fileResolver,
             $converter,

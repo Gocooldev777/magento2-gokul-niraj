@@ -391,6 +391,7 @@ define([
                 }
             };
             options.action.args[this.options.tabIdArgument] = activeTabId;
+            data = data ? $.extend(data, options) : options;
         }
     });
 

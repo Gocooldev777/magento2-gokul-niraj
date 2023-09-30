@@ -6,25 +6,20 @@
 
 namespace Magento\Quote\Model\Quote\Address;
 
-use Magento\Directory\Model\CountryFactory;
-use Magento\Framework\Validator\AbstractValidator;
-use Magento\Framework\Validator\EmailAddress;
-use Magento\Framework\Validator\ValidateException;
-use Magento\Framework\Validator\ValidatorChain;
-use Magento\Quote\Model\Quote\Address;
+use Zend_Validate_Exception;
 
-class Validator extends AbstractValidator
+class Validator extends \Magento\Framework\Validator\AbstractValidator
 {
     /**
-     * @var CountryFactory
+     * @var \Magento\Directory\Model\CountryFactory
      */
     protected $countryFactory;
 
     /**
-     * @param CountryFactory $countryFactory
+     * @param \Magento\Directory\Model\CountryFactory $countryFactory
      */
     public function __construct(
-        CountryFactory $countryFactory
+        \Magento\Directory\Model\CountryFactory $countryFactory
     ) {
         $this->countryFactory = $countryFactory;
     }
@@ -36,15 +31,15 @@ class Validator extends AbstractValidator
      * getMessages() will return an array of messages that explain why the
      * validation failed.
      *
-     * @param  Address $value
+     * @param  \Magento\Quote\Model\Quote\Address $value
      * @return boolean
-     * @throws ValidateException If validation of $value is impossible
+     * @throws Zend_Validate_Exception If validation of $value is impossible
      */
     public function isValid($value)
     {
         $messages = [];
         $email = $value->getEmail();
-        if (!empty($email) && !ValidatorChain::is($email, EmailAddress::class)) {
+        if (!empty($email) && !\Zend_Validate::is($email, \Magento\Framework\Validator\EmailAddress::class)) {
             $messages['invalid_email_format'] = 'Invalid email format';
         }
 

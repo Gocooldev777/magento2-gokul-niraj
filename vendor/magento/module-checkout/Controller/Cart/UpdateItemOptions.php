@@ -12,7 +12,6 @@ use Magento\Framework\App\Action\HttpPostActionInterface as HttpPostActionInterf
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Filter\LocalizedToNormalized;
 use Magento\Framework\Locale\ResolverInterface;
 use Psr\Log\LoggerInterface;
 
@@ -38,7 +37,7 @@ class UpdateItemOptions extends Cart implements HttpPostActionInterface
         }
         try {
             if (isset($params['qty'])) {
-                $inputFilter = new LocalizedToNormalized(
+                $inputFilter = new \Zend_Filter_LocalizedToNormalized(
                     [
                         'locale' => $this->_objectManager->get(ResolverInterface::class)->getLocale(),
                     ]

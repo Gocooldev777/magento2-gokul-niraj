@@ -13,7 +13,6 @@
             <description>Edit image from the View Details panel</description>
         </annotations>
         <click selector="{{AdminEnhancedMediaGalleryViewDetailsSection.edit}}" stepKey="editImage"/>
-        <waitForPageLoad stepKey="waitForLoadingMaskToDisappear"/>
-        <waitForElementVisible selector="{{AdminEnhancedMediaGalleryEditDetailsSection.modalTitle}}" stepKey="waitForSlideOut"/>
+        <waitForElementVisible selector="{{AdminEnhancedMediaGalleryEditDetailsSection.modalTitle}}" stepKey="waitForLoadingMaskToDisappear"/>
     </actionGroup>
 </actionGroups>

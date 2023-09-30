@@ -64,9 +64,9 @@ final class TernaryToNullCoalescingFixer extends AbstractFixer
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
-        $issetIndices = array_keys($tokens->findGivenKind(T_ISSET));
+        $issetIndexes = array_keys($tokens->findGivenKind(T_ISSET));
 
-        while ($issetIndex = array_pop($issetIndices)) {
+        while ($issetIndex = array_pop($issetIndexes)) {
             $this->fixIsset($tokens, $issetIndex);
         }
     }

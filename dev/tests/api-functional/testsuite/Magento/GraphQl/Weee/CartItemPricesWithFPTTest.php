@@ -326,10 +326,6 @@ class CartItemPricesWithFPTTest extends GraphQlAbstract
           value
           currency
         }
-        price_including_tax {
-            value
-            currency
-          }
         row_total {
           value
           currency

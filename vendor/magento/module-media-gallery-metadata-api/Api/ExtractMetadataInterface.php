@@ -12,7 +12,6 @@ use Magento\MediaGalleryMetadataApi\Api\Data\MetadataInterface;
 
 /**
  * Extract asset metadata
- * @api
  */
 interface ExtractMetadataInterface
 {

@@ -131,7 +131,7 @@ define([
             };
 
             if (this.getEnvironment() !== "TEST") {
-                result.merchantInfo = { merchantId: this.getMerchantId() };
+                result['merchantId'] = this.getMerchantId();
             }
 
             return result;

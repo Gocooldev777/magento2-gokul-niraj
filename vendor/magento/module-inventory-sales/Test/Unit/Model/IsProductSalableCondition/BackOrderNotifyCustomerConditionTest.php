@@ -11,7 +11,6 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\InventoryConfigurationApi\Api\Data\StockItemConfigurationInterface;
 use Magento\InventoryConfigurationApi\Api\GetStockItemConfigurationInterface;
-use Magento\InventorySales\Model\GetBackorderQty;
 use Magento\InventorySales\Model\IsProductSalableCondition\BackOrderNotifyCustomerCondition;
 use Magento\InventorySalesApi\Api\Data\ProductSalabilityErrorInterface;
 use Magento\InventorySalesApi\Api\Data\ProductSalabilityErrorInterfaceFactory;
@@ -46,11 +45,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
      * @var GetProductSalableQtyInterface|MockObject
      */
     private $getProductSalableQty;
-
-    /**
-     * @var GetBackorderQty|MockObject
-     */
-    private $getBackorderQty;
 
     /**
      * @inheritDoc
@@ -97,9 +91,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 return $this->stockItemConfiguration;
             }
         );
-        $this->getBackorderQty = $this->createMock(
-            GetBackorderQty::class
-        );
         $getStockItemData = $this->getMockForAbstractClass(
             GetStockItemDataInterface::class
         );
@@ -115,8 +106,7 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 'getStockItemData' => $getStockItemData,
                 'productSalableResultFactory' => $productSalableResultFactory,
                 'productSalabilityErrorFactory' => $productSalabilityErrorFactory,
-                'getProductSalableQty' => $this->getProductSalableQty,
-                'getBackorderQty' => $this->getBackorderQty
+                'getProductSalableQty' => $this->getProductSalableQty
             ]
         );
     }
@@ -129,7 +119,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
      * @param int $reqQty
      * @param float $salableQty
      * @param int $backOrders
-     * @param int $backorderQty
      * @param bool $manageStock
      * @param array $errors
      * @throws LocalizedException
@@ -139,7 +128,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
         int $reqQty,
         float $salableQty,
         int $backOrders,
-        float $backorderQty,
         bool $manageStock,
         array $errors
     ): void {
@@ -147,8 +135,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
             ->willReturn($manageStock);
         $this->stockItemConfiguration->method('getBackorders')
             ->willReturn($backOrders);
-        $this->getBackorderQty->method('execute')
-            ->willReturn((float)$backorderQty);
         $this->getProductSalableQty->method('execute')
             ->willReturn((float)$salableQty);
         $this->stockItemData = $stockData;
@@ -173,7 +159,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 2,
                 1,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                1,
                 true,
                 [
                     [
@@ -190,7 +175,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 20,
                 0,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                20,
                 true,
                 [
                     [
@@ -207,7 +191,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 20,
                 15,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                5,
                 true,
                 [
                     [
@@ -224,7 +207,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 1,
                 1,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                0,
                 true,
                 [],
             ],
@@ -233,7 +215,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 1,
                 1,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                0,
                 true,
                 [],
             ],
@@ -244,7 +225,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 1,
                 1,
                 StockItemConfigurationInterface::BACKORDERS_NO,
-                0,
                 true,
                 [],
             ],
@@ -255,7 +235,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 1,
                 1,
                 StockItemConfigurationInterface::BACKORDERS_YES_NONOTIFY,
-                0,
                 true,
                 [],
             ],
@@ -266,7 +245,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 1,
                 1,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                0,
                 false,
                 [],
             ],
@@ -277,7 +255,6 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 5,
                 13,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                8,
                 true,
                 [
                     [
@@ -294,9 +271,24 @@ class BackOrderNotifyCustomerConditionTest extends TestCase
                 3,
                 13,
                 StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
-                -10,
                 true,
                 [],
+            ],
+            'StockQty=3, ReqQty=13, SalableQty=13, Backorders=YesNotify, ManageStock=Yes' => [
+                [
+                    GetStockItemDataInterface::QUANTITY => 3,
+                ],
+                13,
+                13,
+                StockItemConfigurationInterface::BACKORDERS_YES_NOTIFY,
+                true,
+                [
+                    [
+                        'code' => 'back_order-not-enough',
+                        'message' => 'We don\'t have as many quantity as you requested,'
+                            . ' but we\'ll back order the remaining 0.'
+                    ]
+                ],
             ]
         ];
     }

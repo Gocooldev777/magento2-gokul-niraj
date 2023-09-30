@@ -42,7 +42,7 @@ function (
     'use strict';
 
     var lastSelectedBillingAddress = null,
-        addressUpdated = false,
+        addressUpadated = false,
         addressEdited = false,
         countryData = customerData.get('directory-data'),
         addressOptions = addressList().filter(function (address) {
@@ -125,7 +125,8 @@ function (
         useShippingAddress: function () {
             if (this.isAddressSameAsShipping()) {
                 selectBillingAddress(quote.shippingAddress());
-                this.updateAddresses(true);
+
+                this.updateAddresses();
                 this.isAddressDetailsVisible(true);
             } else {
                 lastSelectedBillingAddress = quote.billingAddress();
@@ -143,7 +144,7 @@ function (
         updateAddress: function () {
             var addressData, newBillingAddress;
 
-            addressUpdated = true;
+            addressUpadated = true;
 
             if (this.selectedAddress() && !this.isAddressFormVisible()) {
                 selectBillingAddress(this.selectedAddress());
@@ -170,14 +171,15 @@ function (
                     checkoutData.setNewCustomerBillingAddress(addressData);
                 }
             }
-            this.updateAddresses(true);
+            setBillingAddressAction(globalMessageList);
+            this.updateAddresses();
         },
 
         /**
          * Edit address action
          */
         editAddress: function () {
-            addressUpdated = false;
+            addressUpadated = false;
             addressEdited = true;
             lastSelectedBillingAddress = quote.billingAddress();
             quote.billingAddress(null);
@@ -188,7 +190,7 @@ function (
          * Cancel address edit action
          */
         cancelAddressEdit: function () {
-            addressUpdated = true;
+            addressUpadated = true;
             this.restoreBillingAddress();
 
             if (quote.billingAddress()) {
@@ -213,7 +215,7 @@ function (
          * Check if Billing Address Changes should be canceled
          */
         needCancelBillingAddressChanges: function () {
-            if (addressEdited && !addressUpdated) {
+            if (addressEdited && !addressUpadated) {
                 this.cancelAddressEdit();
             }
         },
@@ -242,15 +244,11 @@ function (
 
         /**
          * Trigger action to update shipping and billing addresses
-         *
-         * @param {Boolean} force
          */
-        updateAddresses: function (force) {
-            force = !(typeof force === 'undefined' || force !== true);
-
-            if (force
-                || window.checkoutConfig.reloadOnBillingAddress
-                || !window.checkoutConfig.displayBillingOnPaymentMethod) {
+        updateAddresses: function () {
+            if (window.checkoutConfig.reloadOnBillingAddress ||
+                !window.checkoutConfig.displayBillingOnPaymentMethod
+            ) {
                 setBillingAddressAction(globalMessageList);
             }
         },

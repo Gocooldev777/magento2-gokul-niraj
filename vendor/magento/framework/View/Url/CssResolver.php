@@ -18,7 +18,7 @@ class CssResolver
     /**
      * PCRE that matches non-absolute URLs in CSS content
      */
-    public const REGEX_CSS_RELATIVE_URLS =
+    const REGEX_CSS_RELATIVE_URLS =
         '#url\s*\(\s*(?(?=\'|").)(?!http\://|https\://|/|data\:)(.+?)(?:[\#\?].*?|[\'"])?\s*\)#';
 
     /**
@@ -50,18 +50,13 @@ class CssResolver
      */
     public function replaceRelativeUrls($cssContent, $inlineCallback)
     {
-        $cssContent = $cssContent !== null ? $cssContent : '';
         $patterns = self::extractRelativeUrls($cssContent);
         if ($patterns) {
             $replace = [];
             foreach ($patterns as $pattern => $path) {
                 if (!isset($replace[$pattern])) {
                     $newPath = call_user_func($inlineCallback, $path);
-                    $newPattern = str_replace(
-                        $path !== null ? $path : '',
-                        $newPath !== null ? $newPath : '',
-                        $pattern
-                    );
+                    $newPattern = str_replace($path, $newPath, $pattern);
                     $replace[$pattern] = $newPattern;
                 }
             }
@@ -80,7 +75,7 @@ class CssResolver
      */
     public function aggregateImportDirectives($cssContent)
     {
-        $parts = preg_split('/(@import\s.+?;\s*)/', (string)$cssContent, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = preg_split('/(@import\s.+?;\s*)/', $cssContent, -1, PREG_SPLIT_DELIM_CAPTURE);
         $imports = [];
         $css = [];
         foreach ($parts as $part) {

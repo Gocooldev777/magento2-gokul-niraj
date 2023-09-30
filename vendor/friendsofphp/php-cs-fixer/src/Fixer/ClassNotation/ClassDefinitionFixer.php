@@ -38,7 +38,7 @@ final class ClassDefinitionFixer extends AbstractFixer implements ConfigurableFi
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Whitespace around the keywords of a class, trait, enum or interfaces definition should be one space.',
+            'Whitespace around the keywords of a class, trait or interfaces definition should be one space.',
             [
                 new CodeSample(
                     '<?php
@@ -93,10 +93,6 @@ $foo = new class(){};
 ',
                     ['space_before_parenthesis' => true]
                 ),
-                new CodeSample(
-                    "<?php\n\$foo = new class(\n    \$bar,\n    \$baz\n) {};\n",
-                    ['inline_constructor_arguments' => true]
-                ),
             ]
         );
     }
@@ -105,7 +101,6 @@ $foo = new class(){};
      * {@inheritdoc}
      *
      * Must run before BracesFixer.
-     * Must run after NewWithBracesFixer.
      */
     public function getPriority(): int
     {
@@ -155,10 +150,6 @@ $foo = new class(){};
                 ->setAllowedTypes(['bool'])
                 ->setDefault(false)
                 ->getOption(),
-            (new FixerOptionBuilder('inline_constructor_arguments', 'Whether constructor argument list in anonymous classes should be single line.'))
-                ->setAllowedTypes(['bool'])
-                ->setDefault(true)
-                ->getOption(),
         ]);
     }
 
@@ -199,18 +190,6 @@ $foo = new class(){};
             $end = $classDefInfo['extends']['start'];
         } else {
             $end = $tokens->getPrevNonWhitespace($classDefInfo['open']);
-        }
-
-        if ($classDefInfo['anonymousClass'] && !$this->configuration['inline_constructor_arguments']) {
-            if (!$tokens[$end]->equals(')')) { // anonymous class with `extends` and/or `implements`
-                $start = $tokens->getPrevMeaningfulToken($end);
-                $this->makeClassyDefinitionSingleLine($tokens, $start, $end);
-                $end = $start;
-            }
-
-            if ($tokens[$end]->equals(')')) { // skip constructor arguments of anonymous class
-                $end = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $end);
-            }
         }
 
         // 4.1 The extends and implements keywords MUST be declared on the same line as the class name.
@@ -286,16 +265,6 @@ $foo = new class(){};
         return $openIndex + 1;
     }
 
-    /**
-     * @return array{
-     *     start: int,
-     *     classy: int,
-     *     open: int,
-     *     extends: false|array{start: int, numberOfExtends: int, multiLine: bool},
-     *     implements: false|array{start: int, numberOfImplements: int, multiLine: bool},
-     *     anonymousClass: bool,
-     * }
-     */
     private function getClassyDefinitionInfo(Tokens $tokens, int $classyIndex): array
     {
         $openIndex = $tokens->getNextTokenOfKind($classyIndex, ['{']);

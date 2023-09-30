@@ -1,18 +1,14 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Block\Customer;
 
+use PayPal\Braintree\Model\Ui\ConfigProvider;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\AbstractCardRenderer;
-use PayPal\Braintree\Model\Ui\ConfigProvider;
 
-/**
- * @api
- * @since 100.0.2
- */
 class CardRenderer extends AbstractCardRenderer
 {
     /**
@@ -27,8 +23,6 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
-     * Get Number Last 4 Digits
-     *
      * @return string
      */
     public function getNumberLast4Digits(): string
@@ -37,8 +31,6 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
-     * Get exp Date
-     *
      * @return string
      */
     public function getExpDate(): string
@@ -47,8 +39,6 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
-     * Get Icon Url
-     *
      * @return string
      */
     public function getIconUrl(): string
@@ -57,8 +47,6 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
-     * Get Icon Height
-     *
      * @return int
      */
     public function getIconHeight(): int
@@ -67,8 +55,6 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
-     * Get Icon Width
-     *
      * @return int
      */
     public function getIconWidth(): int

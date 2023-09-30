@@ -619,7 +619,7 @@ class ProcessCronQueueObserverTest extends TestCase
      */
     public function dispatchExceptionInCallbackDataProvider(): array
     {
-        $throwable = new TypeError('Description of TypeError');
+        $throwable = new TypeError();
         return [
             'non-callable callback' => [
                 'Not_Existed_Class',
@@ -642,11 +642,11 @@ class ProcessCronQueueObserverTest extends TestCase
                 new CronJobException(
                     $throwable
                 ),
-                'Error when running a cron job: Description of TypeError',
+                'Error when running a cron job',
                 2,
                 1,
                 new \RuntimeException(
-                    'Error when running a cron job: Description of TypeError',
+                    'Error when running a cron job',
                     0,
                     $throwable
                 )

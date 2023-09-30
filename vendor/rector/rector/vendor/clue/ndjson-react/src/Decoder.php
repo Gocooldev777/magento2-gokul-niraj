@@ -1,15 +1,15 @@
 <?php
 
-namespace RectorPrefix202304\Clue\React\NDJson;
+namespace RectorPrefix20211221\Clue\React\NDJson;
 
-use RectorPrefix202304\Evenement\EventEmitter;
-use RectorPrefix202304\React\Stream\ReadableStreamInterface;
-use RectorPrefix202304\React\Stream\Util;
-use RectorPrefix202304\React\Stream\WritableStreamInterface;
+use RectorPrefix20211221\Evenement\EventEmitter;
+use RectorPrefix20211221\React\Stream\ReadableStreamInterface;
+use RectorPrefix20211221\React\Stream\Util;
+use RectorPrefix20211221\React\Stream\WritableStreamInterface;
 /**
  * The Decoder / Parser reads from a plain stream and emits data objects for each JSON element
  */
-class Decoder extends EventEmitter implements ReadableStreamInterface
+class Decoder extends \RectorPrefix20211221\Evenement\EventEmitter implements \RectorPrefix20211221\React\Stream\ReadableStreamInterface
 {
     private $input;
     private $assoc;
@@ -27,7 +27,7 @@ class Decoder extends EventEmitter implements ReadableStreamInterface
      * @param int $maxlength
      * @throws \BadMethodCallException
      */
-    public function __construct(ReadableStreamInterface $input, $assoc = \false, $depth = 512, $options = 0, $maxlength = 65536)
+    public function __construct(\RectorPrefix20211221\React\Stream\ReadableStreamInterface $input, $assoc = \false, $depth = 512, $options = 0, $maxlength = 65536)
     {
         // @codeCoverageIgnoreStart
         if ($options !== 0 && \PHP_VERSION < 5.4) {
@@ -74,18 +74,14 @@ class Decoder extends EventEmitter implements ReadableStreamInterface
     {
         $this->input->resume();
     }
-    public function pipe(WritableStreamInterface $dest, array $options = array())
+    public function pipe(\RectorPrefix20211221\React\Stream\WritableStreamInterface $dest, array $options = array())
     {
-        Util::pipe($this, $dest, $options);
+        \RectorPrefix20211221\React\Stream\Util::pipe($this, $dest, $options);
         return $dest;
     }
     /** @internal */
     public function handleData($data)
     {
-        if (!\is_string($data)) {
-            $this->handleError(new \UnexpectedValueException('Expected stream to emit string, but got ' . \gettype($data)));
-            return;
-        }
         $this->buffer .= $data;
         // keep parsing while a newline has been found
         while (($newline = \strpos($this->buffer, "\n")) !== \false && $newline <= $this->maxlength) {
@@ -93,14 +89,11 @@ class Decoder extends EventEmitter implements ReadableStreamInterface
             $data = (string) \substr($this->buffer, 0, $newline);
             $this->buffer = (string) \substr($this->buffer, $newline + 1);
             // decode data with options given in ctor
-            // @codeCoverageIgnoreStart
             if ($this->options === 0) {
                 $data = \json_decode($data, $this->assoc, $this->depth);
             } else {
-                \assert(\PHP_VERSION_ID >= 50400);
                 $data = \json_decode($data, $this->assoc, $this->depth, $this->options);
             }
-            // @codeCoverageIgnoreEnd
             // abort stream if decoding failed
             if ($data === null && \json_last_error() !== \JSON_ERROR_NONE) {
                 // @codeCoverageIgnoreStart

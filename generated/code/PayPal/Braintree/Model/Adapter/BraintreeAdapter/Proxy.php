@@ -90,7 +90,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function environment(?string $value = null)
+    public function environment($value = null)
     {
         return $this->_getSubject()->environment($value);
     }
@@ -98,7 +98,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function merchantId(?string $value = null)
+    public function merchantId($value = null)
     {
         return $this->_getSubject()->merchantId($value);
     }
@@ -106,7 +106,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function publicKey(?string $value = null)
+    public function publicKey($value = null)
     {
         return $this->_getSubject()->publicKey($value);
     }
@@ -130,7 +130,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function find(string $token)
+    public function find($token)
     {
         return $this->_getSubject()->find($token);
     }
@@ -154,7 +154,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function createNonce(string $token)
+    public function createNonce($token)
     {
         return $this->_getSubject()->createNonce($token);
     }
@@ -170,23 +170,23 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function submitForSettlement(string $transactionId, $amount = null, $attribs = [])
+    public function submitForSettlement($transactionId, $amount = null)
     {
-        return $this->_getSubject()->submitForSettlement($transactionId, $amount, $attribs);
+        return $this->_getSubject()->submitForSettlement($transactionId, $amount);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function submitForPartialSettlement(string $transactionId, $amount = null, $attribs = [])
+    public function submitForPartialSettlement($transactionId, $amount = null)
     {
-        return $this->_getSubject()->submitForPartialSettlement($transactionId, $amount, $attribs);
+        return $this->_getSubject()->submitForPartialSettlement($transactionId, $amount);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function void(string $transactionId)
+    public function void($transactionId)
     {
         return $this->_getSubject()->void($transactionId);
     }
@@ -194,7 +194,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function refund(string $transactionId, $amount = null)
+    public function refund($transactionId, $amount = null)
     {
         return $this->_getSubject()->refund($transactionId, $amount);
     }
@@ -202,7 +202,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function cloneTransaction(string $transactionId, array $attributes)
+    public function cloneTransaction($transactionId, array $attributes)
     {
         return $this->_getSubject()->cloneTransaction($transactionId, $attributes);
     }
@@ -210,7 +210,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function deletePaymentMethod(string $token)
+    public function deletePaymentMethod($token)
     {
         return $this->_getSubject()->deletePaymentMethod($token);
     }
@@ -218,7 +218,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function updatePaymentMethod(string $token, array $attribs)
+    public function updatePaymentMethod($token, $attribs)
     {
         return $this->_getSubject()->updatePaymentMethod($token, $attribs);
     }
@@ -226,7 +226,7 @@ class Proxy extends \PayPal\Braintree\Model\Adapter\BraintreeAdapter implements 
     /**
      * {@inheritdoc}
      */
-    public function getCustomerById(string $id)
+    public function getCustomerById($id)
     {
         return $this->_getSubject()->getCustomerById($id);
     }

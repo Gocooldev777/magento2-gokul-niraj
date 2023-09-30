@@ -11,43 +11,74 @@
  */
 namespace Magento\Framework\HTTP;
 
-/**
- * @deprecated The class is deprecated due to migration from Zend_Http to laminas-http.
- * @see Use \Magento\Framework\HTTP\LaminasClient insted.
- */
-class ZendClient
+class ZendClient extends \Zend_Http_Client
 {
+    /**
+     * Internal flag to allow decoding of request body
+     *
+     * @var bool
+     */
+    protected $_urlEncodeBody = true;
+
     /**
      * @param null|string $uri
      * @param null|array $config
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct($uri = null, $config = null)
     {
-        trigger_error('Class is deprecated', E_USER_DEPRECATED);
+        $this->config['useragent'] = \Magento\Framework\HTTP\ZendClient::class;
+
+        parent::__construct($uri, $config);
     }
 
     /**
-     * Perform an HTTP request
-     *
+     * @return $this
+     */
+    protected function _trySetCurlAdapter()
+    {
+        if (extension_loaded('curl')) {
+            $this->setAdapter(new \Magento\Framework\HTTP\Adapter\Curl());
+        }
+        return $this;
+    }
+
+    /**
      * @param null|string $method
-     * @return void
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @return \Zend_Http_Response
      */
     public function request($method = null)
     {
-        trigger_error('Class is deprecated', E_USER_DEPRECATED);
+        $this->_trySetCurlAdapter();
+        return parent::request($method);
     }
 
     /**
      * Change value of internal flag to disable/enable custom prepare functionality
      *
      * @param bool $flag
-     * @return void
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @return \Magento\Framework\HTTP\ZendClient
      */
     public function setUrlEncodeBody($flag)
     {
-        trigger_error('Class is deprecated', E_USER_DEPRECATED);
+        $this->_urlEncodeBody = $flag;
+        return $this;
+    }
+
+    /**
+     * Adding custom functionality to decode data after
+     * standard prepare functionality
+     *
+     * @return string
+     */
+    protected function _prepareBody()
+    {
+        $body = parent::_prepareBody();
+
+        if (!$this->_urlEncodeBody && $body) {
+            $body = urldecode($body);
+            $this->setHeaders('Content-length', strlen($body));
+        }
+
+        return $body;
     }
 }

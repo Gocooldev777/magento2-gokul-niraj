@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Request;
@@ -14,7 +14,7 @@ class CaptureDataBuilder implements BuilderInterface
 {
     use Formatter;
 
-    public const TRANSACTION_ID = 'transaction_id';
+    const TRANSACTION_ID = 'transaction_id';
 
     /**
      * @var SubjectReader
@@ -33,7 +33,6 @@ class CaptureDataBuilder implements BuilderInterface
 
     /**
      * @inheritdoc
-     *
      * @throws LocalizedException
      */
     public function build(array $buildSubject): array
@@ -49,8 +48,7 @@ class CaptureDataBuilder implements BuilderInterface
 
         return [
             self::TRANSACTION_ID => $transactionId,
-            PaymentDataBuilder::AMOUNT => $this->formatPrice($this->subjectReader->readAmount($buildSubject)),
-            PaymentDataBuilder::ORDER_ID => $paymentDO->getOrder()->getOrderIncrementId()
+            PaymentDataBuilder::AMOUNT => $this->formatPrice($this->subjectReader->readAmount($buildSubject))
         ];
     }
 }

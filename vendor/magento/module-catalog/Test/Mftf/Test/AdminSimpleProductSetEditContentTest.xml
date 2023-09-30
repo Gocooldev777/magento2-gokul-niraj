@@ -29,7 +29,6 @@
             <actionGroup ref="DeleteProductUsingProductGridActionGroup" stepKey="deleteProduct">
                 <argument name="product" value="SimpleProduct"/>
             </actionGroup>
-            <actionGroup ref="ResetAdminDataGridToDefaultViewActionGroup" stepKey="clearFilters"/>
             <!--Admin Logout-->
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>

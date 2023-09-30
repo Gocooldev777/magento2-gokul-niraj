@@ -17,6 +17,7 @@ use Magento\Framework\DataObject;
 use Magento\Framework\Model\AbstractModel;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Stdlib\StringUtils;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -31,15 +32,21 @@ class DataTest extends TestCase
     private $attrDataFactory;
 
     /**
-     * @var Data
+     * @var \Magento\Eav\Model\Validator\Attribute\Data
      */
     private $model;
+
+    /**
+     * @var ObjectManager
+     */
+    private $objectManager;
 
     /**
      * @inheritdoc
      */
     protected function setUp(): void
     {
+        $this->objectManager = new ObjectManager($this);
         $this->attrDataFactory = $this->getMockBuilder(AttributeDataFactory::class)
             ->onlyMethods(['create'])
             ->setConstructorArgs(
@@ -50,7 +57,10 @@ class DataTest extends TestCase
             )
             ->getMock();
 
-        $this->model = new Data($this->attrDataFactory);
+        $this->model = $this->objectManager->getObject(
+            Data::class,
+            ['_attrDataFactory' => $this->attrDataFactory]
+        );
     }
 
     /**
@@ -180,8 +190,7 @@ class DataTest extends TestCase
                 ],
                 'attributeReturns' => ['Error'],
                 'isValid' => true,
-                'messages' => [],
-                'data' => [],
+                'messages' => []
             ],
         ];
     }

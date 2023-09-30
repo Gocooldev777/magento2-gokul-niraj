@@ -13,7 +13,7 @@ namespace Magento\Tax\Plugin\Checkout\CustomerData;
 class Cart
 {
     /**
-     * @var \Magento\Checkout\Model\Session
+     * @var \Magento\Customer\Model\Session
      */
     protected $checkoutSession;
 

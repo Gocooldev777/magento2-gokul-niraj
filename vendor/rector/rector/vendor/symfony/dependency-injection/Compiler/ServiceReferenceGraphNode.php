@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Alias;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Alias;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
 /**
  * Represents a node in your service graph.
  *
@@ -21,56 +21,51 @@ use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
  */
 class ServiceReferenceGraphNode
 {
-    /**
-     * @var string
-     */
     private $id;
-    /**
-     * @var mixed[]
-     */
     private $inEdges = [];
-    /**
-     * @var mixed[]
-     */
     private $outEdges = [];
-    /**
-     * @var mixed
-     */
     private $value;
     /**
-     * @param mixed $value
+     * @param string $id    The node identifier
+     * @param mixed  $value The node value
      */
     public function __construct(string $id, $value)
     {
         $this->id = $id;
         $this->value = $value;
     }
-    public function addInEdge(ServiceReferenceGraphEdge $edge)
+    public function addInEdge(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphEdge $edge)
     {
         $this->inEdges[] = $edge;
     }
-    public function addOutEdge(ServiceReferenceGraphEdge $edge)
+    public function addOutEdge(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\ServiceReferenceGraphEdge $edge)
     {
         $this->outEdges[] = $edge;
     }
     /**
      * Checks if the value of this node is an Alias.
+     *
+     * @return bool
      */
-    public function isAlias() : bool
+    public function isAlias()
     {
-        return $this->value instanceof Alias;
+        return $this->value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Alias;
     }
     /**
      * Checks if the value of this node is a Definition.
+     *
+     * @return bool
      */
-    public function isDefinition() : bool
+    public function isDefinition()
     {
-        return $this->value instanceof Definition;
+        return $this->value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
     }
     /**
      * Returns the identifier.
+     *
+     * @return string
      */
-    public function getId() : string
+    public function getId()
     {
         return $this->id;
     }
@@ -79,7 +74,7 @@ class ServiceReferenceGraphNode
      *
      * @return ServiceReferenceGraphEdge[]
      */
-    public function getInEdges() : array
+    public function getInEdges()
     {
         return $this->inEdges;
     }
@@ -88,12 +83,13 @@ class ServiceReferenceGraphNode
      *
      * @return ServiceReferenceGraphEdge[]
      */
-    public function getOutEdges() : array
+    public function getOutEdges()
     {
         return $this->outEdges;
     }
     /**
      * Returns the value of this Node.
+     *
      * @return mixed
      */
     public function getValue()

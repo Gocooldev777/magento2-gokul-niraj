@@ -14,7 +14,6 @@ use Magento\Sales\Api\Data\OrderItemInterface;
 /**
  * Factory class for @see \Magento\Sales\Model\Order\Creditmemo
  *
- * @api
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class CreditmemoFactory
@@ -34,7 +33,6 @@ class CreditmemoFactory
     /**
      * @var \Magento\Framework\Unserialize\Unserialize
      * @deprecated 101.0.0
-     * @see \Magento\Framework\Unserialize\Unserialize
      */
     protected $unserialize;
 
@@ -231,10 +229,10 @@ class CreditmemoFactory
      * Calculate product options.
      *
      * @param Item $orderItem
-     * @param float $parentQty
-     * @return float
+     * @param int $parentQty
+     * @return int
      */
-    private function calculateProductOptions(Item $orderItem, float $parentQty): float
+    private function calculateProductOptions(Item $orderItem, int $parentQty): int
     {
         $qty = $parentQty;
         $productOptions = $orderItem->getProductOptions();

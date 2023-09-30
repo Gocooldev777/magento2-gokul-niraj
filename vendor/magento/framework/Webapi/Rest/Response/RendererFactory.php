@@ -1,5 +1,7 @@
 <?php
 /**
+ * Factory of REST renders
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -7,9 +9,6 @@ namespace Magento\Framework\Webapi\Rest\Response;
 
 use Magento\Framework\Phrase;
 
-/**
- * Factory of REST renders
- */
 class RendererFactory
 {
     /**
@@ -76,7 +75,7 @@ class RendererFactory
             foreach ($this->_renders as $rendererConfig) {
                 $rendererType = $rendererConfig['type'];
                 if ($acceptType == $rendererType || $acceptType == current(
-                    explode('/', $rendererType ?? '')
+                    explode('/', $rendererType)
                 ) . '/*' || $acceptType == '*/*'
                 ) {
                     return $rendererConfig['model'];

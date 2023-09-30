@@ -53,7 +53,6 @@ class DuplicateClassNameSniff implements Sniff
             T_CLASS,
             T_INTERFACE,
             T_TRAIT,
-            T_ENUM,
             T_NAMESPACE,
             T_CLOSE_TAG,
         ];

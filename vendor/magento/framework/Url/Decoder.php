@@ -24,14 +24,14 @@ class Decoder implements DecoderInterface
     }
 
     /**
-     * The base64_decode() for URLs decoding
+     * base64_decode() for URLs decoding
      *
      * @param    string $url
      * @return   string
      */
     public function decode($url)
     {
-        $url = $url !== null ? base64_decode(strtr($url, '-_,', '+/=')) : '';
+        $url = base64_decode(strtr($url, '-_,', '+/='));
         return $this->urlBuilder->sessionUrlVar($url);
     }
 }

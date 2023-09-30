@@ -8,36 +8,28 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Builder;
+namespace RectorPrefix20211221\Symfony\Component\Config\Builder;
 
-use RectorPrefix202304\Symfony\Component\Config\Definition\ArrayNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\BaseNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\BooleanNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Builder\ExprBuilder;
-use RectorPrefix202304\Symfony\Component\Config\Definition\ConfigurationInterface;
-use RectorPrefix202304\Symfony\Component\Config\Definition\EnumNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use RectorPrefix202304\Symfony\Component\Config\Definition\FloatNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\IntegerNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\NodeInterface;
-use RectorPrefix202304\Symfony\Component\Config\Definition\PrototypedArrayNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\ScalarNode;
-use RectorPrefix202304\Symfony\Component\Config\Definition\VariableNode;
-use RectorPrefix202304\Symfony\Component\Config\Loader\ParamConfigurator;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\BooleanNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\EnumNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\FloatNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\IntegerNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\NodeInterface;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypedArrayNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\VariableNode;
+use RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator;
 /**
  * Generate ConfigBuilders to help create valid config.
  *
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
  */
-class ConfigBuilderGenerator implements ConfigBuilderGeneratorInterface
+class ConfigBuilderGenerator implements \RectorPrefix20211221\Symfony\Component\Config\Builder\ConfigBuilderGeneratorInterface
 {
-    /**
-     * @var ClassBuilder[]
-     */
-    private $classes = [];
-    /**
-     * @var string
-     */
+    private $classes;
     private $outputDir;
     public function __construct(string $outputDir)
     {
@@ -46,17 +38,17 @@ class ConfigBuilderGenerator implements ConfigBuilderGeneratorInterface
     /**
      * @return \Closure that will return the root config class
      */
-    public function build(ConfigurationInterface $configuration) : \Closure
+    public function build(\RectorPrefix20211221\Symfony\Component\Config\Definition\ConfigurationInterface $configuration) : \Closure
     {
         $this->classes = [];
         $rootNode = $configuration->getConfigTreeBuilder()->buildTree();
-        $rootClass = new ClassBuilder('RectorPrefix202304\\Symfony\\Config', $rootNode->getName());
+        $rootClass = new \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder('RectorPrefix20211221\\Symfony\\Config', $rootNode->getName());
         $path = $this->getFullPath($rootClass);
         if (!\is_file($path)) {
             // Generate the class if the file not exists
             $this->classes[] = $rootClass;
             $this->buildNode($rootNode, $rootClass, $this->getSubNamespace($rootClass));
-            $rootClass->addImplements(ConfigBuilderInterface::class);
+            $rootClass->addImplements(\RectorPrefix20211221\Symfony\Component\Config\Builder\ConfigBuilderInterface::class);
             $rootClass->addMethod('getExtensionAlias', '
 public function NAME(): string
 {
@@ -64,13 +56,14 @@ public function NAME(): string
 }', ['ALIAS' => $rootNode->getPath()]);
             $this->writeClasses();
         }
-        return function () use($path, $rootClass) {
+        $loader = \Closure::fromCallable(function () use($path, $rootClass) {
             require_once $path;
             $className = $rootClass->getFqcn();
             return new $className();
-        };
+        });
+        return $loader;
     }
-    private function getFullPath(ClassBuilder $class) : string
+    private function getFullPath(\RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class) : string
     {
         $directory = $this->outputDir . \DIRECTORY_SEPARATOR . $class->getDirectory();
         if (!\is_dir($directory)) {
@@ -83,31 +76,28 @@ public function NAME(): string
         foreach ($this->classes as $class) {
             $this->buildConstructor($class);
             $this->buildToArray($class);
-            if ($class->getProperties()) {
-                $class->addProperty('_usedProperties', null, '[]');
-            }
             $this->buildSetExtraKey($class);
             \file_put_contents($this->getFullPath($class), $class->build());
         }
         $this->classes = [];
     }
-    private function buildNode(NodeInterface $node, ClassBuilder $class, string $namespace) : void
+    private function buildNode(\RectorPrefix20211221\Symfony\Component\Config\Definition\NodeInterface $node, \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class, string $namespace) : void
     {
-        if (!$node instanceof ArrayNode) {
+        if (!$node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode) {
             throw new \LogicException('The node was expected to be an ArrayNode. This Configuration includes an edge case not supported yet.');
         }
         foreach ($node->getChildren() as $child) {
             switch (\true) {
-                case $child instanceof ScalarNode:
+                case $child instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode:
                     $this->handleScalarNode($child, $class);
                     break;
-                case $child instanceof PrototypedArrayNode:
+                case $child instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypedArrayNode:
                     $this->handlePrototypedArrayNode($child, $class, $namespace);
                     break;
-                case $child instanceof VariableNode:
+                case $child instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\VariableNode:
                     $this->handleVariableNode($child, $class);
                     break;
-                case $child instanceof ArrayNode:
+                case $child instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode:
                     $this->handleArrayNode($child, $class, $namespace);
                     break;
                 default:
@@ -115,268 +105,179 @@ public function NAME(): string
             }
         }
     }
-    private function handleArrayNode(ArrayNode $node, ClassBuilder $class, string $namespace) : void
+    private function handleArrayNode(\RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode $node, \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class, string $namespace) : void
     {
-        $childClass = new ClassBuilder($namespace, $node->getName());
+        $childClass = new \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder($namespace, $node->getName());
         $childClass->setAllowExtraKeys($node->shouldIgnoreExtraKeys());
         $class->addRequire($childClass);
         $this->classes[] = $childClass;
-        $hasNormalizationClosures = $this->hasNormalizationClosures($node);
-        $comment = $this->getComment($node);
-        if ($hasNormalizationClosures) {
-            $comment = \sprintf(" * @template TValue\n * @param TValue \$value\n%s", $comment);
-            $comment .= \sprintf(' * @return %s|$this' . "\n", $childClass->getFqcn());
-            $comment .= \sprintf(' * @psalm-return (TValue is array ? %s : static)' . "\n ", $childClass->getFqcn());
-        }
-        if ('' !== $comment) {
-            $comment = "/**\n{$comment}*/\n";
-        }
-        $property = $class->addProperty($node->getName(), $this->getType($childClass->getFqcn(), $hasNormalizationClosures));
-        $nodeTypes = $this->getParameterTypes($node);
-        $body = $hasNormalizationClosures ? '
-COMMENTpublic function NAME(PARAM_TYPE $value = []): CLASS|static
-{
-    if (!\\is_array($value)) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
-        $this->PROPERTY = $value;
-
-        return $this;
-    }
-
-    if (!$this->PROPERTY instanceof CLASS) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
-        $this->PROPERTY = new CLASS($value);
-    } elseif (0 < \\func_num_args()) {
-        throw new InvalidConfigurationException(\'The node created by "NAME()" has already been initialized. You cannot pass values the second time you call NAME().\');
-    }
-
-    return $this->PROPERTY;
-}' : '
-COMMENTpublic function NAME(array $value = []): CLASS
+        $property = $class->addProperty($node->getName(), $childClass->getFqcn());
+        $body = '
+public function NAME(array $value = []): CLASS
 {
     if (null === $this->PROPERTY) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
         $this->PROPERTY = new CLASS($value);
-    } elseif (0 < \\func_num_args()) {
+    } elseif ([] !== $value) {
         throw new InvalidConfigurationException(\'The node created by "NAME()" has already been initialized. You cannot pass values the second time you call NAME().\');
     }
 
     return $this->PROPERTY;
 }';
-        $class->addUse(InvalidConfigurationException::class);
-        $class->addMethod($node->getName(), $body, ['COMMENT' => $comment, 'PROPERTY' => $property->getName(), 'CLASS' => $childClass->getFqcn(), 'PARAM_TYPE' => \in_array('mixed', $nodeTypes, \true) ? 'mixed' : \implode('|', $nodeTypes)]);
+        $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
+        $class->addMethod($node->getName(), $body, ['PROPERTY' => $property->getName(), 'CLASS' => $childClass->getFqcn()]);
         $this->buildNode($node, $childClass, $this->getSubNamespace($childClass));
     }
-    private function handleVariableNode(VariableNode $node, ClassBuilder $class) : void
+    private function handleVariableNode(\RectorPrefix20211221\Symfony\Component\Config\Definition\VariableNode $node, \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class) : void
     {
         $comment = $this->getComment($node);
         $property = $class->addProperty($node->getName());
-        $class->addUse(ParamConfigurator::class);
+        $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator::class);
         $body = '
 /**
-COMMENT *
- * @return $this
+COMMENT * @return $this
  */
-public function NAME(mixed $valueDEFAULT): static
+public function NAME($valueDEFAULT): self
 {
-    $this->_usedProperties[\'PROPERTY\'] = true;
     $this->PROPERTY = $value;
 
     return $this;
 }';
         $class->addMethod($node->getName(), $body, ['PROPERTY' => $property->getName(), 'COMMENT' => $comment, 'DEFAULT' => $node->hasDefaultValue() ? ' = ' . \var_export($node->getDefaultValue(), \true) : '']);
     }
-    private function handlePrototypedArrayNode(PrototypedArrayNode $node, ClassBuilder $class, string $namespace) : void
+    private function handlePrototypedArrayNode(\RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypedArrayNode $node, \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class, string $namespace) : void
     {
         $name = $this->getSingularName($node);
         $prototype = $node->getPrototype();
         $methodName = $name;
-        $hasNormalizationClosures = $this->hasNormalizationClosures($node) || $this->hasNormalizationClosures($prototype);
-        $nodeParameterTypes = $this->getParameterTypes($node);
-        $prototypeParameterTypes = $this->getParameterTypes($prototype);
-        if (!$prototype instanceof ArrayNode || $prototype instanceof PrototypedArrayNode && $prototype->getPrototype() instanceof ScalarNode) {
-            $class->addUse(ParamConfigurator::class);
+        $parameterType = $this->getParameterType($prototype);
+        if (null !== $parameterType || $prototype instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode) {
+            $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator::class);
             $property = $class->addProperty($node->getName());
             if (null === ($key = $node->getKeyAttribute())) {
                 // This is an array of values; don't use singular name
-                $nodeTypesWithoutArray = \array_filter($nodeParameterTypes, static function ($type) {
-                    return 'array' !== $type;
-                });
                 $body = '
 /**
- * @param ParamConfigurator|list<ParamConfigurator|PROTOTYPE_TYPE>EXTRA_TYPE $value
- *
+ * @param ParamConfigurator|list<TYPE|ParamConfigurator> $value
  * @return $this
  */
-public function NAME(PARAM_TYPE $value): static
+public function NAME($value): self
 {
-    $this->_usedProperties[\'PROPERTY\'] = true;
     $this->PROPERTY = $value;
 
     return $this;
 }';
-                $class->addMethod($node->getName(), $body, ['PROPERTY' => $property->getName(), 'PROTOTYPE_TYPE' => \implode('|', $prototypeParameterTypes), 'EXTRA_TYPE' => $nodeTypesWithoutArray ? '|' . \implode('|', $nodeTypesWithoutArray) : '', 'PARAM_TYPE' => \in_array('mixed', $nodeParameterTypes, \true) ? 'mixed' : 'ParamConfigurator|' . \implode('|', $nodeParameterTypes)]);
+                $class->addMethod($node->getName(), $body, ['PROPERTY' => $property->getName(), 'TYPE' => '' === $parameterType ? 'mixed' : $parameterType]);
             } else {
                 $body = '
 /**
+ * @param ParamConfigurator|TYPE $value
  * @return $this
  */
-public function NAME(string $VAR, TYPE $VALUE): static
+public function NAME(string $VAR, $VALUE): self
 {
-    $this->_usedProperties[\'PROPERTY\'] = true;
     $this->PROPERTY[$VAR] = $VALUE;
 
     return $this;
 }';
-                $class->addMethod($methodName, $body, ['PROPERTY' => $property->getName(), 'TYPE' => \in_array('mixed', $prototypeParameterTypes, \true) ? 'mixed' : 'ParamConfigurator|' . \implode('|', $prototypeParameterTypes), 'VAR' => '' === $key ? 'key' : $key, 'VALUE' => 'value' === $key ? 'data' : 'value']);
+                $class->addMethod($methodName, $body, ['PROPERTY' => $property->getName(), 'TYPE' => '' === $parameterType ? 'mixed' : $parameterType, 'VAR' => '' === $key ? 'key' : $key, 'VALUE' => 'value' === $key ? 'data' : 'value']);
             }
             return;
         }
-        $childClass = new ClassBuilder($namespace, $name);
-        if ($prototype instanceof ArrayNode) {
+        $childClass = new \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder($namespace, $name);
+        if ($prototype instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode) {
             $childClass->setAllowExtraKeys($prototype->shouldIgnoreExtraKeys());
         }
         $class->addRequire($childClass);
         $this->classes[] = $childClass;
-        $property = $class->addProperty($node->getName(), $this->getType($childClass->getFqcn() . '[]', $hasNormalizationClosures));
-        $comment = $this->getComment($node);
-        if ($hasNormalizationClosures) {
-            $comment = \sprintf(" * @template TValue\n * @param TValue \$value\n%s", $comment);
-            $comment .= \sprintf(' * @return %s|$this' . "\n", $childClass->getFqcn());
-            $comment .= \sprintf(' * @psalm-return (TValue is array ? %s : static)' . "\n ", $childClass->getFqcn());
-        }
-        if ('' !== $comment) {
-            $comment = "/**\n{$comment}*/\n";
-        }
+        $property = $class->addProperty($node->getName(), $childClass->getFqcn() . '[]');
         if (null === ($key = $node->getKeyAttribute())) {
-            $body = $hasNormalizationClosures ? '
-COMMENTpublic function NAME(PARAM_TYPE $value = []): CLASS|static
+            $body = '
+public function NAME(array $value = []): CLASS
 {
-    $this->_usedProperties[\'PROPERTY\'] = true;
-    if (!\\is_array($value)) {
-        $this->PROPERTY[] = $value;
-
-        return $this;
-    }
-
-    return $this->PROPERTY[] = new CLASS($value);
-}' : '
-COMMENTpublic function NAME(array $value = []): CLASS
-{
-    $this->_usedProperties[\'PROPERTY\'] = true;
-
     return $this->PROPERTY[] = new CLASS($value);
 }';
-            $class->addMethod($methodName, $body, ['COMMENT' => $comment, 'PROPERTY' => $property->getName(), 'CLASS' => $childClass->getFqcn(), 'PARAM_TYPE' => \in_array('mixed', $nodeParameterTypes, \true) ? 'mixed' : \implode('|', $nodeParameterTypes)]);
+            $class->addMethod($methodName, $body, ['PROPERTY' => $property->getName(), 'CLASS' => $childClass->getFqcn()]);
         } else {
-            $body = $hasNormalizationClosures ? '
-COMMENTpublic function NAME(string $VAR, PARAM_TYPE $VALUE = []): CLASS|static
-{
-    if (!\\is_array($VALUE)) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
-        $this->PROPERTY[$VAR] = $VALUE;
-
-        return $this;
-    }
-
-    if (!isset($this->PROPERTY[$VAR]) || !$this->PROPERTY[$VAR] instanceof CLASS) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
-        $this->PROPERTY[$VAR] = new CLASS($VALUE);
-    } elseif (1 < \\func_num_args()) {
-        throw new InvalidConfigurationException(\'The node created by "NAME()" has already been initialized. You cannot pass values the second time you call NAME().\');
-    }
-
-    return $this->PROPERTY[$VAR];
-}' : '
-COMMENTpublic function NAME(string $VAR, array $VALUE = []): CLASS
+            $body = '
+public function NAME(string $VAR, array $VALUE = []): CLASS
 {
     if (!isset($this->PROPERTY[$VAR])) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
-        $this->PROPERTY[$VAR] = new CLASS($VALUE);
-    } elseif (1 < \\func_num_args()) {
-        throw new InvalidConfigurationException(\'The node created by "NAME()" has already been initialized. You cannot pass values the second time you call NAME().\');
+        return $this->PROPERTY[$VAR] = new CLASS($value);
+    }
+    if ([] === $value) {
+        return $this->PROPERTY[$VAR];
     }
 
-    return $this->PROPERTY[$VAR];
+    throw new InvalidConfigurationException(\'The node created by "NAME()" has already been initialized. You cannot pass values the second time you call NAME().\');
 }';
-            $class->addUse(InvalidConfigurationException::class);
-            $class->addMethod($methodName, \str_replace('$value', '$VAR', $body), ['COMMENT' => $comment, 'PROPERTY' => $property->getName(), 'CLASS' => $childClass->getFqcn(), 'VAR' => '' === $key ? 'key' : $key, 'VALUE' => 'value' === $key ? 'data' : 'value', 'PARAM_TYPE' => \in_array('mixed', $prototypeParameterTypes, \true) ? 'mixed' : \implode('|', $prototypeParameterTypes)]);
+            $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
+            $class->addMethod($methodName, $body, ['PROPERTY' => $property->getName(), 'CLASS' => $childClass->getFqcn(), 'VAR' => '' === $key ? 'key' : $key, 'VALUE' => 'value' === $key ? 'data' : 'value']);
         }
         $this->buildNode($prototype, $childClass, $namespace . '\\' . $childClass->getName());
     }
-    private function handleScalarNode(ScalarNode $node, ClassBuilder $class) : void
+    private function handleScalarNode(\RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode $node, \RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class) : void
     {
         $comment = $this->getComment($node);
         $property = $class->addProperty($node->getName());
-        $class->addUse(ParamConfigurator::class);
+        $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator::class);
         $body = '
 /**
 COMMENT * @return $this
  */
-public function NAME($value): static
+public function NAME($value): self
 {
-    $this->_usedProperties[\'PROPERTY\'] = true;
     $this->PROPERTY = $value;
 
     return $this;
 }';
         $class->addMethod($node->getName(), $body, ['PROPERTY' => $property->getName(), 'COMMENT' => $comment]);
     }
-    private function getParameterTypes(NodeInterface $node) : array
+    private function getParameterType(\RectorPrefix20211221\Symfony\Component\Config\Definition\NodeInterface $node) : ?string
     {
-        $paramTypes = [];
-        if ($node instanceof BaseNode) {
-            $types = $node->getNormalizedTypes();
-            if (\in_array(ExprBuilder::TYPE_ANY, $types, \true)) {
-                $paramTypes[] = 'mixed';
-            }
-            if (\in_array(ExprBuilder::TYPE_STRING, $types, \true)) {
-                $paramTypes[] = 'string';
-            }
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\BooleanNode) {
+            return 'bool';
         }
-        if ($node instanceof BooleanNode) {
-            $paramTypes[] = 'bool';
-        } elseif ($node instanceof IntegerNode) {
-            $paramTypes[] = 'int';
-        } elseif ($node instanceof FloatNode) {
-            $paramTypes[] = 'float';
-        } elseif ($node instanceof EnumNode) {
-            $paramTypes[] = 'mixed';
-        } elseif ($node instanceof ArrayNode) {
-            $paramTypes[] = 'array';
-        } elseif ($node instanceof VariableNode) {
-            $paramTypes[] = 'mixed';
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\IntegerNode) {
+            return 'int';
         }
-        return \array_unique($paramTypes);
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\FloatNode) {
+            return 'float';
+        }
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\EnumNode) {
+            return '';
+        }
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypedArrayNode && $node->getPrototype() instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ScalarNode) {
+            // This is just an array of variables
+            return 'array';
+        }
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\VariableNode) {
+            // mixed
+            return '';
+        }
+        return null;
     }
-    private function getComment(BaseNode $node) : string
+    private function getComment(\RectorPrefix20211221\Symfony\Component\Config\Definition\VariableNode $node) : string
     {
         $comment = '';
         if ('' !== ($info = (string) $node->getInfo())) {
             $comment .= ' * ' . $info . "\n";
         }
-        if (!$node instanceof ArrayNode) {
-            foreach ((array) ($node->getExample() ?? []) as $example) {
-                $comment .= ' * @example ' . $example . "\n";
-            }
-            if ('' !== ($default = $node->getDefaultValue())) {
-                $comment .= ' * @default ' . (null === $default ? 'null' : \var_export($default, \true)) . "\n";
-            }
-            if ($node instanceof EnumNode) {
-                $comment .= \sprintf(' * @param ParamConfigurator|%s $value', \implode('|', \array_map(function ($a) {
-                    return \var_export($a, \true);
-                }, $node->getValues()))) . "\n";
-            } else {
-                $parameterTypes = $this->getParameterTypes($node);
-                $comment .= ' * @param ParamConfigurator|' . \implode('|', $parameterTypes) . ' $value' . "\n";
-            }
+        foreach ((array) ($node->getExample() ?? []) as $example) {
+            $comment .= ' * @example ' . $example . "\n";
+        }
+        if ('' !== ($default = $node->getDefaultValue())) {
+            $comment .= ' * @default ' . (null === $default ? 'null' : \var_export($default, \true)) . "\n";
+        }
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\EnumNode) {
+            $comment .= \sprintf(' * @param ParamConfigurator|%s $value', \implode('|', \array_map(function ($a) {
+                return \var_export($a, \true);
+            }, $node->getValues()))) . "\n";
         } else {
-            foreach ((array) ($node->getExample() ?? []) as $example) {
-                $comment .= ' * @example ' . \json_encode($example) . "\n";
+            $parameterType = $this->getParameterType($node);
+            if (null === $parameterType || '' === $parameterType) {
+                $parameterType = 'mixed';
             }
-            if ($node->hasDefaultValue() && [] != ($default = $node->getDefaultValue())) {
-                $comment .= ' * @default ' . \json_encode($default) . "\n";
-            }
+            $comment .= ' * @param ParamConfigurator|' . $parameterType . ' $value' . "\n";
         }
         if ($node->isDeprecated()) {
             $comment .= ' * @deprecated ' . $node->getDeprecation($node->getName(), $node->getParent()->getName())['message'] . "\n";
@@ -386,14 +287,14 @@ public function NAME($value): static
     /**
      * Pick a good singular name.
      */
-    private function getSingularName(PrototypedArrayNode $node) : string
+    private function getSingularName(\RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypedArrayNode $node) : string
     {
         $name = $node->getName();
-        if (\substr_compare($name, 's', -\strlen('s')) !== 0) {
+        if ('s' !== \substr($name, -1)) {
             return $name;
         }
         $parent = $node->getParent();
-        $mappings = $parent instanceof ArrayNode ? $parent->getXmlRemappings() : [];
+        $mappings = $parent instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode ? $parent->getXmlRemappings() : [];
         foreach ($mappings as $map) {
             if ($map[1] === $name) {
                 $name = $map[0];
@@ -402,22 +303,22 @@ public function NAME($value): static
         }
         return $name;
     }
-    private function buildToArray(ClassBuilder $class) : void
+    private function buildToArray(\RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class) : void
     {
         $body = '$output = [];';
         foreach ($class->getProperties() as $p) {
             $code = '$this->PROPERTY';
             if (null !== $p->getType()) {
                 if ($p->isArray()) {
-                    $code = $p->areScalarsAllowed() ? 'array_map(function ($v) { return $v instanceof CLASS ? $v->toArray() : $v; }, $this->PROPERTY)' : 'array_map(function ($v) { return $v->toArray(); }, $this->PROPERTY)';
+                    $code = 'array_map(function ($v) { return $v->toArray(); }, $this->PROPERTY)';
                 } else {
-                    $code = $p->areScalarsAllowed() ? '$this->PROPERTY instanceof CLASS ? $this->PROPERTY->toArray() : $this->PROPERTY' : '$this->PROPERTY->toArray()';
+                    $code = '$this->PROPERTY->toArray()';
                 }
             }
             $body .= \strtr('
-    if (isset($this->_usedProperties[\'PROPERTY\'])) {
+    if (null !== $this->PROPERTY) {
         $output[\'ORG_NAME\'] = ' . $code . ';
-    }', ['PROPERTY' => $p->getName(), 'ORG_NAME' => $p->getOriginalName(), 'CLASS' => $p->getType()]);
+    }', ['PROPERTY' => $p->getName(), 'ORG_NAME' => $p->getOriginalName()]);
         }
         $extraKeys = $class->shouldAllowExtraKeys() ? ' + $this->_extraKeys' : '';
         $class->addMethod('toArray', '
@@ -428,21 +329,20 @@ public function NAME(): array
     return $output' . $extraKeys . ';
 }');
     }
-    private function buildConstructor(ClassBuilder $class) : void
+    private function buildConstructor(\RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class) : void
     {
         $body = '';
         foreach ($class->getProperties() as $p) {
             $code = '$value[\'ORG_NAME\']';
             if (null !== $p->getType()) {
                 if ($p->isArray()) {
-                    $code = $p->areScalarsAllowed() ? 'array_map(function ($v) { return \\is_array($v) ? new ' . $p->getType() . '($v) : $v; }, $value[\'ORG_NAME\'])' : 'array_map(function ($v) { return new ' . $p->getType() . '($v); }, $value[\'ORG_NAME\'])';
+                    $code = 'array_map(function ($v) { return new ' . $p->getType() . '($v); }, $value[\'ORG_NAME\'])';
                 } else {
-                    $code = $p->areScalarsAllowed() ? '\\is_array($value[\'ORG_NAME\']) ? new ' . $p->getType() . '($value[\'ORG_NAME\']) : $value[\'ORG_NAME\']' : 'new ' . $p->getType() . '($value[\'ORG_NAME\'])';
+                    $code = 'new ' . $p->getType() . '($value[\'ORG_NAME\'])';
                 }
             }
             $body .= \strtr('
-    if (array_key_exists(\'ORG_NAME\', $value)) {
-        $this->_usedProperties[\'PROPERTY\'] = true;
+    if (isset($value[\'ORG_NAME\'])) {
         $this->PROPERTY = ' . $code . ';
         unset($value[\'ORG_NAME\']);
     }
@@ -457,49 +357,39 @@ public function NAME(): array
     if ([] !== $value) {
         throw new InvalidConfigurationException(sprintf(\'The following keys are not supported by "%s": \', __CLASS__).implode(\', \', array_keys($value)));
     }';
-            $class->addUse(InvalidConfigurationException::class);
+            $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
         }
         $class->addMethod('__construct', '
 public function __construct(array $value = [])
-{' . $body . '
+{
+' . $body . '
 }');
     }
-    private function buildSetExtraKey(ClassBuilder $class) : void
+    private function buildSetExtraKey(\RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $class) : void
     {
         if (!$class->shouldAllowExtraKeys()) {
             return;
         }
-        $class->addUse(ParamConfigurator::class);
+        $class->addUse(\RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator::class);
         $class->addProperty('_extraKeys');
         $class->addMethod('set', '
 /**
  * @param ParamConfigurator|mixed $value
- *
  * @return $this
  */
-public function NAME(string $key, mixed $value): static
+public function NAME(string $key, $value): self
 {
-    $this->_extraKeys[$key] = $value;
+    if (null === $value) {
+        unset($this->_extraKeys[$key]);
+    } else {
+        $this->_extraKeys[$key] = $value;
+    }
 
     return $this;
 }');
     }
-    private function getSubNamespace(ClassBuilder $rootClass) : string
+    private function getSubNamespace(\RectorPrefix20211221\Symfony\Component\Config\Builder\ClassBuilder $rootClass) : string
     {
         return \sprintf('%s\\%s', $rootClass->getNamespace(), \substr($rootClass->getName(), 0, -6));
-    }
-    private function hasNormalizationClosures(NodeInterface $node) : bool
-    {
-        try {
-            $r = new \ReflectionProperty($node, 'normalizationClosures');
-        } catch (\ReflectionException $exception) {
-            return \false;
-        }
-        $r->setAccessible(\true);
-        return [] !== $r->getValue($node);
-    }
-    private function getType(string $classType, bool $hasNormalizationClosures) : string
-    {
-        return $classType . ($hasNormalizationClosures ? '|scalar' : '');
     }
 }

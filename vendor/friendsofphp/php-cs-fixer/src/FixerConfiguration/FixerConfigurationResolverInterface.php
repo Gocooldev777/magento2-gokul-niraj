@@ -17,7 +17,7 @@ namespace PhpCsFixer\FixerConfiguration;
 interface FixerConfigurationResolverInterface
 {
     /**
-     * @return list<FixerOptionInterface>
+     * @return FixerOptionInterface[]
      */
     public function getOptions(): array;
 

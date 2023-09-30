@@ -11,15 +11,20 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @changelog https://php.watch/versions/8.1/version_compare-operator-restrictions
  * @changelog https://github.com/rectorphp/rector/issues/6271
  *
  * @see \Rector\Tests\Arguments\Rector\FuncCall\FunctionArgumentDefaultValueReplacerRector\FunctionArgumentDefaultValueReplacerRectorTest
  */
-final class FunctionArgumentDefaultValueReplacerRector extends AbstractRector implements ConfigurableRectorInterface
+final class FunctionArgumentDefaultValueReplacerRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const REPLACED_ARGUMENTS = 'replaced_arguments';
     /**
      * @var ReplaceFuncCallArgumentDefaultValue[]
      */
@@ -29,53 +34,47 @@ final class FunctionArgumentDefaultValueReplacerRector extends AbstractRector im
      * @var \Rector\Arguments\ArgumentDefaultValueReplacer
      */
     private $argumentDefaultValueReplacer;
-    public function __construct(ArgumentDefaultValueReplacer $argumentDefaultValueReplacer)
+    public function __construct(\Rector\Arguments\ArgumentDefaultValueReplacer $argumentDefaultValueReplacer)
     {
         $this->argumentDefaultValueReplacer = $argumentDefaultValueReplacer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Streamline the operator arguments of version_compare function', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Streamline the operator arguments of version_compare function', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 version_compare(PHP_VERSION, '5.6', 'gte');
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
 version_compare(PHP_VERSION, '5.6', 'ge');
 CODE_SAMPLE
-, [new ReplaceFuncCallArgumentDefaultValue('version_compare', 2, 'gte', 'ge')])]);
+, [new \Rector\Arguments\ValueObject\ReplaceFuncCallArgumentDefaultValue('version_compare', 2, 'gte', 'ge')])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [FuncCall::class];
+        return [\PhpParser\Node\Expr\FuncCall::class];
     }
     /**
      * @param FuncCall $node
      */
-    public function refactor(Node $node) : ?\PhpParser\Node\Expr\FuncCall
+    public function refactor(\PhpParser\Node $node) : \PhpParser\Node\Expr\FuncCall
     {
-        $hasChanged = \false;
         foreach ($this->replacedArguments as $replacedArgument) {
             if (!$this->isName($node->name, $replacedArgument->getFunction())) {
                 continue;
             }
-            $changedNode = $this->argumentDefaultValueReplacer->processReplaces($node, $replacedArgument);
-            if ($changedNode instanceof Node) {
-                $hasChanged = \true;
-            }
+            $this->argumentDefaultValueReplacer->processReplaces($node, $replacedArgument);
         }
-        if ($hasChanged) {
-            return $node;
-        }
-        return null;
+        return $node;
     }
     /**
      * @param mixed[] $configuration
      */
     public function configure(array $configuration) : void
     {
-        Assert::allIsAOf($configuration, ReplaceFuncCallArgumentDefaultValue::class);
-        $this->replacedArguments = $configuration;
+        $replacedArguments = $configuration[self::REPLACED_ARGUMENTS] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($replacedArguments, \Rector\Arguments\ValueObject\ReplaceFuncCallArgumentDefaultValue::class);
+        $this->replacedArguments = $replacedArguments;
     }
 }

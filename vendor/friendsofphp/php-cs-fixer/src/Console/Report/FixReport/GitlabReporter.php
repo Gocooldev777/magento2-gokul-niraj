@@ -43,7 +43,6 @@ final class GitlabReporter implements ReporterInterface
                 $report[] = [
                     'description' => $fixerName,
                     'fingerprint' => md5($fileName.$fixerName),
-                    'severity' => 'minor',
                     'location' => [
                         'path' => $fileName,
                         'lines' => [

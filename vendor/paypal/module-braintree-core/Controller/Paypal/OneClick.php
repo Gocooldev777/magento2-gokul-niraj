@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 namespace PayPal\Braintree\Controller\Paypal;
 
@@ -23,10 +19,7 @@ use Magento\Quote\Api\Data\CartItemInterface;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Store\Model\StoreManagerInterface;
 
-/**
- * Used by the product page to create a quote for a single product
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+/** Used by the product page to create a quote for a single product
  */
 class OneClick extends Review
 {
@@ -93,8 +86,7 @@ class OneClick extends Review
             $context,
             $config,
             $checkoutSession,
-            $quoteUpdater,
-            $json
+            $quoteUpdater
         );
 
         $this->productRepository = $productRepository;

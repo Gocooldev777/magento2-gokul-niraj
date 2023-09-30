@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Input;
+namespace RectorPrefix20211221\Symfony\Component\Console\Input;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException;
 /**
  * ArgvInput represents an input coming from the CLI arguments.
  *
@@ -36,7 +36,7 @@ use RectorPrefix202304\Symfony\Component\Console\Exception\RuntimeException;
  * @see http://www.gnu.org/software/libc/manual/html_node/Argument-Syntax.html
  * @see http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap12.html#tag_12_02
  */
-class ArgvInput extends Input
+class ArgvInput extends \RectorPrefix20211221\Symfony\Component\Console\Input\Input
 {
     /**
      * @var mixed[]
@@ -46,7 +46,7 @@ class ArgvInput extends Input
      * @var mixed[]
      */
     private $parsed;
-    public function __construct(array $argv = null, InputDefinition $definition = null)
+    public function __construct(array $argv = null, \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition = null)
     {
         $argv = $argv ?? $_SERVER['argv'] ?? [];
         // strip the application name
@@ -58,6 +58,9 @@ class ArgvInput extends Input
     {
         $this->tokens = $tokens;
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function parse()
     {
         $parseOptions = \true;
@@ -109,7 +112,7 @@ class ArgvInput extends Input
         for ($i = 0; $i < $len; ++$i) {
             if (!$this->definition->hasShortcut($name[$i])) {
                 $encoding = \mb_detect_encoding($name, null, \true);
-                throw new RuntimeException(\sprintf('The "-%s" option does not exist.', \false === $encoding ? $name[$i] : \mb_substr($name, $i, 1, $encoding)));
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('The "-%s" option does not exist.', \false === $encoding ? $name[$i] : \mb_substr($name, $i, 1, $encoding)));
             }
             $option = $this->definition->getOptionForShortcut($name[$i]);
             if ($option->acceptValue()) {
@@ -171,7 +174,7 @@ class ArgvInput extends Input
             } else {
                 $message = \sprintf('No arguments expected, got "%s".', $token);
             }
-            throw new RuntimeException($message);
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException($message);
         }
     }
     /**
@@ -183,7 +186,7 @@ class ArgvInput extends Input
     private function addShortOption(string $shortcut, $value)
     {
         if (!$this->definition->hasShortcut($shortcut)) {
-            throw new RuntimeException(\sprintf('The "-%s" option does not exist.', $shortcut));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('The "-%s" option does not exist.', $shortcut));
         }
         $this->addLongOption($this->definition->getOptionForShortcut($shortcut)->getName(), $value);
     }
@@ -197,18 +200,18 @@ class ArgvInput extends Input
     {
         if (!$this->definition->hasOption($name)) {
             if (!$this->definition->hasNegation($name)) {
-                throw new RuntimeException(\sprintf('The "--%s" option does not exist.', $name));
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('The "--%s" option does not exist.', $name));
             }
             $optionName = $this->definition->negationToName($name);
             if (null !== $value) {
-                throw new RuntimeException(\sprintf('The "--%s" option does not accept a value.', $name));
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('The "--%s" option does not accept a value.', $name));
             }
             $this->options[$optionName] = \false;
             return;
         }
         $option = $this->definition->getOption($name);
         if (null !== $value && !$option->acceptValue()) {
-            throw new RuntimeException(\sprintf('The "--%s" option does not accept a value.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('The "--%s" option does not accept a value.', $name));
         }
         if (\in_array($value, ['', null], \true) && $option->acceptValue() && \count($this->parsed)) {
             // if option accepts an optional or mandatory argument
@@ -222,7 +225,7 @@ class ArgvInput extends Input
         }
         if (null === $value) {
             if ($option->isValueRequired()) {
-                throw new RuntimeException(\sprintf('The "--%s" option requires a value.', $name));
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('The "--%s" option requires a value.', $name));
             }
             if (!$option->isArray() && !$option->isValueOptional()) {
                 $value = \true;
@@ -234,6 +237,9 @@ class ArgvInput extends Input
             $this->options[$name] = $value;
         }
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getFirstArgument() : ?string
     {
         $isOption = \false;
@@ -261,7 +267,8 @@ class ArgvInput extends Input
         return null;
     }
     /**
-     * @param string|mixed[] $values
+     * {@inheritdoc}
+     * @param mixed[]|string $values
      */
     public function hasParameterOption($values, bool $onlyParams = \false) : bool
     {
@@ -283,8 +290,9 @@ class ArgvInput extends Input
         return \false;
     }
     /**
-     * @param string|mixed[] $values
-     * @param string|bool|int|float|mixed[]|null $default
+     * {@inheritdoc}
+     * @param mixed[]|string $values
+     * @param mixed[]|bool|float|int|string|null $default
      * @return mixed
      */
     public function getParameterOption($values, $default = \false, bool $onlyParams = \false)

@@ -5,9 +5,7 @@
  */
 namespace Magento\Framework\Data\Argument\Interpreter;
 
-use InvalidArgumentException;
 use Magento\Framework\Data\Argument\InterpreterInterface;
-use Magento\Framework\ObjectManager\Helper\SortItems as SortItemsHelper;
 
 /**
  * Interpreter of array data type that supports arrays of unlimited depth
@@ -19,39 +17,107 @@ class ArrayType implements InterpreterInterface
      *
      * @var InterpreterInterface
      */
-    private InterpreterInterface $itemInterpreter;
-
-    /**
-     * @var SortItemsHelper
-     */
-    private SortItemsHelper $sortItemsHelper;
+    private $itemInterpreter;
 
     /**
      * @param InterpreterInterface $itemInterpreter
-     * @param SortItemsHelper|null $sortItemsHelper
      */
-    public function __construct(InterpreterInterface $itemInterpreter, SortItemsHelper $sortItemsHelper = null)
+    public function __construct(InterpreterInterface $itemInterpreter)
     {
         $this->itemInterpreter = $itemInterpreter;
-        $this->sortItemsHelper = $sortItemsHelper ?: new \Magento\Framework\ObjectManager\Helper\SortItems();
     }
 
     /**
      * @inheritdoc
      * @return array
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
-    public function evaluate(array $data): array
+    public function evaluate(array $data)
     {
-        $items = $data['item'] ?? [];
+        $items = isset($data['item']) ? $data['item'] : [];
         if (!is_array($items)) {
-            throw new InvalidArgumentException('Array items are expected.');
+            throw new \InvalidArgumentException('Array items are expected.');
         }
         $result = [];
-        $items = $this->sortItemsHelper->sortItems($items);
+        $items = $this->sortItems($items);
         foreach ($items as $itemKey => $itemData) {
             $result[$itemKey] = $this->itemInterpreter->evaluate($itemData);
         }
         return $result;
+    }
+
+    /**
+     * Sort items by sort order attribute.
+     *
+     * @param array $items
+     * @return array
+     */
+    private function sortItems($items)
+    {
+        $sortOrderDefined = $this->isSortOrderDefined($items);
+        if ($sortOrderDefined) {
+            $indexedItems = [];
+            foreach ($items as $key => $item) {
+                $indexedItems[] = ['key' => $key, 'item' => $item];
+            }
+            uksort(
+                $indexedItems,
+                function ($firstItemKey, $secondItemKey) use ($indexedItems) {
+                    return $this->compareItems($firstItemKey, $secondItemKey, $indexedItems);
+                }
+            );
+            // Convert array of sorted items back to initial format
+            $items = [];
+            foreach ($indexedItems as $indexedItem) {
+                $items[$indexedItem['key']] = $indexedItem['item'];
+            }
+        }
+        return $items;
+    }
+
+    /**
+     * Compare sortOrder of item
+     *
+     * @param mixed $firstItemKey
+     * @param mixed $secondItemKey
+     * @param array $indexedItems
+     * @return int
+     */
+    private function compareItems($firstItemKey, $secondItemKey, $indexedItems)
+    {
+        $firstItem = $indexedItems[$firstItemKey]['item'];
+        $secondItem = $indexedItems[$secondItemKey]['item'];
+        $firstValue = 0;
+        $secondValue = 0;
+        if (isset($firstItem['sortOrder'])) {
+            $firstValue = (int)$firstItem['sortOrder'];
+        }
+
+        if (isset($secondItem['sortOrder'])) {
+            $secondValue = (int)$secondItem['sortOrder'];
+        }
+
+        if ($firstValue == $secondValue) {
+            // These keys reflect initial relative position of items.
+            // Allows stable sort for items with equal 'sortOrder'
+            return $firstItemKey < $secondItemKey ? -1 : 1;
+        }
+        return $firstValue < $secondValue ? -1 : 1;
+    }
+
+    /**
+     * Determine if a sort order exists for any of the items.
+     *
+     * @param array $items
+     * @return bool
+     */
+    private function isSortOrderDefined($items)
+    {
+        foreach ($items as $itemData) {
+            if (isset($itemData['sortOrder'])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

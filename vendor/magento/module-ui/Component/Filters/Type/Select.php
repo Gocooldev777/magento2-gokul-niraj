@@ -17,9 +17,9 @@ use Magento\Ui\Component\Filters\FilterModifier;
  */
 class Select extends AbstractFilter
 {
-    public const NAME = 'filter_select';
+    const NAME = 'filter_select';
 
-    public const COMPONENT = 'select';
+    const COMPONENT = 'select';
 
     /**
      * UI Component

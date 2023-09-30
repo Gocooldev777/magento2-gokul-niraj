@@ -3,6 +3,7 @@
  * See COPYING.txt for license details.
  */
 
+/*global define*/
 /*global FORM_KEY*/
 define([
     'jquery',

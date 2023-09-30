@@ -6,17 +6,15 @@
 
 namespace Magento\Catalog\Model\Product\Option\Validator;
 
-use Laminas\Validator\ValidatorInterface;
-
 class Pool
 {
     /**
-     * @var ValidatorInterface
+     * @var \Zend_Validate_Interface
      */
     protected $validators;
 
     /**
-     * @param ValidatorInterface[] $validators
+     * @param \Zend_Validate_Interface[] $validators
      */
     public function __construct(array $validators)
     {
@@ -27,7 +25,7 @@ class Pool
      * Get validator
      *
      * @param string $type
-     * @return ValidatorInterface
+     * @return \Zend_Validate_Interface
      */
     public function get($type)
     {

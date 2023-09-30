@@ -11,8 +11,6 @@ use Magento\Quote\Model\Cart\Data\CartItem;
 
 /**
  * Provides data for buy request for different types of products
- *
- * @api
  */
 interface BuyRequestDataProviderInterface
 {

@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Input;
+namespace RectorPrefix20211221\Symfony\Component\Console\Input;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException;
 /**
  * Input is the base class for all concrete Input classes.
  *
@@ -23,23 +23,26 @@ use RectorPrefix202304\Symfony\Component\Console\Exception\RuntimeException;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-abstract class Input implements InputInterface, StreamableInputInterface
+abstract class Input implements \RectorPrefix20211221\Symfony\Component\Console\Input\InputInterface, \RectorPrefix20211221\Symfony\Component\Console\Input\StreamableInputInterface
 {
     protected $definition;
     protected $stream;
     protected $options = [];
     protected $arguments = [];
     protected $interactive = \true;
-    public function __construct(InputDefinition $definition = null)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition = null)
     {
         if (null === $definition) {
-            $this->definition = new InputDefinition();
+            $this->definition = new \RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition();
         } else {
             $this->bind($definition);
             $this->validate();
         }
     }
-    public function bind(InputDefinition $definition)
+    /**
+     * {@inheritdoc}
+     */
+    public function bind(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition)
     {
         $this->arguments = [];
         $this->options = [];
@@ -50,6 +53,9 @@ abstract class Input implements InputInterface, StreamableInputInterface
      * Processes command line arguments.
      */
     protected abstract function parse();
+    /**
+     * {@inheritdoc}
+     */
     public function validate()
     {
         $definition = $this->definition;
@@ -58,50 +64,68 @@ abstract class Input implements InputInterface, StreamableInputInterface
             return !\array_key_exists($argument, $givenArguments) && $definition->getArgument($argument)->isRequired();
         });
         if (\count($missingArguments) > 0) {
-            throw new RuntimeException(\sprintf('Not enough arguments (missing: "%s").', \implode(', ', $missingArguments)));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('Not enough arguments (missing: "%s").', \implode(', ', $missingArguments)));
         }
     }
+    /**
+     * {@inheritdoc}
+     */
     public function isInteractive() : bool
     {
         return $this->interactive;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function setInteractive(bool $interactive)
     {
         $this->interactive = $interactive;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getArguments() : array
     {
         return \array_merge($this->definition->getArgumentDefaults(), $this->arguments);
     }
     /**
+     * {@inheritdoc}
      * @return mixed
      */
     public function getArgument(string $name)
     {
         if (!$this->definition->hasArgument($name)) {
-            throw new InvalidArgumentException(\sprintf('The "%s" argument does not exist.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('The "%s" argument does not exist.', $name));
         }
         return $this->arguments[$name] ?? $this->definition->getArgument($name)->getDefault();
     }
     /**
+     * {@inheritdoc}
      * @param mixed $value
      */
     public function setArgument(string $name, $value)
     {
         if (!$this->definition->hasArgument($name)) {
-            throw new InvalidArgumentException(\sprintf('The "%s" argument does not exist.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('The "%s" argument does not exist.', $name));
         }
         $this->arguments[$name] = $value;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function hasArgument(string $name) : bool
     {
         return $this->definition->hasArgument($name);
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getOptions() : array
     {
         return \array_merge($this->definition->getOptionDefaults(), $this->options);
     }
     /**
+     * {@inheritdoc}
      * @return mixed
      */
     public function getOption(string $name)
@@ -113,11 +137,12 @@ abstract class Input implements InputInterface, StreamableInputInterface
             return !$value;
         }
         if (!$this->definition->hasOption($name)) {
-            throw new InvalidArgumentException(\sprintf('The "%s" option does not exist.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('The "%s" option does not exist.', $name));
         }
         return \array_key_exists($name, $this->options) ? $this->options[$name] : $this->definition->getOption($name)->getDefault();
     }
     /**
+     * {@inheritdoc}
      * @param mixed $value
      */
     public function setOption(string $name, $value)
@@ -126,10 +151,13 @@ abstract class Input implements InputInterface, StreamableInputInterface
             $this->options[$this->definition->negationToName($name)] = !$value;
             return;
         } elseif (!$this->definition->hasOption($name)) {
-            throw new InvalidArgumentException(\sprintf('The "%s" option does not exist.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('The "%s" option does not exist.', $name));
         }
         $this->options[$name] = $value;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function hasOption(string $name) : bool
     {
         return $this->definition->hasOption($name) || $this->definition->hasNegation($name);
@@ -141,10 +169,16 @@ abstract class Input implements InputInterface, StreamableInputInterface
     {
         return \preg_match('{^[\\w-]+$}', $token) ? $token : \escapeshellarg($token);
     }
+    /**
+     * {@inheritdoc}
+     */
     public function setStream($stream)
     {
         $this->stream = $stream;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getStream()
     {
         return $this->stream;

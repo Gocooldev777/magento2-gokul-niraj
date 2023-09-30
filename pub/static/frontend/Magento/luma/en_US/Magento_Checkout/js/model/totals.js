@@ -22,7 +22,7 @@ define([
         quoteItems(newValue.items);
     });
 
-    if (!isNaN(subtotalAmount) && quoteSubtotal !== subtotalAmount && quoteSubtotal !== 0) {
+    if (!isNaN(subtotalAmount) && quoteSubtotal !== subtotalAmount) {
         customerData.reload(['cart'], false);
     }
 

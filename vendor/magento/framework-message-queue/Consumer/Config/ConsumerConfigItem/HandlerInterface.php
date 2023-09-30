@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue\Consumer\Config\ConsumerConfigItem;
 
 /**
  * Representation of message queue handler configuration.
- * @api
  */
 interface HandlerInterface
 {

@@ -75,8 +75,10 @@ class CurrencyConfig
     {
         $storesResult = [];
         foreach ($this->storeManager->getStores() as $store) {
-            $value = $this->config->getValue($path, ScopeInterface::SCOPE_STORE, $store->getCode());
-            $storesResult[] = $value !== null ? explode(',', $value) : [];
+            $storesResult[] = explode(
+                ',',
+                $this->config->getValue($path, ScopeInterface::SCOPE_STORE, $store->getCode())
+            );
         }
 
         return array_merge([], ...$storesResult);
@@ -92,7 +94,6 @@ class CurrencyConfig
     {
         $store = $this->storeManager->getStore();
 
-        $value = $this->config->getValue($path, ScopeInterface::SCOPE_STORE, $store->getCode());
-        return $value !== null ? explode(',', $value) : [];
+        return explode(',', $this->config->getValue($path, ScopeInterface::SCOPE_STORE, $store->getCode()));
     }
 }

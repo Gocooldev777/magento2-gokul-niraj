@@ -130,11 +130,11 @@ class ActionList
         if ($area) {
             $area = '\\' . $area;
         }
-        $namespace = $namespace !== null ? strtolower($namespace) : '';
+        $namespace = strtolower($namespace);
         if (strpos($namespace, self::NOT_ALLOWED_IN_NAMESPACE_PATH) !== false) {
             return null;
         }
-        if ($action && in_array(strtolower($action), $this->reservedWords)) {
+        if (in_array(strtolower($action), $this->reservedWords)) {
             $action .= 'action';
         }
         $fullPath = str_replace(

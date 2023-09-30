@@ -1,10 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class EnumValueNode extends Node implements ValueNode
 {
-    public string $kind = NodeKind::ENUM;
+    /** @var string */
+    public $kind = NodeKind::ENUM;
 
-    public string $value;
+    /** @var string */
+    public $value;
 }

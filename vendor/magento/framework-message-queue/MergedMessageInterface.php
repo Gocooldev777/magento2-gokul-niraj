@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue;
 
 /**
  * Interface for mapping between original and merged messages.
- * @api
  */
 interface MergedMessageInterface
 {

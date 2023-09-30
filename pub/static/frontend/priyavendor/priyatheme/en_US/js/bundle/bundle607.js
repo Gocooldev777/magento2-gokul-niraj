@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_PaypalCaptcha/js/view/checkout/defaultCaptcha-mixin.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([\n    'Magento_PaypalCaptcha/js/model/skipRefreshCaptcha'\n], function (skipRefreshCaptcha) {\n    'use strict';\n\n    var defaultCaptchaMixin = {\n        /**\n         * @override\n         */\n        refresh: function () {\n            if (!skipRefreshCaptcha.skip()) {\n                this._super();\n            } else {\n                skipRefreshCaptcha.skip(false);\n            }\n        }\n    };\n\n    return function (defaultCaptcha) {\n        return defaultCaptcha.extend(defaultCaptchaMixin);\n    };\n});\n"}
+}});

@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\ParameterBag;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\LogicException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 /**
  * ParameterBagInterface is the interface implemented by objects that manage service container parameters.
  *
@@ -33,13 +33,16 @@ interface ParameterBagInterface
     public function add(array $parameters);
     /**
      * Gets the service container parameters.
+     *
+     * @return array
      */
-    public function all() : array;
+    public function all();
     /**
      * Gets a service container parameter.
      *
+     * @return array|bool|string|int|float|null
+     *
      * @throws ParameterNotFoundException if the parameter is not defined
-     * @return mixed[]|bool|string|int|float|\UnitEnum|null
      */
     public function get(string $name);
     /**
@@ -49,14 +52,17 @@ interface ParameterBagInterface
     /**
      * Sets a service container parameter.
      *
+     * @param array|bool|string|int|float|null $value The parameter value
+     *
      * @throws LogicException if the parameter cannot be set
-     * @param mixed[]|bool|string|int|float|\UnitEnum|null $value
      */
     public function set(string $name, $value);
     /**
      * Returns true if a parameter name is defined.
+     *
+     * @return bool
      */
-    public function has(string $name) : bool;
+    public function has(string $name);
     /**
      * Replaces parameter placeholders (%name%) by their values for all parameters.
      */
@@ -64,19 +70,24 @@ interface ParameterBagInterface
     /**
      * Replaces parameter placeholders (%name%) by their values.
      *
+     * @param mixed $value A value
+     *
      * @throws ParameterNotFoundException if a placeholder references a parameter that does not exist
-     * @param mixed $value
      */
     public function resolveValue($value);
     /**
      * Escape parameter placeholders %.
+     *
      * @param mixed $value
+     *
      * @return mixed
      */
     public function escapeValue($value);
     /**
      * Unescape parameter placeholders %.
+     *
      * @param mixed $value
+     *
      * @return mixed
      */
     public function unescapeValue($value);

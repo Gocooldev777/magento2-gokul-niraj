@@ -35,7 +35,7 @@ final class ClassKeywordRemoveFixer extends AbstractFixer implements DeprecatedF
     /**
      * @var string[]
      */
-    private array $imports = [];
+    private $imports = [];
 
     /**
      * {@inheritdoc}

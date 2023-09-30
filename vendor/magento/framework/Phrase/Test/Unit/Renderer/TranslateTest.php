@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Framework\Phrase\Test\Unit\Renderer;
 
-use Magento\Framework\Phrase\Renderer\MessageFormatter;
 use Magento\Framework\Phrase\Renderer\Translate as PhraseRenderer;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Framework\Translate;
@@ -33,32 +32,18 @@ class TranslateTest extends TestCase
      */
     protected $loggerMock;
 
-    /**
-     * @var MessageFormatter|MockObject
-     */
-    private $messageFormatter;
-
     protected function setUp(): void
     {
         $this->_translator = $this->getMockForAbstractClass(TranslateInterface::class);
         $this->loggerMock = $this->getMockBuilder(LoggerInterface::class)
             ->getMock();
-        $this->messageFormatter = $this->getMockBuilder(MessageFormatter::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->messageFormatter
-            ->method('render')
-            ->willReturnCallback(function ($source) {
-                return end($source);
-            });
 
         $objectManagerHelper = new ObjectManager($this);
         $this->_renderer = $objectManagerHelper->getObject(
             PhraseRenderer::class,
             [
                 'translator' => $this->_translator,
-                'logger' => $this->loggerMock,
-                'messageFormatter' => $this->messageFormatter,
+                'logger' => $this->loggerMock
             ]
         );
     }
@@ -111,8 +96,7 @@ class TranslateTest extends TestCase
     {
         $message = 'something went wrong';
         $exception = new \Exception($message);
-        $this->messageFormatter->expects($this->never())
-            ->method('render');
+
         $this->_translator->expects($this->once())
             ->method('getData')
             ->willThrowException($exception);

@@ -11,14 +11,8 @@ use Magento\FunctionalTestingFramework\Config\DataInterface;
 /**
  * Class ActionGroupDataParser
  */
-
 class ActionGroupDataParser
 {
-    /**
-     * @var DataInterface
-     */
-    private $actionGroupData;
-
     /**
      * ActionGroupDataParser constructor.
      *

@@ -1,10 +1,10 @@
 <?php
 
-namespace RectorPrefix202304\React\Socket;
+namespace RectorPrefix20211221\React\Socket;
 
-use RectorPrefix202304\Evenement\EventEmitter;
-use RectorPrefix202304\React\EventLoop\Loop;
-use RectorPrefix202304\React\EventLoop\LoopInterface;
+use RectorPrefix20211221\Evenement\EventEmitter;
+use RectorPrefix20211221\React\EventLoop\Loop;
+use RectorPrefix20211221\React\EventLoop\LoopInterface;
 /**
  * [Internal] The `FdServer` class implements the `ServerInterface` and
  * is responsible for accepting connections from an existing file descriptor.
@@ -30,7 +30,7 @@ use RectorPrefix202304\React\EventLoop\LoopInterface;
  * @see ConnectionInterface
  * @internal
  */
-final class FdServer extends EventEmitter implements ServerInterface
+final class FdServer extends \RectorPrefix20211221\Evenement\EventEmitter implements \RectorPrefix20211221\React\Socket\ServerInterface
 {
     private $master;
     private $loop;
@@ -73,7 +73,7 @@ final class FdServer extends EventEmitter implements ServerInterface
      * @throws \InvalidArgumentException if the listening address is invalid
      * @throws \RuntimeException if listening on this address fails (already in use etc.)
      */
-    public function __construct($fd, LoopInterface $loop = null)
+    public function __construct($fd, \RectorPrefix20211221\React\EventLoop\LoopInterface $loop = null)
     {
         if (\preg_match('#^php://fd/(\\d+)$#', $fd, $m)) {
             $fd = (int) $m[1];
@@ -81,20 +81,16 @@ final class FdServer extends EventEmitter implements ServerInterface
         if (!\is_int($fd) || $fd < 0 || $fd >= \PHP_INT_MAX) {
             throw new \InvalidArgumentException('Invalid FD number given (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22);
         }
-        $this->loop = $loop ?: Loop::get();
-        $errno = 0;
-        $errstr = '';
-        \set_error_handler(function ($_, $error) use(&$errno, &$errstr) {
+        $this->loop = $loop ?: \RectorPrefix20211221\React\EventLoop\Loop::get();
+        $this->master = @\fopen('php://fd/' . $fd, 'r+');
+        if (\false === $this->master) {
             // Match errstr from PHP's warning message.
             // fopen(php://fd/3): Failed to open stream: Error duping file descriptor 3; possibly it doesn't exist: [9]: Bad file descriptor
-            \preg_match('/\\[(\\d+)\\]: (.*)/', $error, $m);
+            $error = \error_get_last();
+            \preg_match('/\\[(\\d+)\\]: (.*)/', $error['message'], $m);
             $errno = isset($m[1]) ? (int) $m[1] : 0;
-            $errstr = isset($m[2]) ? $m[2] : $error;
-        });
-        $this->master = \fopen('php://fd/' . $fd, 'r+');
-        \restore_error_handler();
-        if (\false === $this->master) {
-            throw new \RuntimeException('Failed to listen on FD ' . $fd . ': ' . $errstr . SocketServer::errconst($errno), $errno);
+            $errstr = isset($m[2]) ? $m[2] : $error['message'];
+            throw new \RuntimeException('Failed to listen on FD ' . $fd . ': ' . $errstr . \RectorPrefix20211221\React\Socket\SocketServer::errconst($errno), $errno);
         }
         $meta = \stream_get_meta_data($this->master);
         if (!isset($meta['stream_type']) || $meta['stream_type'] !== 'tcp_socket') {
@@ -150,7 +146,7 @@ final class FdServer extends EventEmitter implements ServerInterface
         $that = $this;
         $this->loop->addReadStream($this->master, function ($master) use($that) {
             try {
-                $newSocket = SocketServer::accept($master);
+                $newSocket = \RectorPrefix20211221\React\Socket\SocketServer::accept($master);
             } catch (\RuntimeException $e) {
                 $that->emit('error', array($e));
                 return;
@@ -171,7 +167,7 @@ final class FdServer extends EventEmitter implements ServerInterface
     /** @internal */
     public function handleConnection($socket)
     {
-        $connection = new Connection($socket, $this->loop);
+        $connection = new \RectorPrefix20211221\React\Socket\Connection($socket, $this->loop);
         $connection->unix = $this->unix;
         $this->emit('connection', array($connection));
     }

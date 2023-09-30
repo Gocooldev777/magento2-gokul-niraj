@@ -77,17 +77,17 @@ final class NoUnusedImportsFixer extends AbstractFixer
 
         foreach ((new NamespacesAnalyzer())->getDeclarations($tokens) as $namespace) {
             $currentNamespaceUseDeclarations = [];
-            $currentNamespaceUseDeclarationIndices = [];
+            $currentNamespaceUseDeclarationIndexes = [];
 
             foreach ($useDeclarations as $useDeclaration) {
                 if ($useDeclaration->getStartIndex() >= $namespace->getScopeStartIndex() && $useDeclaration->getEndIndex() <= $namespace->getScopeEndIndex()) {
                     $currentNamespaceUseDeclarations[] = $useDeclaration;
-                    $currentNamespaceUseDeclarationIndices[$useDeclaration->getStartIndex()] = $useDeclaration->getEndIndex();
+                    $currentNamespaceUseDeclarationIndexes[$useDeclaration->getStartIndex()] = $useDeclaration->getEndIndex();
                 }
             }
 
             foreach ($currentNamespaceUseDeclarations as $useDeclaration) {
-                if (!$this->isImportUsed($tokens, $namespace, $useDeclaration, $currentNamespaceUseDeclarationIndices)) {
+                if (!$this->isImportUsed($tokens, $namespace, $useDeclaration, $currentNamespaceUseDeclarationIndexes)) {
                     $this->removeUseDeclaration($tokens, $useDeclaration);
                 }
             }
@@ -97,9 +97,9 @@ final class NoUnusedImportsFixer extends AbstractFixer
     }
 
     /**
-     * @param array<int, int> $ignoredIndices indices of the use statements themselves that should not be checked as being "used"
+     * @param array<int, int> $ignoredIndexes indexes of the use statements themselves that should not be checked as being "used"
      */
-    private function isImportUsed(Tokens $tokens, NamespaceAnalysis $namespace, NamespaceUseAnalysis $import, array $ignoredIndices): bool
+    private function isImportUsed(Tokens $tokens, NamespaceAnalysis $namespace, NamespaceUseAnalysis $import, array $ignoredIndexes): bool
     {
         $analyzer = new TokensAnalyzer($tokens);
         $gotoLabelAnalyzer = new GotoLabelAnalyzer();
@@ -130,8 +130,8 @@ final class NoUnusedImportsFixer extends AbstractFixer
                 continue;
             }
 
-            if (isset($ignoredIndices[$index])) {
-                $index = $ignoredIndices[$index];
+            if (isset($ignoredIndexes[$index])) {
+                $index = $ignoredIndexes[$index];
 
                 continue;
             }
@@ -232,7 +232,11 @@ final class NoUnusedImportsFixer extends AbstractFixer
         if ($prevToken->isWhitespace()) {
             $content = rtrim($prevToken->getContent(), " \t");
 
-            $tokens->ensureWhitespaceAtIndex($prevIndex, 0, $content);
+            if ('' === $content) {
+                $tokens->clearAt($prevIndex);
+            } else {
+                $tokens[$prevIndex] = new Token([T_WHITESPACE, $content]);
+            }
 
             $prevToken = $tokens[$prevIndex];
         }
@@ -257,7 +261,11 @@ final class NoUnusedImportsFixer extends AbstractFixer
                 1
             );
 
-            $tokens->ensureWhitespaceAtIndex($nextIndex, 0, $content);
+            if ('' !== $content) {
+                $tokens[$nextIndex] = new Token([T_WHITESPACE, $content]);
+            } else {
+                $tokens->clearAt($nextIndex);
+            }
 
             $nextToken = $tokens[$nextIndex];
         }
@@ -265,15 +273,16 @@ final class NoUnusedImportsFixer extends AbstractFixer
         if ($prevToken->isWhitespace() && $nextToken->isWhitespace()) {
             $content = $prevToken->getContent().$nextToken->getContent();
 
-            $tokens->ensureWhitespaceAtIndex($nextIndex, 0, $content);
+            if ('' !== $content) {
+                $tokens[$nextIndex] = new Token([T_WHITESPACE, $content]);
+            } else {
+                $tokens->clearAt($nextIndex);
+            }
 
             $tokens->clearAt($prevIndex);
         }
     }
 
-    /**
-     * @param list<NamespaceUseAnalysis> $useDeclarations
-     */
     private function removeUsesInSameNamespace(Tokens $tokens, array $useDeclarations, NamespaceAnalysis $namespaceDeclaration): void
     {
         $namespace = $namespaceDeclaration->getFullName();

@@ -5,16 +5,15 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Utils;
+namespace RectorPrefix20211221\Nette\Utils;
 
-use RectorPrefix202304\Nette;
+use RectorPrefix20211221\Nette;
 /**
  * Validation utilities.
  */
 class Validators
 {
     use Nette\StaticClass;
-    private const BuiltinTypes = ['string' => 1, 'int' => 1, 'float' => 1, 'bool' => 1, 'array' => 1, 'object' => 1, 'callable' => 1, 'iterable' => 1, 'void' => 1, 'null' => 1, 'mixed' => 1, 'false' => 1, 'never' => 1, 'true' => 1];
     /** @var array<string,?callable> */
     protected static $validators = [
         // PHP types
@@ -32,7 +31,7 @@ class Validators
         // pseudo-types
         'callable' => [self::class, 'isCallable'],
         'iterable' => 'is_iterable',
-        'list' => [Arrays::class, 'isList'],
+        'list' => [\RectorPrefix20211221\Nette\Utils\Arrays::class, 'isList'],
         'mixed' => [self::class, 'isMixed'],
         'none' => [self::class, 'isNone'],
         'number' => [self::class, 'isNumber'],
@@ -61,7 +60,7 @@ class Validators
         'type' => [self::class, 'isType'],
     ];
     /** @var array<string,callable> */
-    protected static $counters = ['string' => 'strlen', 'unicode' => [Strings::class, 'length'], 'array' => 'count', 'list' => 'count', 'alnum' => 'strlen', 'alpha' => 'strlen', 'digit' => 'strlen', 'lower' => 'strlen', 'space' => 'strlen', 'upper' => 'strlen', 'xdigit' => 'strlen'];
+    protected static $counters = ['string' => 'strlen', 'unicode' => [\RectorPrefix20211221\Nette\Utils\Strings::class, 'length'], 'array' => 'count', 'list' => 'count', 'alnum' => 'strlen', 'alpha' => 'strlen', 'digit' => 'strlen', 'lower' => 'strlen', 'space' => 'strlen', 'upper' => 'strlen', 'xdigit' => 'strlen'];
     /**
      * Verifies that the value is of expected types separated by pipe.
      * @param  mixed  $value
@@ -71,14 +70,14 @@ class Validators
     {
         if (!static::is($value, $expected)) {
             $expected = \str_replace(['|', ':'], [' or ', ' in range '], $expected);
-            $translate = ['boolean' => 'bool', 'integer' => 'int', 'double' => 'float', 'NULL' => 'null'];
+            static $translate = ['boolean' => 'bool', 'integer' => 'int', 'double' => 'float', 'NULL' => 'null'];
             $type = $translate[\gettype($value)] ?? \gettype($value);
             if (\is_int($value) || \is_float($value) || \is_string($value) && \strlen($value) < 40) {
                 $type .= ' ' . \var_export($value, \true);
             } elseif (\is_object($value)) {
                 $type .= ' ' . \get_class($value);
             }
-            throw new AssertionException("The {$label} expects to be {$expected}, {$type} given.");
+            throw new \RectorPrefix20211221\Nette\Utils\AssertionException("The {$label} expects to be {$expected}, {$type} given.");
         }
     }
     /**
@@ -87,10 +86,10 @@ class Validators
      * @param  int|string  $key
      * @throws AssertionException
      */
-    public static function assertField(array $array, $key, ?string $expected = null, string $label = "item '%' in array") : void
+    public static function assertField(array $array, $key, string $expected = null, string $label = "item '%' in array") : void
     {
         if (!\array_key_exists($key, $array)) {
-            throw new AssertionException('Missing ' . \str_replace('%', $key, $label) . '.');
+            throw new \RectorPrefix20211221\Nette\Utils\AssertionException('Missing ' . \str_replace('%', $key, $label) . '.');
         } elseif ($expected) {
             static::assert($array[$key], $expected, \str_replace('%', $key, $label));
         }
@@ -123,7 +122,7 @@ class Validators
                     continue;
                 }
             } elseif ($type === 'pattern') {
-                if (Strings::match($value, '|^' . ($item[1] ?? '') . '$|D')) {
+                if (\RectorPrefix20211221\Nette\Utils\Strings::match($value, '|^' . ($item[1] ?? '') . '$|D')) {
                     return \true;
                 }
                 continue;
@@ -182,7 +181,7 @@ class Validators
      */
     public static function isNumeric($value) : bool
     {
-        return \is_float($value) || \is_int($value) || \is_string($value) && \preg_match('#^[+-]?([0-9]++\\.?[0-9]*|\\.[0-9]+)$#D', $value);
+        return \is_float($value) || \is_int($value) || \is_string($value) && \preg_match('#^[+-]?[0-9]*[.]?[0-9]+$#D', $value);
     }
     /**
      * Checks if the value is a syntactically correct callback.
@@ -221,7 +220,7 @@ class Validators
      */
     public static function isList($value) : bool
     {
-        return Arrays::isList($value);
+        return \RectorPrefix20211221\Nette\Utils\Arrays::isList($value);
     }
     /**
      * Checks if the value is in the given range [min, max], where the upper or lower limit can be omitted (null).
@@ -254,7 +253,7 @@ class Validators
     {
         $atom = "[-a-z0-9!#\$%&'*+/=?^_`{|}~]";
         // RFC 5322 unquoted characters in local-part
-        $alpha = "a-z\x80-\xff";
+        $alpha = "a-z€-ÿ";
         // superset of IDN
         return (bool) \preg_match(<<<XX
 \t\t(^
@@ -271,7 +270,7 @@ XX
      */
     public static function isUrl(string $value) : bool
     {
-        $alpha = "a-z\x80-\xff";
+        $alpha = "a-z€-ÿ";
         return (bool) \preg_match(<<<XX
 \t\t(^
 \t\t\thttps?://(
@@ -308,33 +307,5 @@ XX
     public static function isPhpIdentifier(string $value) : bool
     {
         return \preg_match('#^[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*$#D', $value) === 1;
-    }
-    /**
-     * Determines if type is PHP built-in type. Otherwise, it is the class name.
-     */
-    public static function isBuiltinType(string $type) : bool
-    {
-        return isset(self::BuiltinTypes[\strtolower($type)]);
-    }
-    /**
-     * Determines if type is special class name self/parent/static.
-     */
-    public static function isClassKeyword(string $name) : bool
-    {
-        return (bool) \preg_match('#^(self|parent|static)$#Di', $name);
-    }
-    /**
-     * Checks whether the given type declaration is syntactically valid.
-     */
-    public static function isTypeDeclaration(string $type) : bool
-    {
-        return (bool) \preg_match(<<<'XX'
-		~(
-			\?? (?<type> \\? (?<name> [a-zA-Z_\x7f-\xff][\w\x7f-\xff]*) (\\ (?&name))* ) |
-			(?<intersection> (?&type) (& (?&type))+ ) |
-			(?<upart> (?&type) | \( (?&intersection) \) )  (\| (?&upart))+
-		)$~xAD
-XX
-, $type);
     }
 }

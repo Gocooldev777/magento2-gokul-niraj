@@ -4,12 +4,11 @@ declare (strict_types=1);
 namespace Rector\Transform\ValueObject;
 
 use PHPStan\Type\ObjectType;
-use Rector\Core\Validation\RectorAssert;
 final class GetAndSetToMethodCall
 {
     /**
+     * @var class-string
      * @readonly
-     * @var string
      */
     private $classType;
     /**
@@ -22,14 +21,14 @@ final class GetAndSetToMethodCall
      * @var string
      */
     private $setMethod;
+    /**
+     * @param class-string $classType
+     */
     public function __construct(string $classType, string $getMethod, string $setMethod)
     {
         $this->classType = $classType;
         $this->getMethod = $getMethod;
         $this->setMethod = $setMethod;
-        RectorAssert::className($classType);
-        RectorAssert::methodName($getMethod);
-        RectorAssert::methodName($setMethod);
     }
     public function getGetMethod() : string
     {
@@ -39,8 +38,8 @@ final class GetAndSetToMethodCall
     {
         return $this->setMethod;
     }
-    public function getObjectType() : ObjectType
+    public function getObjectType() : \PHPStan\Type\ObjectType
     {
-        return new ObjectType($this->classType);
+        return new \PHPStan\Type\ObjectType($this->classType);
     }
 }

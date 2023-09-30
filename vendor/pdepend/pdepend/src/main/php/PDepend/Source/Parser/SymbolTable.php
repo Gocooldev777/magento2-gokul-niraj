@@ -53,7 +53,7 @@ class SymbolTable
     /**
      * Stack with all active scopes.
      *
-     * @var array<array<string, string>>
+     * @var array<array>
      */
     private $scopeStack = array();
 

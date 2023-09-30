@@ -9,18 +9,16 @@ namespace Magento\Framework\GraphQl\Config;
 
 /**
  * GraphQL config element.
- *
- * @api
  */
 interface ConfigElementInterface
 {
     /**
      * @return string
      */
-    public function getName(): string;
+    public function getName() : string;
 
     /**
      * @return string
      */
-    public function getDescription(): string;
+    public function getDescription() : string;
 }

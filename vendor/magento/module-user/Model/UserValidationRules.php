@@ -6,8 +6,6 @@
 
 namespace Magento\User\Model;
 
-use Laminas\Validator\Identical;
-use Magento\Framework\Validator\DataObject;
 use Magento\Framework\Validator\EmailAddress;
 use Magento\Framework\Validator\NotEmpty;
 use Magento\Framework\Validator\Regex;
@@ -24,38 +22,38 @@ class UserValidationRules
     /**
      * Minimum length of admin password
      */
-    public const MIN_PASSWORD_LENGTH = 7;
+    const MIN_PASSWORD_LENGTH = 7;
 
     /**
      * Adds validation rule for user first name, last name, username and email
      *
-     * @param DataObject $validator
-     * @return DataObject
+     * @param \Magento\Framework\Validator\DataObject $validator
+     * @return \Magento\Framework\Validator\DataObject
      */
-    public function addUserInfoRules(DataObject $validator)
+    public function addUserInfoRules(\Magento\Framework\Validator\DataObject $validator)
     {
         $userNameNotEmpty = new NotEmpty();
         $userNameNotEmpty->setMessage(
             __('"User Name" is required. Enter and try again.'),
-            NotEmpty::IS_EMPTY
+            \Zend_Validate_NotEmpty::IS_EMPTY
         );
         $firstNameNotEmpty = new NotEmpty();
         $firstNameNotEmpty->setMessage(
             __('"First Name" is required. Enter and try again.'),
-            NotEmpty::IS_EMPTY
+            \Zend_Validate_NotEmpty::IS_EMPTY
         );
         $lastNameNotEmpty = new NotEmpty();
         $lastNameNotEmpty->setMessage(
             __('"Last Name" is required. Enter and try again.'),
-            NotEmpty::IS_EMPTY
+            \Zend_Validate_NotEmpty::IS_EMPTY
         );
         $emailValidity = new EmailAddress();
         $emailValidity->setMessage(
             __('Please enter a valid email.'),
-            EmailAddress::INVALID
+            \Zend_Validate_EmailAddress::INVALID
         );
 
-        /** @var $validator DataObject */
+        /** @var $validator \Magento\Framework\Validator\DataObject */
         $validator->addRule(
             $userNameNotEmpty,
             'username'
@@ -76,10 +74,10 @@ class UserValidationRules
     /**
      * Adds validation rule for user password
      *
-     * @param DataObject $validator
-     * @return DataObject
+     * @param \Magento\Framework\Validator\DataObject $validator
+     * @return \Magento\Framework\Validator\DataObject
      */
-    public function addPasswordRules(DataObject $validator)
+    public function addPasswordRules(\Magento\Framework\Validator\DataObject $validator)
     {
         $passwordNotEmpty = new NotEmpty();
         $passwordNotEmpty->setMessage(__('Password is required field.'), NotEmpty::IS_EMPTY);
@@ -87,12 +85,12 @@ class UserValidationRules
         $passwordLength = new StringLength(['min' => $minPassLength, 'encoding' => 'UTF-8']);
         $passwordLength->setMessage(
             __('Your password must be at least %1 characters.', $minPassLength),
-            StringLength::TOO_SHORT
+            \Zend_Validate_StringLength::TOO_SHORT
         );
         $passwordChars = new Regex('/[a-z].*\d|\d.*[a-z]/iu');
         $passwordChars->setMessage(
             __('Your password must include both numeric and alphabetic characters.'),
-            Regex::NOT_MATCH
+            \Zend_Validate_Regex::NOT_MATCH
         );
         $validator->addRule(
             $passwordNotEmpty,
@@ -111,18 +109,18 @@ class UserValidationRules
     /**
      * Adds validation rule for user password confirmation
      *
-     * @param DataObject $validator
+     * @param \Magento\Framework\Validator\DataObject $validator
      * @param string $passwordConfirmation
-     * @return DataObject
+     * @return \Magento\Framework\Validator\DataObject
      */
     public function addPasswordConfirmationRule(
-        DataObject $validator,
+        \Magento\Framework\Validator\DataObject $validator,
         $passwordConfirmation
     ) {
-        $passwordConfirmation = new Identical($passwordConfirmation);
+        $passwordConfirmation = new \Zend_Validate_Identical($passwordConfirmation);
         $passwordConfirmation->setMessage(
             __('Your password confirmation must match your password.'),
-            Identical::NOT_SAME
+            \Zend_Validate_Identical::NOT_SAME
         );
         $validator->addRule($passwordConfirmation, 'password');
         return $validator;

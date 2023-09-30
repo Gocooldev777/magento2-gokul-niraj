@@ -6,27 +6,13 @@
 
 namespace Magento\Catalog\Model\Product\Price;
 
-use Magento\Catalog\Api\BasePriceStorageInterface;
-use Magento\Catalog\Api\Data\BasePriceInterface;
-use Magento\Catalog\Api\Data\BasePriceInterfaceFactory;
-use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
-use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Model\Product\Price\Validation\InvalidSkuProcessor;
-use Magento\Catalog\Model\Product\Price\Validation\Result;
-use Magento\Catalog\Model\ProductIdLocatorInterface;
-use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Store\Api\StoreRepositoryInterface;
-use Magento\Store\Model\Store;
-
 /**
  * Base prices storage.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class BasePriceStorage implements BasePriceStorageInterface
+class BasePriceStorage implements \Magento\Catalog\Api\BasePriceStorageInterface
 {
     /**
-     * Price attribute code.
+     * Attribute code.
      *
      * @var string
      */
@@ -38,27 +24,27 @@ class BasePriceStorage implements BasePriceStorageInterface
     private $pricePersistence;
 
     /**
-     * @var BasePriceInterfaceFactory
+     * @var \Magento\Catalog\Api\Data\BasePriceInterfaceFactory
      */
     private $basePriceInterfaceFactory;
 
     /**
-     * @var ProductIdLocatorInterface
+     * @var \Magento\Catalog\Model\ProductIdLocatorInterface
      */
     private $productIdLocator;
 
     /**
-     * @var StoreRepositoryInterface
+     * @var \Magento\Store\Api\StoreRepositoryInterface
      */
     private $storeRepository;
 
     /**
-     * @var ProductRepositoryInterface
+     * @var \Magento\Catalog\Api\ProductRepositoryInterface
      */
     private $productRepository;
 
     /**
-     * @var Result
+     * @var \Magento\Catalog\Model\Product\Price\Validation\Result
      */
     private $validationResult;
 
@@ -68,24 +54,19 @@ class BasePriceStorage implements BasePriceStorageInterface
     private $pricePersistenceFactory;
 
     /**
-     * @var InvalidSkuProcessor
+     * @var \Magento\Catalog\Model\Product\Price\Validation\InvalidSkuProcessor
      */
     private $invalidSkuProcessor;
 
     /**
-     * @var ProductAttributeRepositoryInterface
-     */
-    private $productAttributeRepository;
-
-    /**
-     * Is price type allowed
+     * Price type allowed.
      *
      * @var int
      */
     private $priceTypeAllowed = 1;
 
     /**
-     * Array of allowed product types.
+     * Allowed product types.
      *
      * @var array
      */
@@ -93,25 +74,23 @@ class BasePriceStorage implements BasePriceStorageInterface
 
     /**
      * @param PricePersistenceFactory $pricePersistenceFactory
-     * @param BasePriceInterfaceFactory $basePriceInterfaceFactory
-     * @param ProductIdLocatorInterface $productIdLocator
-     * @param StoreRepositoryInterface $storeRepository
-     * @param ProductRepositoryInterface $productRepository
-     * @param Result $validationResult
-     * @param InvalidSkuProcessor $invalidSkuProcessor
+     * @param \Magento\Catalog\Api\Data\BasePriceInterfaceFactory $basePriceInterfaceFactory
+     * @param \Magento\Catalog\Model\ProductIdLocatorInterface $productIdLocator
+     * @param \Magento\Store\Api\StoreRepositoryInterface $storeRepository
+     * @param \Magento\Catalog\Api\ProductRepositoryInterface $productRepository
+     * @param \Magento\Catalog\Model\Product\Price\Validation\Result $validationResult
+     * @param \Magento\Catalog\Model\Product\Price\Validation\InvalidSkuProcessor $invalidSkuProcessor
      * @param array $allowedProductTypes [optional]
-     * @param ProductAttributeRepositoryInterface|null $productAttributeRepository
      */
     public function __construct(
         PricePersistenceFactory $pricePersistenceFactory,
-        BasePriceInterfaceFactory $basePriceInterfaceFactory,
-        ProductIdLocatorInterface $productIdLocator,
-        StoreRepositoryInterface $storeRepository,
-        ProductRepositoryInterface $productRepository,
-        Result $validationResult,
-        InvalidSkuProcessor $invalidSkuProcessor,
-        array $allowedProductTypes = [],
-        ProductAttributeRepositoryInterface $productAttributeRepository = null
+        \Magento\Catalog\Api\Data\BasePriceInterfaceFactory $basePriceInterfaceFactory,
+        \Magento\Catalog\Model\ProductIdLocatorInterface $productIdLocator,
+        \Magento\Store\Api\StoreRepositoryInterface $storeRepository,
+        \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
+        \Magento\Catalog\Model\Product\Price\Validation\Result $validationResult,
+        \Magento\Catalog\Model\Product\Price\Validation\InvalidSkuProcessor $invalidSkuProcessor,
+        array $allowedProductTypes = []
     ) {
         $this->pricePersistenceFactory = $pricePersistenceFactory;
         $this->basePriceInterfaceFactory = $basePriceInterfaceFactory;
@@ -121,12 +100,10 @@ class BasePriceStorage implements BasePriceStorageInterface
         $this->validationResult = $validationResult;
         $this->allowedProductTypes = $allowedProductTypes;
         $this->invalidSkuProcessor = $invalidSkuProcessor;
-        $this->productAttributeRepository = $productAttributeRepository ?: ObjectManager::getInstance()
-            ->get(ProductAttributeRepositoryInterface::class);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function get(array $skus)
     {
@@ -151,7 +128,7 @@ class BasePriceStorage implements BasePriceStorageInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function update(array $prices)
     {
@@ -166,18 +143,6 @@ class BasePriceStorage implements BasePriceStorageInterface
                     $this->getPricePersistence()->getEntityLinkField() => $id,
                     'value' => $price->getPrice(),
                 ];
-            }
-        }
-
-        $priceAttribute = $this->productAttributeRepository->get($this->attributeCode);
-
-        if ($priceAttribute !== null && $priceAttribute->isScopeWebsite()) {
-            $formattedPrices = $this->applyWebsitePrices($formattedPrices);
-        }
-
-        if ($priceAttribute !== null && $priceAttribute->isScopeGlobal()) {
-            foreach ($formattedPrices as &$price) {
-                $price['store_id'] = Store::DEFAULT_STORE_ID;
             }
         }
 
@@ -203,7 +168,7 @@ class BasePriceStorage implements BasePriceStorageInterface
     /**
      * Retrieve valid prices that do not contain any errors.
      *
-     * @param BasePriceInterface[] $prices
+     * @param \Magento\Catalog\Api\Data\BasePriceInterface[] $prices
      * @return array
      */
     private function retrieveValidPrices(array $prices)
@@ -242,7 +207,7 @@ class BasePriceStorage implements BasePriceStorageInterface
             }
             try {
                 $this->storeRepository->getById($price->getStoreId());
-            } catch (NoSuchEntityException $e) {
+            } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
                 $this->validationResult->addFailedItem(
                     $id,
                     __(
@@ -259,33 +224,5 @@ class BasePriceStorage implements BasePriceStorageInterface
         }
 
         return $prices;
-    }
-
-    /**
-     * If Catalog Price Mode is Website, price needs to be applied to all Store Views in this website.
-     *
-     * @param array $formattedPrices
-     * @return array
-     * @throws NoSuchEntityException
-     */
-    private function applyWebsitePrices($formattedPrices): array
-    {
-        foreach ($formattedPrices as $price) {
-            if ($price['store_id'] == Store::DEFAULT_STORE_ID) {
-                continue;
-            }
-
-            $storeIds = $this->storeRepository->getById($price['store_id'])->getWebsite()->getStoreIds();
-
-            // Unset origin store view to get rid of duplicate
-            unset($storeIds[$price['store_id']]);
-
-            foreach ($storeIds as $storeId) {
-                $price['store_id'] = (int)$storeId;
-                $formattedPrices[] = $price;
-            }
-        }
-
-        return $formattedPrices;
     }
 }

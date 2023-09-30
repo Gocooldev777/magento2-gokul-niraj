@@ -92,7 +92,7 @@ EOF;
      */
     public function getPriority(): int
     {
-        return 15;
+        return 1;
     }
 
     /**

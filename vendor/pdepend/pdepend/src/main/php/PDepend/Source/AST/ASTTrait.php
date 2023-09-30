@@ -68,10 +68,7 @@ class ASTTrait extends ASTClass
      */
     public function getProperties()
     {
-        /** @var ASTProperty[] $list */
-        $list = array();
-
-        return new ASTArtifactList($list);
+        return new ASTArtifactList(array());
     }
 
     /**
@@ -101,6 +98,16 @@ class ASTTrait extends ASTClass
     public function isSubtypeOf(AbstractASTType $type)
     {
         return false;
+    }
+
+    /**
+     * ASTVisitor method for node tree traversal.
+     *
+     * @return void
+     */
+    public function accept(ASTVisitor $visitor)
+    {
+        $visitor->visitTrait($this);
     }
 
     /**

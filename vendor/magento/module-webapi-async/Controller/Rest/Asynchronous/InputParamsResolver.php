@@ -113,13 +113,12 @@ class InputParamsResolver
 
         $this->requestValidator->validate();
         $webapiResolvedParams = [];
-        $inputData = $this->getInputData();
         $route = $this->getRoute();
         $routeServiceClass = $route->getServiceClass();
         $routeServiceMethod = $route->getServiceMethod();
         $this->inputArraySizeLimitValue->set($route->getInputArraySizeLimit());
 
-        foreach ($inputData as $key => $singleEntityParams) {
+        foreach ($this->getInputData() as $key => $singleEntityParams) {
             $webapiResolvedParams[$key] = $this->resolveBulkItemParams(
                 $singleEntityParams,
                 $routeServiceClass,

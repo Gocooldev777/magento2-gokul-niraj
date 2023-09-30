@@ -20,6 +20,7 @@ function (defaultCaptcha, captchaList, _, placeOrderHooks) {
 
             this._super();
             currentCaptcha = captchaList.getCaptchaByFormId(this.formId);
+
             if (currentCaptcha != null) {
                 currentCaptcha.setIsVisible(true);
                 this.setCurrentCaptcha(currentCaptcha);
@@ -28,11 +29,9 @@ function (defaultCaptcha, captchaList, _, placeOrderHooks) {
                         headers['X-Captcha'] = self.captchaValue()();
                     }
                 });
-                if (self.isRequired()) {
-                    placeOrderHooks.afterRequestListeners.push(function () {
-                        self.refresh();
-                    });
-                }
+                placeOrderHooks.afterRequestListeners.push(function () {
+                    self.refresh();
+                });
             }
         }
     });

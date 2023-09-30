@@ -4,8 +4,7 @@ declare (strict_types=1);
 namespace PhpParser\Node\Stmt;
 
 use PhpParser\Node;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-class Namespace_ extends Node\Stmt implements StmtsAwareInterface
+class Namespace_ extends \PhpParser\Node\Stmt
 {
     /* For use in the "kind" attribute */
     const KIND_SEMICOLON = 1;
@@ -21,7 +20,7 @@ class Namespace_ extends Node\Stmt implements StmtsAwareInterface
      * @param null|Node\Stmt[] $stmts      Statements
      * @param array            $attributes Additional attributes
      */
-    public function __construct(Node\Name $name = null, $stmts = [], array $attributes = [])
+    public function __construct(\PhpParser\Node\Name $name = null, $stmts = [], array $attributes = [])
     {
         $this->attributes = $attributes;
         $this->name = $name;

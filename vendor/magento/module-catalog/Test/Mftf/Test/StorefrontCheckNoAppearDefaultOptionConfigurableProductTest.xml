@@ -58,6 +58,5 @@
         <actionGroup ref="DeleteProductBySkuActionGroup" stepKey="deleteConfigurableProduct">
             <argument name="sku" value="$grabSkuProduct"/>
         </actionGroup>
-        <actionGroup ref="ResetAdminDataGridToDefaultViewActionGroup" stepKey="clearFilters"/>
     </test>
 </tests>

@@ -158,20 +158,15 @@ class SecureHtmlRenderer
                 $exploded[1] = join('', array_slice($exploded, 1));
             }
             $styleValue = str_replace('\'', '\\\'', trim($exploded[1]));
-            $stylesAssignments .= "element.style.$styleAttribute = '$styleValue';\n";
+            $stylesAssignments .= "$elementVariable.style.$styleAttribute = '$styleValue';\n";
         }
 
-        $script = <<<script
-            var {$elementVariable}Array = document.querySelectorAll('{$selector}');
-            if({$elementVariable}Array.length !== 'undefined'){
-                {$elementVariable}Array.forEach(function(element) {
-                    if (element) {
-                        {$stylesAssignments}
-                    }
-                });
-            }
-        script;
-
-        return $this->renderTag('script', ['type' => 'text/javascript'], $script, false);
+        return $this->renderTag(
+            'script',
+            ['type' => 'text/javascript'],
+            "var $elementVariable = document.querySelector('$selector');\n"
+            . "if ($elementVariable) {\n{$stylesAssignments}}",
+            false
+        );
     }
 }

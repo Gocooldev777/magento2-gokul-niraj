@@ -3,7 +3,7 @@
  * See COPYING.txt for license details.
  */
 /* inspired by http://github.com/requirejs/text */
-/*global XDomainRequest */
+/*global XMLHttpRequest, XDomainRequest */
 
 define(['module'], function (module) {
     'use strict';

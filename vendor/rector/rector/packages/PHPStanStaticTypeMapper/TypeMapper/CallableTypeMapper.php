@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\PHPStanStaticTypeMapper\TypeMapper;
 
 use PhpParser\Node;
-use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\Type\CallableType;
@@ -14,11 +14,11 @@ use Rector\BetterPhpDocParser\ValueObject\Type\SpacingAwareCallableTypeNode;
 use Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements TypeMapperInterface<CallableType>
  */
-final class CallableTypeMapper implements TypeMapperInterface
+final class CallableTypeMapper implements \Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface
 {
     /**
      * @var \Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper
@@ -27,7 +27,7 @@ final class CallableTypeMapper implements TypeMapperInterface
     /**
      * @required
      */
-    public function autowire(PHPStanStaticTypeMapper $phpStanStaticTypeMapper) : void
+    public function autowire(\Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper $phpStanStaticTypeMapper) : void
     {
         $this->phpStanStaticTypeMapper = $phpStanStaticTypeMapper;
     }
@@ -36,26 +36,24 @@ final class CallableTypeMapper implements TypeMapperInterface
      */
     public function getNodeClass() : string
     {
-        return CallableType::class;
+        return \PHPStan\Type\CallableType::class;
     }
     /**
-     * @param TypeKind::* $typeKind
      * @param CallableType $type
      */
-    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode
+    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
     {
         $returnTypeNode = $this->phpStanStaticTypeMapper->mapToPHPStanPhpDocTypeNode($type->getReturnType(), $typeKind);
-        return new SpacingAwareCallableTypeNode(new IdentifierTypeNode('callable'), [], $returnTypeNode);
+        return new \Rector\BetterPhpDocParser\ValueObject\Type\SpacingAwareCallableTypeNode(new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('callable'), [], $returnTypeNode);
     }
     /**
-     * @param TypeKind::* $typeKind
      * @param CallableType|ClosureType $type
      */
-    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node
+    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node
     {
-        if ($typeKind === TypeKind::PROPERTY) {
+        if ($typeKind->equals(\Rector\PHPStanStaticTypeMapper\Enum\TypeKind::PROPERTY())) {
             return null;
         }
-        return new Identifier('callable');
+        return new \PhpParser\Node\Name('callable');
     }
 }

@@ -1,51 +1,44 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type\Definition;
 
 use GraphQL\Type\Schema;
 
-/**
- * @phpstan-type WrappedType (NullableType&Type)|callable():(NullableType&Type)
- */
 class NonNull extends Type implements WrappingType, OutputType, InputType
 {
-    /**
-     * @var Type|callable
-     *
-     * @phpstan-var WrappedType
-     */
-    private $wrappedType;
+    /** @var callable():(NullableType&Type)|(NullableType&Type) */
+    private $ofType;
 
     /**
-     * @param Type|callable $type
-     *
-     * @phpstan-param WrappedType $type
+     * code sniffer doesn't understand this syntax. Pr with a fix here: waiting on https://github.com/squizlabs/PHP_CodeSniffer/pull/2919
+     * @param callable():(NullableType&Type)|(NullableType&Type) $type
      */
     public function __construct($type)
     {
-        $this->wrappedType = $type;
+        $this->ofType = $type;
     }
 
-    public function toString(): string
+    public function toString() : string
     {
         return $this->getWrappedType()->toString() . '!';
     }
 
-    /** @return NullableType&Type */
-    public function getWrappedType(): Type
+    public function getOfType()
     {
-        return Schema::resolveType($this->wrappedType);
+        return Schema::resolveType($this->ofType);
     }
 
-    public function getInnermostType(): NamedType
+    /**
+     * @return (NullableType&Type)
+     */
+    public function getWrappedType(bool $recurse = false) : Type
     {
-        $type = $this->getWrappedType();
-        while ($type instanceof WrappingType) {
-            $type = $type->getWrappedType();
-        }
+        $type = $this->getOfType();
 
-        assert($type instanceof NamedType, 'known because we unwrapped all the way down');
-
-        return $type;
+        return $recurse && $type instanceof WrappingType
+            ? $type->getWrappedType($recurse)
+            : $type;
     }
 }

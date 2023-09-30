@@ -4,23 +4,20 @@ declare (strict_types=1);
 namespace Rector\PHPStanStaticTypeMapper\TypeMapper;
 
 use PhpParser\Node;
-use PhpParser\Node\Name\FullyQualified;
-use PHPStan\PhpDocParser\Ast\Type\CallableTypeParameterNode;
+use PhpParser\Node\Name;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
-use PHPStan\Reflection\ParameterReflection;
 use PHPStan\Type\ClosureType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\ValueObject\Type\SpacingAwareCallableTypeNode;
 use Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements TypeMapperInterface<ClosureType>
  */
-final class ClosureTypeMapper implements TypeMapperInterface
+final class ClosureTypeMapper implements \Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface
 {
     /**
      * @var \Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper
@@ -31,50 +28,32 @@ final class ClosureTypeMapper implements TypeMapperInterface
      */
     public function getNodeClass() : string
     {
-        return ClosureType::class;
+        return \PHPStan\Type\ClosureType::class;
     }
     /**
      * @param ClosureType $type
      */
-    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode
+    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
     {
-        $identifierTypeNode = new IdentifierTypeNode($type->getClassName());
+        $identifierTypeNode = new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode($type->getClassName());
         $returnDocTypeNode = $this->phpStanStaticTypeMapper->mapToPHPStanPhpDocTypeNode($type->getReturnType(), $typeKind);
-        $callableTypeParameterNodes = $this->createCallableTypeParameterNodes($type, $typeKind);
-        // callable parameters must be of specific type
-        Assert::allIsInstanceOf($callableTypeParameterNodes, CallableTypeParameterNode::class);
-        return new SpacingAwareCallableTypeNode($identifierTypeNode, $callableTypeParameterNodes, $returnDocTypeNode);
+        return new \Rector\BetterPhpDocParser\ValueObject\Type\SpacingAwareCallableTypeNode($identifierTypeNode, [], $returnDocTypeNode);
     }
     /**
-     * @param TypeKind::* $typeKind
      * @param ClosureType $type
      */
-    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node
+    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node
     {
-        if ($typeKind === TypeKind::PROPERTY) {
+        if ($typeKind->equals(\Rector\PHPStanStaticTypeMapper\Enum\TypeKind::PROPERTY())) {
             return null;
         }
-        return new FullyQualified('Closure');
+        return new \PhpParser\Node\Name('callable');
     }
     /**
      * @required
      */
-    public function autowire(PHPStanStaticTypeMapper $phpStanStaticTypeMapper) : void
+    public function autowire(\Rector\PHPStanStaticTypeMapper\PHPStanStaticTypeMapper $phpStanStaticTypeMapper) : void
     {
         $this->phpStanStaticTypeMapper = $phpStanStaticTypeMapper;
-    }
-    /**
-     * @param TypeKind::* $typeKind
-     * @return CallableTypeParameterNode[]
-     */
-    private function createCallableTypeParameterNodes(ClosureType $closureType, string $typeKind) : array
-    {
-        $callableTypeParameterNodes = [];
-        foreach ($closureType->getParameters() as $parameterReflection) {
-            /** @var ParameterReflection $parameterReflection */
-            $typeNode = $this->phpStanStaticTypeMapper->mapToPHPStanPhpDocTypeNode($parameterReflection->getType(), $typeKind);
-            $callableTypeParameterNodes[] = new CallableTypeParameterNode($typeNode, $parameterReflection->passedByReference()->yes(), $parameterReflection->isVariadic(), $parameterReflection->getName() !== '' && $parameterReflection->getName() !== '0' ? '$' . $parameterReflection->getName() : '', $parameterReflection->isOptional());
-        }
-        return $callableTypeParameterNodes;
     }
 }

@@ -12,7 +12,8 @@ use Magento\Framework\App\Filesystem\DirectoryList;
 /**
  * Image abstract adapter
  *
- * @api
+ * @file        Abstract.php
+ * @author      Magento Core Team <core@magentocommerce.com>
  * @SuppressWarnings(PHPMD.TooManyFields)
  */
 abstract class AbstractAdapter implements AdapterInterface

@@ -5,28 +5,30 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Utils;
+namespace RectorPrefix20211221\Nette\Utils;
 
-use RectorPrefix202304\Nette;
+use RectorPrefix20211221\Nette;
 /**
  * PHP reflection helpers.
  */
 final class Reflection
 {
     use Nette\StaticClass;
+    private const BUILTIN_TYPES = ['string' => 1, 'int' => 1, 'float' => 1, 'bool' => 1, 'array' => 1, 'object' => 1, 'callable' => 1, 'iterable' => 1, 'void' => 1, 'null' => 1, 'mixed' => 1, 'false' => 1, 'never' => 1];
+    private const CLASS_KEYWORDS = ['self' => 1, 'parent' => 1, 'static' => 1];
     /**
      * Determines if type is PHP built-in type. Otherwise, it is the class name.
      */
     public static function isBuiltinType(string $type) : bool
     {
-        return Validators::isBuiltinType($type);
+        return isset(self::BUILTIN_TYPES[\strtolower($type)]);
     }
     /**
      * Determines if type is special class name self/parent/static.
      */
     public static function isClassKeyword(string $name) : bool
     {
-        return Validators::isClassKeyword($name);
+        return isset(self::CLASS_KEYWORDS[\strtolower($name)]);
     }
     /**
      * Returns the type of return value of given function or method and normalizes `self`, `static`, and `parent` to actual class names.
@@ -43,7 +45,7 @@ final class Reflection
      */
     public static function getReturnTypes(\ReflectionFunctionAbstract $func) : array
     {
-        $type = Type::fromReflection($func);
+        $type = \RectorPrefix20211221\Nette\Utils\Type::fromReflection($func);
         return $type ? $type->getNames() : [];
     }
     /**
@@ -60,7 +62,7 @@ final class Reflection
      */
     public static function getParameterTypes(\ReflectionParameter $param) : array
     {
-        $type = Type::fromReflection($param);
+        $type = \RectorPrefix20211221\Nette\Utils\Type::fromReflection($param);
         return $type ? $type->getNames() : [];
     }
     /**
@@ -77,7 +79,7 @@ final class Reflection
      */
     public static function getPropertyTypes(\ReflectionProperty $prop) : array
     {
-        $type = Type::fromReflection($prop);
+        $type = \RectorPrefix20211221\Nette\Utils\Type::fromReflection($prop);
         return $type ? $type->getNames() : [];
     }
     /**
@@ -88,11 +90,11 @@ final class Reflection
         if ($type === null) {
             return null;
         } elseif ($type instanceof \ReflectionNamedType) {
-            return Type::resolve($type->getName(), $reflection);
-        } elseif ($type instanceof \ReflectionUnionType || $type instanceof \ReflectionIntersectionType) {
-            throw new Nette\InvalidStateException('The ' . self::toString($reflection) . ' is not expected to have a union or intersection type.');
+            return \RectorPrefix20211221\Nette\Utils\Type::resolve($type->getName(), $reflection);
+        } elseif ($type instanceof \ReflectionUnionType || $type instanceof \RectorPrefix20211221\ReflectionIntersectionType) {
+            throw new \RectorPrefix20211221\Nette\InvalidStateException('The ' . self::toString($reflection) . ' is not expected to have a union or intersection type.');
         } else {
-            throw new Nette\InvalidStateException('Unexpected type of ' . self::toString($reflection));
+            throw new \RectorPrefix20211221\Nette\InvalidStateException('Unexpected type of ' . self::toString($reflection));
         }
     }
     /**
@@ -106,7 +108,7 @@ final class Reflection
             $const = $orig = $param->getDefaultValueConstantName();
             $pair = \explode('::', $const);
             if (isset($pair[1])) {
-                $pair[0] = Type::resolve($pair[0], $param);
+                $pair[0] = \RectorPrefix20211221\Nette\Utils\Type::resolve($pair[0], $param);
                 try {
                     $rcc = new \ReflectionClassConstant($pair[0], $pair[1]);
                 } catch (\ReflectionException $e) {
@@ -180,7 +182,7 @@ final class Reflection
         } elseif ($ref instanceof \ReflectionParameter) {
             return '$' . $ref->name . ' in ' . self::toString($ref->getDeclaringFunction());
         } else {
-            throw new Nette\InvalidArgumentException();
+            throw new \RectorPrefix20211221\Nette\InvalidArgumentException();
         }
     }
     /**
@@ -192,8 +194,8 @@ final class Reflection
     {
         $lower = \strtolower($name);
         if (empty($name)) {
-            throw new Nette\InvalidArgumentException('Class name must not be empty.');
-        } elseif (Validators::isBuiltinType($lower)) {
+            throw new \RectorPrefix20211221\Nette\InvalidArgumentException('Class name must not be empty.');
+        } elseif (isset(self::BUILTIN_TYPES[$lower])) {
             return $lower;
         } elseif ($lower === 'self' || $lower === 'static') {
             return $context->name;
@@ -218,7 +220,7 @@ final class Reflection
     public static function getUseStatements(\ReflectionClass $class) : array
     {
         if ($class->isAnonymous()) {
-            throw new Nette\NotImplementedException('Anonymous classes are not supported.');
+            throw new \RectorPrefix20211221\Nette\NotImplementedException('Anonymous classes are not supported.');
         }
         static $cache = [];
         if (!isset($cache[$name = $class->name])) {
@@ -234,7 +236,7 @@ final class Reflection
     /**
      * Parses PHP code to [class => [alias => class, ...]]
      */
-    private static function parseUseStatements(string $code, ?string $forClass = null) : array
+    private static function parseUseStatements(string $code, string $forClass = null) : array
     {
         try {
             $tokens = \token_get_all($code, \TOKEN_PARSE);
@@ -255,7 +257,7 @@ final class Reflection
                 case \T_CLASS:
                 case \T_INTERFACE:
                 case \T_TRAIT:
-                case \PHP_VERSION_ID < 80100 ? \T_CLASS : \T_ENUM:
+                case \PHP_VERSION_ID < 80100 ? \T_CLASS : T_ENUM:
                     if ($name = self::fetch($tokens, \T_STRING)) {
                         $class = $namespace . $name;
                         $classLevel = $level + 1;

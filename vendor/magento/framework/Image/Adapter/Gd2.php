@@ -84,24 +84,24 @@ class Gd2 extends AbstractAdapter
     }
 
     /**
-     * Checks for invalid URL schema if it exists
-     *
+    
+     
      * @param string $filename
      * @return bool
      */
     private function validateURLScheme(string $filename) : bool
-    {
-        $allowed_schemes = ['ftp', 'ftps', 'http', 'https'];
-        $url = parse_url($filename);
-        if ($url && isset($url['scheme']) && !in_array($url['scheme'], $allowed_schemes)) {
-            return false;
-        }
+{
+          $allowed_schemes = ['ftp', 'ftps', 'http', 'https'];
+          $url = parse_url($filename);
+          if ($url && isset($url['scheme']) && !in_array($url['scheme'], $allowed_schemes) && !file_exists($filename)) {
+              return false;
+          }
 
-        return true;
-    }
+          return true;   
+}
 
     /**
-     * Checks whether memory limit is reached.
+     
      *
      * @return bool
      */
@@ -110,14 +110,14 @@ class Gd2 extends AbstractAdapter
         $limit = $this->_convertToByte(ini_get('memory_limit'));
         $requiredMemory = $this->_getImageNeedMemorySize($this->_fileName);
         if ($limit === -1) {
-            // A limit of -1 means no limit: http://www.php.net/manual/en/ini.core.php#ini.memory-limit
+            
             return false;
         }
         return memory_get_usage(true) + $requiredMemory > $limit;
     }
 
     /**
-     * Get image needed memory size
+    
      *
      * @param string $file
      * @return float|int
@@ -129,11 +129,11 @@ class Gd2 extends AbstractAdapter
             return 0;
         }
         if (!isset($imageInfo['channels'])) {
-            // if there is no info about this parameter lets set it for maximum
+            
             $imageInfo['channels'] = 4;
         }
         if (!isset($imageInfo['bits'])) {
-            // if there is no info about this parameter lets set it for maximum
+            
             $imageInfo['bits'] = 8;
         }
 
@@ -143,9 +143,7 @@ class Gd2 extends AbstractAdapter
     }
 
     /**
-     * Converts memory value (e.g. 64M, 129K) to bytes.
-     *
-     * Case insensitive value might be used.
+    
      *
      * @param string $memoryValue
      * @return int
@@ -364,7 +362,7 @@ class Gd2 extends AbstractAdapter
      */
     public function checkAlpha($fileName)
     {
-        return (ord(file_get_contents((string)$fileName, false, null, 25, 1)) & 6 & 4) == 4;
+        return (ord(file_get_contents($fileName, false, null, 25, 1)) & 6 & 4) == 4;
     }
 
     /**
@@ -538,8 +536,8 @@ class Gd2 extends AbstractAdapter
         } elseif ($this->getWatermarkPosition() == self::POSITION_STRETCH) {
             $watermark = $this->createWaterMark($watermark, $this->_imageSrcWidth, $this->_imageSrcHeight);
         } elseif ($this->getWatermarkPosition() == self::POSITION_CENTER) {
-            $positionX = (int) ($this->_imageSrcWidth / 2 - imagesx($watermark) / 2);
-            $positionY = (int) ($this->_imageSrcHeight / 2 - imagesy($watermark) / 2);
+            $positionX = $this->_imageSrcWidth / 2 - imagesx($watermark) / 2;
+            $positionY = $this->_imageSrcHeight / 2 - imagesy($watermark) / 2;
             $this->imagecopymergeWithAlphaFix(
                 $this->_imageHandler,
                 $watermark,
@@ -822,7 +820,7 @@ class Gd2 extends AbstractAdapter
      */
     protected function _createImageFromText($text)
     {
-        $width = imagefontwidth($this->_fontSize) * strlen((string)$text);
+        $width = imagefontwidth($this->_fontSize) * strlen($text);
         $height = imagefontheight($this->_fontSize);
 
         $this->_createEmptyImage($width, $height);

@@ -7,22 +7,18 @@ use PHPStan\Type\ObjectType;
 final class ArrayArgumentToDataProvider
 {
     /**
-     * @readonly
      * @var string
      */
     private $class;
     /**
-     * @readonly
      * @var string
      */
     private $oldMethod;
     /**
-     * @readonly
      * @var string
      */
     private $newMethod;
     /**
-     * @readonly
      * @var string
      */
     private $variableName;
@@ -33,9 +29,9 @@ final class ArrayArgumentToDataProvider
         $this->newMethod = $newMethod;
         $this->variableName = $variableName;
     }
-    public function getObjectType() : ObjectType
+    public function getObjectType() : \PHPStan\Type\ObjectType
     {
-        return new ObjectType($this->class);
+        return new \PHPStan\Type\ObjectType($this->class);
     }
     public function getOldMethod() : string
     {

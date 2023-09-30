@@ -12,14 +12,11 @@ use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\CategoryRepository;
 use Magento\Catalog\Model\ResourceModel\Category\Collection as CategoryCollection;
-use Magento\Catalog\Test\Fixture\Category as CategoryFixture;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DataObject;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\TestFramework\Fixture\DataFixture;
-use Magento\TestFramework\Fixture\DataFixtureStorageManager;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\ObjectManager;
 use Magento\TestFramework\TestCase\GraphQl\ResponseContainsErrorsException;
@@ -52,18 +49,12 @@ class CategoryTest extends GraphQlAbstract
      */
     private $metadataPool;
 
-    /**
-     * @var \Magento\TestFramework\Fixture\DataFixtureStorage
-     */
-    private $fixtures;
-
     protected function setUp(): void
     {
         $this->objectManager = Bootstrap::getObjectManager();
         $this->categoryRepository = $this->objectManager->get(CategoryRepository::class);
         $this->store = $this->objectManager->get(Store::class);
         $this->metadataPool = $this->objectManager->get(MetadataPool::class);
-        $this->fixtures = Bootstrap::getObjectManager()->get(DataFixtureStorageManager::class)->getStorage();
     }
 
     /**
@@ -283,12 +274,12 @@ QUERY;
         $this->assertCount(6, $response['category']['children']);
     }
 
-    #[
-        DataFixture(CategoryFixture::class, ['name' => 'Category 1.2'], 'category'),
-    ]
+    /**
+     * @magentoApiDataFixture Magento/Catalog/_files/categories.php
+     */
     public function testGetCategoryById()
     {
-        $categoryId = $this->fixtures->get('category')->getId();
+        $categoryId = 13;
         $query = <<<QUERY
 {
   category(id: {$categoryId}) {
@@ -299,18 +290,18 @@ QUERY;
 QUERY;
         $response = $this->graphQlQuery($query);
         self::assertEquals('Category 1.2', $response['category']['name']);
-        self::assertEquals($categoryId, $response['category']['id']);
+        self::assertEquals(13, $response['category']['id']);
     }
 
-    #[
-        DataFixture(CategoryFixture::class, ['is_active' => false], 'category'),
-    ]
+    /**
+     * @magentoApiDataFixture Magento/Catalog/_files/categories.php
+     */
     public function testGetDisabledCategory()
     {
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Category doesn\'t exist');
 
-        $categoryId = $this->fixtures->get('category')->getId();
+        $categoryId = 8;
         $query = <<<QUERY
 {
   category(id: {$categoryId}) {
@@ -413,8 +404,6 @@ QUERY;
           }
         }
         name
-        new_from_date
-        new_to_date
         options_container
         price {
           minimalPrice {
@@ -850,8 +839,6 @@ QUERY;
             'short_description',
             'country_of_manufacture',
             'gift_message_available',
-            'new_from_date',
-            'new_to_date',
             'options_container',
             'special_price'
         ];

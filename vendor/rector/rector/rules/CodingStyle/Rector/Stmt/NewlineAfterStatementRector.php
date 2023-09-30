@@ -3,13 +3,12 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\Stmt;
 
-use PhpParser\Comment;
+use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Catch_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
-use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Do_;
 use PhpParser\Node\Stmt\Else_;
@@ -20,45 +19,39 @@ use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Nop;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\Node\Stmt\While_;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\PostRector\Collector\NodesToRemoveCollector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\Stmt\NewlineAfterStatementRector\NewlineAfterStatementRectorTest
  */
-final class NewlineAfterStatementRector extends AbstractRector
+final class NewlineAfterStatementRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var array<class-string<Node>>
      */
-    private const STMTS_TO_HAVE_NEXT_NEWLINE = [ClassMethod::class, Function_::class, Property::class, If_::class, Foreach_::class, Do_::class, While_::class, For_::class, ClassConst::class, TryCatch::class, Class_::class, Trait_::class, Interface_::class, Switch_::class];
+    private const STMTS_TO_HAVE_NEXT_NEWLINE = [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Stmt\Property::class, \PhpParser\Node\Stmt\If_::class, \PhpParser\Node\Stmt\Foreach_::class, \PhpParser\Node\Stmt\Do_::class, \PhpParser\Node\Stmt\While_::class, \PhpParser\Node\Stmt\For_::class, \PhpParser\Node\Stmt\ClassConst::class, \PhpParser\Node\Stmt\Namespace_::class, \PhpParser\Node\Stmt\TryCatch::class, \PhpParser\Node\Stmt\Class_::class, \PhpParser\Node\Stmt\Trait_::class, \PhpParser\Node\Stmt\Interface_::class, \PhpParser\Node\Stmt\Switch_::class];
     /**
-     * @readonly
-     * @var \Rector\PostRector\Collector\NodesToRemoveCollector
+     * @var array<string, true>
      */
-    private $nodesToRemoveCollector;
-    public function __construct(NodesToRemoveCollector $nodesToRemoveCollector)
+    private $stmtsHashed = [];
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        $this->nodesToRemoveCollector = $nodesToRemoveCollector;
-    }
-    public function getRuleDefinition() : RuleDefinition
-    {
-        return new RuleDefinition('Add new line after statements to tidify code', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add new line after statements to tidify code', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
-    public function first()
+    public function test()
     {
     }
-    public function second()
+    public function test2()
     {
     }
 }
@@ -66,11 +59,11 @@ CODE_SAMPLE
 , <<<'CODE_SAMPLE'
 class SomeClass
 {
-    public function first()
+    public function test()
     {
     }
 
-    public function second()
+    public function test2()
     {
     }
 }
@@ -82,82 +75,57 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [StmtsAwareInterface::class, ClassLike::class];
+        return [\PhpParser\Node\Stmt::class];
     }
     /**
-     * @param StmtsAwareInterface|ClassLike $node
-     * @return null|\Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface|\PhpParser\Node\Stmt\ClassLike
+     * @param Stmt $node
      */
-    public function refactor(Node $node)
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        return $this->processAddNewLine($node, \false);
-    }
-    /**
-     * @param \Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface|\PhpParser\Node\Stmt\ClassLike $node
-     * @return null|\Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface|\PhpParser\Node\Stmt\ClassLike
-     */
-    private function processAddNewLine($node, bool $hasChanged, int $jumpToKey = 0)
-    {
-        if ($node->stmts === null) {
+        if ($this->nodesToRemoveCollector->isActive()) {
             return null;
         }
-        \end($node->stmts);
-        $totalKeys = \key($node->stmts);
-        for ($key = $jumpToKey; $key < $totalKeys; ++$key) {
-            if (!isset($node->stmts[$key], $node->stmts[$key + 1])) {
-                break;
+        $node = $this->resolveCurrentStatement($node);
+        if (!\in_array(\get_class($node), self::STMTS_TO_HAVE_NEXT_NEWLINE, \true)) {
+            return null;
+        }
+        $hash = \spl_object_hash($node);
+        if (isset($this->stmtsHashed[$hash])) {
+            return null;
+        }
+        $nextNode = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+        if ($this->shouldSkip($nextNode)) {
+            return null;
+        }
+        $endLine = $node->getEndLine();
+        $line = $nextNode->getLine();
+        $rangeLine = $line - $endLine;
+        if ($rangeLine > 1) {
+            $comments = $nextNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS);
+            if ($this->hasNoComment($comments)) {
+                return null;
             }
-            $stmt = $node->stmts[$key];
-            $nextStmt = $node->stmts[$key + 1];
-            if ($this->shouldSkip($nextStmt, $stmt)) {
-                continue;
+            $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($nextNode);
+            if ($phpDocInfo->hasChanged()) {
+                return null;
             }
-            $endLine = $stmt->getEndLine();
-            $line = $nextStmt->getStartLine();
+            $line = $comments[0]->getLine();
             $rangeLine = $line - $endLine;
             if ($rangeLine > 1) {
-                $rangeLine = $this->resolveRangeLineFromComment($rangeLine, $line, $endLine, $nextStmt);
+                return null;
             }
-            // skip same line or < 0 that cause infinite loop or crash
-            if ($rangeLine <= 0) {
-                continue;
-            }
-            if ($rangeLine > 1) {
-                continue;
-            }
-            if ($this->isRemoved($nextStmt, $stmt)) {
-                continue;
-            }
-            \array_splice($node->stmts, $key + 1, 0, [new Nop()]);
-            $hasChanged = \true;
-            return $this->processAddNewLine($node, $hasChanged, $key + 2);
         }
-        if ($hasChanged) {
-            return $node;
-        }
-        return null;
+        $this->stmtsHashed[$hash] = \true;
+        $this->nodesToAddCollector->addNodeAfterNode(new \PhpParser\Node\Stmt\Nop(), $node);
+        return $node;
     }
-    /**
-     * @param int|float $rangeLine
-     * @return int|float
-     */
-    private function resolveRangeLineFromComment($rangeLine, int $line, int $endLine, Stmt $nextStmt)
+    private function resolveCurrentStatement(\PhpParser\Node\Stmt $stmt) : \PhpParser\Node\Stmt
     {
-        /** @var Comment[]|null $comments */
-        $comments = $nextStmt->getAttribute(AttributeKey::COMMENTS);
-        if ($this->hasNoComment($comments)) {
-            return $rangeLine;
-        }
-        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($nextStmt);
-        if ($phpDocInfo->hasChanged()) {
-            return $rangeLine;
-        }
-        /** @var Comment[] $comments */
-        $line = $comments[0]->getStartLine();
-        return $line - $endLine;
+        $currentStatement = $stmt->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CURRENT_STATEMENT);
+        return $currentStatement instanceof \PhpParser\Node\Stmt ? $currentStatement : $stmt;
     }
     /**
-     * @param Comment[]|null $comments
+     * @param null|Doc[] $comments
      */
     private function hasNoComment(?array $comments) : bool
     {
@@ -166,20 +134,11 @@ CODE_SAMPLE
         }
         return !isset($comments[0]);
     }
-    private function isRemoved(Stmt $nextStmt, Stmt $stmt) : bool
+    private function shouldSkip(?\PhpParser\Node $nextNode) : bool
     {
-        if ($this->nodesToRemoveCollector->isNodeRemoved($stmt)) {
+        if (!$nextNode instanceof \PhpParser\Node\Stmt) {
             return \true;
         }
-        $parentCurrentNode = $stmt->getAttribute(AttributeKey::PARENT_NODE);
-        $parentnextStmt = $nextStmt->getAttribute(AttributeKey::PARENT_NODE);
-        return $parentnextStmt !== $parentCurrentNode;
-    }
-    private function shouldSkip(Stmt $nextStmt, Stmt $stmt) : bool
-    {
-        if (!\in_array(\get_class($stmt), self::STMTS_TO_HAVE_NEXT_NEWLINE, \true)) {
-            return \true;
-        }
-        return \in_array(\get_class($nextStmt), [Else_::class, ElseIf_::class, Catch_::class, Finally_::class], \true);
+        return \in_array(\get_class($nextNode), [\PhpParser\Node\Stmt\Else_::class, \PhpParser\Node\Stmt\ElseIf_::class, \PhpParser\Node\Stmt\Catch_::class, \PhpParser\Node\Stmt\Finally_::class], \true);
     }
 }

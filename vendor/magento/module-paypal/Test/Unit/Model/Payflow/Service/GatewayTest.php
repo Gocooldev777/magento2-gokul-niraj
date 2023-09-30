@@ -7,11 +7,9 @@ declare(strict_types=1);
 
 namespace Magento\Paypal\Test\Unit\Model\Payflow\Service;
 
-use Laminas\Http\Exception\RuntimeException;
-use Laminas\Http\Response;
 use Magento\Framework\DataObject;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\HTTP\ZendClientFactory;
 use Magento\Framework\Math\Random;
 use Magento\Payment\Model\Method\ConfigInterface;
 use Magento\Payment\Model\Method\Logger;
@@ -20,6 +18,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
+use Zend_Http_Client_Exception;
+use Zend_Http_Response;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -32,7 +32,7 @@ class GatewayTest extends TestCase
     private $object;
 
     /**
-     * @var LaminasClientFactory|MockObject
+     * @var ZendClientFactory|MockObject
      */
     private $httpClientFactoryMock;
 
@@ -47,26 +47,26 @@ class GatewayTest extends TestCase
     private $loggerMock;
 
     /**
-     * @var LaminasClient|MockObject
+     * @var ZendClient|MockObject
      */
-    private $httpClientMock;
+    private $zendClientMock;
 
     /**
      * @inheritdoc
      */
     protected function setUp(): void
     {
-        $this->httpClientFactoryMock = $this->getMockBuilder(LaminasClientFactory::class)
+        $this->httpClientFactoryMock = $this->getMockBuilder(ZendClientFactory::class)
             ->setMethods(['create'])
             ->disableOriginalConstructor()
             ->getMock();
-        $this->httpClientMock = $this->getMockBuilder(LaminasClient::class)
-            ->setMethods(['send', 'setUri'])
+        $this->zendClientMock = $this->getMockBuilder(ZendClient::class)
+            ->setMethods(['request', 'setUri'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->httpClientFactoryMock->expects(static::once())
             ->method('create')
-            ->willReturn($this->httpClientMock);
+            ->willReturn($this->zendClientMock);
         $this->mathRandomMock = $this->getMockBuilder(Random::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -97,25 +97,22 @@ class GatewayTest extends TestCase
         /** @var ConfigInterface|MockObject $configInterfaceMock */
         $configInterfaceMock = $this->getMockBuilder(ConfigInterface::class)
             ->getMockForAbstractClass();
-        $responseMock = $this->getMockBuilder(Response::class)
+        $zendResponseMock = $this->getMockBuilder(Zend_Http_Response::class)
             ->setMethods(['getBody'])
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock->expects(static::once())
+        $zendResponseMock->expects(static::once())
             ->method('getBody')
             ->willReturn($nvpResponse);
-        $this->httpClientMock->expects(static::once())
-            ->method('send')
-            ->willReturn($responseMock);
+        $this->zendClientMock->expects(static::once())
+            ->method('request')
+            ->willReturn($zendResponseMock);
 
         $configInterfaceMock->expects(static::any())
             ->method('getValue')
             ->willReturnMap($configMap);
         $this->loggerMock->expects(static::once())
             ->method('debug');
-        $this->mathRandomMock->expects(static::once())
-            ->method('getUniqueHash')
-            ->willReturn('UniqueHash');
 
         $object = new DataObject();
 
@@ -187,31 +184,28 @@ class GatewayTest extends TestCase
         /** @var ConfigInterface|MockObject $configInterfaceMock */
         $configInterfaceMock = $this->getMockBuilder(ConfigInterface::class)
             ->getMockForAbstractClass();
-        $responseMock = $this->getMockBuilder(Response::class)
+        $zendResponseMock = $this->getMockBuilder(Zend_Http_Response::class)
             ->setMethods(['getBody'])
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock->expects(static::once())
+        $zendResponseMock->expects(static::once())
             ->method('getBody')
             ->willReturn('RESULT=0&RESPMSG=Approved');
-        $this->httpClientMock->expects(static::once())
-            ->method('send')
-            ->willReturn($responseMock);
+        $this->zendClientMock->expects(static::once())
+            ->method('request')
+            ->willReturn($zendResponseMock);
 
         $configInterfaceMock->expects(static::any())
             ->method('getValue')
             ->willReturnMap($configMap);
         $this->loggerMock->expects(static::once())
             ->method('debug');
-        $this->mathRandomMock->expects(static::once())
-            ->method('getUniqueHash')
-            ->willReturn('UniqueHash');
 
         $request = new DataObject($requestData);
         $this->object->postRequest($request, $configInterfaceMock);
-        $method = new ReflectionMethod($this->httpClientMock, 'prepareBody');
+        $method = new ReflectionMethod($this->zendClientMock, '_prepareBody');
         $method->setAccessible(true);
-        $this->assertEquals($requestBody, urldecode($method->invoke($this->httpClientMock)));
+        $this->assertEquals($requestBody, $method->invoke($this->zendClientMock));
     }
 
     /**
@@ -241,22 +235,19 @@ class GatewayTest extends TestCase
 
     public function testPostRequestFail()
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException('Zend_Http_Client_Exception');
         /** @var ConfigInterface|MockObject $configInterfaceMock */
         $configInterfaceMock = $this->getMockBuilder(ConfigInterface::class)
             ->getMockForAbstractClass();
-        $responseMock = $this->getMockBuilder(Response::class)
+        $zendResponseMock = $this->getMockBuilder(Zend_Http_Response::class)
             ->setMethods(['getBody'])
             ->disableOriginalConstructor()
             ->getMock();
-        $responseMock->expects(static::never())
+        $zendResponseMock->expects(static::never())
             ->method('getBody');
-        $this->httpClientMock->expects(static::once())
-            ->method('send')
-            ->willThrowException(new RuntimeException());
-        $this->mathRandomMock->expects(static::once())
-            ->method('getUniqueHash')
-            ->willReturn('UniqueHash');
+        $this->zendClientMock->expects(static::once())
+            ->method('request')
+            ->willThrowException(new Zend_Http_Client_Exception());
 
         $object = new DataObject();
         $this->object->postRequest($object, $configInterfaceMock);

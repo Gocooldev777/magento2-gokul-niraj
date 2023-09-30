@@ -48,11 +48,6 @@ class IndexerTableSwapperTest extends TestCase
 
         $this->adapterInterfaceMock = $this->getMockBuilder(AdapterInterface::class)
             ->getMockForAbstractClass();
-        $zendDbStatementInterfaceMock = $this->getMockBuilder(\Zend_Db_Statement_Interface::class)
-            ->getMockForAbstractClass();
-        $this->adapterInterfaceMock->expects($this->any())
-            ->method('query')
-            ->willReturn($zendDbStatementInterfaceMock);
         /** @var \Zend_Db_Statement_Interface $statementInterfaceMock */
         $this->statementInterfaceMock = $this->getMockBuilder(\Zend_Db_Statement_Interface::class)
             ->getMockForAbstractClass();

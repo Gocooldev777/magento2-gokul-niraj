@@ -17,11 +17,9 @@
             <argument name="email" type="string"/>
         </arguments>
 
-        <click selector="{{AdminCustomerFiltersSection.filtersButton}}" stepKey="openFilters"/>
         <conditionalClick selector="{{AdminCustomerFiltersSection.clearAll}}" dependentSelector="{{AdminCustomerFiltersSection.clearAll}}" visible="true" stepKey="clickClearFilters"/>
-        <waitForPageLoad stepKey="waitForClearFilters"/>
+        <click selector="{{AdminCustomerFiltersSection.filtersButton}}" stepKey="openFilters"/>
         <fillField selector="{{AdminCustomerFiltersSection.emailInput}}" userInput="{{email}}" stepKey="fillEmail"/>
         <click selector="{{AdminCustomerFiltersSection.apply}}" stepKey="clickApplyFilters"/>
-        <waitForPageLoad stepKey="waitForPageToLoad"/>
     </actionGroup>
 </actionGroups>

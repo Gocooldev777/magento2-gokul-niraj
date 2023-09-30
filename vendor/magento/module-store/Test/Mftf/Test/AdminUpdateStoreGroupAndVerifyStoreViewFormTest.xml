@@ -26,7 +26,6 @@
                 <argument name="storeGroupName" value="{{SecondStoreGroupUnique.name}}"/>
                 <argument name="storeGroupCode" value="{{SecondStoreGroupUnique.code}}"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
         </before>
         <after>
             <actionGroup ref="DeleteCustomStoreActionGroup" stepKey="deleteStoreGroup">
@@ -35,7 +34,6 @@
             <actionGroup ref="DeleteCustomStoreActionGroup" stepKey="deleteUpdatedStoreGroup">
                 <argument name="storeGroupName" value="SecondStoreGroupUnique.name"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
 
@@ -51,7 +49,6 @@
             <argument name="store" value="{{customStoreGroup.name}}"/>
             <argument name="rootCategory" value="Default Category"/>
         </actionGroup>
-        <magentoCron groups="index" stepKey="reindex"/>
 
         <!--Search updated store group(from above step) in grid and verify AssertStoreGroupInGrid-->
         <actionGroup ref="AssertStoreGroupInGridActionGroup" stepKey="seeUpdatedStoreGroupInGrid">

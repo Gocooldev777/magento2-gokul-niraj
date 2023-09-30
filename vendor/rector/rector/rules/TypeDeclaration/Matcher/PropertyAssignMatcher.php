@@ -7,15 +7,22 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use Rector\Core\NodeAnalyzer\PropertyFetchAnalyzer;
+use Rector\NodeNameResolver\NodeNameResolver;
 final class PropertyAssignMatcher
 {
+    /**
+     * @readonly
+     * @var \Rector\NodeNameResolver\NodeNameResolver
+     */
+    private $nodeNameResolver;
     /**
      * @readonly
      * @var \Rector\Core\NodeAnalyzer\PropertyFetchAnalyzer
      */
     private $propertyFetchAnalyzer;
-    public function __construct(PropertyFetchAnalyzer $propertyFetchAnalyzer)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\NodeAnalyzer\PropertyFetchAnalyzer $propertyFetchAnalyzer)
     {
+        $this->nodeNameResolver = $nodeNameResolver;
         $this->propertyFetchAnalyzer = $propertyFetchAnalyzer;
     }
     /**
@@ -23,16 +30,18 @@ final class PropertyAssignMatcher
      * - $this->propertyName = $expr;
      * - $this->propertyName[] = $expr;
      */
-    public function matchPropertyAssignExpr(Assign $assign, string $propertyName) : ?Expr
+    public function matchPropertyAssignExpr(\PhpParser\Node\Expr\Assign $assign, string $propertyName) : ?\PhpParser\Node\Expr
     {
-        $assignVar = $assign->var;
-        if ($this->propertyFetchAnalyzer->isLocalPropertyFetchName($assignVar, $propertyName)) {
+        if ($this->propertyFetchAnalyzer->isPropertyFetch($assign->var)) {
+            if (!$this->nodeNameResolver->isName($assign->var, $propertyName)) {
+                return null;
+            }
             return $assign->expr;
         }
-        if (!$assignVar instanceof ArrayDimFetch) {
-            return null;
-        }
-        if ($this->propertyFetchAnalyzer->isLocalPropertyFetchName($assignVar->var, $propertyName)) {
+        if ($assign->var instanceof \PhpParser\Node\Expr\ArrayDimFetch && $this->propertyFetchAnalyzer->isPropertyFetch($assign->var->var)) {
+            if (!$this->nodeNameResolver->isName($assign->var->var, $propertyName)) {
+                return null;
+            }
             return $assign->expr;
         }
         return null;

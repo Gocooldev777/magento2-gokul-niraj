@@ -22,17 +22,32 @@ class IndexerResetStateCommandTest extends AbstractIndexerCommandCommonSetup
      */
     private $command;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->stateMock->expects($this->once())->method('setAreaCode')->with(FrontNameResolver::AREA_CODE);
+    }
+
     public function testExecute()
     {
         $this->configureAdminArea();
         $indexerOne = $this->getIndexerMock(
-            ['invalidate'],
+            ['getState'],
             ['indexer_id' => 'indexer_1', 'title' => 'Title_indexerOne']
         );
         $this->initIndexerCollectionByItems([$indexerOne]);
 
+        $stateMock = $this->createMock(State::class);
+        $stateMock->expects($this->exactly(1))
+            ->method('setStatus')
+            ->with(StateInterface::STATUS_INVALID)->willReturnSelf();
+
+        $stateMock->expects($this->exactly(1))
+            ->method('save');
+
         $indexerOne->expects($this->once())
-            ->method('invalidate');
+            ->method('getState')
+            ->willReturn($stateMock);
 
         $this->command = new IndexerResetStateCommand($this->objectManagerFactory);
         $commandTester = new CommandTester($this->command);

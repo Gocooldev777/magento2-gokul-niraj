@@ -370,9 +370,6 @@ abstract class PHPParserVersion56 extends PHPParserVersion55
         return $arguments;
     }
 
-    /**
-     * @return ASTNode|null
-     */
     protected function parseArgumentExpression()
     {
         return $this->parseOptionalExpression();
@@ -387,7 +384,7 @@ abstract class PHPParserVersion56 extends PHPParserVersion55
     protected function parseConstantDeclaratorValue()
     {
         if ($this->isFollowedByStaticValueOrStaticArray()) {
-            return $this->parseVariableDefaultValue();
+            return $this->parseStaticValueOrStaticArray();
         }
 
         // Else it would be provided as ASTLiteral or expressions object.

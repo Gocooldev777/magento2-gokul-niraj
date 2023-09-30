@@ -3,7 +3,6 @@
 declare (strict_types=1);
 namespace Rector\TypeDeclaration\TypeInferer;
 
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\Yield_;
@@ -17,6 +16,7 @@ use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\Throw_;
+use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TryCatch;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 final class SilentVoidResolver
@@ -26,37 +26,40 @@ final class SilentVoidResolver
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(BetterNodeFinder $betterNodeFinder)
+    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
     {
         $this->betterNodeFinder = $betterNodeFinder;
     }
     /**
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\Function_ $functionLike
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
     public function hasExclusiveVoid($functionLike) : bool
     {
-        $classLike = $this->betterNodeFinder->findParentType($functionLike, ClassLike::class);
-        if ($classLike instanceof Interface_) {
+        $classLike = $this->betterNodeFinder->findParentType($functionLike, \PhpParser\Node\Stmt\ClassLike::class);
+        if ($classLike instanceof \PhpParser\Node\Stmt\Interface_) {
+            return \false;
+        }
+        if ($classLike instanceof \PhpParser\Node\Stmt\Trait_) {
             return \false;
         }
         if ($this->hasNeverType($functionLike)) {
             return \false;
         }
-        if ($this->betterNodeFinder->hasInstancesOfInFunctionLikeScoped($functionLike, Yield_::class)) {
+        if ($this->betterNodeFinder->hasInstancesOf((array) $functionLike->stmts, [\PhpParser\Node\Expr\Yield_::class])) {
             return \false;
         }
         /** @var Return_[] $returns */
-        $returns = $this->betterNodeFinder->findInstancesOfInFunctionLikeScoped($functionLike, Return_::class);
+        $returns = $this->betterNodeFinder->findInstanceOf((array) $functionLike->stmts, \PhpParser\Node\Stmt\Return_::class);
         foreach ($returns as $return) {
-            if ($return->expr instanceof Expr) {
+            if ($return->expr !== null) {
                 return \false;
             }
         }
         return \true;
     }
-    public function hasSilentVoid(FunctionLike $functionLike) : bool
+    public function hasSilentVoid(\PhpParser\Node\FunctionLike $functionLike) : bool
     {
-        if ($functionLike instanceof ArrowFunction) {
+        if ($functionLike instanceof \PhpParser\Node\Expr\ArrowFunction) {
             return \false;
         }
         if ($this->hasStmtsAlwaysReturn((array) $functionLike->getStmts())) {
@@ -64,14 +67,14 @@ final class SilentVoidResolver
         }
         foreach ((array) $functionLike->getStmts() as $stmt) {
             // has switch with always return
-            if ($stmt instanceof Switch_ && $this->isSwitchWithAlwaysReturn($stmt)) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\Switch_ && $this->isSwitchWithAlwaysReturn($stmt)) {
                 return \false;
             }
             // is part of try/catch
-            if ($stmt instanceof TryCatch && $this->isTryCatchAlwaysReturn($stmt)) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\TryCatch && $this->isTryCatchAlwaysReturn($stmt)) {
                 return \false;
             }
-            if ($stmt instanceof Throw_) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\Throw_) {
                 return \false;
             }
         }
@@ -83,21 +86,21 @@ final class SilentVoidResolver
     private function hasStmtsAlwaysReturn(array $stmts) : bool
     {
         foreach ($stmts as $stmt) {
-            if ($stmt instanceof Expression) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\Expression) {
                 $stmt = $stmt->expr;
             }
             // is 1st level return
-            if ($stmt instanceof Return_) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\Return_) {
                 return \true;
             }
         }
         return \false;
     }
-    private function isSwitchWithAlwaysReturn(Switch_ $switch) : bool
+    private function isSwitchWithAlwaysReturn(\PhpParser\Node\Stmt\Switch_ $switch) : bool
     {
         $hasDefault = \false;
         foreach ($switch->cases as $case) {
-            if (!$case->cond instanceof Expr) {
+            if ($case->cond === null) {
                 $hasDefault = \true;
                 break;
             }
@@ -109,7 +112,7 @@ final class SilentVoidResolver
         // has same amount of returns as switches
         return \count($switch->cases) === $casesWithReturnCount;
     }
-    private function isTryCatchAlwaysReturn(TryCatch $tryCatch) : bool
+    private function isTryCatchAlwaysReturn(\PhpParser\Node\Stmt\TryCatch $tryCatch) : bool
     {
         if (!$this->hasStmtsAlwaysReturn($tryCatch->stmts)) {
             return \false;
@@ -121,18 +124,18 @@ final class SilentVoidResolver
     }
     /**
      * @see https://phpstan.org/writing-php-code/phpdoc-types#bottom-type
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\Function_ $functionLike
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
     private function hasNeverType($functionLike) : bool
     {
-        return $this->betterNodeFinder->hasInstancesOf($functionLike, [Throw_::class]);
+        return $this->betterNodeFinder->hasInstancesOf($functionLike, [\PhpParser\Node\Stmt\Throw_::class]);
     }
-    private function resolveReturnCount(Switch_ $switch) : int
+    private function resolveReturnCount(\PhpParser\Node\Stmt\Switch_ $switch) : int
     {
         $casesWithReturnCount = 0;
         foreach ($switch->cases as $case) {
             foreach ($case->stmts as $caseStmt) {
-                if (!$caseStmt instanceof Return_) {
+                if (!$caseStmt instanceof \PhpParser\Node\Stmt\Return_) {
                     continue;
                 }
                 ++$casesWithReturnCount;

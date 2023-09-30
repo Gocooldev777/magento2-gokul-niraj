@@ -92,10 +92,7 @@ class ContextTest extends TestCase
                     'dataScope' => null,
                     'config' => [
                         'data' => ['some_field' => '${\'some_value\'}', '__disableTmpl' => ['some_field' => true]],
-                        'params' => [
-                            'namespace' => null,
-                            'id' => 'id'
-                        ]]
+                        'params' => ['namespace' => null]]
                 ]
             ],
             $data

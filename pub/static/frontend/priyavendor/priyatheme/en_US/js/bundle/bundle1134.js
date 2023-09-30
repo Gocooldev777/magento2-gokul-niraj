@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/element/multiselect.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<select multiple class=\"admin__control-multiselect\" data-bind=\"\n    attr: {\n        name: inputName,\n        id: uid,\n        size: size ? size : '6',\n        disabled: disabled,\n        'aria-describedby': noticeId,\n        placeholder: placeholder\n    },\n    hasFocus: focused,\n    optgroup: options,\n    selectedOptions: value,\n    optionsValue: 'value',\n    optionsText: 'label'\"\n></select>\n"}
+}});

@@ -18,6 +18,7 @@ use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -70,7 +71,11 @@ if (!$bar) {
             $token = $tokens[$index];
 
             if ($token->equals('!')) {
-                $tokens->ensureWhitespaceAtIndex($index + 1, 0, ' ');
+                if (!$tokens[$index + 1]->isWhitespace()) {
+                    $tokens->insertAt($index + 1, new Token([T_WHITESPACE, ' ']));
+                } else {
+                    $tokens[$index + 1] = new Token([T_WHITESPACE, ' ']);
+                }
             }
         }
     }

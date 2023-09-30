@@ -6,10 +6,15 @@ namespace Rector\Php70\NodeAnalyzer;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 final class Php4ConstructorClassMethodAnalyzer
 {
-    public function detect(ClassMethod $classMethod, Scope $scope) : bool
+    public function detect(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
     {
+        $scope = $classMethod->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if (!$scope instanceof \PHPStan\Analyser\Scope) {
+            return \false;
+        }
         // catch only classes without namespace
         if ($scope->getNamespace() !== null) {
             return \false;
@@ -21,7 +26,7 @@ final class Php4ConstructorClassMethodAnalyzer
             return \false;
         }
         $classReflection = $scope->getClassReflection();
-        if (!$classReflection instanceof ClassReflection) {
+        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
             return \false;
         }
         return !$classReflection->isAnonymous();

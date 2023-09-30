@@ -4,11 +4,11 @@ declare (strict_types=1);
 namespace Rector\Testing\PHPUnit;
 
 use PHPUnit\Framework\TestCase;
-use RectorPrefix202304\Psr\Container\ContainerInterface;
+use RectorPrefix20211221\Psr\Container\ContainerInterface;
 use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\Kernel\RectorKernel;
-use RectorPrefix202304\Webmozart\Assert\Assert;
-abstract class AbstractTestCase extends TestCase
+use RectorPrefix20211221\Webmozart\Assert\Assert;
+abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var array<string, RectorKernel>
@@ -32,10 +32,10 @@ abstract class AbstractTestCase extends TestCase
             $rectorKernel = self::$kernelsByHash[$configsHash];
             self::$currentContainer = $rectorKernel->getContainer();
         } else {
-            $rectorKernel = new RectorKernel();
-            $containerBuilder = $rectorKernel->createFromConfigs($configFiles);
+            $rectorKernel = new \Rector\Core\Kernel\RectorKernel();
+            $container = $rectorKernel->createFromConfigs($configFiles);
             self::$kernelsByHash[$configsHash] = $rectorKernel;
-            self::$currentContainer = $containerBuilder;
+            self::$currentContainer = $container;
         }
     }
     /**
@@ -43,17 +43,17 @@ abstract class AbstractTestCase extends TestCase
      *
      * @template T of object
      * @param class-string<T> $type
-     * @return T
+     * @return object
      */
-    protected function getService(string $type) : object
+    protected function getService(string $type)
     {
-        if (!self::$currentContainer instanceof ContainerInterface) {
-            throw new ShouldNotHappenException('First, create container with "boot()" or "bootWithConfigFileInfos([...])"');
+        if (self::$currentContainer === null) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException('First, create container with "bootWithConfigFileInfos([...])"');
         }
         $object = self::$currentContainer->get($type);
         if ($object === null) {
             $message = \sprintf('Service "%s" was not found', $type);
-            throw new ShouldNotHappenException($message);
+            throw new \Rector\Core\Exception\ShouldNotHappenException($message);
         }
         return $object;
     }
@@ -62,8 +62,8 @@ abstract class AbstractTestCase extends TestCase
      */
     private function createConfigsHash(array $configFiles) : string
     {
-        Assert::allFile($configFiles);
-        Assert::allString($configFiles);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allFile($configFiles);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($configFiles);
         $configHash = '';
         foreach ($configFiles as $configFile) {
             $configHash .= \md5_file($configFile);

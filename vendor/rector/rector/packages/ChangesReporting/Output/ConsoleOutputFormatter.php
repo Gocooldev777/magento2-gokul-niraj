@@ -3,15 +3,15 @@
 declare (strict_types=1);
 namespace Rector\ChangesReporting\Output;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use Rector\ChangesReporting\Annotation\RectorsChangelogResolver;
 use Rector\ChangesReporting\Contract\Output\OutputFormatterInterface;
 use Rector\Core\Contract\Console\OutputStyleInterface;
+use Rector\Core\ValueObject\Application\SystemError;
 use Rector\Core\ValueObject\Configuration;
-use Rector\Core\ValueObject\Error\SystemError;
 use Rector\Core\ValueObject\ProcessResult;
 use Rector\Core\ValueObject\Reporting\FileDiff;
-final class ConsoleOutputFormatter implements OutputFormatterInterface
+final class ConsoleOutputFormatter implements \Rector\ChangesReporting\Contract\Output\OutputFormatterInterface
 {
     /**
      * @var string
@@ -26,18 +26,18 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
      * @readonly
      * @var \Rector\Core\Contract\Console\OutputStyleInterface
      */
-    private $rectorOutputStyle;
+    private $outputStyle;
     /**
      * @readonly
      * @var \Rector\ChangesReporting\Annotation\RectorsChangelogResolver
      */
     private $rectorsChangelogResolver;
-    public function __construct(OutputStyleInterface $rectorOutputStyle, RectorsChangelogResolver $rectorsChangelogResolver)
+    public function __construct(\Rector\Core\Contract\Console\OutputStyleInterface $outputStyle, \Rector\ChangesReporting\Annotation\RectorsChangelogResolver $rectorsChangelogResolver)
     {
-        $this->rectorOutputStyle = $rectorOutputStyle;
+        $this->outputStyle = $outputStyle;
         $this->rectorsChangelogResolver = $rectorsChangelogResolver;
     }
-    public function report(ProcessResult $processResult, Configuration $configuration) : void
+    public function report(\Rector\Core\ValueObject\ProcessResult $processResult, \Rector\Core\ValueObject\Configuration $configuration) : void
     {
         if ($configuration->shouldShowDiffs()) {
             $this->reportFileDiffs($processResult->getFileDiffs());
@@ -47,12 +47,8 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
         if ($processResult->getErrors() !== []) {
             return;
         }
-        // to keep space between progress bar and success message
-        if ($configuration->shouldShowProgressBar() && $processResult->getFileDiffs() === []) {
-            $this->rectorOutputStyle->newLine();
-        }
         $message = $this->createSuccessMessage($processResult, $configuration);
-        $this->rectorOutputStyle->success($message);
+        $this->outputStyle->success($message);
     }
     public function getName() : string
     {
@@ -69,7 +65,7 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
         // normalize
         \ksort($fileDiffs);
         $message = \sprintf('%d file%s with changes', \count($fileDiffs), \count($fileDiffs) === 1 ? '' : 's');
-        $this->rectorOutputStyle->title($message);
+        $this->outputStyle->title($message);
         $i = 0;
         foreach ($fileDiffs as $fileDiff) {
             $relativeFilePath = $fileDiff->getRelativeFilePath();
@@ -79,14 +75,14 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
                 $relativeFilePath .= ':' . $firstLineNumber;
             }
             $message = \sprintf('<options=bold>%d) %s</>', ++$i, $relativeFilePath);
-            $this->rectorOutputStyle->writeln($message);
-            $this->rectorOutputStyle->newLine();
-            $this->rectorOutputStyle->writeln($fileDiff->getDiffConsoleFormatted());
+            $this->outputStyle->writeln($message);
+            $this->outputStyle->newline();
+            $this->outputStyle->writeln($fileDiff->getDiffConsoleFormatted());
             $rectorsChangelogsLines = $this->createRectorChangelogLines($fileDiff);
             if ($fileDiff->getRectorChanges() !== []) {
-                $this->rectorOutputStyle->writeln('<options=underscore>Applied rules:</>');
-                $this->rectorOutputStyle->listing($rectorsChangelogsLines);
-                $this->rectorOutputStyle->newLine();
+                $this->outputStyle->writeln('<options=underscore>Applied rules:</>');
+                $this->outputStyle->listing($rectorsChangelogsLines);
+                $this->outputStyle->newline();
             }
         }
     }
@@ -98,40 +94,40 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
         foreach ($errors as $error) {
             $errorMessage = $error->getMessage();
             $errorMessage = $this->normalizePathsToRelativeWithLine($errorMessage);
-            $message = \sprintf('Could not process %s%s, due to: %s"%s".', $error->getFile() !== null ? '"' . $error->getFile() . '" file' : 'some files', $error->getRectorClass() !== null ? ' by "' . $error->getRectorClass() . '"' : '', \PHP_EOL, $errorMessage);
+            $message = \sprintf('Could not process "%s" file%s, due to: %s"%s".', $error->getRelativeFilePath(), $error->getRectorClass() !== null ? ' by "' . $error->getRectorClass() . '"' : '', \PHP_EOL, $errorMessage);
             if ($error->getLine() !== null) {
                 $message .= ' On line: ' . $error->getLine();
             }
-            $this->rectorOutputStyle->error($message);
+            $this->outputStyle->error($message);
         }
     }
-    private function reportRemovedFilesAndNodes(ProcessResult $processResult) : void
+    private function reportRemovedFilesAndNodes(\Rector\Core\ValueObject\ProcessResult $processResult) : void
     {
         if ($processResult->getAddedFilesCount() !== 0) {
             $message = \sprintf('%d files were added', $processResult->getAddedFilesCount());
-            $this->rectorOutputStyle->note($message);
+            $this->outputStyle->note($message);
         }
         if ($processResult->getRemovedFilesCount() !== 0) {
             $message = \sprintf('%d files were removed', $processResult->getRemovedFilesCount());
-            $this->rectorOutputStyle->note($message);
+            $this->outputStyle->note($message);
         }
         $this->reportRemovedNodes($processResult);
     }
     private function normalizePathsToRelativeWithLine(string $errorMessage) : string
     {
         $regex = '#' . \preg_quote(\getcwd(), '#') . '/#';
-        $errorMessage = Strings::replace($errorMessage, $regex);
-        return Strings::replace($errorMessage, self::ON_LINE_REGEX);
+        $errorMessage = \RectorPrefix20211221\Nette\Utils\Strings::replace($errorMessage, $regex, '');
+        return \RectorPrefix20211221\Nette\Utils\Strings::replace($errorMessage, self::ON_LINE_REGEX, ':');
     }
-    private function reportRemovedNodes(ProcessResult $processResult) : void
+    private function reportRemovedNodes(\Rector\Core\ValueObject\ProcessResult $processResult) : void
     {
         if ($processResult->getRemovedNodeCount() === 0) {
             return;
         }
         $message = \sprintf('%d nodes were removed', $processResult->getRemovedNodeCount());
-        $this->rectorOutputStyle->warning($message);
+        $this->outputStyle->warning($message);
     }
-    private function createSuccessMessage(ProcessResult $processResult, Configuration $configuration) : string
+    private function createSuccessMessage(\Rector\Core\ValueObject\ProcessResult $processResult, \Rector\Core\ValueObject\Configuration $configuration) : string
     {
         $changeCount = \count($processResult->getFileDiffs()) + $processResult->getRemovedAndAddedFilesCount();
         if ($changeCount === 0) {
@@ -142,12 +138,12 @@ final class ConsoleOutputFormatter implements OutputFormatterInterface
     /**
      * @return string[]
      */
-    private function createRectorChangelogLines(FileDiff $fileDiff) : array
+    private function createRectorChangelogLines(\Rector\Core\ValueObject\Reporting\FileDiff $fileDiff) : array
     {
         $rectorsChangelogs = $this->rectorsChangelogResolver->resolveIncludingMissing($fileDiff->getRectorClasses());
         $rectorsChangelogsLines = [];
         foreach ($rectorsChangelogs as $rectorClass => $changelog) {
-            $rectorShortClass = (string) Strings::after($rectorClass, '\\', -1);
+            $rectorShortClass = (string) \RectorPrefix20211221\Nette\Utils\Strings::after($rectorClass, '\\', -1);
             $rectorsChangelogsLines[] = $changelog === null ? $rectorShortClass : $rectorShortClass . ' (' . $changelog . ')';
         }
         return $rectorsChangelogsLines;

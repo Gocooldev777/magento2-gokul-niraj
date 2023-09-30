@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Helper;
+namespace RectorPrefix20211221\Symfony\Component\Console\Helper;
 
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatter;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter;
 /**
  * The Formatter class provides helpers to format messages.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class FormatterHelper extends Helper
+class FormatterHelper extends \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper
 {
     /**
      * Formats a message within a section.
@@ -27,7 +27,7 @@ class FormatterHelper extends Helper
     }
     /**
      * Formats a message as a block of text.
-     * @param string|mixed[] $messages
+     * @param mixed[]|string $messages
      */
     public function formatBlock($messages, string $style, bool $large = \false) : string
     {
@@ -37,7 +37,7 @@ class FormatterHelper extends Helper
         $len = 0;
         $lines = [];
         foreach ($messages as $message) {
-            $message = OutputFormatter::escape($message);
+            $message = \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter::escape($message);
             $lines[] = \sprintf($large ? '  %s  ' : ' %s ', $message);
             $len = \max(self::width($message) + ($large ? 4 : 2), $len);
         }
@@ -64,6 +64,9 @@ class FormatterHelper extends Helper
         }
         return self::substr($message, 0, $length) . $suffix;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getName() : string
     {
         return 'formatter';

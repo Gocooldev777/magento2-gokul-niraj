@@ -18,7 +18,6 @@ namespace Magento\Framework\Module;
  * ```php
  *  $manager->isEnabled('Vendor_Module');
  * ```
- * @api
  */
 class Manager
 {

@@ -71,11 +71,7 @@ interface ASTArtifact /* extends ASTNode */
     /**
      * ASTVisitor method for node tree traversal.
      *
-     * @template T of array<string, mixed>|string|null
-     *
-     * @param T $data
-     *
-     * @return T
+     * @return void
      */
-    public function accept(ASTVisitor $visitor, $data = null);
+    public function accept(ASTVisitor $visitor);
 }

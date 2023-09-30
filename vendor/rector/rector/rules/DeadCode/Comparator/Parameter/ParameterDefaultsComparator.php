@@ -6,7 +6,6 @@ namespace Rector\DeadCode\Comparator\Parameter;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Param;
 use PHPStan\Reflection\ParameterReflection;
-use PHPStan\Type\Type;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\DowngradePhp80\Reflection\DefaultParameterValueResolver;
 final class ParameterDefaultsComparator
@@ -21,14 +20,14 @@ final class ParameterDefaultsComparator
      * @var \Rector\DowngradePhp80\Reflection\DefaultParameterValueResolver
      */
     private $defaultParameterValueResolver;
-    public function __construct(NodeComparator $nodeComparator, DefaultParameterValueResolver $defaultParameterValueResolver)
+    public function __construct(\Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator, \Rector\DowngradePhp80\Reflection\DefaultParameterValueResolver $defaultParameterValueResolver)
     {
         $this->nodeComparator = $nodeComparator;
         $this->defaultParameterValueResolver = $defaultParameterValueResolver;
     }
-    public function areDefaultValuesDifferent(ParameterReflection $parameterReflection, Param $param) : bool
+    public function areDefaultValuesDifferent(\PHPStan\Reflection\ParameterReflection $parameterReflection, \PhpParser\Node\Param $param) : bool
     {
-        if (!$parameterReflection->getDefaultValue() instanceof Type && !$param->default instanceof Expr) {
+        if ($parameterReflection->getDefaultValue() === null && $param->default === null) {
             return \false;
         }
         if ($this->isMutuallyExclusiveNull($parameterReflection, $param)) {
@@ -36,17 +35,17 @@ final class ParameterDefaultsComparator
         }
         /** @var Expr $paramDefault */
         $paramDefault = $param->default;
-        $defaultValueExpr = $this->defaultParameterValueResolver->resolveFromParameterReflection($parameterReflection);
-        return !$this->nodeComparator->areNodesEqual($paramDefault, $defaultValueExpr);
+        $firstParameterValue = $this->defaultParameterValueResolver->resolveFromParameterReflection($parameterReflection);
+        return !$this->nodeComparator->areNodesEqual($paramDefault, $firstParameterValue);
     }
-    private function isMutuallyExclusiveNull(ParameterReflection $parameterReflection, Param $param) : bool
+    private function isMutuallyExclusiveNull(\PHPStan\Reflection\ParameterReflection $parameterReflection, \PhpParser\Node\Param $param) : bool
     {
-        if (!$parameterReflection->getDefaultValue() instanceof Type && $param->default instanceof Expr) {
+        if ($parameterReflection->getDefaultValue() === null && $param->default !== null) {
             return \true;
         }
-        if (!$parameterReflection->getDefaultValue() instanceof Type) {
+        if ($parameterReflection->getDefaultValue() === null) {
             return \false;
         }
-        return !$param->default instanceof Expr;
+        return $param->default === null;
     }
 }

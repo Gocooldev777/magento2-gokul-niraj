@@ -9,6 +9,7 @@ use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\Type\UnionType;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\Core\Rector\AbstractRector;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PHPStanStaticTypeMapper\TypeAnalyzer\UnionTypeAnalyzer;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -16,7 +17,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodeQuality\Rector\ClassMethod\NarrowUnionTypeDocRector\NarrowUnionTypeDocRectorTest
  */
-final class NarrowUnionTypeDocRector extends AbstractRector
+final class NarrowUnionTypeDocRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var bool
@@ -27,13 +28,13 @@ final class NarrowUnionTypeDocRector extends AbstractRector
      * @var \Rector\PHPStanStaticTypeMapper\TypeAnalyzer\UnionTypeAnalyzer
      */
     private $unionTypeAnalyzer;
-    public function __construct(UnionTypeAnalyzer $unionTypeAnalyzer)
+    public function __construct(\Rector\PHPStanStaticTypeMapper\TypeAnalyzer\UnionTypeAnalyzer $unionTypeAnalyzer)
     {
         $this->unionTypeAnalyzer = $unionTypeAnalyzer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Changes docblock by narrowing type', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes docblock by narrowing type', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass {
     /**
      * @param object|DateTime $message
@@ -60,12 +61,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         $params = $node->getParams();
@@ -74,7 +75,7 @@ CODE_SAMPLE
             /** @var string $paramName */
             $paramName = $this->getName($param->var);
             $paramType = $phpDocInfo->getParamType($paramName);
-            if (!$paramType instanceof UnionType) {
+            if (!$paramType instanceof \PHPStan\Type\UnionType) {
                 continue;
             }
             if ($this->unionTypeAnalyzer->isScalar($paramType)) {
@@ -88,11 +89,12 @@ CODE_SAMPLE
             }
         }
         if ($this->hasChanged) {
+            $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::HAS_PHP_DOC_INFO_JUST_CHANGED, \true);
             return $node;
         }
         return null;
     }
-    private function changeDocObjectWithoutClassType(UnionType $unionType, int $key, PhpDocInfo $phpDocInfo) : void
+    private function changeDocObjectWithoutClassType(\PHPStan\Type\UnionType $unionType, int $key, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo) : void
     {
         if (!$this->unionTypeAnalyzer->hasObjectWithoutClassTypeWithOnlyFullyQualifiedObjectType($unionType)) {
             return;
@@ -100,21 +102,21 @@ CODE_SAMPLE
         $types = $unionType->getTypes();
         $resultType = '';
         foreach ($types as $type) {
-            if ($type instanceof FullyQualifiedObjectType) {
+            if ($type instanceof \Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType) {
                 $resultType .= $type->getClassName() . '|';
             }
         }
         $resultType = \rtrim($resultType, '|');
         $paramTagValueNodes = $phpDocInfo->getParamTagValueNodes();
         if (isset($paramTagValueNodes[$key])) {
-            $paramTagValueNodes[$key]->type = new IdentifierTypeNode($resultType);
+            $paramTagValueNodes[$key]->type = new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode($resultType);
         }
     }
-    private function changeDocObjectScalar(int $key, PhpDocInfo $phpDocInfo) : void
+    private function changeDocObjectScalar(int $key, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo) : void
     {
         $paramTagValueNodes = $phpDocInfo->getParamTagValueNodes();
         if (isset($paramTagValueNodes[$key])) {
-            $paramTagValueNodes[$key]->type = new IdentifierTypeNode('scalar');
+            $paramTagValueNodes[$key]->type = new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('scalar');
         }
     }
 }

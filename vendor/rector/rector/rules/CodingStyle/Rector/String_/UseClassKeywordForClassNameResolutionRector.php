@@ -3,20 +3,19 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Rector\String_;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodingStyle\Rector\String_\UseClassKeywordForClassNameResolutionRector\UseClassKeywordForClassNameResolutionRectorTest
  */
-final class UseClassKeywordForClassNameResolutionRector extends AbstractRector
+final class UseClassKeywordForClassNameResolutionRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var string
@@ -28,13 +27,13 @@ final class UseClassKeywordForClassNameResolutionRector extends AbstractRector
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(ReflectionProvider $reflectionProvider)
+    public function __construct(\PHPStan\Reflection\ReflectionProvider $reflectionProvider)
     {
         $this->reflectionProvider = $reflectionProvider;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Use `class` keyword for class name resolution in string instead of hardcoded string reference', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Use `class` keyword for class name resolution in string instead of hardcoded string reference', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 $value = 'App\SomeClass::someMethod()';
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
@@ -47,21 +46,16 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [String_::class];
+        return [\PhpParser\Node\Scalar\String_::class];
     }
     /**
      * @param String_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        $stringKind = $node->getAttribute(AttributeKey::KIND);
-        if (\in_array($stringKind, [String_::KIND_HEREDOC, String_::KIND_NOWDOC], \true)) {
-            return null;
-        }
         $classNames = $this->getExistingClasses($node);
-        $classNames = $this->filterOurShortClasses($classNames);
         if ($classNames === []) {
-            return null;
+            return $node;
         }
         $parts = $this->getParts($node, $classNames);
         if ($parts === []) {
@@ -71,25 +65,12 @@ CODE_SAMPLE
         return $this->nodeFactory->createConcat($exprsToConcat);
     }
     /**
-     * @param string[] $classNames
-     * @return mixed[]
-     */
-    private function getParts(String_ $string, array $classNames) : array
-    {
-        $quotedClassNames = \array_map('preg_quote', $classNames);
-        // @see https://regex101.com/r/8nGS0F/1
-        $parts = Strings::split($string->value, '#(' . \implode('|', $quotedClassNames) . ')#');
-        return \array_filter($parts, static function (string $className) : bool {
-            return $className !== '';
-        });
-    }
-    /**
      * @return string[]
      */
-    private function getExistingClasses(String_ $string) : array
+    public function getExistingClasses(\PhpParser\Node\Scalar\String_ $string) : array
     {
         /** @var mixed[] $matches */
-        $matches = Strings::matchAll($string->value, self::CLASS_BEFORE_STATIC_ACCESS_REGEX, \PREG_PATTERN_ORDER);
+        $matches = \RectorPrefix20211221\Nette\Utils\Strings::matchAll($string->value, self::CLASS_BEFORE_STATIC_ACCESS_REGEX, \PREG_PATTERN_ORDER);
         if (!isset($matches['class_name'])) {
             return [];
         }
@@ -103,6 +84,19 @@ CODE_SAMPLE
         return $classNames;
     }
     /**
+     * @param string[] $classNames
+     * @return mixed[]
+     */
+    public function getParts(\PhpParser\Node\Scalar\String_ $string, array $classNames) : array
+    {
+        $quotedClassNames = \array_map('preg_quote', $classNames);
+        // @see https://regex101.com/r/8nGS0F/1
+        $parts = \RectorPrefix20211221\Nette\Utils\Strings::split($string->value, '#(' . \implode('|', $quotedClassNames) . ')#');
+        return \array_filter($parts, function (string $className) : bool {
+            return $className !== '';
+        });
+    }
+    /**
      * @param string[] $parts
      * @return ClassConstFetch[]|String_[]
      */
@@ -111,21 +105,11 @@ CODE_SAMPLE
         $exprsToConcat = [];
         foreach ($parts as $part) {
             if ($this->reflectionProvider->hasClass($part)) {
-                $exprsToConcat[] = new ClassConstFetch(new FullyQualified(\ltrim($part, '\\')), 'class');
+                $exprsToConcat[] = new \PhpParser\Node\Expr\ClassConstFetch(new \PhpParser\Node\Name\FullyQualified(\ltrim($part, '\\')), 'class');
             } else {
-                $exprsToConcat[] = new String_($part);
+                $exprsToConcat[] = new \PhpParser\Node\Scalar\String_($part);
             }
         }
         return $exprsToConcat;
-    }
-    /**
-     * @param string[] $classNames
-     * @return string[]
-     */
-    private function filterOurShortClasses(array $classNames) : array
-    {
-        return \array_filter($classNames, static function (string $className) : bool {
-            return \strpos($className, '\\') !== \false;
-        });
     }
 }

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Ui/js/lib/logger/entry-factory.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([\n    './entry'\n], function (LogEntry) {\n    'use strict';\n\n    return {\n        /**\n         * @param {String} message\n         * @param {Number} level\n         * @param {Object} [messageData]\n         * @returns {LogEntry}\n         */\n        createEntry: function (message, level, messageData) {\n            return new LogEntry(message, level, messageData);\n        }\n    };\n});\n"}
+}});

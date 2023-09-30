@@ -33,7 +33,7 @@ abstract class AbstractPhpdocTypesFixer extends AbstractFixer
      *
      * @var string[]
      */
-    protected array $tags;
+    protected $tags;
 
     /**
      * {@inheritdoc}

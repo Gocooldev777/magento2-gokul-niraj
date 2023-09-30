@@ -183,7 +183,7 @@ class JsonGenerationFromDataObjectTest extends \Magento\TestFramework\TestCase\W
                             'testModule5AllSoapAndRestV1',
                         ],
                         'description' => 'Update existing item.',
-                        'operationId' => 'PutV1TestModule5ParentIdNestedResourceEntityId',
+                        'operationId' => 'testModule5AllSoapAndRestV1NestedUpdatePut',
                         'parameters' => [
                             [
                                 'name' => 'parentId',
@@ -198,7 +198,7 @@ class JsonGenerationFromDataObjectTest extends \Magento\TestFramework\TestCase\W
                                 'required' => true
                             ],
                             [
-                                'name' => 'PutV1TestModule5ParentIdNestedResourceEntityIdBody',
+                                'name' => 'testModule5AllSoapAndRestV1NestedUpdatePutBody',
                                 'in' => 'body',
                                 'schema' => [
                                     'required' => [
@@ -314,7 +314,7 @@ class JsonGenerationFromDataObjectTest extends \Magento\TestFramework\TestCase\W
                             'testModule5AllSoapAndRestV2',
                         ],
                         'description' => 'Delete existing item.',
-                        'operationId' => 'DeleteV2TestModule5Id',
+                        'operationId' => 'testModule5AllSoapAndRestV2DeleteDelete',
                         'parameters' => [
                             [
                                 'name' => 'id',

@@ -25,8 +25,6 @@ use Magento\Framework\GraphQl\Query\Resolver\ArgumentsProcessorInterface;
 
 /**
  * Retrieve filtered product data based off given search criteria in a format that GraphQL can interpret.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Filter implements ProductQueryInterface
 {
@@ -41,7 +39,7 @@ class Filter implements ProductQueryInterface
     private $productDataProvider;
 
     /**
-     * @var FieldSelection
+     * FieldSelection
      */
     private $fieldSelection;
 
@@ -175,7 +173,7 @@ class Filter implements ProductQueryInterface
                 if ($condition === 'match') {
                     // reformat 'match' filter so MySQL filtering behaves like SearchAPI filtering
                     $condition = 'like';
-                    $value = $value !== null ? str_replace('%', '', trim($value)) : '';
+                    $value = str_replace('%', '', trim($value));
                     if (strlen($value) < $minimumQueryLength) {
                         throw new InputException(__('Invalid match filter'));
                     }

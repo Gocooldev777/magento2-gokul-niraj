@@ -16,7 +16,6 @@ use Magento\Framework\View\Design\Theme\ThemePackageFactory;
 
 require __DIR__ . '/autoload.php';
 
-error_reporting(E_ALL);
 if (!defined('TESTS_TEMP_DIR')) {
     define('TESTS_TEMP_DIR', dirname(__DIR__) . '/tmp');
 }

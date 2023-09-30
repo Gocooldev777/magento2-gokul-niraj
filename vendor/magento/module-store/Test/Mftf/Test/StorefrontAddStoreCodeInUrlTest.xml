@@ -28,9 +28,6 @@
         </before>
         <after>
             <magentoCLI command="config:set {{StorefrontDisableAddStoreCodeToUrls.path}} {{StorefrontDisableAddStoreCodeToUrls.value}}" stepKey="addStoreCodeToUrlDisable"/>
-            <actionGroup ref="CliCacheFlushActionGroup" stepKey="flushPageCacheAfter">
-                <argument name="tags" value="full_page"/>
-            </actionGroup>
         </after>
 
         <actionGroup ref="StorefrontClickOnHeaderLogoActionGroup" stepKey="clickOnStorefrontHeaderLogo"/>

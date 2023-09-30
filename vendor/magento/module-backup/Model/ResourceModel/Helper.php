@@ -6,9 +6,6 @@
 
 namespace Magento\Backup\Model\ResourceModel;
 
-use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\Stdlib\DateTime\DateTime;
-
 /**
  * @api
  * @since 100.0.2
@@ -24,19 +21,21 @@ class Helper extends \Magento\Framework\DB\Helper
     protected $_foreignKeys = [];
 
     /**
-     * @var DateTime
+     * Core Date
+     *
+     * @var \Magento\Framework\Stdlib\DateTime\DateTime
      */
     protected $_coreDate;
 
     /**
-     * @param ResourceConnection $resource
+     * @param \Magento\Framework\App\ResourceConnection $resource
      * @param string $modulePrefix
-     * @param DateTime $coreDate
+     * @param \Magento\Framework\Stdlib\DateTime\DateTime $coreDate
      */
     public function __construct(
-        ResourceConnection $resource,
+        \Magento\Framework\App\ResourceConnection $resource,
         $modulePrefix,
-        DateTime $coreDate
+        \Magento\Framework\Stdlib\DateTime\DateTime $coreDate
     ) {
         parent::__construct($resource, $modulePrefix);
         $this->_coreDate = $coreDate;
@@ -154,8 +153,8 @@ class Helper extends \Magento\Framework\DB\Helper
                     $connection->quoteIdentifier($match[2]),
                     $connection->quoteIdentifier($match[3]),
                     $connection->quoteIdentifier($match[4]),
-                    $match[5] ?? '',
-                    $match[7] ?? ''
+                    isset($match[5]) ? $match[5] : '',
+                    isset($match[7]) ? $match[7] : ''
                 );
             }
         }
@@ -308,7 +307,7 @@ class Helper extends \Magento\Framework\DB\Helper
         foreach ($row as $key => $data) {
             if ($data === null) {
                 $value = 'NULL';
-            } elseif (in_array(strtolower($describe[$key]['DATA_TYPE'] ?? ''), $dataTypes)) {
+            } elseif (in_array(strtolower($describe[$key]['DATA_TYPE']), $dataTypes)) {
                 $value = $data;
             } else {
                 $value = $connection->quoteInto('?', $data);
@@ -351,7 +350,7 @@ class Helper extends \Magento\Framework\DB\Helper
     public function getTableTriggersSql($tableName, $addDropIfExists = false, $stripDefiner = true)
     {
         $script = "--\n-- Triggers structure for table `{$tableName}`\n--\n";
-        $triggers = $this->getConnection()->query('SHOW TRIGGERS LIKE \'' . $tableName . '\'')->fetchAll();
+        $triggers = $this->getConnection()->query('SHOW TRIGGERS LIKE \''. $tableName . '\'')->fetchAll();
 
         if (!$triggers) {
             return '';
@@ -362,7 +361,7 @@ class Helper extends \Magento\Framework\DB\Helper
             }
             $script .= "delimiter ;;\n";
 
-            $triggerData = $this->getConnection()->query('SHOW CREATE TRIGGER ' . $trigger['Trigger'])->fetch();
+            $triggerData = $this->getConnection()->query('SHOW CREATE TRIGGER '. $trigger['Trigger'])->fetch();
             if ($stripDefiner) {
                 $cleanedScript = preg_replace('/DEFINER=[^\s]*/', '', $triggerData['SQL Original Statement']);
                 $script .= $cleanedScript . "\n";

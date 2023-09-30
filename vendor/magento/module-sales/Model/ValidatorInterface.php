@@ -10,7 +10,6 @@ use Magento\Sales\Exception\DocumentValidationException;
 
 /**
  * Interface ValidatorInterface
- * @api
  */
 interface ValidatorInterface
 {

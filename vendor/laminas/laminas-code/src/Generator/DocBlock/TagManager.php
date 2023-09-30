@@ -9,7 +9,6 @@ use ReflectionClass;
 use ReflectionMethod;
 
 use function method_exists;
-use function str_starts_with;
 use function strpos;
 use function substr;
 use function ucfirst;
@@ -53,12 +52,12 @@ class TagManager extends PrototypeClassFactory
         // transport any properties via accessors and mutators from reflection to codegen object
         $reflectionClass = new ReflectionClass($reflectionTag);
         foreach ($reflectionClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if (str_starts_with($method->getName(), 'get')) {
+            if (0 === strpos($method->getName(), 'get')) {
                 $propertyName = substr($method->getName(), 3);
                 if (method_exists($newTag, 'set' . $propertyName)) {
                     $newTag->{'set' . $propertyName}($reflectionTag->{'get' . $propertyName}());
                 }
-            } elseif (str_starts_with($method->getName(), 'is')) {
+            } elseif (0 === strpos($method->getName(), 'is')) {
                 $propertyName = ucfirst($method->getName());
                 if (method_exists($newTag, 'set' . $propertyName)) {
                     $newTag->{'set' . $propertyName}($reflectionTag->{$method->getName()}());

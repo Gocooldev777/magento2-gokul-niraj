@@ -1,5 +1,7 @@
 <?php
 /**
+ * Initial configuration data container. Provides interface for reading initial config values
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -8,15 +10,12 @@ namespace Magento\Framework\App\Config;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Serialize\SerializerInterface;
 
-/**
- * Initial configuration data container. Provides interface for reading initial config values
- */
 class Initial
 {
     /**
      * Cache identifier used to store initial config
      */
-    public const CACHE_ID = 'initial_config';
+    const CACHE_ID = 'initial_config';
 
     /**
      * Config data
@@ -70,7 +69,7 @@ class Initial
      */
     public function getData($scope)
     {
-        [$scopeType, $scopeCode] = array_pad(explode('|', (string)$scope), 2, null);
+        list($scopeType, $scopeCode) = array_pad(explode('|', $scope), 2, null);
 
         if (ScopeConfigInterface::SCOPE_TYPE_DEFAULT == $scopeType) {
             return $this->_data[$scopeType] ?? [];

@@ -13,12 +13,17 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Arguments\Rector\ClassMethod\ReplaceArgumentDefaultValueRector\ReplaceArgumentDefaultValueRectorTest
  */
-final class ReplaceArgumentDefaultValueRector extends AbstractRector implements ConfigurableRectorInterface
+final class ReplaceArgumentDefaultValueRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const REPLACED_ARGUMENTS = 'replaced_arguments';
     /**
      * @var ReplaceArgumentDefaultValue[]
      */
@@ -28,13 +33,13 @@ final class ReplaceArgumentDefaultValueRector extends AbstractRector implements 
      * @var \Rector\Arguments\ArgumentDefaultValueReplacer
      */
     private $argumentDefaultValueReplacer;
-    public function __construct(ArgumentDefaultValueReplacer $argumentDefaultValueReplacer)
+    public function __construct(\Rector\Arguments\ArgumentDefaultValueReplacer $argumentDefaultValueReplacer)
     {
         $this->argumentDefaultValueReplacer = $argumentDefaultValueReplacer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Replaces defined map of arguments in defined methods and their calls.', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Replaces defined map of arguments in defined methods and their calls.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 $someObject = new SomeClass;
 $someObject->someMethod(SomeClass::OLD_CONSTANT);
 CODE_SAMPLE
@@ -42,45 +47,40 @@ CODE_SAMPLE
 $someObject = new SomeClass;
 $someObject->someMethod(false);
 CODE_SAMPLE
-, [new ReplaceArgumentDefaultValue('SomeClass', 'someMethod', 0, 'SomeClass::OLD_CONSTANT', \false)])]);
+, [new \Rector\Arguments\ValueObject\ReplaceArgumentDefaultValue('SomeClass', 'someMethod', 0, 'SomeClass::OLD_CONSTANT', \false)])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [MethodCall::class, StaticCall::class, ClassMethod::class];
+        return [\PhpParser\Node\Expr\MethodCall::class, \PhpParser\Node\Expr\StaticCall::class, \PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param MethodCall|StaticCall|ClassMethod $node
-     * @return \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Stmt\ClassMethod|null
+     * @return \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Stmt\ClassMethod
      */
-    public function refactor(Node $node)
+    public function refactor(\PhpParser\Node $node)
     {
-        $hasChanged = \false;
         foreach ($this->replacedArguments as $replacedArgument) {
-            if (!$this->isName($node->name, $replacedArgument->getMethod())) {
-                continue;
-            }
             if (!$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, $replacedArgument->getObjectType())) {
                 continue;
             }
-            $replacedNode = $this->argumentDefaultValueReplacer->processReplaces($node, $replacedArgument);
-            if ($replacedNode instanceof Node) {
-                $hasChanged = \true;
+            if (!$this->isName($node->name, $replacedArgument->getMethod())) {
+                continue;
             }
+            $this->argumentDefaultValueReplacer->processReplaces($node, $replacedArgument);
         }
-        if ($hasChanged) {
-            return $node;
-        }
-        return null;
+        return $node;
     }
     /**
      * @param mixed[] $configuration
      */
     public function configure(array $configuration) : void
     {
-        Assert::allIsAOf($configuration, ReplaceArgumentDefaultValue::class);
-        $this->replacedArguments = $configuration;
+        $replacedArguments = $configuration[self::REPLACED_ARGUMENTS] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($replacedArguments);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($replacedArguments, \Rector\Arguments\ValueObject\ReplaceArgumentDefaultValue::class);
+        $this->replacedArguments = $replacedArguments;
     }
 }

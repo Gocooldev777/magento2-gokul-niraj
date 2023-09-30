@@ -29,9 +29,7 @@ class ClassPropertyPHPDocFormattingSniff extends AbstractVariableSniff
         T_NS_SEPARATOR,
         T_STRING,
         T_COMMENT,
-        T_NULLABLE,
-        T_BITWISE_AND,
-        T_TYPE_UNION,
+        T_NULLABLE
     ];
 
     /**
@@ -69,15 +67,6 @@ class ClassPropertyPHPDocFormattingSniff extends AbstractVariableSniff
         }
 
         $commentStart = $tokens[$commentEnd]['comment_opener'];
-        if ($this->PHPDocFormattingValidator->hasDeprecatedWellFormatted($commentStart, $tokens) !== true) {
-            $phpcsFile->addWarning(
-                'Motivation behind the added @deprecated tag MUST be explained. '
-                . '@see tag MUST be used with reference to new implementation when code is deprecated '
-                . 'and there is a new alternative.',
-                $stackPtr,
-                'InvalidDeprecatedTagUsage'
-            );
-        }
         $varAnnotationPosition = null;
         foreach ($tokens[$commentStart]['comment_tags'] as $tag) {
             if ($tokens[$tag]['content'] === '@var') {

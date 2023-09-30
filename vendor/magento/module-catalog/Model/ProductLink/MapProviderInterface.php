@@ -12,8 +12,6 @@ use Magento\Catalog\Model\Product;
 
 /**
  * Provide link data for products.
- *
- * @api
  */
 interface MapProviderInterface
 {

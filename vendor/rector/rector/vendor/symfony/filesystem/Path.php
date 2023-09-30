@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Filesystem;
+namespace RectorPrefix20211221\Symfony\Component\Filesystem;
 
-use RectorPrefix202304\Symfony\Component\Filesystem\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Filesystem\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Filesystem\Exception\RuntimeException;
 /**
  * Contains utility methods for handling path strings.
  *
@@ -73,7 +73,7 @@ final class Path
         }
         // Replace "~" with user's home directory.
         if ('~' === $path[0]) {
-            $path = self::getHomeDirectory() . \substr($path, 1);
+            $path = self::getHomeDirectory() . \mb_substr($path, 1);
         }
         $path = self::normalize($path);
         [$root, $pathWithoutRoot] = self::split($path);
@@ -133,9 +133,9 @@ final class Path
         }
         $path = self::canonicalize($path);
         // Maintain scheme
-        if (\false !== ($schemeSeparatorPosition = \strpos($path, '://'))) {
-            $scheme = \substr($path, 0, $schemeSeparatorPosition + 3);
-            $path = \substr($path, $schemeSeparatorPosition + 3);
+        if (\false !== ($schemeSeparatorPosition = \mb_strpos($path, '://'))) {
+            $scheme = \mb_substr($path, 0, $schemeSeparatorPosition + 3);
+            $path = \mb_substr($path, $schemeSeparatorPosition + 3);
         } else {
             $scheme = '';
         }
@@ -148,9 +148,9 @@ final class Path
         }
         // Directory equals Windows root "C:/"
         if (2 === $dirSeparatorPosition && \ctype_alpha($path[0]) && ':' === $path[1]) {
-            return $scheme . \substr($path, 0, 3);
+            return $scheme . \mb_substr($path, 0, 3);
         }
-        return $scheme . \substr($path, 0, $dirSeparatorPosition);
+        return $scheme . \mb_substr($path, 0, $dirSeparatorPosition);
     }
     /**
      * Returns canonical path of the user's home directory.
@@ -160,11 +160,11 @@ final class Path
      *  - UNIX
      *  - Windows8 and upper
      *
-     * If your operating system or environment isn't supported, an exception is thrown.
+     * If your operation system or environment isn't supported, an exception is thrown.
      *
      * The result is a canonical path.
      *
-     * @throws RuntimeException If your operating system or environment isn't supported
+     * @throws RuntimeException If your operation system or environment isn't supported
      */
     public static function getHomeDirectory() : string
     {
@@ -176,7 +176,7 @@ final class Path
         if (\getenv('HOMEDRIVE') && \getenv('HOMEPATH')) {
             return self::canonicalize(\getenv('HOMEDRIVE') . \getenv('HOMEPATH'));
         }
-        throw new RuntimeException("Cannot find the home directory path: Your environment or operating system isn't supported.");
+        throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\RuntimeException("Cannot find the home directory path: Your environment or operation system isn't supported.");
     }
     /**
      * Returns the root directory of a path.
@@ -203,7 +203,7 @@ final class Path
         if ('/' === $firstCharacter || '\\' === $firstCharacter) {
             return $scheme . '/';
         }
-        $length = \strlen($path);
+        $length = \mb_strlen($path);
         // Windows root
         if ($length > 1 && ':' === $path[1] && \ctype_alpha($firstCharacter)) {
             // Special case: "C:"
@@ -223,7 +223,7 @@ final class Path
      * @param string|null $extension if specified, only that extension is cut
      *                               off (may contain leading dot)
      */
-    public static function getFilenameWithoutExtension(string $path, string $extension = null) : string
+    public static function getFilenameWithoutExtension(string $path, string $extension = null)
     {
         if ('' === $path) {
             return '';
@@ -299,14 +299,14 @@ final class Path
         $actualExtension = self::getExtension($path);
         $extension = \ltrim($extension, '.');
         // No extension for paths
-        if ('/' === \substr($path, -1)) {
+        if ('/' === \mb_substr($path, -1)) {
             return $path;
         }
         // No actual extension in path
         if (empty($actualExtension)) {
-            return $path . ('.' === \substr($path, -1) ? '' : '.') . $extension;
+            return $path . ('.' === \mb_substr($path, -1) ? '' : '.') . $extension;
         }
-        return \substr($path, 0, -\strlen($actualExtension)) . $extension;
+        return \mb_substr($path, 0, -\mb_strlen($actualExtension)) . $extension;
     }
     public static function isAbsolute(string $path) : bool
     {
@@ -314,8 +314,8 @@ final class Path
             return \false;
         }
         // Strip scheme
-        if (\false !== ($schemeSeparatorPosition = \strpos($path, '://'))) {
-            $path = \substr($path, $schemeSeparatorPosition + 3);
+        if (\false !== ($schemeSeparatorPosition = \mb_strpos($path, '://'))) {
+            $path = \mb_substr($path, $schemeSeparatorPosition + 3);
         }
         $firstCharacter = $path[0];
         // UNIX root "/" or "\" (Windows style)
@@ -323,9 +323,9 @@ final class Path
             return \true;
         }
         // Windows root
-        if (\strlen($path) > 1 && \ctype_alpha($firstCharacter) && ':' === $path[1]) {
+        if (\mb_strlen($path) > 1 && \ctype_alpha($firstCharacter) && ':' === $path[1]) {
             // Special case: "C:"
-            if (2 === \strlen($path)) {
+            if (2 === \mb_strlen($path)) {
                 return \true;
             }
             // Normal case: "C:/ or "C:\"
@@ -379,17 +379,17 @@ final class Path
     public static function makeAbsolute(string $path, string $basePath) : string
     {
         if ('' === $basePath) {
-            throw new InvalidArgumentException(\sprintf('The base path must be a non-empty string. Got: "%s".', $basePath));
+            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The base path must be a non-empty string. Got: "%s".', $basePath));
         }
         if (!self::isAbsolute($basePath)) {
-            throw new InvalidArgumentException(\sprintf('The base path "%s" is not an absolute path.', $basePath));
+            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The base path "%s" is not an absolute path.', $basePath));
         }
         if (self::isAbsolute($path)) {
             return self::canonicalize($path);
         }
-        if (\false !== ($schemeSeparatorPosition = \strpos($basePath, '://'))) {
-            $scheme = \substr($basePath, 0, $schemeSeparatorPosition + 3);
-            $basePath = \substr($basePath, $schemeSeparatorPosition + 3);
+        if (\false !== ($schemeSeparatorPosition = \mb_strpos($basePath, '://'))) {
+            $scheme = \mb_substr($basePath, 0, $schemeSeparatorPosition + 3);
+            $basePath = \mb_substr($basePath, $schemeSeparatorPosition + 3);
         } else {
             $scheme = '';
         }
@@ -464,11 +464,11 @@ final class Path
         // If the passed path is absolute, but the base path is not, we
         // cannot generate a relative path
         if ('' !== $root && '' === $baseRoot) {
-            throw new InvalidArgumentException(\sprintf('The absolute path "%s" cannot be made relative to the relative path "%s". You should provide an absolute base path instead.', $path, $basePath));
+            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The absolute path "%s" cannot be made relative to the relative path "%s". You should provide an absolute base path instead.', $path, $basePath));
         }
         // Fail if the roots of the two paths are different
         if ($baseRoot && $root !== $baseRoot) {
-            throw new InvalidArgumentException(\sprintf('The path "%s" cannot be made relative to "%s", because they have different roots ("%s" and "%s").', $path, $basePath, $root, $baseRoot));
+            throw new \RectorPrefix20211221\Symfony\Component\Filesystem\Exception\InvalidArgumentException(\sprintf('The path "%s" cannot be made relative to "%s", because they have different roots ("%s" and "%s").', $path, $basePath, $root, $baseRoot));
         }
         if ('' === $relativeBasePath) {
             return $relativePath;
@@ -495,7 +495,7 @@ final class Path
      */
     public static function isLocal(string $path) : bool
     {
-        return '' !== $path && \strpos($path, '://') === \false;
+        return '' !== $path && \false === \mb_strpos($path, '://');
     }
     /**
      * Returns the longest common base path in canonical form of a set of paths or
@@ -505,20 +505,20 @@ final class Path
      * into forward slashes.
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath(
+     * $basePath = Path::getLongestCommonBasePath([
      *     '/symfony/css/style.css',
      *     '/symfony/css/..'
-     * );
+     * ]);
      * // => /symfony
      * ```
      *
      * The root is returned if no common base path can be found:
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath(
+     * $basePath = Path::getLongestCommonBasePath([
      *     '/symfony/css/style.css',
      *     '/puli/css/..'
-     * );
+     * ]);
      * // => /
      * ```
      *
@@ -526,10 +526,10 @@ final class Path
      * returned.
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath(
+     * $basePath = Path::getLongestCommonBasePath([
      *     'C:/symfony/css/style.css',
      *     'D:/symfony/css/..'
-     * );
+     * ]);
      * // => null
      * ```
      */
@@ -553,7 +553,7 @@ final class Path
                 }
                 // Prevent false positives for common prefixes
                 // see isBasePath()
-                if (\strncmp($path . '/', $basePath . '/', \strlen($basePath . '/')) === 0) {
+                if (0 === \mb_strpos($path . '/', $basePath . '/')) {
                     // next path
                     continue 2;
                 }
@@ -576,11 +576,11 @@ final class Path
             if (null === $finalPath) {
                 // For first part we keep slashes, like '/top', 'C:\' or 'phar://'
                 $finalPath = $path;
-                $wasScheme = \strpos($path, '://') !== \false;
+                $wasScheme = \false !== \mb_strpos($path, '://');
                 continue;
             }
             // Only add slash if previous part didn't end with '/' or '\'
-            if (!\in_array(\substr($finalPath, -1), ['/', '\\'])) {
+            if (!\in_array(\mb_substr($finalPath, -1), ['/', '\\'])) {
                 $finalPath .= '/';
             }
             // If first part included a scheme like 'phar://' we allow \current part to start with '/', otherwise trim
@@ -621,10 +621,10 @@ final class Path
         // Don't append a slash for the root "/", because then that root
         // won't be discovered as common prefix ("//" is not a prefix of
         // "/foobar/").
-        return \strncmp($ofPath . '/', \rtrim($basePath, '/') . '/', \strlen(\rtrim($basePath, '/') . '/')) === 0;
+        return 0 === \mb_strpos($ofPath . '/', \rtrim($basePath, '/') . '/');
     }
     /**
-     * @return string[]
+     * @return non-empty-string[]
      */
     private static function findCanonicalParts(string $root, string $pathWithoutRoot) : array
     {
@@ -671,17 +671,17 @@ final class Path
             return ['', ''];
         }
         // Remember scheme as part of the root, if any
-        if (\false !== ($schemeSeparatorPosition = \strpos($path, '://'))) {
-            $root = \substr($path, 0, $schemeSeparatorPosition + 3);
-            $path = \substr($path, $schemeSeparatorPosition + 3);
+        if (\false !== ($schemeSeparatorPosition = \mb_strpos($path, '://'))) {
+            $root = \mb_substr($path, 0, $schemeSeparatorPosition + 3);
+            $path = \mb_substr($path, $schemeSeparatorPosition + 3);
         } else {
             $root = '';
         }
-        $length = \strlen($path);
+        $length = \mb_strlen($path);
         // Remove and remember root directory
-        if (\strncmp($path, '/', \strlen('/')) === 0) {
+        if (0 === \mb_strpos($path, '/')) {
             $root .= '/';
-            $path = $length > 1 ? \substr($path, 1) : '';
+            $path = $length > 1 ? \mb_substr($path, 1) : '';
         } elseif ($length > 1 && \ctype_alpha($path[0]) && ':' === $path[1]) {
             if (2 === $length) {
                 // Windows special case: "C:"
@@ -689,18 +689,18 @@ final class Path
                 $path = '';
             } elseif ('/' === $path[2]) {
                 // Windows normal case: "C:/"..
-                $root .= \substr($path, 0, 3);
-                $path = $length > 3 ? \substr($path, 3) : '';
+                $root .= \mb_substr($path, 0, 3);
+                $path = $length > 3 ? \mb_substr($path, 3) : '';
             }
         }
         return [$root, $path];
     }
     private static function toLower(string $string) : string
     {
-        if (\false !== ($encoding = \mb_detect_encoding($string, null, \true))) {
+        if (\false !== ($encoding = \mb_detect_encoding($string))) {
             return \mb_strtolower($string, $encoding);
         }
-        return \strtolower($string);
+        return \strtolower($string, $encoding);
     }
     private function __construct()
     {

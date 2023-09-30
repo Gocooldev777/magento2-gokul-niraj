@@ -5,50 +5,34 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterChain;
-use Laminas\Filter\FilterInterface;
-
-class ArrayFilter
+class ArrayFilter extends \Zend_Filter
 {
-    /**
-     * @var FilterChain
-     */
-    protected $filterChain;
-
     /**
      * @var array
      */
     protected $_columnFilters = [];
 
     /**
-     * @param FilterChain|null $filterChain
-     */
-    public function __construct(FilterChain $filterChain = null)
-    {
-        $this->filterChain = $filterChain ?? new FilterChain();
-    }
-
-    /**
-     * Method to add filer.
+     * {@inheritdoc}
      *
-     * @param FilterInterface $filter
+     * @param \Zend_Filter_Interface $filter
      * @param string $column
-     * @return ArrayFilter
+     * @return null|\Zend_Filter
      */
-    public function addFilter(FilterInterface $filter, $column = '')
+    public function addFilter(\Zend_Filter_Interface $filter, $column = '')
     {
-        if ($column !== '') {
-            $this->_columnFilters[$column] = $this->_columnFilters[$column] ?? new FilterChain();
-            $this->_columnFilters[$column]->setOptions(['callbacks' => [['callback' => $filter]]]);
+        if ('' === $column) {
+            parent::addFilter($filter);
         } else {
-            $this->filterChain->setOptions(['callbacks' => [['callback' => $filter]]]);
+            if (!isset($this->_columnFilters[$column])) {
+                $this->_columnFilters[$column] = new \Zend_Filter();
+            }
+            $this->_columnFilters[$column]->addFilter($filter);
         }
-
-        return $this;
     }
 
     /**
-     * Returns $value filtered through each filter in the chain.
+     * {@inheritdoc}
      *
      * @param array $array
      * @return array
@@ -56,15 +40,13 @@ class ArrayFilter
     public function filter($array)
     {
         $out = [];
-
         foreach ($array as $column => $value) {
-            $value = $this->filterChain->filter($value);
+            $value = parent::filter($value);
             if (isset($this->_columnFilters[$column])) {
                 $value = $this->_columnFilters[$column]->filter($value);
             }
             $out[$column] = $value;
         }
-
         return $out;
     }
 }

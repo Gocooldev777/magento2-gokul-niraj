@@ -4,10 +4,9 @@ declare (strict_types=1);
 namespace Rector\TypeDeclaration\NodeTypeAnalyzer;
 
 use PhpParser\Node\ComplexType;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Property;
+use PHPStan\Type\ArrayType;
 use PHPStan\Type\UnionType;
 use PHPStan\Type\VerbosityLevel;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
@@ -38,7 +37,7 @@ final class PropertyTypeDecorator
      * @var \Rector\Core\PhpParser\Node\NodeFactory
      */
     private $nodeFactory;
-    public function __construct(UnionTypeAnalyzer $unionTypeAnalyzer, PhpDocTypeChanger $phpDocTypeChanger, PhpVersionProvider $phpVersionProvider, NodeFactory $nodeFactory)
+    public function __construct(\Rector\PHPStanStaticTypeMapper\TypeAnalyzer\UnionTypeAnalyzer $unionTypeAnalyzer, \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger $phpDocTypeChanger, \Rector\Core\Php\PhpVersionProvider $phpVersionProvider, \Rector\Core\PhpParser\Node\NodeFactory $nodeFactory)
     {
         $this->unionTypeAnalyzer = $unionTypeAnalyzer;
         $this->phpDocTypeChanger = $phpDocTypeChanger;
@@ -46,16 +45,14 @@ final class PropertyTypeDecorator
         $this->nodeFactory = $nodeFactory;
     }
     /**
-     * @param \PhpParser\Node\Name|\PhpParser\Node\ComplexType|\PhpParser\Node\Identifier $typeNode
+     * @param \PhpParser\Node\ComplexType|\PhpParser\Node\Name $typeNode
      */
-    public function decoratePropertyUnionType(UnionType $unionType, $typeNode, Property $property, PhpDocInfo $phpDocInfo, bool $changeVarTypeFallback = \true) : void
+    public function decoratePropertyUnionType(\PHPStan\Type\UnionType $unionType, $typeNode, \PhpParser\Node\Stmt\Property $property, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo) : void
     {
         if (!$this->unionTypeAnalyzer->isNullable($unionType)) {
-            if ($this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::UNION_TYPES)) {
+            if ($this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::UNION_TYPES)) {
                 $property->type = $typeNode;
-                return;
-            }
-            if ($changeVarTypeFallback) {
+            } else {
                 $this->phpDocTypeChanger->changeVarType($phpDocInfo, $unionType);
             }
             return;
@@ -63,23 +60,19 @@ final class PropertyTypeDecorator
         $property->type = $typeNode;
         $propertyProperty = $property->props[0];
         // add null default
-        if (!$propertyProperty->default instanceof Expr) {
+        if ($propertyProperty->default === null) {
             $propertyProperty->default = $this->nodeFactory->createNull();
         }
         // has array with defined type? add docs
-        if (!$this->isDocBlockRequired($unionType)) {
-            return;
+        if ($this->isDocBlockRequired($unionType)) {
+            $this->phpDocTypeChanger->changeVarType($phpDocInfo, $unionType);
         }
-        if (!$changeVarTypeFallback) {
-            return;
-        }
-        $this->phpDocTypeChanger->changeVarType($phpDocInfo, $unionType);
     }
-    private function isDocBlockRequired(UnionType $unionType) : bool
+    private function isDocBlockRequired(\PHPStan\Type\UnionType $unionType) : bool
     {
         foreach ($unionType->getTypes() as $unionedType) {
-            if ($unionedType->isArray()->yes()) {
-                $describedArray = $unionedType->describe(VerbosityLevel::value());
+            if ($unionedType instanceof \PHPStan\Type\ArrayType) {
+                $describedArray = $unionedType->describe(\PHPStan\Type\VerbosityLevel::value());
                 if ($describedArray !== 'array') {
                     return \true;
                 }

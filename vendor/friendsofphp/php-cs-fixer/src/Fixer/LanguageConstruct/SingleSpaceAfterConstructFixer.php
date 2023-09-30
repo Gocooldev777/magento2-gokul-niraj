@@ -36,7 +36,7 @@ final class SingleSpaceAfterConstructFixer extends AbstractFixer implements Conf
     /**
      * @var array<string, null|int>
      */
-    private static array $tokenMap = [
+    private static $tokenMap = [
         'abstract' => T_ABSTRACT,
         'as' => T_AS,
         'attribute' => CT::T_ATTRIBUTE_CLOSE,
@@ -90,7 +90,6 @@ final class SingleSpaceAfterConstructFixer extends AbstractFixer implements Conf
         'throw' => T_THROW,
         'trait' => T_TRAIT,
         'try' => T_TRY,
-        'type_colon' => CT::T_TYPE_COLON,
         'use' => T_USE,
         'use_lambda' => CT::T_USE_LAMBDA,
         'use_trait' => CT::T_USE_TRAIT,
@@ -103,7 +102,7 @@ final class SingleSpaceAfterConstructFixer extends AbstractFixer implements Conf
     /**
      * @var array<string, int>
      */
-    private array $fixTokenMap = [];
+    private $fixTokenMap = [];
 
     /**
      * {@inheritdoc}
@@ -220,7 +219,7 @@ yield  from  baz();
 
             $whitespaceTokenIndex = $index + 1;
 
-            if ($tokens[$whitespaceTokenIndex]->equalsAny([',', ';', ')', [CT::T_ARRAY_SQUARE_BRACE_CLOSE], [CT::T_DESTRUCTURING_SQUARE_BRACE_CLOSE]])) {
+            if ($tokens[$whitespaceTokenIndex]->equalsAny([',', ';', ')', [CT::T_ARRAY_SQUARE_BRACE_CLOSE]])) {
                 continue;
             }
 
@@ -232,7 +231,7 @@ yield  from  baz();
             }
 
             if ($token->isGivenKind(T_OPEN_TAG)) {
-                if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE]) && !str_contains($tokens[$whitespaceTokenIndex]->getContent(), "\n") && !str_contains($token->getContent(), "\n")) {
+                if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE]) && !str_contains($token->getContent(), "\n")) {
                     $tokens->clearAt($whitespaceTokenIndex);
                 }
 
@@ -251,17 +250,17 @@ yield  from  baz();
                 continue;
             }
 
-            if ($token->isGivenKind(T_CONST) && $this->isMultilineConstant($tokens, $index)) {
-                continue;
-            }
-
             if ($token->isComment() || $token->isGivenKind(CT::T_ATTRIBUTE_CLOSE)) {
                 if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE]) && str_contains($tokens[$whitespaceTokenIndex]->getContent(), "\n")) {
                     continue;
                 }
             }
 
-            $tokens->ensureWhitespaceAtIndex($whitespaceTokenIndex, 0, ' ');
+            if ($tokens[$whitespaceTokenIndex]->equals([T_WHITESPACE])) {
+                $tokens[$whitespaceTokenIndex] = new Token([T_WHITESPACE, ' ']);
+            } else {
+                $tokens->insertAt($whitespaceTokenIndex, new Token([T_WHITESPACE, ' ']));
+            }
 
             if (
                 $token->isGivenKind(T_YIELD_FROM)
@@ -278,16 +277,13 @@ yield  from  baz();
 
     protected function createConfigurationDefinition(): FixerConfigurationResolverInterface
     {
-        $defaults = self::$tokenMap;
-        $tokens = array_keys($defaults);
-
-        unset($defaults['type_colon']);
+        $tokens = array_keys(self::$tokenMap);
 
         return new FixerConfigurationResolver([
             (new FixerOptionBuilder('constructs', 'List of constructs which must be followed by a single space.'))
                 ->setAllowedTypes(['array'])
                 ->setAllowedValues([new AllowedValueSubset($tokens)])
-                ->setDefault(array_keys($defaults))
+                ->setDefault($tokens)
                 ->getOption(),
         ]);
     }
@@ -346,13 +342,5 @@ yield  from  baz();
         }
 
         return false;
-    }
-
-    private function isMultilineConstant(Tokens $tokens, int $index): bool
-    {
-        $scopeEnd = $tokens->getNextTokenOfKind($index, [';', [T_CLOSE_TAG]]) - 1;
-        $hasMoreThanOneConstant = null !== $tokens->findSequence([new Token(',')], $index + 1, $scopeEnd);
-
-        return $hasMoreThanOneConstant && $tokens->isPartialCodeMultiline($index, $scopeEnd);
     }
 }

@@ -12,8 +12,6 @@ use Magento\Framework\ObjectManagerInterface;
 
 /**
  * Factory for Mysql adapter
- *
- * @api
  */
 class MysqlFactory
 {

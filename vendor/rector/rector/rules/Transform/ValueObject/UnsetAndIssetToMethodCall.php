@@ -27,13 +27,11 @@ final class UnsetAndIssetToMethodCall
         $this->type = $type;
         $this->issetMethodCall = $issetMethodCall;
         $this->unsedMethodCall = $unsedMethodCall;
-        RectorAssert::className($type);
-        RectorAssert::methodName($issetMethodCall);
-        RectorAssert::methodName($unsedMethodCall);
+        \Rector\Core\Validation\RectorAssert::className($type);
     }
-    public function getObjectType() : ObjectType
+    public function getObjectType() : \PHPStan\Type\ObjectType
     {
-        return new ObjectType($this->type);
+        return new \PHPStan\Type\ObjectType($this->type);
     }
     public function getIssetMethodCall() : string
     {

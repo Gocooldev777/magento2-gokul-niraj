@@ -98,11 +98,10 @@ class CartFixedTest extends TestCase
             ->onlyMethods(['getStore', 'getExtensionAttributes', 'isVirtual'])
             ->disableOriginalConstructor()
             ->getMock();
-        $this->address = $this->getMockBuilder(Address::class)
-            ->onlyMethods(['getShippingMethod'])
-            ->addMethods(['getShippingInclTax', 'getShippingExclTax'])
-            ->disableOriginalConstructor()
-            ->getMock();
+        $this->address = $this->createPartialMock(
+            Address::class,
+            ['getShippingMethod']
+        );
         $this->item->expects($this->any())->method('getQuote')->willReturn($this->quote);
         $this->item->expects($this->any())->method('getAddress')->willReturn($this->address);
 
@@ -130,8 +129,7 @@ class CartFixedTest extends TestCase
                 'getQuoteTotalsForMultiShipping',
                 'getQuoteTotalsForRegularShipping',
                 'getBaseRuleTotals',
-                'getAvailableDiscountAmount',
-                'applyDiscountOnPricesIncludedTax'])
+                'getAvailableDiscountAmount'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -179,9 +177,6 @@ class CartFixedTest extends TestCase
                     $ruleDetails['discounted_amount']
                 )
             );
-        $this->cartFixedDiscountHelper->expects($this->any())
-            ->method('applyDiscountOnPricesIncludedTax')
-            ->willReturn(true);
         $cartExtensionMock = $this->getMockBuilder(CartExtensionInterface::class)
             ->disableOriginalConstructor()
             ->setMethods(['getShippingAssignments'])
@@ -217,12 +212,6 @@ class CartFixedTest extends TestCase
                     $shipping['shipping_method']
                 )
             );
-        $this->address->expects($this->any())
-            ->method('getShippingInclTax')
-            ->willReturn(15.00);
-        $this->address->expects($this->any())
-            ->method('getShippingExclTax')
-            ->willReturn(10.00);
 
         /** validators data */
         $this->validator

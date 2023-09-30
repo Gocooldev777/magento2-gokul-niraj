@@ -19,7 +19,6 @@ class FileResolver
     public function getFile($class)
     {
         $relativePath = $this->getFilePath($class);
-        // phpcs:ignore Magento2.Exceptions.TryProcessSystemResources
         return stream_resolve_include_path($relativePath);
     }
 
@@ -31,7 +30,7 @@ class FileResolver
      */
     public function getFilePath($class)
     {
-        return ($class !== null ? ltrim(str_replace(['_', '\\'], '/', $class), '/') : '') . '.php';
+        return ltrim(str_replace(['_', '\\'], '/', $class), '/') . '.php';
     }
 
     /**

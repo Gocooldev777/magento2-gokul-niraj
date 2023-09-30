@@ -4,10 +4,6 @@ namespace PayPal\Braintree\Block\Adminhtml\Virtual;
 
 use PayPal\Braintree\Block\Payment;
 
-/**
- * @api
- * @since 100.0.2
- */
 class Script extends Payment
 {
     /**

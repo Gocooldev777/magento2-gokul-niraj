@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue;
 
 /**
  * Message Queue connection type resolver.
- * @api
  */
 interface ConnectionTypeResolverInterface
 {

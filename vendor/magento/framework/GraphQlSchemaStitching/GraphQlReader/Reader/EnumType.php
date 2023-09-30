@@ -44,7 +44,7 @@ class EnumType implements TypeMetaReaderInterface
             ];
             foreach ($typeMeta->getValues() as $enumValueMeta) {
                 $result['items'][$enumValueMeta->value] = [
-                    'name' => $enumValueMeta->name !== null ? strtolower($enumValueMeta->name) : '',
+                    'name' => strtolower($enumValueMeta->name),
                     '_value' => $enumValueMeta->value,
                     'description' => $enumValueMeta->description,
                     'deprecationReason' =>$enumValueMeta->deprecationReason

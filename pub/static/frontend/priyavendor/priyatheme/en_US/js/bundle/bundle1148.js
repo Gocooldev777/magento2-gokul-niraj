@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/element/helper/service.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div class=\"admin__field-service\">\n    <input type=\"checkbox\"\n           class=\"admin__control-checkbox\"\n           attr=\"\n                id: $data.uid + '_default',\n                name: 'use_default[' + $data.index + ']',\n           \"\n           ko-checked=\"isUseDefault\"\n           ko-disabled=\"$data.serviceDisabled\">\n    <label translate=\"'Use Default Value'\" attr=\"for: $data.uid + '_default'\" class=\"admin__field-label\"></label>\n</div>\n"}
+}});

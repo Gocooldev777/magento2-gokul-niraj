@@ -23,7 +23,12 @@ define(['Magento_Customer/js/form/components/insert-listing'], function (Constr)
             };
 
         beforeEach(function () {
-            obj = new Constr({ name: 'content_name' });
+            obj = new Constr({
+                name: 'content_name',
+                selections: function () {
+                    return selectionsProvider;
+                }
+            });
         });
 
         describe('Check delete massaction process', function () {
@@ -40,10 +45,6 @@ define(['Magento_Customer/js/form/components/insert-listing'], function (Constr)
 
             it('Check ids are retrieved from selections provider if they are NOT in data', function () {
                 obj._delete = jasmine.createSpy();
-                obj.selections = jasmine.createSpy().and.callFake(function () {
-                    return selectionsProvider;
-                });
-
                 obj.onMassAction({
                     action: 'delete',
                     data: {}
@@ -59,10 +60,6 @@ define(['Magento_Customer/js/form/components/insert-listing'], function (Constr)
                     get: jasmine.createSpy().and.returnValues(2, 3),
                     set: jasmine.createSpy()
                 };
-                obj.selections = jasmine.createSpy().and.callFake(function () {
-                    return selectionsProvider;
-                });
-
                 obj.onMassAction(data);
 
                 expect(selectionsProvider.selected).not.toHaveBeenCalled();

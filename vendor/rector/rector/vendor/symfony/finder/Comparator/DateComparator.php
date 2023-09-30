@@ -8,14 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Finder\Comparator;
+namespace RectorPrefix20211221\Symfony\Component\Finder\Comparator;
 
 /**
  * DateCompare compiles date comparisons.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class DateComparator extends Comparator
+class DateComparator extends \RectorPrefix20211221\Symfony\Component\Finder\Comparator\Comparator
 {
     /**
      * @param string $test A comparison string
@@ -28,9 +28,9 @@ class DateComparator extends Comparator
             throw new \InvalidArgumentException(\sprintf('Don\'t understand "%s" as a date test.', $test));
         }
         try {
-            $date = new \DateTimeImmutable($matches[2]);
+            $date = new \DateTime($matches[2]);
             $target = $date->format('U');
-        } catch (\Exception $exception) {
+        } catch (\Exception $e) {
             throw new \InvalidArgumentException(\sprintf('"%s" is not a valid date.', $matches[2]));
         }
         $operator = $matches[1] ?? '==';

@@ -32,7 +32,7 @@ final class TypeIntersectionTransformer extends AbstractTypeTransformer
      */
     public function getPriority(): int
     {
-        // needs to run after ArrayTypehintTransformer, TypeColonTransformer and AttributeTransformer
+        // needs to run after ArrayTypehintTransformer and TypeColonTransformer
         return -15;
     }
 

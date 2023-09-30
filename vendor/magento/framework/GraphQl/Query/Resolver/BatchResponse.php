@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl\Query\Resolver;
 
 /**
  * Contains responses for batch requests.
- *
- * @api
  */
 class BatchResponse
 {

@@ -5,11 +5,10 @@
  */
 namespace Magento\Analytics\Model\Connector\Http;
 
-use Laminas\Http\Response;
 use Magento\Analytics\Model\Config\Backend\Baseurl\SubscriptionUpdateHandler;
 use Magento\Analytics\Model\Config\Backend\Enabled\SubscriptionHandler;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\FlagManager;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\TestFramework\Helper\Bootstrap;
 
 /**
@@ -68,10 +67,7 @@ class ReSignUpResponseResolverTest extends \PHPUnit\Framework\TestCase
     public function testReSignUpOnOtp()
     {
         $body = $this->converter->toBody(['test' => '42']);
-        $retryResponse = new Response();
-        $retryResponse->setStatusCode(Response::STATUS_CODE_401);
-        $retryResponse->getHeaders()->addHeaderLine($this->converter->getContentTypeHeader());
-        $retryResponse->setContent($body);
+        $retryResponse = new \Zend_Http_Response(401, [$this->converter->getContentTypeHeader()], $body);
         $this->otpResponseResolver->getResult($retryResponse);
         $this->assertCronWasSet();
     }
@@ -83,10 +79,7 @@ class ReSignUpResponseResolverTest extends \PHPUnit\Framework\TestCase
     public function testReSignOnOtpWasNotCalled()
     {
         $body = $this->converter->toBody(['test' => '42']);
-        $successResponse = new Response();
-        $successResponse->setStatusCode(Response::STATUS_CODE_201);
-        $successResponse->getHeaders()->addHeaderLine($this->converter->getContentTypeHeader());
-        $successResponse->setContent($body);
+        $successResponse = new \Zend_Http_Response(201, [$this->converter->getContentTypeHeader()], $body);
         $this->otpResponseResolver->getResult($successResponse);
         $this->assertCronWasNotSet();
     }
@@ -98,10 +91,7 @@ class ReSignUpResponseResolverTest extends \PHPUnit\Framework\TestCase
     public function testReSignUpOnUpdateWasCalled()
     {
         $body = $this->converter->toBody(['test' => '42']);
-        $retryResponse = new Response();
-        $retryResponse->setStatusCode(Response::STATUS_CODE_401);
-        $retryResponse->getHeaders()->addHeaderLine($this->converter->getContentTypeHeader());
-        $retryResponse->setContent($body);
+        $retryResponse = new \Zend_Http_Response(401, [$this->converter->getContentTypeHeader()], $body);
         $this->updateResponseResolver->getResult($retryResponse);
         $this->assertCronWasSet();
     }
@@ -113,10 +103,7 @@ class ReSignUpResponseResolverTest extends \PHPUnit\Framework\TestCase
     public function testReSignUpOnUpdateWasNotCalled()
     {
         $body = $this->converter->toBody(['test' => '42']);
-        $successResponse = new Response();
-        $successResponse->setStatusCode(Response::STATUS_CODE_201);
-        $successResponse->getHeaders()->addHeaderLine($this->converter->getContentTypeHeader());
-        $successResponse->setContent($body);
+        $successResponse = new \Zend_Http_Response(201, [$this->converter->getContentTypeHeader()], $body);
         $this->updateResponseResolver->getResult($successResponse);
         $this->assertCronWasNotSet();
     }
@@ -133,10 +120,7 @@ class ReSignUpResponseResolverTest extends \PHPUnit\Framework\TestCase
                 'https://previous.example.com/'
             );
         $body = $this->converter->toBody(['test' => '42']);
-        $retryResponse = new Response();
-        $retryResponse->setStatusCode(Response::STATUS_CODE_401);
-        $retryResponse->getHeaders()->addHeaderLine($this->converter->getContentTypeHeader());
-        $retryResponse->setContent($body);
+        $retryResponse = new \Zend_Http_Response(401, [$this->converter->getContentTypeHeader()], $body);
         $this->notifyDataChangedResponseResolver->getResult($retryResponse);
         $this->assertCronWasNotSet();
     }

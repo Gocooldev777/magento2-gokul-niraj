@@ -3,8 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Transform\ValueObject;
 
-use Rector\Core\Validation\RectorAssert;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use PHPStan\Type\ObjectType;
 final class ParentClassToTraits
 {
     /**
@@ -24,12 +23,10 @@ final class ParentClassToTraits
     {
         $this->parentType = $parentType;
         $this->traitNames = $traitNames;
-        RectorAssert::className($parentType);
-        Assert::allString($traitNames);
     }
-    public function getParentType() : string
+    public function getParentObjectType() : \PHPStan\Type\ObjectType
     {
-        return $this->parentType;
+        return new \PHPStan\Type\ObjectType($this->parentType);
     }
     /**
      * @return string[]

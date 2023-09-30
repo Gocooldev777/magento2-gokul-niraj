@@ -10,8 +10,6 @@ use Magento\Catalog\Model\Product\Configuration\Item\ItemInterface;
 
 /**
  * Configured price interface.
- *
- * @api
  */
 interface ConfiguredPriceInterface
 {

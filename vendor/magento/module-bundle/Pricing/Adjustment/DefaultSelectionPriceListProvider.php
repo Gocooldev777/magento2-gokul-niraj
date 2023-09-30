@@ -10,9 +10,6 @@ use Magento\Bundle\Model\Option;
 use Magento\Bundle\Pricing\Price\BundleSelectionFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Bundle\Model\Product\Price;
-use Magento\Catalog\Helper\Data as CatalogData;
-use Magento\Store\Model\StoreManagerInterface;
-use Magento\Store\Api\WebsiteRepositoryInterface;
 
 /**
  * Provide lightweight implementation which uses price index
@@ -30,40 +27,15 @@ class DefaultSelectionPriceListProvider implements SelectionPriceListProviderInt
     private $priceList;
 
     /**
-     * @var CatalogData
-     */
-    private $catalogData;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var WebsiteRepositoryInterface
-     */
-    private $websiteRepository;
-
-    /**
      * @param BundleSelectionFactory $bundleSelectionFactory
-     * @param CatalogData $catalogData
-     * @param StoreManagerInterface $storeManager
-     * @param WebsiteRepositoryInterface $websiteRepository
      */
-    public function __construct(
-        BundleSelectionFactory $bundleSelectionFactory,
-        CatalogData $catalogData,
-        StoreManagerInterface $storeManager,
-        WebsiteRepositoryInterface $websiteRepository
-    ) {
+    public function __construct(BundleSelectionFactory $bundleSelectionFactory)
+    {
         $this->selectionFactory = $bundleSelectionFactory;
-        $this->catalogData = $catalogData;
-        $this->storeManager = $storeManager;
-        $this->websiteRepository = $websiteRepository;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getPriceList(Product $bundleProduct, $searchMin, $useRegularPrice)
     {
@@ -166,14 +138,7 @@ class DefaultSelectionPriceListProvider implements SelectionPriceListProviderInt
      */
     private function addMaximumMultiSelectionPriceList(Product $bundleProduct, $selectionsCollection, $useRegularPrice)
     {
-        $websiteId = null;
-        if (!$this->catalogData->isPriceGlobal()) {
-            $websiteId = (int)$this->storeManager->getStore()->getWebsiteId();
-            if ($websiteId === 0) {
-                $websiteId = $this->websiteRepository->getDefault()->getId();
-            }
-        }
-        $selectionsCollection->addPriceData(null, $websiteId);
+        $selectionsCollection->addPriceData();
 
         foreach ($selectionsCollection as $selection) {
             $this->priceList[] =  $this->selectionFactory->create(
@@ -188,8 +153,6 @@ class DefaultSelectionPriceListProvider implements SelectionPriceListProviderInt
     }
 
     /**
-     * Adjust min price for non required options
-     *
      * @return void
      */
     private function processMinPriceForNonRequiredOptions()

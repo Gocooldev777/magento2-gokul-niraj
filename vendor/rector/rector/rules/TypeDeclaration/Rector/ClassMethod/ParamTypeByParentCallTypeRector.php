@@ -10,8 +10,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use Rector\Core\Enum\ObjectReference;
-use Rector\Core\Rector\AbstractScopeAwareRector;
-use Rector\Core\Reflection\ReflectionResolver;
+use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\TypeDeclaration\NodeAnalyzer\CallerParamMatcher;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -19,26 +18,20 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\ClassMethod\ParamTypeByParentCallTypeRector\ParamTypeByParentCallTypeRectorTest
  */
-final class ParamTypeByParentCallTypeRector extends AbstractScopeAwareRector
+final class ParamTypeByParentCallTypeRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @readonly
      * @var \Rector\TypeDeclaration\NodeAnalyzer\CallerParamMatcher
      */
     private $callerParamMatcher;
-    /**
-     * @readonly
-     * @var \Rector\Core\Reflection\ReflectionResolver
-     */
-    private $reflectionResolver;
-    public function __construct(CallerParamMatcher $callerParamMatcher, ReflectionResolver $reflectionResolver)
+    public function __construct(\Rector\TypeDeclaration\NodeAnalyzer\CallerParamMatcher $callerParamMatcher)
     {
         $this->callerParamMatcher = $callerParamMatcher;
-        $this->reflectionResolver = $reflectionResolver;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Change param type based on parent param type', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change param type based on parent param type', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeControl
 {
     public function __construct(string $name)
@@ -77,18 +70,22 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
      * @param ClassMethod $node
      */
-    public function refactorWithScope(Node $node, Scope $scope) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($this->shouldSkip($node)) {
             return null;
         }
         $parentStaticCall = $this->findParentStaticCall($node);
-        if (!$parentStaticCall instanceof StaticCall) {
+        if (!$parentStaticCall instanceof \PhpParser\Node\Expr\StaticCall) {
+            return null;
+        }
+        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if (!$scope instanceof \PHPStan\Analyser\Scope) {
             return null;
         }
         $hasChanged = \false;
@@ -98,7 +95,7 @@ CODE_SAMPLE
                 continue;
             }
             $parentParam = $this->callerParamMatcher->matchParentParam($parentStaticCall, $param, $scope);
-            if (!$parentParam instanceof Param) {
+            if (!$parentParam instanceof \PhpParser\Node\Param) {
                 continue;
             }
             if ($parentParam->type === null) {
@@ -107,10 +104,7 @@ CODE_SAMPLE
             // mimic type
             $paramType = $parentParam->type;
             // original attributes have to removed to avoid tokens crashing from origin positions
-            $this->traverseNodesWithCallable($paramType, static function (Node $node) {
-                $node->setAttribute(AttributeKey::ORIGINAL_NODE, null);
-                return null;
-            });
+            $paramType->setAttributes([]);
             $param->type = $paramType;
             $hasChanged = \true;
         }
@@ -119,13 +113,13 @@ CODE_SAMPLE
         }
         return null;
     }
-    private function findParentStaticCall(ClassMethod $classMethod) : ?StaticCall
+    private function findParentStaticCall(\PhpParser\Node\Stmt\ClassMethod $classMethod) : ?\PhpParser\Node\Expr\StaticCall
     {
         $classMethodName = $this->getName($classMethod);
         /** @var StaticCall[] $staticCalls */
-        $staticCalls = $this->betterNodeFinder->findInstanceOf($classMethod, StaticCall::class);
+        $staticCalls = $this->betterNodeFinder->findInstanceOf($classMethod, \PhpParser\Node\Expr\StaticCall::class);
         foreach ($staticCalls as $staticCall) {
-            if (!$this->isName($staticCall->class, ObjectReference::PARENT)) {
+            if (!$this->isName($staticCall->class, \Rector\Core\Enum\ObjectReference::PARENT()->getValue())) {
                 continue;
             }
             if (!$this->isName($staticCall->name, $classMethodName)) {
@@ -135,13 +129,17 @@ CODE_SAMPLE
         }
         return null;
     }
-    private function shouldSkip(ClassMethod $classMethod) : bool
+    private function shouldSkip(\PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
     {
         if ($classMethod->params === []) {
             return \true;
         }
-        $classReflection = $this->reflectionResolver->resolveClassReflection($classMethod);
-        if (!$classReflection instanceof ClassReflection) {
+        $scope = $classMethod->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if (!$scope instanceof \PHPStan\Analyser\Scope) {
+            return \true;
+        }
+        $classReflection = $scope->getClassReflection();
+        if (!$classReflection instanceof \PHPStan\Reflection\ClassReflection) {
             return \true;
         }
         return !$classReflection->isClass();

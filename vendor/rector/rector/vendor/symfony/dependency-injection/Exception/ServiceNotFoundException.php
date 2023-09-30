@@ -8,27 +8,18 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Exception;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception;
 
-use RectorPrefix202304\Psr\Container\NotFoundExceptionInterface;
+use RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface;
 /**
  * This exception is thrown when a non-existent service is requested.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class ServiceNotFoundException extends InvalidArgumentException implements NotFoundExceptionInterface
+class ServiceNotFoundException extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException implements \RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface
 {
-    /**
-     * @var string
-     */
     private $id;
-    /**
-     * @var string|null
-     */
     private $sourceId;
-    /**
-     * @var mixed[]
-     */
     private $alternatives;
     public function __construct(string $id, string $sourceId = null, \Throwable $previous = null, array $alternatives = [], string $msg = null)
     {

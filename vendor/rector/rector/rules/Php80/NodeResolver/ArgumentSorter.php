@@ -17,7 +17,6 @@ final class ArgumentSorter
     {
         $newArgsOrParams = [];
         foreach (\array_keys($argOrParams) as $position) {
-            \assert(\is_int($position));
             $newPosition = $oldToNewPositions[$position] ?? null;
             if ($newPosition === null) {
                 continue;

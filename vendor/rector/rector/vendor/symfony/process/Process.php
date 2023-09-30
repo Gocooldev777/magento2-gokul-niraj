@@ -8,17 +8,17 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Process;
+namespace RectorPrefix20211221\Symfony\Component\Process;
 
-use RectorPrefix202304\Symfony\Component\Process\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Process\Exception\LogicException;
-use RectorPrefix202304\Symfony\Component\Process\Exception\ProcessFailedException;
-use RectorPrefix202304\Symfony\Component\Process\Exception\ProcessSignaledException;
-use RectorPrefix202304\Symfony\Component\Process\Exception\ProcessTimedOutException;
-use RectorPrefix202304\Symfony\Component\Process\Exception\RuntimeException;
-use RectorPrefix202304\Symfony\Component\Process\Pipes\PipesInterface;
-use RectorPrefix202304\Symfony\Component\Process\Pipes\UnixPipes;
-use RectorPrefix202304\Symfony\Component\Process\Pipes\WindowsPipes;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessFailedException;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessSignaledException;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessTimedOutException;
+use RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\Process\Pipes\PipesInterface;
+use RectorPrefix20211221\Symfony\Component\Process\Pipes\UnixPipes;
+use RectorPrefix20211221\Symfony\Component\Process\Pipes\WindowsPipes;
 /**
  * Process is a thin wrapper around proc_* functions to easily
  * start independent PHP processes.
@@ -52,7 +52,7 @@ class Process implements \IteratorAggregate
     private $hasCallback = \false;
     private $commandline;
     private $cwd;
-    private $env = [];
+    private $env;
     private $input;
     private $starttime;
     private $lastOutputTime;
@@ -133,7 +133,7 @@ class Process implements \IteratorAggregate
     public function __construct(array $command, string $cwd = null, array $env = null, $input = null, ?float $timeout = 60)
     {
         if (!\function_exists('proc_open')) {
-            throw new LogicException('The Process class relies on proc_open, which is not available on your PHP installation.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('The Process class relies on proc_open, which is not available on your PHP installation.');
         }
         $this->commandline = $command;
         $this->cwd = $cwd;
@@ -162,7 +162,7 @@ class Process implements \IteratorAggregate
      * In order to inject dynamic values into command-lines, we strongly recommend using placeholders.
      * This will save escaping values, which is not portable nor secure anyway:
      *
-     *   $process = Process::fromShellCommandline('my_command "${:MY_VAR}"');
+     *   $process = Process::fromShellCommandline('my_command "$MY_VAR"');
      *   $process->run(null, ['MY_VAR' => $theValue]);
      *
      * @param string         $command The command line to pass to the shell of the OS
@@ -243,7 +243,7 @@ class Process implements \IteratorAggregate
     public function mustRun(callable $callback = null, array $env = [])
     {
         if (0 !== $this->run($callback, $env)) {
-            throw new ProcessFailedException($this);
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessFailedException($this);
         }
         return $this;
     }
@@ -269,7 +269,7 @@ class Process implements \IteratorAggregate
     public function start(callable $callback = null, array $env = [])
     {
         if ($this->isRunning()) {
-            throw new RuntimeException('Process is already running.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('Process is already running.');
         }
         $this->resetProcessData();
         $this->starttime = $this->lastOutputTime = \microtime(\true);
@@ -281,7 +281,7 @@ class Process implements \IteratorAggregate
         }
         $env += '\\' === \DIRECTORY_SEPARATOR ? \array_diff_ukey($this->getDefaultEnv(), $env, 'strcasecmp') : $this->getDefaultEnv();
         if (\is_array($commandline = $this->commandline)) {
-            $commandline = \implode(' ', \array_map(\Closure::fromCallable([$this, 'escapeArgument']), $commandline));
+            $commandline = \implode(' ', \array_map([$this, 'escapeArgument'], $commandline));
             if ('\\' !== \DIRECTORY_SEPARATOR) {
                 // exec is mandatory to deal with sending a signal to the process
                 $commandline = 'exec ' . $commandline;
@@ -303,16 +303,16 @@ class Process implements \IteratorAggregate
         }
         $envPairs = [];
         foreach ($env as $k => $v) {
-            if (\false !== $v && \false === \in_array($k, ['argc', 'argv', 'ARGC', 'ARGV'], \true)) {
+            if (\false !== $v && 'argc' !== $k && 'argv' !== $k) {
                 $envPairs[] = $k . '=' . $v;
             }
         }
         if (!\is_dir($this->cwd)) {
-            throw new RuntimeException(\sprintf('The provided cwd "%s" does not exist.', $this->cwd));
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException(\sprintf('The provided cwd "%s" does not exist.', $this->cwd));
         }
         $this->process = @\proc_open($commandline, $descriptors, $this->processPipes->pipes, $this->cwd, $envPairs, $this->options);
         if (!\is_resource($this->process)) {
-            throw new RuntimeException('Unable to launch a new process.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('Unable to launch a new process.');
         }
         $this->status = self::STATUS_STARTED;
         if (isset($descriptors[3])) {
@@ -343,7 +343,7 @@ class Process implements \IteratorAggregate
     public function restart(callable $callback = null, array $env = [])
     {
         if ($this->isRunning()) {
-            throw new RuntimeException('Process is already running.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('Process is already running.');
         }
         $process = clone $this;
         $process->start($callback, $env);
@@ -371,7 +371,7 @@ class Process implements \IteratorAggregate
         if (null !== $callback) {
             if (!$this->processPipes->haveReadSupport()) {
                 $this->stop(0);
-                throw new LogicException('Pass the callback to the "Process::start" method or call enableOutput to use a callback with "Process::wait".');
+                throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Pass the callback to the "Process::start" method or call enableOutput to use a callback with "Process::wait".');
             }
             $this->callback = $this->buildCallback($callback);
         }
@@ -385,7 +385,7 @@ class Process implements \IteratorAggregate
             \usleep(1000);
         }
         if ($this->processInformation['signaled'] && $this->processInformation['termsig'] !== $this->latestSignal) {
-            throw new ProcessSignaledException($this);
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessSignaledException($this);
         }
         return $this->exitcode;
     }
@@ -406,7 +406,7 @@ class Process implements \IteratorAggregate
         $this->updateStatus(\false);
         if (!$this->processPipes->haveReadSupport()) {
             $this->stop(0);
-            throw new LogicException('Pass the callback to the "Process::start" method or call enableOutput to use a callback with "Process::waitUntil".');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Pass the callback to the "Process::start" method or call enableOutput to use a callback with "Process::waitUntil".');
         }
         $callback = $this->buildCallback($callback);
         $ready = \false;
@@ -466,10 +466,10 @@ class Process implements \IteratorAggregate
     public function disableOutput()
     {
         if ($this->isRunning()) {
-            throw new RuntimeException('Disabling output while the process is running is not possible.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('Disabling output while the process is running is not possible.');
         }
         if (null !== $this->idleTimeout) {
-            throw new LogicException('Output cannot be disabled while an idle timeout is set.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Output cannot be disabled while an idle timeout is set.');
         }
         $this->outputDisabled = \true;
         return $this;
@@ -484,7 +484,7 @@ class Process implements \IteratorAggregate
     public function enableOutput()
     {
         if ($this->isRunning()) {
-            throw new RuntimeException('Enabling output while the process is running is not possible.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('Enabling output while the process is running is not possible.');
         }
         $this->outputDisabled = \false;
         return $this;
@@ -533,8 +533,6 @@ class Process implements \IteratorAggregate
      * Returns an iterator to the output of the process, with the output type as keys (Process::OUT/ERR).
      *
      * @param int $flags A bit field of Process::ITER_* flags
-     *
-     * @return \Generator<string, string>
      *
      * @throws LogicException in case the output has been disabled
      * @throws LogicException In case the process is not started
@@ -693,7 +691,7 @@ class Process implements \IteratorAggregate
     {
         $this->requireProcessIsTerminated(__FUNCTION__);
         if ($this->isSigchildEnabled() && -1 === $this->processInformation['termsig']) {
-            throw new RuntimeException('This PHP has been compiled with --enable-sigchild. Term signal cannot be retrieved.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('This PHP has been compiled with --enable-sigchild. Term signal cannot be retrieved.');
         }
         return $this->processInformation['termsig'];
     }
@@ -761,7 +759,7 @@ class Process implements \IteratorAggregate
      * Stops the process.
      *
      * @param int|float $timeout The timeout in seconds
-     * @param int|null  $signal  A POSIX signal to send in case the process has not stop at timeout, default is SIGKILL (9)
+     * @param int       $signal  A POSIX signal to send in case the process has not stop at timeout, default is SIGKILL (9)
      *
      * @return int|null The exit-code of the process or null if it's not running
      */
@@ -825,7 +823,7 @@ class Process implements \IteratorAggregate
      */
     public function getCommandLine() : string
     {
-        return \is_array($this->commandline) ? \implode(' ', \array_map(\Closure::fromCallable([$this, 'escapeArgument']), $this->commandline)) : $this->commandline;
+        return \is_array($this->commandline) ? \implode(' ', \array_map([$this, 'escapeArgument'], $this->commandline)) : $this->commandline;
     }
     /**
      * Gets the process timeout in seconds (max. runtime).
@@ -868,7 +866,7 @@ class Process implements \IteratorAggregate
     public function setIdleTimeout(?float $timeout)
     {
         if (null !== $timeout && $this->outputDisabled) {
-            throw new LogicException('Idle timeout cannot be set while the output is disabled.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Idle timeout cannot be set while the output is disabled.');
         }
         $this->idleTimeout = $this->validateTimeout($timeout);
         return $this;
@@ -883,10 +881,10 @@ class Process implements \IteratorAggregate
     public function setTty(bool $tty)
     {
         if ('\\' === \DIRECTORY_SEPARATOR && $tty) {
-            throw new RuntimeException('TTY mode is not supported on Windows platform.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('TTY mode is not supported on Windows platform.');
         }
         if ($tty && !self::isTtySupported()) {
-            throw new RuntimeException('TTY mode requires /dev/tty to be read/writable.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('TTY mode requires /dev/tty to be read/writable.');
         }
         $this->tty = $tty;
         return $this;
@@ -979,9 +977,9 @@ class Process implements \IteratorAggregate
     public function setInput($input)
     {
         if ($this->isRunning()) {
-            throw new LogicException('Input cannot be set while the process is running.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Input cannot be set while the process is running.');
         }
-        $this->input = ProcessUtils::validateInput(__METHOD__, $input);
+        $this->input = \RectorPrefix20211221\Symfony\Component\Process\ProcessUtils::validateInput(__METHOD__, $input);
         return $this;
     }
     /**
@@ -999,11 +997,11 @@ class Process implements \IteratorAggregate
         }
         if (null !== $this->timeout && $this->timeout < \microtime(\true) - $this->starttime) {
             $this->stop(0);
-            throw new ProcessTimedOutException($this, ProcessTimedOutException::TYPE_GENERAL);
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessTimedOutException($this, \RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessTimedOutException::TYPE_GENERAL);
         }
         if (null !== $this->idleTimeout && $this->idleTimeout < \microtime(\true) - $this->lastOutputTime) {
             $this->stop(0);
-            throw new ProcessTimedOutException($this, ProcessTimedOutException::TYPE_IDLE);
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessTimedOutException($this, \RectorPrefix20211221\Symfony\Component\Process\Exception\ProcessTimedOutException::TYPE_IDLE);
         }
     }
     /**
@@ -1012,7 +1010,7 @@ class Process implements \IteratorAggregate
     public function getStartTime() : float
     {
         if (!$this->isStarted()) {
-            throw new LogicException('Start time is only available after process start.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Start time is only available after process start.');
         }
         return $this->starttime;
     }
@@ -1027,14 +1025,14 @@ class Process implements \IteratorAggregate
     public function setOptions(array $options)
     {
         if ($this->isRunning()) {
-            throw new RuntimeException('Setting options while the process is running is not possible.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException('Setting options while the process is running is not possible.');
         }
         $defaultOptions = $this->options;
         $existingOptions = ['blocking_pipes', 'create_process_group', 'create_new_console'];
         foreach ($options as $key => $value) {
             if (!\in_array($key, $existingOptions)) {
                 $this->options = $defaultOptions;
-                throw new LogicException(\sprintf('Invalid option "%s" passed to "%s()". Supported options are "%s".', $key, __METHOD__, \implode('", "', $existingOptions)));
+                throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException(\sprintf('Invalid option "%s" passed to "%s()". Supported options are "%s".', $key, __METHOD__, \implode('", "', $existingOptions)));
             }
             $this->options[$key] = $value;
         }
@@ -1045,7 +1043,10 @@ class Process implements \IteratorAggregate
     public static function isTtySupported() : bool
     {
         static $isTtySupported;
-        return $isTtySupported = $isTtySupported ?? '/' === \DIRECTORY_SEPARATOR && \stream_isatty(\STDOUT);
+        if (null === $isTtySupported) {
+            $isTtySupported = (bool) @\proc_open('echo 1 >/dev/null', [['file', '/dev/tty', 'r'], ['file', '/dev/tty', 'w'], ['file', '/dev/tty', 'w']], $pipes);
+        }
+        return $isTtySupported;
     }
     /**
      * Returns whether PTY is supported on the current operating system.
@@ -1070,9 +1071,9 @@ class Process implements \IteratorAggregate
             $this->input->rewind();
         }
         if ('\\' === \DIRECTORY_SEPARATOR) {
-            $this->processPipes = new WindowsPipes($this->input, !$this->outputDisabled || $this->hasCallback);
+            $this->processPipes = new \RectorPrefix20211221\Symfony\Component\Process\Pipes\WindowsPipes($this->input, !$this->outputDisabled || $this->hasCallback);
         } else {
-            $this->processPipes = new UnixPipes($this->isTty(), $this->isPty(), $this->input, !$this->outputDisabled || $this->hasCallback);
+            $this->processPipes = new \RectorPrefix20211221\Symfony\Component\Process\Pipes\UnixPipes($this->isTty(), $this->isPty(), $this->input, !$this->outputDisabled || $this->hasCallback);
         }
         return $this->processPipes->getDescriptors();
     }
@@ -1147,7 +1148,7 @@ class Process implements \IteratorAggregate
     private function readPipesForOutput(string $caller, bool $blocking = \false)
     {
         if ($this->outputDisabled) {
-            throw new LogicException('Output has been disabled.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Output has been disabled.');
         }
         $this->requireProcessIsStarted($caller);
         $this->updateStatus($blocking);
@@ -1163,7 +1164,7 @@ class Process implements \IteratorAggregate
         if (0.0 === $timeout) {
             $timeout = null;
         } elseif ($timeout < 0) {
-            throw new InvalidArgumentException('The timeout value must be a valid positive integer or float number.');
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\InvalidArgumentException('The timeout value must be a valid positive integer or float number.');
         }
         return $timeout;
     }
@@ -1245,7 +1246,7 @@ class Process implements \IteratorAggregate
     {
         if (null === ($pid = $this->getPid())) {
             if ($throwException) {
-                throw new LogicException('Cannot send signal on a non running process.');
+                throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException('Cannot send signal on a non running process.');
             }
             return \false;
         }
@@ -1253,7 +1254,7 @@ class Process implements \IteratorAggregate
             \exec(\sprintf('taskkill /F /T /PID %d 2>&1', $pid), $output, $exitCode);
             if ($exitCode && $this->isRunning()) {
                 if ($throwException) {
-                    throw new RuntimeException(\sprintf('Unable to kill the process (%s).', \implode(' ', $output)));
+                    throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException(\sprintf('Unable to kill the process (%s).', \implode(' ', $output)));
                 }
                 return \false;
             }
@@ -1267,7 +1268,7 @@ class Process implements \IteratorAggregate
             }
             if (!$ok) {
                 if ($throwException) {
-                    throw new RuntimeException(\sprintf('Error while sending signal "%s".', $signal));
+                    throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\RuntimeException(\sprintf('Error while sending signal "%s".', $signal));
                 }
                 return \false;
             }
@@ -1296,8 +1297,8 @@ class Process implements \IteratorAggregate
             if (isset($varCache[$m[0]])) {
                 return $varCache[$m[0]];
             }
-            if (\strpos($value = $m[1], "\x00") !== \false) {
-                $value = \str_replace("\x00", '?', $value);
+            if (\strpos($value = $m[1], "\0") !== \false) {
+                $value = \str_replace("\0", '?', $value);
             }
             if (\false === \strpbrk($value, "\"%!\n")) {
                 return '"' . $value . '"';
@@ -1322,7 +1323,7 @@ class Process implements \IteratorAggregate
     private function requireProcessIsStarted(string $functionName)
     {
         if (!$this->isStarted()) {
-            throw new LogicException(\sprintf('Process must be started before calling "%s()".', $functionName));
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException(\sprintf('Process must be started before calling "%s()".', $functionName));
         }
     }
     /**
@@ -1333,7 +1334,7 @@ class Process implements \IteratorAggregate
     private function requireProcessIsTerminated(string $functionName)
     {
         if (!$this->isTerminated()) {
-            throw new LogicException(\sprintf('Process must be terminated before calling "%s()".', $functionName));
+            throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\LogicException(\sprintf('Process must be terminated before calling "%s()".', $functionName));
         }
     }
     /**
@@ -1347,8 +1348,8 @@ class Process implements \IteratorAggregate
         if ('\\' !== \DIRECTORY_SEPARATOR) {
             return "'" . \str_replace("'", "'\\''", $argument) . "'";
         }
-        if (\strpos($argument, "\x00") !== \false) {
-            $argument = \str_replace("\x00", '?', $argument);
+        if (\strpos($argument, "\0") !== \false) {
+            $argument = \str_replace("\0", '?', $argument);
         }
         if (!\preg_match('/[\\/()%!^"<>&|\\s]/', $argument)) {
             return $argument;
@@ -1360,7 +1361,7 @@ class Process implements \IteratorAggregate
     {
         return \preg_replace_callback('/"\\$\\{:([_a-zA-Z]++[_a-zA-Z0-9]*+)\\}"/', function ($matches) use($commandline, $env) {
             if (!isset($env[$matches[1]]) || \false === $env[$matches[1]]) {
-                throw new InvalidArgumentException(\sprintf('Command line is missing a value for parameter "%s": ', $matches[1]) . $commandline);
+                throw new \RectorPrefix20211221\Symfony\Component\Process\Exception\InvalidArgumentException(\sprintf('Command line is missing a value for parameter "%s": ', $matches[1]) . $commandline);
             }
             return $this->escapeArgument($env[$matches[1]]);
         }, $commandline);

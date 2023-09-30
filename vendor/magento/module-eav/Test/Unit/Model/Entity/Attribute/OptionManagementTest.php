@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Eav\Test\Unit\Model\Entity\Attribute;
 
-use Magento\Catalog\Model\Product;
 use Magento\Eav\Api\Data\AttributeOptionInterface as EavAttributeOptionInterface;
 use Magento\Eav\Api\Data\AttributeOptionLabelInterface as EavAttributeOptionLabelInterface;
 use Magento\Eav\Model\AttributeRepository;
@@ -19,7 +18,7 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\StateException;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\MockObject as MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -60,15 +59,13 @@ class OptionManagementTest extends TestCase
 
     /**
      * Test to add attribute option
-     *
-     * @param string $label
-     * @dataProvider optionLabelDataProvider
      */
-    public function testAdd(string $label): void
+    public function testAdd()
     {
         $entityType = 42;
         $storeId = 4;
         $attributeCode = 'atrCde';
+        $label = 'optionLabel';
         $storeLabel = 'labelLabel';
         $sortOder = 'optionSortOrder';
         $option = [
@@ -122,17 +119,6 @@ class OptionManagementTest extends TestCase
             $newOptionId,
             $this->model->add($entityType, $attributeCode, $optionMock)
         );
-    }
-
-    /**
-     * @return array
-     */
-    public function optionLabelDataProvider(): array
-    {
-        return [
-            ['optionLabel'],
-            ['0']
-        ];
     }
 
     /**
@@ -228,75 +214,6 @@ class OptionManagementTest extends TestCase
         $this->resourceModelMock->expects($this->once())->method('save')->with($attributeMock)
             ->willThrowException(new \Exception());
         $this->model->add($entityType, $attributeCode, $optionMock);
-    }
-
-    /**
-     * Test to update attribute option
-     *
-     * @param string $label
-     * @dataProvider optionLabelDataProvider
-     */
-    public function testUpdate(string $label): void
-    {
-        $entityType = Product::ENTITY;
-        $storeId = 4;
-        $attributeCode = 'atrCde';
-        $storeLabel = 'labelLabel';
-        $sortOder = 'optionSortOrder';
-        $optionId = 10;
-        $option = [
-            'value' => [
-                $optionId => [
-                    0 => $label,
-                    $storeId => $storeLabel,
-                ],
-            ],
-            'order' => [
-                $optionId => $sortOder,
-            ]
-        ];
-
-        $optionMock = $this->getAttributeOption();
-        $labelMock = $this->getAttributeOptionLabel();
-        /** @var SourceInterface|MockObject $sourceMock */
-        $sourceMock = $this->createMock(EavAttributeSource::class);
-
-        $sourceMock->expects($this->once())
-            ->method('getOptionText')
-            ->with($optionId)
-            ->willReturn($label);
-
-        $sourceMock->expects($this->once())
-            ->method('getOptionId')
-            ->with($label)
-            ->willReturn($optionId);
-
-        /** @var EavAbstractAttribute|MockObject $attributeMock */
-        $attributeMock = $this->getMockBuilder(EavAbstractAttribute::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['setOption'])
-            ->onlyMethods(['usesSource', 'getSource'])
-            ->getMock();
-        $attributeMock->method('usesSource')->willReturn(true);
-        $attributeMock->expects($this->once())->method('setOption')->with($option);
-        $attributeMock->method('getSource')->willReturn($sourceMock);
-
-        $this->attributeRepositoryMock->expects($this->once())
-            ->method('get')
-            ->with($entityType, $attributeCode)
-            ->willReturn($attributeMock);
-        $optionMock->method('getLabel')->willReturn($label);
-        $optionMock->method('getSortOrder')->willReturn($sortOder);
-        $optionMock->method('getIsDefault')->willReturn(true);
-        $optionMock->method('getStoreLabels')->willReturn([$labelMock]);
-        $labelMock->method('getStoreId')->willReturn($storeId);
-        $labelMock->method('getLabel')->willReturn($storeLabel);
-        $this->resourceModelMock->expects($this->once())->method('save')->with($attributeMock);
-
-        $this->assertEquals(
-            true,
-            $this->model->update($entityType, $attributeCode, $optionId, $optionMock)
-        );
     }
 
     /**

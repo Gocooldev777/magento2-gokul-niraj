@@ -12,23 +12,21 @@ use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\Case_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeFinder;
-use PhpParser\NodeTraverser;
 use Rector\Core\NodeAnalyzer\ClassAnalyzer;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
-use Rector\Core\Util\MultiInstanceofChecker;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Symplify\PackageBuilder\Php\TypeChecker;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Core\Tests\PhpParser\Node\BetterNodeFinder\BetterNodeFinderTest
  */
@@ -46,6 +44,11 @@ final class BetterNodeFinder
     private $nodeNameResolver;
     /**
      * @readonly
+     * @var \Symplify\PackageBuilder\Php\TypeChecker
+     */
+    private $typeChecker;
+    /**
+     * @readonly
      * @var \Rector\Core\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
@@ -54,41 +57,31 @@ final class BetterNodeFinder
      * @var \Rector\Core\NodeAnalyzer\ClassAnalyzer
      */
     private $classAnalyzer;
-    /**
-     * @readonly
-     * @var \Rector\Core\Util\MultiInstanceofChecker
-     */
-    private $multiInstanceofChecker;
-    /**
-     * @readonly
-     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
-     */
-    private $simpleCallableNodeTraverser;
-    public function __construct(NodeFinder $nodeFinder, NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator, ClassAnalyzer $classAnalyzer, MultiInstanceofChecker $multiInstanceofChecker, SimpleCallableNodeTraverser $simpleCallableNodeTraverser)
+    public function __construct(\PhpParser\NodeFinder $nodeFinder, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \RectorPrefix20211221\Symplify\PackageBuilder\Php\TypeChecker $typeChecker, \Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator, \Rector\Core\NodeAnalyzer\ClassAnalyzer $classAnalyzer)
     {
         $this->nodeFinder = $nodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
+        $this->typeChecker = $typeChecker;
         $this->nodeComparator = $nodeComparator;
         $this->classAnalyzer = $classAnalyzer;
-        $this->multiInstanceofChecker = $multiInstanceofChecker;
-        $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
     }
     /**
-     * @template TNode of \PhpParser\Node
-     * @param array<class-string<TNode>> $types
-     * @return TNode|null
+     * @template T of \PhpParser\Node
+     * @param array<class-string<T>> $types
+     * @return T|null
      */
-    public function findParentByTypes(Node $node, array $types) : ?Node
+    public function findParentByTypes(\PhpParser\Node $currentNode, array $types) : ?\PhpParser\Node
     {
-        Assert::allIsAOf($types, Node::class);
-        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-        while ($parentNode instanceof Node) {
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($types, \PhpParser\Node::class);
+        while ($currentNode = $currentNode->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE)) {
+            if (!$currentNode instanceof \PhpParser\Node) {
+                return null;
+            }
             foreach ($types as $type) {
-                if ($parentNode instanceof $type) {
-                    return $parentNode;
+                if (\is_a($currentNode, $type, \true)) {
+                    return $currentNode;
                 }
             }
-            $parentNode = $parentNode->getAttribute(AttributeKey::PARENT_NODE);
         }
         return null;
     }
@@ -97,22 +90,27 @@ final class BetterNodeFinder
      * @param class-string<T> $type
      * @return T|null
      */
-    public function findParentType(Node $node, string $type) : ?Node
+    public function findParentType(\PhpParser\Node $node, string $type) : ?\PhpParser\Node
     {
-        Assert::isAOf($type, Node::class);
-        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-        while ($parentNode instanceof Node) {
-            if ($parentNode instanceof $type) {
-                return $parentNode;
-            }
-            $parentNode = $parentNode->getAttribute(AttributeKey::PARENT_NODE);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isAOf($type, \PhpParser\Node::class);
+        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        if (!$parent instanceof \PhpParser\Node) {
+            return null;
         }
+        do {
+            if (\is_a($parent, $type, \true)) {
+                return $parent;
+            }
+            if (!$parent instanceof \PhpParser\Node) {
+                return null;
+            }
+        } while ($parent = $parent->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE));
         return null;
     }
     /**
      * @template T of Node
      * @param array<class-string<T>> $types
-     * @param \PhpParser\Node|mixed[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      * @return T[]
      */
     public function findInstancesOf($nodes, array $types) : array
@@ -127,7 +125,7 @@ final class BetterNodeFinder
     /**
      * @template T of Node
      * @param class-string<T> $type
-     * @param \PhpParser\Node|mixed[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      * @return T[]
      */
     public function findInstanceOf($nodes, string $type) : array
@@ -137,50 +135,47 @@ final class BetterNodeFinder
     /**
      * @template T of Node
      * @param class-string<T> $type
-     * @return T|null
-     *
-     * @param \PhpParser\Node|mixed[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      */
-    public function findFirstInstanceOf($nodes, string $type) : ?Node
+    public function findFirstInstanceOf($nodes, string $type) : ?\PhpParser\Node
     {
-        Assert::isAOf($type, Node::class);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isAOf($type, \PhpParser\Node::class);
         return $this->nodeFinder->findFirstInstanceOf($nodes, $type);
     }
     /**
      * @param class-string<Node> $type
-     * @param Node[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      */
-    public function hasInstanceOfName(array $nodes, string $type, string $name) : bool
+    public function hasInstanceOfName($nodes, string $type, string $name) : bool
     {
-        Assert::isAOf($type, Node::class);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isAOf($type, \PhpParser\Node::class);
         return (bool) $this->findInstanceOfName($nodes, $type, $name);
     }
     /**
-     * @param Node[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      */
-    public function hasVariableOfName(array $nodes, string $name) : bool
+    public function hasVariableOfName($nodes, string $name) : bool
     {
-        return $this->findVariableOfName($nodes, $name) instanceof Node;
+        return $this->findVariableOfName($nodes, $name) instanceof \PhpParser\Node;
     }
     /**
-     * @api
-     * @param \PhpParser\Node|mixed[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      * @return Variable|null
      */
-    public function findVariableOfName($nodes, string $name) : ?Node
+    public function findVariableOfName($nodes, string $name) : ?\PhpParser\Node
     {
-        return $this->findInstanceOfName($nodes, Variable::class, $name);
+        return $this->findInstanceOfName($nodes, \PhpParser\Node\Expr\Variable::class, $name);
     }
     /**
-     * @param \PhpParser\Node|mixed[] $nodes
+     * @param mixed[]|\PhpParser\Node $nodes
      * @param array<class-string<Node>> $types
      */
     public function hasInstancesOf($nodes, array $types) : bool
     {
-        Assert::allIsAOf($types, Node::class);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($types, \PhpParser\Node::class);
         foreach ($types as $type) {
             $foundNode = $this->nodeFinder->findFirstInstanceOf($nodes, $type);
-            if (!$foundNode instanceof Node) {
+            if (!$foundNode instanceof \PhpParser\Node) {
                 continue;
             }
             return \true;
@@ -189,14 +184,12 @@ final class BetterNodeFinder
     }
     /**
      * @template T of Node
-     *
-     * @param Stmt[] $nodes
      * @param class-string<T> $type
+     * @param mixed[]|\PhpParser\Node $nodes
      */
-    public function findLastInstanceOf(array $nodes, string $type) : ?Node
+    public function findLastInstanceOf($nodes, string $type) : ?\PhpParser\Node
     {
-        Assert::allIsAOf($nodes, Stmt::class);
-        Assert::isAOf($type, Node::class);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isAOf($type, \PhpParser\Node::class);
         $foundInstances = $this->nodeFinder->findInstanceOf($nodes, $type);
         if ($foundInstances === []) {
             return null;
@@ -206,8 +199,7 @@ final class BetterNodeFinder
         return $foundInstances[$lastItemKey];
     }
     /**
-     * @param \PhpParser\Node|mixed[] $nodes
-     * @param callable(Node $node): bool $filter
+     * @param mixed[]|\PhpParser\Node $nodes
      * @return Node[]
      */
     public function find($nodes, callable $filter) : array
@@ -215,155 +207,157 @@ final class BetterNodeFinder
         return $this->nodeFinder->find($nodes, $filter);
     }
     /**
-     * @api symfony
      * @param Node[] $nodes
      * @return ClassLike|null
      */
-    public function findFirstNonAnonymousClass(array $nodes) : ?Node
+    public function findFirstNonAnonymousClass(array $nodes) : ?\PhpParser\Node
     {
-        // skip anonymous classes
-        return $this->findFirst($nodes, function (Node $node) : bool {
-            return $node instanceof Class_ && !$this->classAnalyzer->isAnonymousClass($node);
+        return $this->findFirst($nodes, function (\PhpParser\Node $node) : bool {
+            if (!$node instanceof \PhpParser\Node\Stmt\ClassLike) {
+                return \false;
+            }
+            // skip anonymous classes
+            return !($node instanceof \PhpParser\Node\Stmt\Class_ && $this->classAnalyzer->isAnonymousClass($node));
         });
     }
     /**
-     * @param \PhpParser\Node|mixed[] $nodes
-     * @param callable(Node $filter): bool $filter
+     * @param mixed[]|\PhpParser\Node $nodes
      */
-    public function findFirst($nodes, callable $filter) : ?Node
+    public function findFirst($nodes, callable $filter) : ?\PhpParser\Node
     {
         return $this->nodeFinder->findFirst($nodes, $filter);
     }
     /**
      * @return Assign[]
      */
-    public function findClassMethodAssignsToLocalProperty(ClassMethod $classMethod, string $propertyName) : array
+    public function findClassMethodAssignsToLocalProperty(\PhpParser\Node\Stmt\ClassMethod $classMethod, string $propertyName) : array
     {
-        /** @var Assign[] $assigns */
-        $assigns = [];
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use($propertyName, &$assigns) {
-            // skip anonymous classes and inner function
-            if ($node instanceof Class_ || $node instanceof Function_) {
-                return NodeTraverser::DONT_TRAVERSE_CURRENT_AND_CHILDREN;
+        return $this->find((array) $classMethod->stmts, function (\PhpParser\Node $node) use($propertyName) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\Assign) {
+                return \false;
             }
-            if (!$node instanceof Assign) {
-                return null;
-            }
-            if (!$node->var instanceof PropertyFetch) {
-                return null;
+            if (!$node->var instanceof \PhpParser\Node\Expr\PropertyFetch) {
+                return \false;
             }
             $propertyFetch = $node->var;
             if (!$this->nodeNameResolver->isName($propertyFetch->var, 'this')) {
-                return null;
+                return \false;
             }
-            if (!$this->nodeNameResolver->isName($propertyFetch->name, $propertyName)) {
-                return null;
-            }
-            $assigns[] = $node;
-            return $node;
+            return $this->nodeNameResolver->isName($propertyFetch->name, $propertyName);
         });
-        return $assigns;
     }
     /**
-     * @api symfony
      * @return Assign|null
      */
-    public function findPreviousAssignToExpr(Expr $expr) : ?Node
+    public function findPreviousAssignToExpr(\PhpParser\Node\Expr $expr) : ?\PhpParser\Node
     {
-        return $this->findFirstPrevious($expr, function (Node $node) use($expr) : bool {
-            if (!$node instanceof Assign) {
+        return $this->findFirstPrevious($expr, function (\PhpParser\Node $node) use($expr) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\Assign) {
                 return \false;
             }
             return $this->nodeComparator->areNodesEqual($node->var, $expr);
         });
     }
-    /**
-     * Search in previous Node/Stmt, when no Node found, lookup previous Stmt of Parent Node
-     *
-     * @param callable(Node $node): bool $filter
-     */
-    public function findFirstPrevious(Node $node, callable $filter) : ?Node
+    public function findFirstPreviousOfNode(\PhpParser\Node $node, callable $filter) : ?\PhpParser\Node
     {
-        $foundNode = $this->findFirstInlinedPrevious($node, $filter);
-        // we found what we need
-        if ($foundNode instanceof Node) {
-            return $foundNode;
+        // move to previous expression
+        $previousStatement = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PREVIOUS_NODE);
+        if ($previousStatement !== null) {
+            $foundNode = $this->findFirst([$previousStatement], $filter);
+            // we found what we need
+            if ($foundNode !== null) {
+                return $foundNode;
+            }
+            return $this->findFirstPreviousOfNode($previousStatement, $filter);
         }
-        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if ($parentNode instanceof FunctionLike) {
+        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        if ($parent instanceof \PhpParser\Node\FunctionLike) {
             return null;
         }
-        if ($parentNode instanceof Node) {
-            return $this->findFirstPrevious($parentNode, $filter);
+        if ($parent instanceof \PhpParser\Node) {
+            return $this->findFirstPreviousOfNode($parent, $filter);
         }
         return null;
     }
+    public function findFirstPrevious(\PhpParser\Node $node, callable $filter) : ?\PhpParser\Node
+    {
+        $node = $node instanceof \PhpParser\Node\Stmt\Expression ? $node : $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::CURRENT_STATEMENT);
+        if ($node === null) {
+            return null;
+        }
+        $foundNode = $this->findFirst([$node], $filter);
+        // we found what we need
+        if ($foundNode !== null) {
+            return $foundNode;
+        }
+        // move to previous expression
+        $previousStatement = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PREVIOUS_STATEMENT);
+        if ($previousStatement !== null) {
+            return $this->findFirstPrevious($previousStatement, $filter);
+        }
+        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        if ($parent === null) {
+            return null;
+        }
+        return $this->findFirstPrevious($parent, $filter);
+    }
     /**
-     * @api
      * @template T of Node
      * @param array<class-string<T>> $types
      */
-    public function findFirstPreviousOfTypes(Node $mainNode, array $types) : ?Node
+    public function findFirstPreviousOfTypes(\PhpParser\Node $mainNode, array $types) : ?\PhpParser\Node
     {
-        return $this->findFirstPrevious($mainNode, function (Node $node) use($types) : bool {
-            return $this->multiInstanceofChecker->isInstanceOf($node, $types);
+        return $this->findFirstPrevious($mainNode, function (\PhpParser\Node $node) use($types) : bool {
+            return $this->typeChecker->isInstanceOf($node, $types);
         });
     }
-    /**
-     * @param callable(Node $node): bool $filter
-     */
-    public function findFirstNext(Node $node, callable $filter) : ?Node
+    public function findFirstNext(\PhpParser\Node $node, callable $filter) : ?\PhpParser\Node
     {
-        $nextNode = $node->getAttribute(AttributeKey::NEXT_NODE);
-        if ($nextNode instanceof Node) {
-            if ($nextNode instanceof Return_ && !$nextNode->expr instanceof Expr) {
-                $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-                if (!$parentNode instanceof Case_) {
-                    return null;
-                }
+        $next = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+        if ($next instanceof \PhpParser\Node) {
+            if ($next instanceof \PhpParser\Node\Stmt\Return_ && $next->expr === null) {
+                return null;
             }
-            $found = $this->findFirst($nextNode, $filter);
-            if ($found instanceof Node) {
+            $found = $this->findFirst($next, $filter);
+            if ($found instanceof \PhpParser\Node) {
                 return $found;
             }
-            return $this->findFirstNext($nextNode, $filter);
+            return $this->findFirstNext($next, $filter);
         }
-        $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-        if ($parentNode instanceof Return_ || $parentNode instanceof FunctionLike) {
+        $parent = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
+        if ($parent instanceof \PhpParser\Node\Stmt\Return_ || $parent instanceof \PhpParser\Node\FunctionLike) {
             return null;
         }
-        if ($parentNode instanceof Node) {
-            return $this->findFirstNext($parentNode, $filter);
+        if ($parent instanceof \PhpParser\Node) {
+            return $this->findFirstNext($parent, $filter);
         }
         return null;
     }
     /**
-     * @api
      * @return Expr[]
-     * @param \PhpParser\Node\Expr|\PhpParser\Node\Expr\Variable|\PhpParser\Node\Stmt\Property|\PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticPropertyFetch $expr
+     * @param \PhpParser\Node\Expr|\PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticPropertyFetch|\PhpParser\Node\Expr\Variable|\PhpParser\Node\Stmt\Property $expr
      */
     public function findSameNamedExprs($expr) : array
     {
         // assign of empty string to something
         $scopeNode = $this->findParentScope($expr);
-        if (!$scopeNode instanceof Node) {
+        if (!$scopeNode instanceof \PhpParser\Node) {
             return [];
         }
-        if ($expr instanceof Variable) {
+        if ($expr instanceof \PhpParser\Node\Expr\Variable) {
             $exprName = $this->nodeNameResolver->getName($expr);
             if ($exprName === null) {
                 return [];
             }
-            /** @var Variable[] $variables */
-            $variables = $this->find($scopeNode, function (Node $node) use($exprName) : bool {
-                return $node instanceof Variable && $this->nodeNameResolver->isName($node, $exprName);
+            $variables = $this->findInstancesOf($scopeNode, [\PhpParser\Node\Expr\Variable::class]);
+            return \array_filter($variables, function (\PhpParser\Node\Expr\Variable $variable) use($exprName) : bool {
+                return $this->nodeNameResolver->isName($variable, $exprName);
             });
-            return $variables;
         }
-        if ($expr instanceof Property) {
+        if ($expr instanceof \PhpParser\Node\Stmt\Property) {
             $singleProperty = $expr->props[0];
             $exprName = $this->nodeNameResolver->getName($singleProperty->name);
-        } elseif ($expr instanceof StaticPropertyFetch || $expr instanceof PropertyFetch) {
+        } elseif ($expr instanceof \PhpParser\Node\Expr\StaticPropertyFetch || $expr instanceof \PhpParser\Node\Expr\PropertyFetch) {
             $exprName = $this->nodeNameResolver->getName($expr->name);
         } else {
             return [];
@@ -371,16 +365,15 @@ final class BetterNodeFinder
         if ($exprName === null) {
             return [];
         }
-        /** @var PropertyFetch[]|StaticPropertyFetch[] $propertyFetches */
-        $propertyFetches = $this->find($scopeNode, function (Node $node) use($exprName) : bool {
-            return ($node instanceof PropertyFetch || $node instanceof StaticPropertyFetch) && $this->nodeNameResolver->isName($node->name, $exprName);
+        $propertyFetches = $this->findInstancesOf($scopeNode, [\PhpParser\Node\Expr\PropertyFetch::class, \PhpParser\Node\Expr\StaticPropertyFetch::class]);
+        return \array_filter($propertyFetches, function ($propertyFetch) use($exprName) : bool {
+            return $this->nodeNameResolver->isName($propertyFetch->name, $exprName);
         });
-        return $propertyFetches;
     }
     /**
      * @template T of Node
      * @param array<class-string<T>>|class-string<T> $types
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
     public function hasInstancesOfInFunctionLikeScoped($functionLike, $types) : bool
     {
@@ -388,12 +381,13 @@ final class BetterNodeFinder
             $types = [$types];
         }
         foreach ($types as $type) {
-            $foundNodes = $this->findInstanceOf((array) $functionLike->stmts, $type);
-            foreach ($foundNodes as $foundNode) {
-                $parentFunctionLike = $this->findParentByTypes($foundNode, [ClassMethod::class, Function_::class, Closure::class]);
-                if ($parentFunctionLike === $functionLike) {
-                    return \true;
-                }
+            $foundNode = $this->findFirstInstanceOf((array) $functionLike->stmts, $type);
+            if (!$foundNode instanceof \PhpParser\Node) {
+                continue;
+            }
+            $parentFunctionLike = $this->findParentByTypes($foundNode, [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Expr\Closure::class]);
+            if ($parentFunctionLike === $functionLike) {
+                return \true;
             }
         }
         return \false;
@@ -402,7 +396,7 @@ final class BetterNodeFinder
      * @template T of Node
      * @param array<class-string<T>>|class-string<T> $types
      * @return T[]
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
     public function findInstancesOfInFunctionLikeScoped($functionLike, $types) : array
     {
@@ -418,7 +412,7 @@ final class BetterNodeFinder
                 continue;
             }
             foreach ($nodes as $key => $node) {
-                $parentFunctionLike = $this->findParentByTypes($node, [ClassMethod::class, Function_::class, Closure::class]);
+                $parentFunctionLike = $this->findParentByTypes($node, [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Expr\Closure::class]);
                 if ($parentFunctionLike !== $functionLike) {
                     unset($nodes[$key]);
                 }
@@ -431,77 +425,42 @@ final class BetterNodeFinder
         return $foundNodes;
     }
     /**
-     * @param callable(Node $node): bool $filter
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
+     * @param \PhpParser\Node\Expr\Closure|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
-    public function findFirstInFunctionLikeScoped($functionLike, callable $filter) : ?Node
+    public function findFirstInFunctionLikeScoped($functionLike, callable $filter) : ?\PhpParser\Node
     {
         $foundNode = $this->findFirst((array) $functionLike->stmts, $filter);
-        if (!$foundNode instanceof Node) {
+        if (!$foundNode instanceof \PhpParser\Node) {
             return null;
         }
-        $parentFunctionLike = $this->findParentByTypes($foundNode, [ClassMethod::class, Function_::class, Closure::class, Class_::class]);
+        $parentFunctionLike = $this->findParentByTypes($foundNode, [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Expr\Closure::class]);
         if ($parentFunctionLike !== $functionLike) {
             return null;
         }
         return $foundNode;
     }
-    public function resolveCurrentStatement(Node $node) : ?Stmt
+    /**
+     * @template T of Node
+     * @param mixed[]|\PhpParser\Node $nodes
+     * @param class-string<T> $type
+     */
+    private function findInstanceOfName($nodes, string $type, string $name) : ?\PhpParser\Node
     {
-        if ($node instanceof Stmt) {
-            return $node;
-        }
-        $currentStmt = $node;
-        while ($currentStmt = $currentStmt->getAttribute(AttributeKey::PARENT_NODE)) {
-            if ($currentStmt instanceof Stmt) {
-                return $currentStmt;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isAOf($type, \PhpParser\Node::class);
+        $foundInstances = $this->nodeFinder->findInstanceOf($nodes, $type);
+        foreach ($foundInstances as $foundInstance) {
+            if (!$this->nodeNameResolver->isName($foundInstance, $name)) {
+                continue;
             }
-            /** @var Node|null $currentStmt */
-            if (!$currentStmt instanceof Node) {
-                return null;
-            }
+            return $foundInstance;
         }
         return null;
     }
     /**
-     * Only search in previous Node/Stmt
-     * @api
-     *
-     * @param callable(Node $node): bool $filter
+     * @return \PhpParser\Node|null
      */
-    private function findFirstInlinedPrevious(Node $node, callable $filter) : ?Node
+    private function findParentScope(\PhpParser\Node $node)
     {
-        $previousNode = $node->getAttribute(AttributeKey::PREVIOUS_NODE);
-        if (!$previousNode instanceof Node) {
-            return null;
-        }
-        if ($previousNode === $node) {
-            return null;
-        }
-        $foundNode = $this->findFirst($previousNode, $filter);
-        // we found what we need
-        if ($foundNode instanceof Node) {
-            return $foundNode;
-        }
-        return $this->findFirstInlinedPrevious($previousNode, $filter);
-    }
-    /**
-     * @template T of Node
-     * @param \PhpParser\Node|mixed[] $nodes
-     * @param class-string<T> $type
-     */
-    private function findInstanceOfName($nodes, string $type, string $name) : ?Node
-    {
-        Assert::isAOf($type, Node::class);
-        return $this->nodeFinder->findFirst($nodes, function (Node $node) use($type, $name) : bool {
-            return $node instanceof $type && $this->nodeNameResolver->isName($node, $name);
-        });
-    }
-    /**
-     * @return Closure|Function_|ClassMethod|Class_|Namespace_|null
-     */
-    private function findParentScope(Node $node)
-    {
-        return $this->findParentByTypes($node, [Closure::class, Function_::class, ClassMethod::class, Class_::class, Namespace_::class]);
+        return $this->findParentByTypes($node, [\PhpParser\Node\Expr\Closure::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Class_::class, \PhpParser\Node\Stmt\Namespace_::class]);
     }
 }

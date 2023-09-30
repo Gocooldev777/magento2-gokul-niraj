@@ -182,7 +182,7 @@ define([
                             }, 0);
                             toTemplate.data[type] = {
                                 value: value,
-                                formatted: utils.formatPriceLocale(value, format)
+                                formatted: utils.formatPrice(value, format)
                             };
                         });
 

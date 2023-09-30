@@ -215,10 +215,6 @@ if (!defined('T_READONLY')) {
     define('T_READONLY', 42401);
 }
 
-if (!defined('T_ENUM')) {
-    define('T_ENUM', 42372);
-}
-
 /**
  * This tokenizer uses the internal {@link token_get_all()} function as token stream
  * generator.
@@ -265,7 +261,6 @@ class PHPTokenizerInternal implements FullTokenizer
         T_CONST                     => Tokens::T_CONST,
         T_EMPTY                     => Tokens::T_EMPTY,
         T_ENDIF                     => Tokens::T_ENDIF,
-        T_ENUM                      => Tokens::T_ENUM,
         T_FINAL                     => Tokens::T_FINAL,
         T_ISSET                     => Tokens::T_ISSET,
         T_PRINT                     => Tokens::T_PRINT,
@@ -437,7 +432,7 @@ class PHPTokenizerInternal implements FullTokenizer
     );
 
     /**
-     * @var array<int, array<int, string>>
+     * @var array<mixed, array>
      */
     protected static $substituteTokens = array(
         T_DOLLAR_OPEN_CURLY_BRACES  =>  array('$', '{'),
@@ -448,7 +443,7 @@ class PHPTokenizerInternal implements FullTokenizer
      *
      * Re-map based on the previous token
      *
-     * @var array<int, array<int, int>>
+     * @var array<int, array>
      */
     protected static $alternativeMap = array(
         Tokens::T_USE => array(
@@ -794,7 +789,7 @@ class PHPTokenizerInternal implements FullTokenizer
      *
      * @param array<int|string> $token
      *
-     * @return array<int, array<int|string>>
+     * @return array<array>
      */
     private function splitQualifiedNameToken($token)
     {
@@ -827,7 +822,7 @@ class PHPTokenizerInternal implements FullTokenizer
      * @param array<int|string> $token
      * @param string            $namespace
      *
-     * @return array<int, array<int, string|int>>
+     * @return array<array>
      */
     private function splitRelativeNameToken($token, $namespace)
     {

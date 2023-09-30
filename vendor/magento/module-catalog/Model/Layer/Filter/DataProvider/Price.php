@@ -9,7 +9,6 @@ use Magento\Catalog\Model\Layer;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Registry;
 use Magento\Store\Model\ScopeInterface;
-use Magento\Catalog\Model\ResourceModel\Layer\Filter\Price as LayerFilterPrice;
 
 /**
  * Data provider for price filter in layered navigation
@@ -19,29 +18,29 @@ class Price
     /**
      * XML configuration paths for Price Layered Navigation
      */
-    public const XML_PATH_RANGE_CALCULATION = 'catalog/layered_navigation/price_range_calculation';
+    const XML_PATH_RANGE_CALCULATION = 'catalog/layered_navigation/price_range_calculation';
 
-    public const XML_PATH_RANGE_STEP = 'catalog/layered_navigation/price_range_step';
+    const XML_PATH_RANGE_STEP = 'catalog/layered_navigation/price_range_step';
 
-    public const XML_PATH_RANGE_MAX_INTERVALS = 'catalog/layered_navigation/price_range_max_intervals';
+    const XML_PATH_RANGE_MAX_INTERVALS = 'catalog/layered_navigation/price_range_max_intervals';
 
-    public const XML_PATH_ONE_PRICE_INTERVAL = 'catalog/layered_navigation/one_price_interval';
+    const XML_PATH_ONE_PRICE_INTERVAL = 'catalog/layered_navigation/one_price_interval';
 
-    public const XML_PATH_INTERVAL_DIVISION_LIMIT = 'catalog/layered_navigation/interval_division_limit';
+    const XML_PATH_INTERVAL_DIVISION_LIMIT = 'catalog/layered_navigation/interval_division_limit';
 
     /**
      * Price layered navigation modes: Automatic (equalize price ranges), Automatic (equalize product counts), Manual
      */
-    public const RANGE_CALCULATION_AUTO = 'auto';
+    const RANGE_CALCULATION_AUTO = 'auto';
 
-    public const RANGE_CALCULATION_IMPROVED = 'improved';
+    const RANGE_CALCULATION_IMPROVED = 'improved';
 
-    public const RANGE_CALCULATION_MANUAL = 'manual';
+    const RANGE_CALCULATION_MANUAL = 'manual';
 
     /**
      * Minimal size of the range
      */
-    public const MIN_RANGE_POWER = 10;
+    const MIN_RANGE_POWER = 10;
 
     /**
      * @var Layer
@@ -59,7 +58,7 @@ class Price
     private $rangeItemCounts = [];
 
     /**
-     * @var LayerFilterPrice
+     * @var \Magento\Catalog\Model\ResourceModel\Layer\Filter\Price
      */
     private $resource;
 
@@ -92,13 +91,13 @@ class Price
      * @param Layer $layer
      * @param Registry $coreRegistry
      * @param ScopeConfigInterface $scopeConfig
-     * @param LayerFilterPrice $resource
+     * @param \Magento\Catalog\Model\ResourceModel\Layer\Filter\Price $resource
      */
     public function __construct(
         Layer $layer,
         Registry $coreRegistry,
         ScopeConfigInterface $scopeConfig,
-        LayerFilterPrice $resource
+        \Magento\Catalog\Model\ResourceModel\Layer\Filter\Price $resource
     ) {
         $this->layer = $layer;
         $this->coreRegistry = $coreRegistry;
@@ -325,7 +324,7 @@ class Price
      */
     public function validateFilter($filter)
     {
-        $filter = $filter === null ? [] : explode('-', $filter);
+        $filter = explode('-', $filter);
         if (count($filter) != 2) {
             return false;
         }
@@ -382,7 +381,7 @@ class Price
     /**
      * Get Resource model for price filter
      *
-     * @return LayerFilterPrice
+     * @return \Magento\Catalog\Model\ResourceModel\Layer\Filter\Price
      */
     public function getResource()
     {

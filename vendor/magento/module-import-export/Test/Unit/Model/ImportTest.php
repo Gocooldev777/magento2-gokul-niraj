@@ -30,7 +30,6 @@ use Magento\ImportExport\Model\Import\Entity\AbstractEntity;
 use Magento\ImportExport\Model\Import\Entity\Factory;
 use Magento\ImportExport\Model\Import\ErrorProcessing\ProcessingErrorAggregatorInterface;
 use Magento\ImportExport\Model\Import\Source\Csv;
-use Magento\ImportExport\Model\Source\Upload;
 use Magento\ImportExport\Test\Unit\Model\Import\AbstractImportTestCase;
 use Magento\MediaStorage\Model\File\UploaderFactory;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -134,11 +133,6 @@ class ImportTest extends AbstractImportTestCase
     private $errorAggregatorMock;
 
     /**
-     * @var Upload
-     */
-    private $upload;
-
-    /**
      * Set up
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -231,7 +225,6 @@ class ImportTest extends AbstractImportTestCase
             ->expects($this->any())
             ->method('getDriver')
             ->willReturn($this->_driver);
-        $this->upload = $this->createMock(Upload::class);
         $this->import = $this->getMockBuilder(Import::class)
             ->setConstructorArgs(
                 [
@@ -248,11 +241,7 @@ class ImportTest extends AbstractImportTestCase
                     $this->_behaviorFactory,
                     $this->indexerRegistry,
                     $this->historyModel,
-                    $this->dateTime,
-                    [],
-                    null,
-                    null,
-                    $this->upload
+                    $this->dateTime
                 ]
             )
             ->setMethods(
@@ -363,7 +352,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetOperationResultMessages()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -386,7 +375,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetEntity()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -394,7 +383,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetErrorsCount()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -402,7 +391,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetErrorsLimit()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -410,7 +399,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetInvalidRowsCount()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -418,7 +407,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetNotices()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -426,7 +415,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetProcessedEntitiesCount()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -434,7 +423,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetProcessedRowsCount()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -442,7 +431,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetWorkingDir()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -450,7 +439,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testIsImportAllowed()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -458,7 +447,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testUploadSource()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**
@@ -566,11 +555,7 @@ class ImportTest extends AbstractImportTestCase
             $this->_behaviorFactory,
             $this->indexerRegistry,
             $this->historyModel,
-            $this->dateTime,
-            [],
-            null,
-            null,
-            $this->upload
+            $this->dateTime
         );
 
         $import->setEntity('test');
@@ -603,11 +588,7 @@ class ImportTest extends AbstractImportTestCase
             $this->_behaviorFactory,
             $this->indexerRegistry,
             $this->historyModel,
-            $this->dateTime,
-            [],
-            null,
-            null,
-            $this->upload
+            $this->dateTime
         );
 
         $import->setEntity('test');
@@ -637,11 +618,7 @@ class ImportTest extends AbstractImportTestCase
             $this->_behaviorFactory,
             $this->indexerRegistry,
             $this->historyModel,
-            $this->dateTime,
-            [],
-            null,
-            null,
-            $this->upload
+            $this->dateTime
         );
 
         $import->setEntity('test');
@@ -677,11 +654,7 @@ class ImportTest extends AbstractImportTestCase
             $this->_behaviorFactory,
             $this->indexerRegistry,
             $this->historyModel,
-            $this->dateTime,
-            [],
-            null,
-            null,
-            $this->upload
+            $this->dateTime
         );
 
         $import->setEntity($entity);
@@ -704,7 +677,7 @@ class ImportTest extends AbstractImportTestCase
      */
     public function testGetUniqueEntityBehaviors()
     {
-        $this->markTestSkipped('This test has not been implemented yet.');
+        $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
     /**

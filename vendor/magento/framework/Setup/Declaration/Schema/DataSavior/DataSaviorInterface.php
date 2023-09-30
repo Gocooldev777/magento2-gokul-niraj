@@ -3,7 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
 
 namespace Magento\Framework\Setup\Declaration\Schema\DataSavior;
 
@@ -12,8 +11,6 @@ use Magento\Framework\Setup\Declaration\Schema\Dto\ElementInterface;
 /**
  * This interface allows to dump data during declarative installation process
  * and revert changes with applying previously saved data, if something goes wrong
- *
- * @api
  */
 interface DataSaviorInterface
 {

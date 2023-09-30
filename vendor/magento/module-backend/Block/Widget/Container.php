@@ -1,42 +1,42 @@
 <?php
 /**
+ * Backend container block
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 
 namespace Magento\Backend\Block\Widget;
 
-use Magento\Backend\Block\Template;
-use Magento\Backend\Block\Widget\Button\ButtonList;
-use Magento\Backend\Block\Widget\Button\Item as ButtonItem;
+use Magento\Framework\View\Element\Template;
 
 /**
- * Backend container block
- *
  * @api
  * @since 100.0.2
  */
-class Container extends Template implements ContainerInterface
+class Container extends \Magento\Backend\Block\Template implements ContainerInterface
 {
-    /**
+    /**#@+
      * Initialization parameters in pseudo-constructor
      */
-    public const PARAM_CONTROLLER = 'controller';
+    const PARAM_CONTROLLER = 'controller';
 
-    public const PARAM_HEADER_TEXT = 'header_text';
+    const PARAM_HEADER_TEXT = 'header_text';
 
-    /**
-     * @var string
-     */
+    /**#@-*/
+
+    /**#@-*/
     protected $_controller = 'empty';
 
     /**
+     * Header text
+     *
      * @var string
      */
     protected $_headerText = 'Container Widget Header';
 
     /**
-     * @var ButtonList
+     * @var \Magento\Backend\Block\Widget\Button\ButtonList
      */
     protected $buttonList;
 
@@ -49,7 +49,7 @@ class Container extends Template implements ContainerInterface
      * @param Context $context
      * @param array $data
      */
-    public function __construct(Context $context, array $data = [])
+    public function __construct(\Magento\Backend\Block\Widget\Context $context, array $data = [])
     {
         $this->buttonList = $context->getButtonList();
         $this->toolbar = $context->getButtonToolbar();
@@ -135,7 +135,7 @@ class Container extends Template implements ContainerInterface
     {
         $out = '';
         foreach ($this->buttonList->getItems() as $buttons) {
-            /** @var ButtonItem $item */
+            /** @var \Magento\Backend\Block\Widget\Button\Item $item */
             foreach ($buttons as $item) {
                 if ($region && $region != $item->getRegion()) {
                     continue;
@@ -163,7 +163,7 @@ class Container extends Template implements ContainerInterface
      */
     public function getHeaderCssClass()
     {
-        return 'head-' . strtr($this->_controller ?? '', '_', '-');
+        return 'head-' . strtr($this->_controller, '_', '-');
     }
 
     /**
@@ -196,7 +196,7 @@ class Container extends Template implements ContainerInterface
     /**
      * Check whether button rendering is allowed in current context
      *
-     * @param ButtonItem $item
+     * @param \Magento\Backend\Block\Widget\Button\Item $item
      * @return bool
      */
     public function canRender(Button\Item $item)

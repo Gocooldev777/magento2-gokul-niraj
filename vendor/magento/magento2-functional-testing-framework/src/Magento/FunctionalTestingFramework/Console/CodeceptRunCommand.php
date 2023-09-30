@@ -20,7 +20,7 @@ class CodeceptRunCommand extends Run
      *
      * @return void
      */
-    protected function configure():void
+    protected function configure()
     {
         $this->setName('codecept:run')
             ->setDescription(

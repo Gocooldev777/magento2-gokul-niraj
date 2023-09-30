@@ -8,20 +8,17 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\OutOfBoundsException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\OutOfBoundsException;
 /**
  * This definition extends another definition.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class ChildDefinition extends Definition
+class ChildDefinition extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition
 {
-    /**
-     * @var string
-     */
     private $parent;
     /**
      * @param string $parent The id of Definition instance to decorate
@@ -32,8 +29,10 @@ class ChildDefinition extends Definition
     }
     /**
      * Returns the Definition to inherit from.
+     *
+     * @return string
      */
-    public function getParent() : string
+    public function getParent()
     {
         return $this->parent;
     }
@@ -53,9 +52,11 @@ class ChildDefinition extends Definition
      * If replaceArgument() has been used to replace an argument, this method
      * will return the replacement value.
      *
-     * @throws OutOfBoundsException When the argument does not exist
      * @param int|string $index
+     *
      * @return mixed
+     *
+     * @throws OutOfBoundsException When the argument does not exist
      */
     public function getArgument($index)
     {
@@ -72,11 +73,12 @@ class ChildDefinition extends Definition
      * certain conventions when you want to overwrite the arguments of the
      * parent definition, otherwise your arguments will only be appended.
      *
+     * @param int|string $index
+     * @param mixed      $value
+     *
      * @return $this
      *
      * @throws InvalidArgumentException when $index isn't an integer
-     * @param int|string $index
-     * @param mixed $value
      */
     public function replaceArgument($index, $value)
     {
@@ -85,7 +87,7 @@ class ChildDefinition extends Definition
         } elseif (\strncmp($index, '$', \strlen('$')) === 0) {
             $this->arguments[$index] = $value;
         } else {
-            throw new InvalidArgumentException('The argument must be an existing index or the name of a constructor\'s parameter.');
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException('The argument must be an existing index or the name of a constructor\'s parameter.');
         }
         return $this;
     }

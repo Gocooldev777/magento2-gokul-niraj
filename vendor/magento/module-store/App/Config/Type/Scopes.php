@@ -15,7 +15,7 @@ use Magento\Store\Model\ScopeInterface;
  */
 class Scopes implements ConfigTypeInterface
 {
-    public const CONFIG_TYPE = 'scopes';
+    const CONFIG_TYPE = 'scopes';
 
     /**
      * @var ConfigSourceInterface
@@ -63,7 +63,7 @@ class Scopes implements ConfigTypeInterface
             $this->data = new DataObject($this->source->get());
         }
 
-        $patchChunks = explode('/', (string)$path);
+        $patchChunks = explode('/', $path);
 
         if (isset($patchChunks[1])
             && is_numeric($patchChunks[1])
@@ -76,7 +76,8 @@ class Scopes implements ConfigTypeInterface
     }
 
     /**
-     * Replace scope id with scope code. E.g. path 'websites/admin' will be converted to 'websites/0'
+     * Replace scope id with scope code.
+     * E.g. path 'websites/admin' will be converted to 'websites/0'
      *
      * @param array $patchChunks
      * @return string

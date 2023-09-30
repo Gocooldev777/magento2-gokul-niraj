@@ -4,7 +4,7 @@ namespace Codeception\Test\Interfaces;
 
 interface StrictCoverage
 {
-    public function getLinesToBeCovered(): array|bool;
+    public function getLinesToBeCovered();
 
-    public function getLinesToBeUsed(): array;
+    public function getLinesToBeUsed();
 }

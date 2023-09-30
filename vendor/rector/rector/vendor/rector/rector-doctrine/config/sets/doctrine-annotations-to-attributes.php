@@ -1,67 +1,56 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
 use Rector\Php80\Rector\Class_\AnnotationToAttributeRector;
-use Rector\Php80\Rector\Property\NestedAnnotationToAttributeRector;
-use Rector\Php80\ValueObject\AnnotationPropertyToAttributeClass;
 use Rector\Php80\ValueObject\AnnotationToAttribute;
-use Rector\Php80\ValueObject\NestedAnnotationToAttribute;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->ruleWithConfiguration(NestedAnnotationToAttributeRector::class, [
-        /** @see https://www.doctrine-project.org/projects/doctrine-orm/en/2.13/reference/attributes-reference.html#joincolumn-inversejoincolumn */
-        new NestedAnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinTable', [new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\JoinColumn', 'joinColumns'), new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\InverseJoinColumn', 'inverseJoinColumns', \true)]),
-        /** @see https://www.doctrine-project.org/projects/doctrine-orm/en/latest/reference/annotations-reference.html#joincolumns */
-        new NestedAnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumns', [new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\JoinColumn')], \true),
-        new NestedAnnotationToAttribute('Doctrine\\ORM\\Mapping\\Table', [new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\Index', 'indexes', \true), new AnnotationPropertyToAttributeClass('Doctrine\\ORM\\Mapping\\UniqueConstraint', 'uniqueConstraints', \true)]),
-    ]);
-    $rectorConfig->ruleWithConfiguration(AnnotationToAttributeRector::class, [
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\Php80\Rector\Class_\AnnotationToAttributeRector::class)->configure([
         // class
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Entity'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Column'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\UniqueConstraint'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Table'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Entity'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Column'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\UniqueConstraint'),
         // id
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Id'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\GeneratedValue'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\SequenceGenerator'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Index'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\CustomIdGenerator'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Id'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\GeneratedValue'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\SequenceGenerator'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Index'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\CustomIdGenerator'),
         // relations
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OneToOne'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OneToMany'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ManyToMany'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinTable'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ManyToOne'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OrderBy'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumn'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OneToOne'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OneToMany'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ManyToMany'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinTable'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ManyToOne'),
+        // join columns
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumns'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\JoinColumn'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\InverseJoinColumn'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\OrderBy'),
         // embed
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Embeddable'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Embedded'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Embeddable'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Embedded'),
         // inheritance
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\MappedSuperclass'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\InheritanceType'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\DiscriminatorColumn'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\DiscriminatorMap'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Version'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ChangeTrackingPolicy'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\MappedSuperclass'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\InheritanceType'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\DiscriminatorColumn'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\DiscriminatorMap'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Version'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\ChangeTrackingPolicy'),
         // events
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\HasLifecycleCallbacks'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostLoad'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostPersist'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostRemove'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostUpdate'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PreFlush'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PrePersist'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PreRemove'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PreUpdate'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Cache'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\EntityListeners'),
-        // Overrides
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AssociationOverrides'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AssociationOverride'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AttributeOverrides'),
-        new AnnotationToAttribute('Doctrine\\ORM\\Mapping\\AttributeOverride'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\HasLifecycleCallbacks'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostLoad'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostPersist'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostRemove'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PostUpdate'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PrePersist'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PreRemove'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\PreUpdate'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\Cache'),
+        new \Rector\Php80\ValueObject\AnnotationToAttribute('Doctrine\\ORM\\Mapping\\EntityListeners'),
     ]);
 };

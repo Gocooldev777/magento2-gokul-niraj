@@ -9,11 +9,6 @@ namespace Magento\CatalogImportExport\Model\Export;
 
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
 
-/**
- * Product filter interface
- *
- * @api
- */
 interface ProductFilterInterface
 {
     /**

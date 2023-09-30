@@ -256,7 +256,8 @@ class OrderServiceTest extends TestCase
             ->method('addStatusHistory')
             ->with($this->orderStatusHistoryMock)
             ->willReturn($this->orderMock);
-        $this->orderStatusHistoryMock->method('getComment')
+        $this->orderStatusHistoryMock->expects($this->once())
+            ->method('getComment')
             ->willReturn("<h1>" . $clearComment);
         $this->orderRepositoryMock->expects($this->once())
             ->method('save')

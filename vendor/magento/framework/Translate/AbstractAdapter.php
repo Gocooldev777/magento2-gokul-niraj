@@ -9,9 +9,7 @@
  */
 namespace Magento\Framework\Translate;
 
-use Laminas\I18n\View\Helper\AbstractTranslatorHelper;
-
-abstract class AbstractAdapter extends AbstractTranslatorHelper implements AdapterInterface
+abstract class AbstractAdapter extends \Zend_Translate_Adapter implements AdapterInterface
 {
     /**
      * Load translation data
@@ -30,12 +28,12 @@ abstract class AbstractAdapter extends AbstractTranslatorHelper implements Adapt
     /**
      * Is translation available.
      *
-     * Return false, as \Laminas\Validator\ValidatorChain pass message into translator only when isTranslated is false
+     * Return false, as \Zend_Validate pass message into translator only when isTranslated is false
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      * @param string $messageId
      * @param bool $original
-     * @param string|null $locale
+     * @param null $locale
      * @return false
      */
     public function isTranslated($messageId, $original = false, $locale = null)

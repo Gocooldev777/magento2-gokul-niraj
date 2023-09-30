@@ -48,7 +48,6 @@ use PDepend\Metrics\AnalyzerProjectAware;
 use PDepend\Source\AST\AbstractASTCallable;
 use PDepend\Source\AST\AbstractASTType;
 use PDepend\Source\AST\ASTArtifact;
-use PDepend\Source\AST\ASTArtifactList;
 use PDepend\Source\AST\ASTClass;
 use PDepend\Source\AST\ASTFunction;
 use PDepend\Source\AST\ASTInterface;
@@ -118,7 +117,7 @@ class CouplingAnalyzer extends AbstractAnalyzer implements AnalyzerNodeAware, An
      * Temporary map that is used to hold the id combinations of dependee and
      * depender.
      *
-     * @var array<string, array<string, array<string, bool>>>
+     * @var array<string, array>
      *
      * @since 0.10.2
      */
@@ -128,7 +127,7 @@ class CouplingAnalyzer extends AbstractAnalyzer implements AnalyzerNodeAware, An
      * This array holds a mapping between node identifiers and an array with
      * the node's metrics.
      *
-     * @var array<string, array<string, mixed>>
+     * @var array<string, array>
      *
      * @since 0.10.2
      */
@@ -180,6 +179,8 @@ class CouplingAnalyzer extends AbstractAnalyzer implements AnalyzerNodeAware, An
     /**
      * Processes all {@link ASTNamespace} code nodes.
      *
+     * @param ASTNamespace[] $namespaces
+     *
      * @return void
      */
     public function analyze($namespaces)
@@ -194,7 +195,7 @@ class CouplingAnalyzer extends AbstractAnalyzer implements AnalyzerNodeAware, An
      * This method traverses all namespaces in the given iterator and calculates
      * the coupling metrics for them.
      *
-     * @param ASTArtifactList<ASTNamespace> $namespaces
+     * @param ASTNamespace[] $namespaces
      *
      * @return void
      *

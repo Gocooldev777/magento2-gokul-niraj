@@ -23,13 +23,6 @@ class Sample
     private $config = [];
 
     /**
-     * Union type attribute
-     *
-     * @var int|string
-     */
-    private int|string $attribute;
-
-    /**
      * @param array $messages
      */
     public function setMessages(array $messages)
@@ -59,21 +52,5 @@ class Sample
     public function getConfig(): array
     {
         return $this->config;
-    }
-
-    /**
-     * @param int|string $attribute
-     */
-    public function setAttribute(int|string $attribute)
-    {
-        $this->attribute = $attribute;
-    }
-
-    /**
-     * @return int|string
-     */
-    public function getAttribute(): int|string
-    {
-        return $this->attribute;
     }
 }

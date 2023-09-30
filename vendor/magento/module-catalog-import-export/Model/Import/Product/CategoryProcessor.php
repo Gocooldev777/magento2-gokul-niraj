@@ -6,6 +6,8 @@
 namespace Magento\CatalogImportExport\Model\Import\Product;
 
 /**
+ * Class CategoryProcessor
+ *
  * @api
  * @since 100.0.2
  */
@@ -14,7 +16,7 @@ class CategoryProcessor
     /**
      * Delimiter in category path.
      */
-    public const DELIMITER_CATEGORY = '/';
+    const DELIMITER_CATEGORY = '/';
 
     /**
      * @var \Magento\Catalog\Model\ResourceModel\Category\CollectionFactory
@@ -86,7 +88,7 @@ class CategoryProcessor
                     $path = [];
                     for ($i = 1; $i < $pathSize; $i++) {
                         $name = $collection->getItemById((int)$structure[$i])->getName();
-                        $path[] = $name !== null ? $this->quoteDelimiter($name) : '';
+                        $path[] = $this->quoteDelimiter($name);
                     }
                     /** @var string $index */
                     $index = $this->standardizeString(
@@ -133,7 +135,7 @@ class CategoryProcessor
     protected function upsertCategory($categoryPath)
     {
         /** @var string $index */
-        $index = $categoryPath !== null ? $this->standardizeString($categoryPath) : '';
+        $index = $this->standardizeString($categoryPath);
 
         if (!isset($this->categories[$index])) {
             $pathParts = preg_split('~(?<!\\\)' . preg_quote(self::DELIMITER_CATEGORY, '~') . '~', $categoryPath);
@@ -163,7 +165,7 @@ class CategoryProcessor
     public function upsertCategories($categoriesString, $categoriesSeparator)
     {
         $categoriesIds = [];
-        $categories = $categoriesString !== null ? explode($categoriesSeparator, $categoriesString) : [];
+        $categories = explode($categoriesSeparator, $categoriesString);
 
         foreach ($categories as $category) {
             try {

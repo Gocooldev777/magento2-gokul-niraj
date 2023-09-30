@@ -10,9 +10,8 @@
 namespace Magento\TestFramework\Annotation;
 
 use Magento\Framework\Exception\LocalizedException;
+use Magento\TestFramework\Annotation\TestCaseAnnotation;
 use Magento\TestFramework\Application;
-use Magento\TestFramework\Fixture\ParserInterface;
-use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\TestCase\AbstractController;
 use PHPUnit\Framework\TestCase;
 
@@ -85,19 +84,17 @@ class AppIsolation
     public function endTest(TestCase $test)
     {
         $this->hasNonIsolatedTests = true;
-        $values = [];
-        try {
-            $values = $this->parse($test);
-        } catch (\Throwable $exception) {
-            ExceptionHandler::handle(
-                'Unable to parse fixtures',
-                get_class($test),
-                $test->getName(false),
-                $exception
-            );
-        }
-        if ($values) {
-            $isIsolationEnabled = $values[0]['enabled'];
+
+        /* Determine an isolation from doc comment */
+        $annotations = $this->getAnnotations($test);
+        if (isset($annotations['magentoAppIsolation'])) {
+            $isolation = $annotations['magentoAppIsolation'];
+            if ($isolation !== ['enabled'] && $isolation !== ['disabled']) {
+                throw new LocalizedException(
+                    __('Invalid "@magentoAppIsolation" annotation, can be "enabled" or "disabled" only.')
+                );
+            }
+            $isIsolationEnabled = $isolation === ['enabled'];
         } else {
             /* Controller tests should be isolated by default */
             $isIsolationEnabled = $test instanceof AbstractController;
@@ -109,33 +106,16 @@ class AppIsolation
     }
 
     /**
-     * Returns AppIsolation fixtures configuration
+     * Get method annotations. Overwrites class-defined annotations.
      *
      * @param TestCase $test
+     *
      * @return array
-     * @throws LocalizedException
      */
-    private function parse(TestCase $test): array
+    private function getAnnotations(TestCase $test): array
     {
-        $objectManager = Bootstrap::getObjectManager();
-        $parsers = $objectManager
-            ->create(
-                \Magento\TestFramework\Annotation\Parser\Composite::class,
-                [
-                    'parsers' => [
-                        $objectManager->get(\Magento\TestFramework\Annotation\Parser\AppIsolation::class),
-                        $objectManager->get(\Magento\TestFramework\Fixture\Parser\AppIsolation::class)
-                    ]
-                ]
-            );
-        $values = $parsers->parse($test, ParserInterface::SCOPE_METHOD)
-            ?: $parsers->parse($test, ParserInterface::SCOPE_CLASS);
+        $annotations = TestCaseAnnotation::getInstance()->getAnnotations($test);
 
-        if (count($values) > 1) {
-            throw new LocalizedException(
-                __('Only one "@magentoAppIsolation" annotation is allowed per test')
-            );
-        }
-        return $values;
+        return array_replace((array)$annotations['class'], (array)$annotations['method']);
     }
 }

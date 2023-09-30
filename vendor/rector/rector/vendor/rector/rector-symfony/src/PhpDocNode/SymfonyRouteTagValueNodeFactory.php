@@ -4,17 +4,14 @@ declare (strict_types=1);
 namespace Rector\Symfony\PhpDocNode;
 
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
-use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
-use Rector\Symfony\Enum\SymfonyAnnotation;
 final class SymfonyRouteTagValueNodeFactory
 {
     /**
-     * @param ArrayItemNode[] $arrayItemNodes
+     * @param array<string, mixed> $items
      */
-    public function createFromItems(array $arrayItemNodes) : DoctrineAnnotationTagValueNode
+    public function createFromItems(array $items) : \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode
     {
-        $identifierTypeNode = new IdentifierTypeNode(SymfonyAnnotation::ROUTE);
-        return new DoctrineAnnotationTagValueNode($identifierTypeNode, null, $arrayItemNodes, 'path');
+        return new \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode(new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode('Symfony\\Component\\Routing\\Annotation\\Route'), null, $items, 'path');
     }
 }

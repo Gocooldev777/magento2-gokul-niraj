@@ -19,9 +19,6 @@ namespace PhpCsFixer;
  */
 interface ToolInfoInterface
 {
-    /**
-     * @return array{name: string, version: string, dist: array{reference?: string}}
-     */
     public function getComposerInstallationDetails(): array;
 
     public function getComposerVersion(): string;

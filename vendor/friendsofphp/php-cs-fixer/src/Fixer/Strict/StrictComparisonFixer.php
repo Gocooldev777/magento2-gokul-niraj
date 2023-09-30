@@ -39,11 +39,11 @@ final class StrictComparisonFixer extends AbstractFixer
     /**
      * {@inheritdoc}
      *
-     * Must run before BinaryOperatorSpacesFixer, ModernizeStrposFixer.
+     * Must run before BinaryOperatorSpacesFixer.
      */
     public function getPriority(): int
     {
-        return 38;
+        return 0;
     }
 
     /**

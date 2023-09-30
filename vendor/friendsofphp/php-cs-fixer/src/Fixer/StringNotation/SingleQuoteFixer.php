@@ -59,12 +59,11 @@ EOF;
     /**
      * {@inheritdoc}
      *
-     * Must run before NoUselessConcatOperatorFixer.
      * Must run after BacktickToShellExecFixer, EscapeImplicitBackslashesFixer.
      */
     public function getPriority(): int
     {
-        return 10;
+        return 0;
     }
 
     /**

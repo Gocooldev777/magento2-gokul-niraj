@@ -7,8 +7,7 @@ declare(strict_types=1);
 
 namespace PayPal\Braintree\Plugin;
 
-use Closure;
-use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
@@ -24,12 +23,12 @@ class OrderCancellation
     /**
      * @var OrderCancellationService
      */
-    private OrderCancellationService $orderCancellationService;
+    private $orderCancellationService;
 
     /**
      * @var CartRepositoryInterface
      */
-    private CartRepositoryInterface $quoteRepository;
+    private $quoteRepository;
 
     /**
      * @param OrderCancellationService $orderCancellationService
@@ -47,21 +46,21 @@ class OrderCancellation
      * Cancels an order if an exception occurs during the order creation.
      *
      * @param CartManagementInterface $subject
-     * @param Closure $proceed
+     * @param \Closure $proceed
      * @param int $cartId
-     * @param PaymentInterface|null $payment
+     * @param PaymentInterface $payment
      * @return int
-     * @throws NoSuchEntityException
+     * @throws \Exception
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function aroundPlaceOrder(
         CartManagementInterface $subject,
-        Closure $proceed,
-        int $cartId,
+        \Closure $proceed,
+        $cartId,
         PaymentInterface $payment = null
-    ): int {
+    ) {
         try {
-            return (int)$proceed($cartId, $payment);
+            return $proceed($cartId, $payment);
         } catch (\Exception $e) {
             $quote = $this->quoteRepository->get((int) $cartId);
             $payment = $quote->getPayment();
@@ -73,9 +72,7 @@ class OrderCancellation
             ];
             if (in_array($payment->getMethod(), $paymentCodes)) {
                 $incrementId = $quote->getReservedOrderId();
-                if ($incrementId) {
-                    $this->orderCancellationService->execute($incrementId);
-                }
+                $this->orderCancellationService->execute($incrementId);
             }
 
             throw $e;

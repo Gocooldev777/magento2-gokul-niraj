@@ -5,21 +5,20 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Neon\Node;
+namespace RectorPrefix20211221\Nette\Neon\Node;
 
-use RectorPrefix202304\Nette;
-use RectorPrefix202304\Nette\Neon\Node;
+use RectorPrefix20211221\Nette;
+use RectorPrefix20211221\Nette\Neon\Node;
 /** @internal */
-final class StringNode extends Node
+final class StringNode extends \RectorPrefix20211221\Nette\Neon\Node
 {
-    private const EscapeSequences = ['t' => "\t", 'n' => "\n", 'r' => "\r", 'f' => "\f", 'b' => "\x08", '"' => '"', '\\' => '\\', '/' => '/', '_' => " "];
-    /**
-     * @var string
-     */
+    private const ESCAPE_SEQUENCES = ['t' => "\t", 'n' => "\n", 'r' => "\r", 'f' => "\f", 'b' => "\10", '"' => '"', '\\' => '\\', '/' => '/', '_' => " "];
+    /** @var string */
     public $value;
-    public function __construct(string $value)
+    public function __construct(string $value, int $pos = null)
     {
         $this->value = $value;
+        $this->startPos = $this->endPos = $pos;
     }
     public function toValue() : string
     {
@@ -41,36 +40,35 @@ final class StringNode extends Node
         if ($s[0] === "'") {
             return $res;
         }
-        return \preg_replace_callback('#\\\\(?:ud[89ab][0-9a-f]{2}\\\\ud[c-f][0-9a-f]{2}|u[0-9a-f]{4}|.)#i', function (array $m) : string {
+        return \preg_replace_callback('#\\\\(?:ud[89ab][0-9a-f]{2}\\\\ud[c-f][0-9a-f]{2}|u[0-9a-f]{4}|x[0-9a-f]{2}|.)#i', function (array $m) : string {
             $sq = $m[0];
-            if (isset(self::EscapeSequences[$sq[1]])) {
-                return self::EscapeSequences[$sq[1]];
+            if (isset(self::ESCAPE_SEQUENCES[$sq[1]])) {
+                return self::ESCAPE_SEQUENCES[$sq[1]];
             } elseif ($sq[1] === 'u' && \strlen($sq) >= 6) {
-                if (\json_decode('"' . $sq . '"') !== null) {
-                    throw new Nette\Neon\Exception("Invalid UTF-8 sequence {$sq}");
+                if (($res = \json_decode('"' . $sq . '"')) !== null) {
+                    return $res;
                 }
-                return \json_decode('"' . $sq . '"');
+                throw new \RectorPrefix20211221\Nette\Neon\Exception("Invalid UTF-8 sequence {$sq}");
+            } elseif ($sq[1] === 'x' && \strlen($sq) === 4) {
+                \trigger_error("Neon: '{$sq}' is deprecated, use '\\uXXXX' instead.", \E_USER_DEPRECATED);
+                return \chr(\hexdec(\substr($sq, 2)));
             } else {
-                throw new Nette\Neon\Exception("Invalid escaping sequence {$sq}");
+                throw new \RectorPrefix20211221\Nette\Neon\Exception("Invalid escaping sequence {$sq}");
             }
         }, $res);
     }
     public function toString() : string
     {
-        if (\strpos($this->value, "\n") === \false) {
-            return "'" . \str_replace("'", "''", $this->value) . "'";
-        } elseif (\preg_match('~\\n[\\t ]+\'{3}~', $this->value)) {
-            $s = \json_encode($this->value, \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES);
-            $s = \preg_replace_callback('#[^\\\\]|\\\\(.)#s', function ($m) {
-                return ['n' => "\n", 't' => "\t", '"' => '"'][$m[1] ?? ''] ?? $m[0];
-            }, \substr($s, 1, -1));
-            $s = \str_replace('"""', '""\\"', $s);
-            $delim = '"""';
-        } else {
-            $s = $this->value;
-            $delim = "'''";
+        $res = \json_encode($this->value, \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES);
+        if ($res === \false) {
+            throw new \RectorPrefix20211221\Nette\Neon\Exception('Invalid UTF-8 sequence: ' . $this->value);
         }
-        $s = \preg_replace('#^(?=.)#m', "\t", $s);
-        return $delim . "\n" . $s . "\n" . $delim;
+        if (\strpos($this->value, "\n") !== \false) {
+            $res = \preg_replace_callback('#[^\\\\]|\\\\(.)#s', function ($m) {
+                return ['n' => "\n\t", 't' => "\t", '"' => '"'][$m[1] ?? ''] ?? $m[0];
+            }, $res);
+            $res = '"""' . "\n\t" . \substr($res, 1, -1) . "\n" . '"""';
+        }
+        return $res;
     }
 }

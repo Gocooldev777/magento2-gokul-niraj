@@ -1,9 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Validator\Rules;
 
+use Exception;
 use GraphQL\Error\Error;
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Language\AST\DirectiveDefinitionNode;
 use GraphQL\Language\AST\DirectiveNode;
 use GraphQL\Language\AST\EnumTypeDefinitionNode;
@@ -28,46 +30,41 @@ use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\ScalarTypeDefinitionNode;
 use GraphQL\Language\AST\ScalarTypeExtensionNode;
 use GraphQL\Language\AST\SchemaDefinitionNode;
-use GraphQL\Language\AST\SchemaExtensionNode;
+use GraphQL\Language\AST\SchemaTypeExtensionNode;
 use GraphQL\Language\AST\UnionTypeDefinitionNode;
 use GraphQL\Language\AST\UnionTypeExtensionNode;
 use GraphQL\Language\AST\VariableDefinitionNode;
 use GraphQL\Language\DirectiveLocation;
-use GraphQL\Language\Visitor;
 use GraphQL\Type\Definition\Directive;
-use GraphQL\Validator\QueryValidationContext;
+use GraphQL\Utils\Utils;
+use GraphQL\Validator\ASTValidationContext;
 use GraphQL\Validator\SDLValidationContext;
 use GraphQL\Validator\ValidationContext;
+use function array_map;
+use function count;
+use function get_class;
+use function in_array;
+use function sprintf;
 
-/**
- * @phpstan-import-type VisitorArray from Visitor
- */
 class KnownDirectives extends ValidationRule
 {
-    /** @throws InvariantViolation */
-    public function getVisitor(QueryValidationContext $context): array
+    public function getVisitor(ValidationContext $context)
     {
         return $this->getASTVisitor($context);
     }
 
-    /** @throws InvariantViolation */
-    public function getSDLVisitor(SDLValidationContext $context): array
+    public function getSDLVisitor(SDLValidationContext $context)
     {
         return $this->getASTVisitor($context);
     }
 
-    /**
-     * @phpstan-return VisitorArray
-     *
-     * @throws InvariantViolation
-     */
-    public function getASTVisitor(ValidationContext $context): array
+    public function getASTVisitor(ASTValidationContext $context)
     {
-        $locationsMap = [];
-        $schema = $context->getSchema();
-        $definedDirectives = $schema === null
-            ? Directive::getInternalDirectives()
-            : $schema->getDirectives();
+        $locationsMap      = [];
+        $schema            = $context->getSchema();
+        $definedDirectives = $schema
+            ? $schema->getDirectives()
+            : Directive::getInternalDirectives();
 
         foreach ($definedDirectives as $directive) {
             $locationsMap[$directive->name] = $directive->locations;
@@ -76,14 +73,16 @@ class KnownDirectives extends ValidationRule
         $astDefinition = $context->getDocument()->definitions;
 
         foreach ($astDefinition as $def) {
-            if ($def instanceof DirectiveDefinitionNode) {
-                $locationNames = [];
-                foreach ($def->locations as $location) {
-                    $locationNames[] = $location->value;
-                }
-
-                $locationsMap[$def->name->value] = $locationNames;
+            if (! ($def instanceof DirectiveDefinitionNode)) {
+                continue;
             }
+
+            $locationsMap[$def->name->value] = Utils::map(
+                $def->locations,
+                static function ($name) : string {
+                    return $name->value;
+                }
+            );
         }
 
         return [
@@ -96,13 +95,13 @@ class KnownDirectives extends ValidationRule
             ) use (
                 $context,
                 $locationsMap
-            ): void {
-                $name = $node->name->value;
+            ) : void {
+                $name      = $node->name->value;
                 $locations = $locationsMap[$name] ?? null;
 
-                if ($locations === null) {
+                if (! $locations) {
                     $context->reportError(new Error(
-                        static::unknownDirectiveMessage($name),
+                        self::unknownDirectiveMessage($name),
                         [$node]
                     ));
 
@@ -111,13 +110,12 @@ class KnownDirectives extends ValidationRule
 
                 $candidateLocation = $this->getDirectiveLocationForASTPath($ancestors);
 
-                if ($candidateLocation === '' || \in_array($candidateLocation, $locations, true)) {
+                if (! $candidateLocation || in_array($candidateLocation, $locations, true)) {
                     return;
                 }
-
                 $context->reportError(
                     new Error(
-                        static::misplacedDirectiveMessage($name, $candidateLocation),
+                        self::misplacedDirectiveMessage($name, $candidateLocation),
                         [$node]
                     )
                 );
@@ -125,20 +123,19 @@ class KnownDirectives extends ValidationRule
         ];
     }
 
-    public static function unknownDirectiveMessage(string $directiveName): string
+    public static function unknownDirectiveMessage($directiveName)
     {
-        return "Unknown directive \"@{$directiveName}\".";
+        return sprintf('Unknown directive "%s".', $directiveName);
     }
 
     /**
-     * @param array<Node|NodeList> $ancestors
+     * @param Node[]|NodeList[] $ancestors The type is actually (Node|NodeList)[] but this PSR-5 syntax is so far not supported by most of the tools
      *
-     * @throws \Exception
+     * @return string
      */
-    protected function getDirectiveLocationForASTPath(array $ancestors): string
+    private function getDirectiveLocationForASTPath(array $ancestors)
     {
-        $appliedTo = $ancestors[\count($ancestors) - 1];
-
+        $appliedTo = $ancestors[count($ancestors) - 1];
         switch (true) {
             case $appliedTo instanceof OperationDefinitionNode:
                 switch ($appliedTo->operation) {
@@ -149,7 +146,7 @@ class KnownDirectives extends ValidationRule
                     case 'subscription':
                         return DirectiveLocation::SUBSCRIPTION;
                 }
-                // no break, since all possible cases were handled
+                break;
             case $appliedTo instanceof FieldNode:
                 return DirectiveLocation::FIELD;
             case $appliedTo instanceof FragmentSpreadNode:
@@ -161,7 +158,7 @@ class KnownDirectives extends ValidationRule
             case $appliedTo instanceof VariableDefinitionNode:
                 return DirectiveLocation::VARIABLE_DEFINITION;
             case $appliedTo instanceof SchemaDefinitionNode:
-            case $appliedTo instanceof SchemaExtensionNode:
+            case $appliedTo instanceof SchemaTypeExtensionNode:
                 return DirectiveLocation::SCHEMA;
             case $appliedTo instanceof ScalarTypeDefinitionNode:
             case $appliedTo instanceof ScalarTypeExtensionNode:
@@ -186,19 +183,18 @@ class KnownDirectives extends ValidationRule
             case $appliedTo instanceof InputObjectTypeExtensionNode:
                 return DirectiveLocation::INPUT_OBJECT;
             case $appliedTo instanceof InputValueDefinitionNode:
-                $parentNode = $ancestors[\count($ancestors) - 3];
+                $parentNode = $ancestors[count($ancestors) - 3];
 
                 return $parentNode instanceof InputObjectTypeDefinitionNode
                     ? DirectiveLocation::INPUT_FIELD_DEFINITION
                     : DirectiveLocation::ARGUMENT_DEFINITION;
-            default:
-                $unknownLocation = \get_class($appliedTo);
-                throw new \Exception("Unknown directive location: {$unknownLocation}.");
         }
+
+        throw new Exception('Unknown directive location: ' . get_class($appliedTo));
     }
 
-    public static function misplacedDirectiveMessage(string $directiveName, string $location): string
+    public static function misplacedDirectiveMessage($directiveName, $location)
     {
-        return "Directive \"{$directiveName}\" may not be used on \"{$location}\".";
+        return sprintf('Directive "%s" may not be used on "%s".', $directiveName, $location);
     }
 }

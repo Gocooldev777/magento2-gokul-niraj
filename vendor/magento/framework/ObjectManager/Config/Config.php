@@ -5,14 +5,12 @@
  */
 namespace Magento\Framework\ObjectManager\Config;
 
-use Magento\Framework\ObjectManager\ConfigCacheInterface;
-use Magento\Framework\ObjectManager\ConfigInterface;
-use Magento\Framework\ObjectManager\DefinitionInterface;
-use Magento\Framework\ObjectManager\Helper\SortItems as SortItemsHelper;
-use Magento\Framework\ObjectManager\RelationsInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\ObjectManager\ConfigCacheInterface;
+use Magento\Framework\ObjectManager\DefinitionInterface;
+use Magento\Framework\ObjectManager\RelationsInterface;
 
-class Config implements ConfigInterface
+class Config implements \Magento\Framework\ObjectManager\ConfigInterface
 {
     /**
      * Config cache
@@ -24,11 +22,12 @@ class Config implements ConfigInterface
     /**
      * Class definitions
      *
-     * @var DefinitionInterface
+     * @var \Magento\Framework\ObjectManager\DefinitionInterface
      */
     protected $_definitions;
 
     /**
+     * Current cache key
      *
      * @var string
      */
@@ -42,6 +41,7 @@ class Config implements ConfigInterface
     protected $_preferences = [];
 
     /**
+     * Virtual types
      *
      * @var array
      */
@@ -76,28 +76,18 @@ class Config implements ConfigInterface
     protected $_mergedArguments;
 
     /**
-     * @var SerializerInterface
+     * @var \Magento\Framework\Serialize\SerializerInterface
      */
     private $serializer;
 
     /**
-     * @var SortItemsHelper
+     * @param RelationsInterface $relations
+     * @param DefinitionInterface $definitions
      */
-    private SortItemsHelper $sortItemsHelper;
-
-    /**
-     * @param RelationsInterface|null $relations
-     * @param DefinitionInterface|null $definitions
-     * @param SortItemsHelper|null $sortItemsHelper
-     */
-    public function __construct(
-        RelationsInterface $relations = null,
-        DefinitionInterface $definitions = null,
-        SortItemsHelper $sortItemsHelper = null
-    ) {
+    public function __construct(RelationsInterface $relations = null, DefinitionInterface $definitions = null)
+    {
         $this->_relations = $relations ?: new \Magento\Framework\ObjectManager\Relations\Runtime();
         $this->_definitions = $definitions ?: new \Magento\Framework\ObjectManager\Definition\Runtime();
-        $this->sortItemsHelper = $sortItemsHelper ?: new \Magento\Framework\ObjectManager\Helper\SortItems();
     }
 
     /**
@@ -170,7 +160,7 @@ class Config implements ConfigInterface
      */
     public function getPreference($type)
     {
-        $type = $type !== null ? ltrim($type, '\\') : '';
+        $type = ltrim($type, '\\');
         $preferencePath = [];
         while (isset($this->_preferences[$type])) {
             if (isset($preferencePath[$this->_preferences[$type]])) {
@@ -195,12 +185,11 @@ class Config implements ConfigInterface
      * @return array
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    protected function _collectConfiguration($type): array
+    protected function _collectConfiguration($type)
     {
         if (!isset($this->_mergedArguments[$type])) {
             if (isset($this->_virtualTypes[$type])) {
                 $arguments = $this->_collectConfiguration($this->_virtualTypes[$type]);
-                $arguments = $this->sortItemsHelper->sortItems($arguments);
             } elseif ($this->_relations->has($type)) {
                 $relations = $this->_relations->getParents($type);
                 $arguments = [];
@@ -209,7 +198,6 @@ class Config implements ConfigInterface
                         $relationArguments = $this->_collectConfiguration($relation);
                         if ($relationArguments) {
                             $arguments = array_replace($arguments, $relationArguments);
-                            $arguments = $this->sortItemsHelper->sortItems($arguments);
                         }
                     }
                 }
@@ -220,7 +208,6 @@ class Config implements ConfigInterface
             if (isset($this->_arguments[$type])) {
                 if ($arguments && count($arguments)) {
                     $arguments = array_replace_recursive($arguments, $this->_arguments[$type]);
-                    $arguments = $this->sortItemsHelper->sortItems($arguments);
                 } else {
                     $arguments = $this->_arguments[$type];
                 }
@@ -352,7 +339,7 @@ class Config implements ConfigInterface
     /**
      * Get serializer
      *
-     * @return SerializerInterface
+     * @return \Magento\Framework\Serialize\SerializerInterface
      * @deprecated 101.0.0
      */
     private function getSerializer()

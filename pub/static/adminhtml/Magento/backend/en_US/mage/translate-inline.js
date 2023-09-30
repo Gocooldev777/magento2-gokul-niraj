@@ -18,14 +18,13 @@ define([
                 template: '#translate-form-template',
                 data: {
                     id: 'translate-inline-form',
-                    message: 'Please refresh the page to see your changes after submitting this form. ' +
-                        'Note: browser cache refresh may be required'
+                    message: 'Please refresh the page to see your changes after submitting this form.'
                 }
             },
             autoOpen: false,
             translateArea: null,
             modal: true,
-            dialogClass: 'popup-window window-translate-inline',
+            dialogClass: 'popup-window',
             width: '75%',
             title: $.mage.__('Translate'),
             height: 470,
@@ -158,12 +157,9 @@ define([
          * @private
          */
         _formSubmitComplete: function (response) {
-            var responseJSON = response.responseJSON || response;
-
             this.close();
             this.formIsSubmitted = false;
-            $.mage.translate.add(responseJSON);
-            this._updatePlaceholder(responseJSON[this.data.items[0].original]);
+            this._updatePlaceholder(response.responseJSON[this.data.items[0].original]);
         },
 
         /**
@@ -176,7 +172,6 @@ define([
 
             translateObject.shown = newValue;
             translateObject.translated = newValue;
-            $.mage.translate.add(this.data.items[0].original, newValue);
 
             $target.html(newValue);
         },

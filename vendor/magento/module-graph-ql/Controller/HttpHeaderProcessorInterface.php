@@ -9,8 +9,6 @@ namespace Magento\GraphQl\Controller;
 
 /**
  * Use this interface to implement a processor for each entry of a header in an HTTP GraphQL request.
- *
- * @api
  */
 interface HttpHeaderProcessorInterface
 {

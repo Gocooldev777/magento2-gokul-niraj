@@ -87,8 +87,7 @@ class DataProvider extends AbstractDataProvider
         /** @var GridCollection $collection */
         $collection = $this->getCollection();
         if ($filter->getField() === 'fulltext') {
-            $value = $filter->getValue() !== null ? trim($filter->getValue()) : '';
-            $collection->addFullTextFilter($value);
+            $collection->addFullTextFilter(trim($filter->getValue()));
         } else {
             $collection->addFieldToFilter(
                 $filter->getField(),

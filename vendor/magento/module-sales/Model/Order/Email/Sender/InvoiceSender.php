@@ -24,7 +24,6 @@ use Magento\Store\Model\App\Emulation;
 /**
  * Sends order invoice email to the customer.
  *
- * @api
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class InvoiceSender extends Sender

@@ -107,8 +107,7 @@ class SalesHelper extends Helper
         string $expectedUrl,
         string $expectedUrlComparisonType
     ): bool {
-        $currentWebDriverUrlPath = $webDriver->getCurrentURL() !== null ?
-            parse_url($webDriver->getCurrentURL(), PHP_URL_PATH) : '';
+        $currentWebDriverUrlPath = parse_url($webDriver->getCurrentURL(), PHP_URL_PATH);
 
         switch ($expectedUrlComparisonType) {
             case self::COMPARISON_PATH_EXACT_MATCH:

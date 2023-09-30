@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Bundle\JoseFramework\DataCollector;
 
 use Jose\Component\Core\JWK;
@@ -17,24 +26,31 @@ use Throwable;
 class KeyCollector implements Collector
 {
     /**
-     * @var array<JWK>
+     * @var null|KeyAnalyzerManager
      */
-    private array $jwks = [];
+    private $jwkAnalyzerManager;
 
     /**
-     * @var array<JWKSet>
+     * @var null|KeysetAnalyzerManager
      */
-    private array $jwksets = [];
+    private $jwksetAnalyzerManager;
 
-    public function __construct(
-        private readonly ?KeyAnalyzerManager $jwkAnalyzerManager = null,
-        private readonly ?KeysetAnalyzerManager $jwksetAnalyzerManager = null
-    ) {
+    /**
+     * @var JWK[]
+     */
+    private $jwks = [];
+
+    /**
+     * @var JWKSet[]
+     */
+    private $jwksets = [];
+
+    public function __construct(?KeyAnalyzerManager $jwkAnalyzerManager = null, ?KeysetAnalyzerManager $jwksetAnalyzerManager = null)
+    {
+        $this->jwkAnalyzerManager = $jwkAnalyzerManager;
+        $this->jwksetAnalyzerManager = $jwksetAnalyzerManager;
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
     public function collect(array &$data, Request $request, Response $response, ?Throwable $exception = null): void
     {
         $this->collectJWK($data);
@@ -51,9 +67,6 @@ class KeyCollector implements Collector
         $this->jwksets[$id] = $jwkset;
     }
 
-    /**
-     * @param array<string, array<string, mixed>> $data
-     */
     private function collectJWK(array &$data): void
     {
         $cloner = new VarCloner();
@@ -61,14 +74,11 @@ class KeyCollector implements Collector
         foreach ($this->jwks as $id => $jwk) {
             $data['key']['jwk'][$id] = [
                 'jwk' => $cloner->cloneVar($jwk),
-                'analyze' => $this->jwkAnalyzerManager === null ? [] : $this->jwkAnalyzerManager->analyze($jwk),
+                'analyze' => null === $this->jwkAnalyzerManager ? [] : $this->jwkAnalyzerManager->analyze($jwk),
             ];
         }
     }
 
-    /**
-     * @param array<string, array<string, mixed>> $data
-     */
     private function collectJWKSet(array &$data): void
     {
         $cloner = new VarCloner();
@@ -76,12 +86,12 @@ class KeyCollector implements Collector
         foreach ($this->jwksets as $id => $jwkset) {
             $analyze = [];
             $analyzeJWKSet = new MessageBag();
-            if ($this->jwkAnalyzerManager !== null) {
+            if (null !== $this->jwkAnalyzerManager) {
                 foreach ($jwkset as $kid => $jwk) {
                     $analyze[$kid] = $this->jwkAnalyzerManager->analyze($jwk);
                 }
             }
-            if ($this->jwksetAnalyzerManager !== null) {
+            if (null !== $this->jwksetAnalyzerManager) {
                 $analyzeJWKSet = $this->jwksetAnalyzerManager->analyze($jwkset);
             }
             $data['key']['jwkset'][$id] = [

@@ -7,8 +7,6 @@ namespace Magento\Framework\View\Design\Theme;
 
 /**
  * Theme file interface
- *
- * @api
  */
 interface FileInterface
 {

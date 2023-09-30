@@ -11,7 +11,6 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Return_;
 use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
-use Rector\Core\Util\ArrayChecker;
 final class ClosureArrowFunctionAnalyzer
 {
     /**
@@ -24,69 +23,39 @@ final class ClosureArrowFunctionAnalyzer
      * @var \Rector\Core\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
-    /**
-     * @readonly
-     * @var \Rector\Core\Util\ArrayChecker
-     */
-    private $arrayChecker;
-    public function __construct(BetterNodeFinder $betterNodeFinder, NodeComparator $nodeComparator, ArrayChecker $arrayChecker)
+    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeComparator = $nodeComparator;
-        $this->arrayChecker = $arrayChecker;
     }
-    public function matchArrowFunctionExpr(Closure $closure) : ?Expr
+    public function matchArrowFunctionExpr(\PhpParser\Node\Expr\Closure $closure) : ?\PhpParser\Node\Expr
     {
         if (\count($closure->stmts) !== 1) {
             return null;
         }
         $onlyStmt = $closure->stmts[0];
-        if (!$onlyStmt instanceof Return_) {
+        if (!$onlyStmt instanceof \PhpParser\Node\Stmt\Return_) {
             return null;
         }
         /** @var Return_ $return */
         $return = $onlyStmt;
-        if (!$return->expr instanceof Expr) {
+        if ($return->expr === null) {
             return null;
         }
-        if ($this->shouldSkipForUsedReferencedValue($closure)) {
+        if ($this->shouldSkipForUsedReferencedValue($closure, $return->expr)) {
             return null;
         }
         return $return->expr;
     }
-    private function shouldSkipForUsedReferencedValue(Closure $closure) : bool
+    private function shouldSkipForUsedReferencedValue(\PhpParser\Node\Expr\Closure $closure, \PhpParser\Node\Expr $expr) : bool
     {
         $referencedValues = $this->resolveReferencedUseVariablesFromClosure($closure);
         if ($referencedValues === []) {
             return \false;
         }
-        $isFoundInStmt = (bool) $this->betterNodeFinder->findFirstInFunctionLikeScoped($closure, function (Node $node) use($referencedValues) : bool {
+        return (bool) $this->betterNodeFinder->findFirst([$expr], function (\PhpParser\Node $node) use($referencedValues) : bool {
             foreach ($referencedValues as $referencedValue) {
                 if ($this->nodeComparator->areNodesEqual($node, $referencedValue)) {
-                    return \true;
-                }
-            }
-            return \false;
-        });
-        if ($isFoundInStmt) {
-            return \true;
-        }
-        return $this->isFoundInInnerUses($closure, $referencedValues);
-    }
-    /**
-     * @param Variable[] $referencedValues
-     */
-    private function isFoundInInnerUses(Closure $node, array $referencedValues) : bool
-    {
-        return (bool) $this->betterNodeFinder->findFirstInFunctionLikeScoped($node, function (Node $subNode) use($referencedValues) : bool {
-            if (!$subNode instanceof Closure) {
-                return \false;
-            }
-            foreach ($referencedValues as $referencedValue) {
-                $isFoundInInnerUses = $this->arrayChecker->doesExist($subNode->uses, function (ClosureUse $closureUse) use($referencedValue) : bool {
-                    return $closureUse->byRef && $this->nodeComparator->areNodesEqual($closureUse->var, $referencedValue);
-                });
-                if ($isFoundInInnerUses) {
                     return \true;
                 }
             }
@@ -96,7 +65,7 @@ final class ClosureArrowFunctionAnalyzer
     /**
      * @return Variable[]
      */
-    private function resolveReferencedUseVariablesFromClosure(Closure $closure) : array
+    private function resolveReferencedUseVariablesFromClosure(\PhpParser\Node\Expr\Closure $closure) : array
     {
         $referencedValues = [];
         /** @var ClosureUse $use */

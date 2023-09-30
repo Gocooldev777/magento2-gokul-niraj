@@ -7,14 +7,11 @@ declare(strict_types=1);
 
 namespace Magento\SalesRule\Helper;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Quote\Api\Data\AddressInterface;
-use Magento\Quote\Model\Cart\ShippingMethodConverter;
 use Magento\Quote\Model\Quote;
 use Magento\SalesRule\Model\DeltaPriceRound;
 use Magento\SalesRule\Model\Rule;
-use Magento\Store\Model\ScopeInterface;
 
 /**
  * Helper for CartFixed Available Discount and Quote Totals
@@ -32,44 +29,27 @@ class CartFixedDiscount
     private $priceCurrency;
 
     /**
-     * @var ShippingMethodConverter
-     */
-    private $shippingMethodConverter = null;
-
-    /**
-     * @var ScopeConfigInterface
-     */
-    private $scopeConfig = null;
-
-    /**
      * @param DeltaPriceRound $deltaPriceRound
      * @param PriceCurrencyInterface $priceCurrency
-     * @param ShippingMethodConverter $shippingMethodConverter
-     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         DeltaPriceRound $deltaPriceRound,
-        PriceCurrencyInterface $priceCurrency,
-        ShippingMethodConverter $shippingMethodConverter,
-        ScopeConfigInterface $scopeConfig
+        PriceCurrencyInterface $priceCurrency
     ) {
         $this->deltaPriceRound = $deltaPriceRound;
         $this->priceCurrency = $priceCurrency;
-        $this->shippingMethodConverter = $shippingMethodConverter;
-        $this->scopeConfig = $scopeConfig;
     }
 
     /**
      * Retrieve shipping amount by quote address and shipping method
      *
      * @param AddressInterface $address
-     * @param float $shippingAmount
      * @return float
      */
     public function calculateShippingAmountWhenAppliedToShipping(
-        AddressInterface $address,
-        float $shippingAmount
+        AddressInterface $address
     ): float {
+        $shippingAmount = (float) $address->getShippingAmount();
         if ($shippingAmount == 0.0) {
             $addressQty = $this->getAddressQty($address);
             $address->setItemQty($addressQty);
@@ -79,16 +59,11 @@ class CartFixedDiscount
             foreach ($shippingRates as $shippingRate) {
                 if ($shippingRate->getCode() === $address->getShippingMethod()
                 ) {
-                    $shippingMethod = $this->shippingMethodConverter
-                        ->modelToDataObject($shippingRate, $address->getQuote()->getQuoteCurrencyCode());
-                    $shippingAmount = $this->applyDiscountOnPricesIncludedTax()
-                        ? $shippingMethod->getPriceInclTax()
-                        : $shippingMethod->getPriceExclTax();
+                    $shippingAmount = (float) $shippingRate->getPrice();
                     break;
                 }
             }
         }
-
         return $shippingAmount;
     }
 
@@ -205,17 +180,14 @@ class CartFixedDiscount
      *
      * @param Quote\Address $address
      * @param float $baseRuleTotals
-     * @param float $shippingAmount
      * @return float
      */
     public function getQuoteTotalsForRegularShipping(
         Quote\Address $address,
-        float $baseRuleTotals,
-        float $shippingAmount
+        float $baseRuleTotals
     ): float {
         $baseRuleTotals += $this->calculateShippingAmountWhenAppliedToShipping(
-            $address,
-            $shippingAmount
+            $address
         );
         return $baseRuleTotals;
     }
@@ -228,7 +200,6 @@ class CartFixedDiscount
      * @param bool $isMultiShipping
      * @param Quote\Address $address
      * @param float $baseRuleTotals
-     * @param float $shippingAmount
      * @return float
      */
     public function getBaseRuleTotals(
@@ -236,13 +207,12 @@ class CartFixedDiscount
         Quote $quote,
         bool $isMultiShipping,
         Quote\Address $address,
-        float $baseRuleTotals,
-        float $shippingAmount
+        float $baseRuleTotals
     ): float {
         if ($isAppliedToShipping) {
             $baseRuleTotals = ($quote->getIsMultiShipping() && $isMultiShipping) ?
                 $this->getQuoteTotalsForMultiShipping($quote) :
-                $this->getQuoteTotalsForRegularShipping($address, $baseRuleTotals, $shippingAmount);
+                $this->getQuoteTotalsForRegularShipping($address, $baseRuleTotals);
         }
         return (float) $baseRuleTotals;
     }
@@ -272,19 +242,6 @@ class CartFixedDiscount
             $availableDiscountAmount -= $baseDiscountAmount;
         }
         return $availableDiscountAmount;
-    }
-
-    /**
-     * Get configuration setting "Apply Discount On Prices Including Tax" value
-     *
-     * @return bool
-     */
-    public function applyDiscountOnPricesIncludedTax(): bool
-    {
-        return (bool) $this->scopeConfig->getValue(
-            'tax/calculation/discount_tax',
-            ScopeInterface::SCOPE_STORE
-        ) ?? false;
     }
 
     /**

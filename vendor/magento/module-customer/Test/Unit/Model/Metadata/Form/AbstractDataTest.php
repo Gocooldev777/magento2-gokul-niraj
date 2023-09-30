@@ -1,15 +1,12 @@
-<?php
+<?php declare(strict_types=1);
 /**
+ * test Magento\Customer\Model\Metadata\Form\AbstractData
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Customer\Test\Unit\Model\Metadata\Form;
 
-use Laminas\I18n\Validator\Alpha;
-use Laminas\Validator\Date;
-use Laminas\Validator\Digits;
 use Magento\Customer\Api\Data\AttributeMetadataInterface;
 use Magento\Customer\Api\Data\ValidationRuleInterface;
 use Magento\Framework\App\Request\Http;
@@ -17,9 +14,6 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
-use Magento\Framework\Validator\Alnum;
-use Magento\Framework\Validator\EmailAddress;
-use Magento\Framework\Validator\Hostname;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -29,7 +23,7 @@ use Psr\Log\LoggerInterface;
  */
 class AbstractDataTest extends TestCase
 {
-    public const MODEL = 'MODEL';
+    const MODEL = 'MODEL';
 
     /**
      * @var ExtendsAbstractData
@@ -307,7 +301,7 @@ class AbstractDataTest extends TestCase
                 'mylabel',
                 'alphanumeric',
                 [
-                    Alnum::NOT_ALNUM => '"mylabel" contains non-alphabetic or non-numeric characters.'
+                    \Zend_Validate_Alnum::NOT_ALNUM => '"mylabel" contains non-alphabetic or non-numeric characters.'
                 ]
             ],
             [
@@ -315,7 +309,7 @@ class AbstractDataTest extends TestCase
                 'mylabel',
                 'alphanumeric',
                 [
-                    Alnum::NOT_ALNUM => '"mylabel" contains non-alphabetic or non-numeric characters.'
+                    \Zend_Validate_Alnum::NOT_ALNUM => '"mylabel" contains non-alphabetic or non-numeric characters.'
                 ]
             ],
             ['abcqaz', 'mylabel', 'alphanumeric', true],
@@ -324,13 +318,13 @@ class AbstractDataTest extends TestCase
                 '!@#$',
                 'mylabel',
                 'numeric',
-                [Digits::NOT_DIGITS => '"mylabel" contains non-numeric characters.']
+                [\Zend_Validate_Digits::NOT_DIGITS => '"mylabel" contains non-numeric characters.']
             ],
             [
                 '1234',
                 'mylabel',
                 'alpha',
-                [Alpha::NOT_ALPHA => '"mylabel" contains non-alphabetic characters.']
+                [\Zend_Validate_Alpha::NOT_ALPHA => '"mylabel" contains non-alphabetic characters.']
             ],
             [
                 '!@#$',
@@ -338,9 +332,9 @@ class AbstractDataTest extends TestCase
                 'email',
                 [
                     // @codingStandardsIgnoreStart
-                    EmailAddress::INVALID_HOSTNAME => '"mylabel" is not a valid hostname.',
-                    Hostname::INVALID_HOSTNAME => "'#\$' does not match the expected structure for a DNS hostname",
-                    Hostname::INVALID_LOCAL_NAME => "'#\$' does not look like a valid local network name."
+                    \Zend_Validate_EmailAddress::INVALID_HOSTNAME => '"mylabel" is not a valid hostname.',
+                    \Zend_Validate_Hostname::INVALID_HOSTNAME => "'#\$' does not match the expected structure for a DNS hostname",
+                    \Zend_Validate_Hostname::INVALID_LOCAL_NAME => "'#\$' does not look like a valid local network name."
                     // @codingStandardsIgnoreEnd
                 ]
             ],
@@ -350,7 +344,7 @@ class AbstractDataTest extends TestCase
                 '1234',
                 'mylabel',
                 'date',
-                [Date::INVALID_DATE => '"mylabel" is not a valid date.']
+                [\Zend_Validate_Date::INVALID_DATE => '"mylabel" is not a valid date.']
             ]
         ];
     }

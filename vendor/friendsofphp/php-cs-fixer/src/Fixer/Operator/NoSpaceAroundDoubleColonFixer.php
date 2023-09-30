@@ -54,9 +54,6 @@ final class NoSpaceAroundDoubleColonFixer extends AbstractFixer
         }
     }
 
-    /**
-     * @param -1|1 $direction
-     */
     private function removeSpace(Tokens $tokens, int $index, int $direction): void
     {
         if (!$tokens[$index + $direction]->isWhitespace()) {

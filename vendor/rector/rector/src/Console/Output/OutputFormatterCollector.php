@@ -8,7 +8,7 @@ use Rector\Core\Exception\Configuration\InvalidConfigurationException;
 final class OutputFormatterCollector
 {
     /**
-     * @var array<string, OutputFormatterInterface>
+     * @var OutputFormatterInterface[]
      */
     private $outputFormatters = [];
     /**
@@ -20,17 +20,23 @@ final class OutputFormatterCollector
             $this->outputFormatters[$outputFormatter->getName()] = $outputFormatter;
         }
     }
-    public function getByName(string $name) : OutputFormatterInterface
+    public function getByName(string $name) : \Rector\ChangesReporting\Contract\Output\OutputFormatterInterface
     {
         $this->ensureOutputFormatExists($name);
         return $this->outputFormatters[$name];
+    }
+    /**
+     * @return int[]|string[]
+     */
+    public function getNames() : array
+    {
+        return \array_keys($this->outputFormatters);
     }
     private function ensureOutputFormatExists(string $name) : void
     {
         if (isset($this->outputFormatters[$name])) {
             return;
         }
-        $outputFormatterNames = \array_keys($this->outputFormatters);
-        throw new InvalidConfigurationException(\sprintf('Output formatter "%s" was not found. Pick one of "%s".', $name, \implode('", "', $outputFormatterNames)));
+        throw new \Rector\Core\Exception\Configuration\InvalidConfigurationException(\sprintf('Output formatter "%s" was not found. Pick one of "%s".', $name, \implode('", "', $this->getNames())));
     }
 }

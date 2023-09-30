@@ -12,16 +12,14 @@ use Rector\NodeNameResolver\NodeNameResolver;
 final class AssignPropertyFetchAnalyzer
 {
     /**
-     * @readonly
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
     /**
-     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(BetterNodeFinder $betterNodeFinder, NodeNameResolver $nodeNameResolver)
+    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->nodeNameResolver = $nodeNameResolver;
@@ -29,19 +27,19 @@ final class AssignPropertyFetchAnalyzer
     /**
      * @return AssignToPropertyFetch[]
      */
-    public function resolveAssignToPropertyFetch(ClassMethod $classMethod) : array
+    public function resolveAssignToPropertyFetch(\PhpParser\Node\Stmt\ClassMethod $classMethod) : array
     {
         /** @var Assign[] $assigns */
-        $assigns = $this->betterNodeFinder->findInstanceOf((array) $classMethod->stmts, Assign::class);
+        $assigns = $this->betterNodeFinder->findInstanceOf((array) $classMethod->stmts, \PhpParser\Node\Expr\Assign::class);
         $assignsToPropertyFetch = [];
         foreach ($assigns as $assign) {
-            if (!$assign->var instanceof PropertyFetch) {
+            if (!$assign->var instanceof \PhpParser\Node\Expr\PropertyFetch) {
                 continue;
             }
             $propertyFetch = $assign->var;
             /** @var string $propertyName */
             $propertyName = $this->nodeNameResolver->getName($propertyFetch);
-            $assignsToPropertyFetch[] = new AssignToPropertyFetch($assign, $propertyFetch, $propertyName);
+            $assignsToPropertyFetch[] = new \Rector\Doctrine\ValueObject\AssignToPropertyFetch($assign, $propertyFetch, $propertyName);
         }
         return $assignsToPropertyFetch;
     }

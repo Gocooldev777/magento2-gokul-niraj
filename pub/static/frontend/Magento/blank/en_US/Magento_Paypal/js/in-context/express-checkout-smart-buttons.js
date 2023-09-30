@@ -7,9 +7,8 @@ define([
     'underscore',
     'jquery',
     'Magento_Paypal/js/in-context/paypal-sdk',
-    'Magento_Customer/js/customer-data',
     'domReady!'
-], function (_, $, paypalSdk, customerData) {
+], function (_, $, paypalSdk) {
     'use strict';
 
     /**
@@ -48,7 +47,6 @@ define([
         var params = {
             paymentToken: data.orderID,
             payerId: data.payerID,
-            paypalFundingSource: customerData.get('paypal-funding-source'),
             'form_key': clientConfig.formKey
         };
 
@@ -58,10 +56,8 @@ define([
                     $.post(clientConfig.onAuthorizeUrl, params).done(function (res) {
                         clientConfig.rendererComponent
                             .afterOnAuthorize(res, deferred.resolve, deferred.reject, actions);
-                        customerData.set('paypal-funding-source', '');
                     }).fail(function (jqXHR, textStatus, err) {
                         clientConfig.rendererComponent.catchOnAuthorize(err, deferred.resolve, deferred.reject);
-                        customerData.set('paypal-funding-source', '');
                     });
                 });
         }).promise();
@@ -101,8 +97,7 @@ define([
                 /**
                  * Execute logic on Paypal button click
                  */
-                onClick: function (data) {
-                    customerData.set('paypal-funding-source', data.fundingSource);
+                onClick: function () {
                     clientConfig.rendererComponent.validate();
                     clientConfig.rendererComponent.onClick();
                 },

@@ -6,13 +6,7 @@
 
 namespace Magento\Catalog\Model\Product\Option\Type\File;
 
-use Laminas\Validator\File\ExcludeExtension;
-use Laminas\Validator\File\Extension;
-use Laminas\Validator\File\FilesSize;
-use Laminas\Validator\File\ImageSize;
-use Laminas\Validator\ValidatorChain;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\File\Http;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -66,7 +60,7 @@ abstract class Validator
     /**
      * Get Error messages for validator Errors
      *
-     * @param string[] $errors Array of validation failure message codes @see ValidatorChain::getErrors()
+     * @param string[] $errors Array of validation failure message codes @see \Zend_Validate::getErrors()
      * @param array $fileInfo File info
      * @param \Magento\Catalog\Model\Product\Option $option
      * @return string[] Array of error messages
@@ -77,22 +71,22 @@ abstract class Validator
         $result = [];
         foreach ($errors as $errorCode) {
             switch ($errorCode) {
-                case ExcludeExtension::FALSE_EXTENSION:
+                case \Zend_Validate_File_ExcludeExtension::FALSE_EXTENSION:
                     $result[] = __(
                         "The file '%1' for '%2' has an invalid extension.",
                         $fileInfo['title'],
                         $option->getTitle()
                     );
                     break;
-                case Extension::FALSE_EXTENSION:
+                case \Zend_Validate_File_Extension::FALSE_EXTENSION:
                     $result[] = __(
                         "The file '%1' for '%2' has an invalid extension.",
                         $fileInfo['title'],
                         $option->getTitle()
                     );
                     break;
-                case ImageSize::WIDTH_TOO_BIG:
-                case ImageSize::HEIGHT_TOO_BIG:
+                case \Zend_Validate_File_ImageSize::WIDTH_TOO_BIG:
+                case \Zend_Validate_File_ImageSize::HEIGHT_TOO_BIG:
                     $result[] = __(
                         "The maximum allowed image size for '%1' is %2x%3 px.",
                         $option->getTitle(),
@@ -100,14 +94,14 @@ abstract class Validator
                         $option->getImageSizeY()
                     );
                     break;
-                case FilesSize::TOO_BIG:
+                case \Zend_Validate_File_FilesSize::TOO_BIG:
                     $result[] = __(
                         "The file '%1' you uploaded is larger than the %2 megabytes allowed by our server.",
                         $fileInfo['title'],
                         $this->fileSize->getMaxFileSizeInMb()
                     );
                     break;
-                case ImageSize::NOT_DETECTED:
+                case \Zend_Validate_File_ImageSize::NOT_DETECTED:
                     $result[] = __(
                         'The file "%1" is empty. Select another file and try again.',
                         $fileInfo['title']
@@ -143,10 +137,10 @@ abstract class Validator
     /**
      * Adds required validators to th $object
      *
-     * @param Http|ValidatorChain $object
+     * @param \Zend_File_Transfer_Adapter_Http|\Zend_Validate $object
      * @param \Magento\Catalog\Model\Product\Option $option
      * @param array $fileFullPath
-     * @return Http|ValidatorChain $object
+     * @return \Zend_File_Transfer_Adapter_Http|\Zend_Validate $object
      * @throws \Magento\Framework\Exception\InputException
      */
     protected function buildImageValidator($object, $option, $fileFullPath = null)
@@ -165,22 +159,22 @@ abstract class Validator
                     __('File \'%1\' is not an image.', $option->getTitle())
                 );
             }
-            $object->addValidator(new ImageSize($dimensions));
+            $object->addValidator(new \Zend_Validate_File_ImageSize($dimensions));
         }
 
         // File extension
         $allowed = $this->parseExtensionsString($option->getFileExtension());
         if ($allowed !== null) {
-            $object->addValidator(new Extension($allowed));
+            $object->addValidator(new \Zend_Validate_File_Extension($allowed));
         } else {
             $forbidden = $this->parseExtensionsString($this->getConfigData('forbidden_extensions'));
             if ($forbidden !== null) {
-                $object->addValidator(new ExcludeExtension($forbidden));
+                $object->addValidator(new \Zend_Validate_File_ExcludeExtension($forbidden));
             }
         }
 
         $object->addValidator(
-            new FilesSize(['max' => $this->fileSize->getMaxFileSize()])
+            new \Zend_Validate_File_FilesSize(['max' => $this->fileSize->getMaxFileSize()])
         );
         return $object;
     }
@@ -188,7 +182,7 @@ abstract class Validator
     /**
      * Simple check if file is image
      *
-     * @param array|string $fileInfo - either file data from \Laminas\File\Transfer\Transfer or file path
+     * @param array|string $fileInfo - either file data from \Zend_File_Transfer or file path
      * @return boolean
      * @see \Magento\Catalog\Model\Product\Option\Type\File::_isImage
      */

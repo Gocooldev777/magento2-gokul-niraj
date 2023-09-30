@@ -5,11 +5,7 @@ namespace PHPStan\PhpDocParser\Ast\PhpDoc;
 
 use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
-use function array_column;
-use function array_filter;
-use function array_map;
-use function implode;
-class PhpDocNode implements Node
+class PhpDocNode implements \PHPStan\PhpDocParser\Ast\Node
 {
     use NodeAttributes;
     /** @var PhpDocChildNode[] */
@@ -26,16 +22,17 @@ class PhpDocNode implements Node
      */
     public function getTags() : array
     {
-        return array_filter($this->children, static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode $child) : bool {
+        return \array_filter($this->children, static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode $child) : bool {
             return $child instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
         });
     }
     /**
+     * @param  string $tagName
      * @return PhpDocTagNode[]
      */
     public function getTagsByName(string $tagName) : array
     {
-        return array_filter($this->getTags(), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) use($tagName) : bool {
+        return \array_filter($this->getTags(), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) use($tagName) : bool {
             return $tag->name === $tagName;
         });
     }
@@ -44,205 +41,151 @@ class PhpDocNode implements Node
      */
     public function getVarTagValues(string $tagName = '@var') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode;
+        }), 'value');
     }
     /**
      * @return ParamTagValueNode[]
      */
     public function getParamTagValues(string $tagName = '@param') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
-        });
-    }
-    /**
-     * @return TypelessParamTagValueNode[]
-     */
-    public function getTypelessParamTagValues(string $tagName = '@param') : array
-    {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TypelessParamTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
+        }), 'value');
     }
     /**
      * @return TemplateTagValueNode[]
      */
     public function getTemplateTagValues(string $tagName = '@template') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
+        }), 'value');
     }
     /**
      * @return ExtendsTagValueNode[]
      */
     public function getExtendsTagValues(string $tagName = '@extends') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ExtendsTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ExtendsTagValueNode;
+        }), 'value');
     }
     /**
      * @return ImplementsTagValueNode[]
      */
     public function getImplementsTagValues(string $tagName = '@implements') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ImplementsTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ImplementsTagValueNode;
+        }), 'value');
     }
     /**
      * @return UsesTagValueNode[]
      */
     public function getUsesTagValues(string $tagName = '@use') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\UsesTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\UsesTagValueNode;
+        }), 'value');
     }
     /**
      * @return ReturnTagValueNode[]
      */
     public function getReturnTagValues(string $tagName = '@return') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
+        }), 'value');
     }
     /**
      * @return ThrowsTagValueNode[]
      */
     public function getThrowsTagValues(string $tagName = '@throws') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ThrowsTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ThrowsTagValueNode;
+        }), 'value');
     }
     /**
      * @return MixinTagValueNode[]
      */
     public function getMixinTagValues(string $tagName = '@mixin') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\MixinTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\MixinTagValueNode;
+        }), 'value');
     }
     /**
-     * @return DeprecatedTagValueNode[]
+     * @return \PHPStan\PhpDocParser\Ast\PhpDoc\DeprecatedTagValueNode[]
      */
     public function getDeprecatedTagValues() : array
     {
-        return array_filter(array_column($this->getTagsByName('@deprecated'), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\DeprecatedTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName('@deprecated'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\DeprecatedTagValueNode;
+        }), 'value');
     }
     /**
      * @return PropertyTagValueNode[]
      */
     public function getPropertyTagValues(string $tagName = '@property') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
+        }), 'value');
     }
     /**
      * @return PropertyTagValueNode[]
      */
     public function getPropertyReadTagValues(string $tagName = '@property-read') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
+        }), 'value');
     }
     /**
      * @return PropertyTagValueNode[]
      */
     public function getPropertyWriteTagValues(string $tagName = '@property-write') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
+        }), 'value');
     }
     /**
      * @return MethodTagValueNode[]
      */
     public function getMethodTagValues(string $tagName = '@method') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\MethodTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\MethodTagValueNode;
+        }), 'value');
     }
     /**
      * @return TypeAliasTagValueNode[]
      */
     public function getTypeAliasTagValues(string $tagName = '@phpstan-type') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasTagValueNode;
+        }), 'value');
     }
     /**
      * @return TypeAliasImportTagValueNode[]
      */
     public function getTypeAliasImportTagValues(string $tagName = '@phpstan-import-type') : array
     {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
-        });
-    }
-    /**
-     * @return AssertTagValueNode[]
-     */
-    public function getAssertTagValues(string $tagName = '@phpstan-assert') : array
-    {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\AssertTagValueNode;
-        });
-    }
-    /**
-     * @return AssertTagPropertyValueNode[]
-     */
-    public function getAssertPropertyTagValues(string $tagName = '@phpstan-assert') : array
-    {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\AssertTagPropertyValueNode;
-        });
-    }
-    /**
-     * @return AssertTagMethodValueNode[]
-     */
-    public function getAssertMethodTagValues(string $tagName = '@phpstan-assert') : array
-    {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\AssertTagMethodValueNode;
-        });
-    }
-    /**
-     * @return SelfOutTagValueNode[]
-     */
-    public function getSelfOutTypeTagValues(string $tagName = '@phpstan-this-out') : array
-    {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\SelfOutTagValueNode;
-        });
-    }
-    /**
-     * @return ParamOutTagValueNode[]
-     */
-    public function getParamOutTypeTagValues(string $tagName = '@param-out') : array
-    {
-        return array_filter(array_column($this->getTagsByName($tagName), 'value'), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode $value) : bool {
-            return $value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\ParamOutTagValueNode;
-        });
+        return \array_column(\array_filter($this->getTagsByName($tagName), static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode $tag) : bool {
+            return $tag->value instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
+        }), 'value');
     }
     public function __toString() : string
     {
-        $children = array_map(static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode $child) : string {
+        $children = \array_map(static function (\PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode $child) : string {
             $s = (string) $child;
             return $s === '' ? '' : ' ' . $s;
         }, $this->children);
-        return "/**\n *" . implode("\n *", $children) . "\n */";
+        return "/**\n *" . \implode("\n *", $children) . "\n */";
     }
 }

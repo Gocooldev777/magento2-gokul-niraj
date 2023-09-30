@@ -9,7 +9,6 @@ use PHPStan\Type\MixedType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
-use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\DependencyInjection\NodeManipulator\PropertyConstructorInjectionManipulator;
@@ -23,36 +22,28 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Symfony\Tests\Rector\Property\JMSInjectPropertyToConstructorInjectionRector\JMSInjectPropertyToConstructorInjectionRectorTest
  */
-final class JMSInjectPropertyToConstructorInjectionRector extends AbstractRector
+final class JMSInjectPropertyToConstructorInjectionRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var string
      */
     private const INJECT_ANNOTATION_CLASS = 'JMS\\DiExtraBundle\\Annotation\\Inject';
     /**
-     * @readonly
      * @var \Rector\Symfony\TypeAnalyzer\JMSDITypeResolver
      */
     private $jmsDITypeResolver;
     /**
-     * @readonly
      * @var \Rector\DependencyInjection\NodeManipulator\PropertyConstructorInjectionManipulator
      */
     private $propertyConstructorInjectionManipulator;
-    /**
-     * @readonly
-     * @var \Rector\Core\Php\PhpVersionProvider
-     */
-    private $phpVersionProvider;
-    public function __construct(JMSDITypeResolver $jmsDITypeResolver, PropertyConstructorInjectionManipulator $propertyConstructorInjectionManipulator, PhpVersionProvider $phpVersionProvider)
+    public function __construct(\Rector\Symfony\TypeAnalyzer\JMSDITypeResolver $jmsDITypeResolver, \Rector\DependencyInjection\NodeManipulator\PropertyConstructorInjectionManipulator $propertyConstructorInjectionManipulator)
     {
         $this->jmsDITypeResolver = $jmsDITypeResolver;
         $this->propertyConstructorInjectionManipulator = $propertyConstructorInjectionManipulator;
-        $this->phpVersionProvider = $phpVersionProvider;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Turns properties with `@inject` to private properties and constructor injection', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns properties with `@inject` to private properties and constructor injection', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 /**
  * @var SomeService
  * @inject
@@ -77,36 +68,36 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Property::class];
+        return [\PhpParser\Node\Stmt\Property::class];
     }
     /**
      * @param Property $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNode($node);
-        if (!$phpDocInfo instanceof PhpDocInfo) {
+        if (!$phpDocInfo instanceof \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo) {
             return null;
         }
-        $doctrineAnnotationTagValueNode = $phpDocInfo->getByAnnotationClass(self::INJECT_ANNOTATION_CLASS);
-        if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
+        $injectTagNode = $phpDocInfo->getByAnnotationClass(self::INJECT_ANNOTATION_CLASS);
+        if (!$injectTagNode instanceof \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode) {
             return null;
         }
-        $serviceType = $this->resolveServiceType($doctrineAnnotationTagValueNode, $phpDocInfo, $node);
-        if ($serviceType instanceof MixedType) {
+        $serviceType = $this->resolveServiceType($injectTagNode, $phpDocInfo, $node);
+        if ($serviceType instanceof \PHPStan\Type\MixedType) {
             return null;
         }
-        $this->propertyConstructorInjectionManipulator->refactor($node, $serviceType, $doctrineAnnotationTagValueNode);
-        if ($this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::PROPERTY_PROMOTION)) {
+        $this->propertyConstructorInjectionManipulator->refactor($node, $serviceType, $injectTagNode);
+        if ($this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::PROPERTY_PROMOTION)) {
             $this->removeNode($node);
             return null;
         }
         return $node;
     }
-    private function resolveServiceType(DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, PhpDocInfo $phpDocInfo, Property $property) : Type
+    private function resolveServiceType(\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo, \PhpParser\Node\Stmt\Property $property) : \PHPStan\Type\Type
     {
         $serviceType = $phpDocInfo->getVarType();
-        if (!$serviceType instanceof MixedType) {
+        if (!$serviceType instanceof \PHPStan\Type\MixedType) {
             return $serviceType;
         }
         return $this->jmsDITypeResolver->resolve($property, $doctrineAnnotationTagValueNode);

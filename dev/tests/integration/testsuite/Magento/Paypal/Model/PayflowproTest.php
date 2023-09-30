@@ -6,50 +6,39 @@
 
 namespace Magento\Paypal\Model;
 
-use Magento\Framework\DataObject;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
-use Magento\Framework\Math\Random;
-use Magento\Framework\ObjectManagerInterface;
-use Magento\Payment\Model\Method\Logger;
-use Magento\Paypal\Model\Payflow\Service\Gateway;
-use Magento\Sales\Model\Order;
-use Magento\TestFramework\Helper\Bootstrap;
-use PHPUnit\Framework\TestCase;
-
-class PayflowproTest extends TestCase
+class PayflowproTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var ObjectManagerInterface
+     * @var \Magento\Framework\ObjectManagerInterface
      */
     protected $_objectManager;
 
     /**
-     * @var Payflowpro
+     * @var \Magento\Paypal\Model\Payflowpro
      */
     protected $_model;
 
     /**
-     * @var LaminasClient
+     * @var \Magento\Framework\HTTP\ZendClient
      */
     protected $_httpClientMock;
 
     /**
-     * @var Gateway
+     * @var \Magento\Paypal\Model\Payflow\Service\Gateway
      */
     protected $gatewayMock;
 
     protected function setUp(): void
     {
-        $this->_objectManager = Bootstrap::getObjectManager();
-        $httpClientFactoryMock = $this->getMockBuilder(LaminasClientFactory::class)
+        $this->_objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+        $httpClientFactoryMock = $this->getMockBuilder(\Magento\Framework\HTTP\ZendClientFactory::class)
             ->setMethods(['create'])
             ->disableOriginalConstructor()
             ->getMock();
-        $this->_httpClientMock = $this->getMockBuilder(LaminasClient::class)->setMethods([])
+        $this->_httpClientMock = $this->getMockBuilder(\Magento\Framework\HTTP\ZendClient::class)->setMethods([])
             ->disableOriginalConstructor()->getMock();
         $this->_httpClientMock->expects($this->any())->method('setUri')->willReturnSelf();
-        $this->_httpClientMock->expects($this->any())->method('setOptions')->willReturnSelf();
+        $this->_httpClientMock->expects($this->any())->method('setConfig')->willReturnSelf();
         $this->_httpClientMock->expects($this->any())->method('setMethod')->willReturnSelf();
         $this->_httpClientMock->expects($this->any())->method('setParameterPost')->willReturnSelf();
         $this->_httpClientMock->expects($this->any())->method('setHeaders')->willReturnSelf();
@@ -58,10 +47,10 @@ class PayflowproTest extends TestCase
         $httpClientFactoryMock->expects($this->any())->method('create')
             ->willReturn($this->_httpClientMock);
 
-        $mathRandomMock = $this->createMock(Random::class);
-        $loggerMock = $this->createMock(Logger::class);
+        $mathRandomMock = $this->createMock(\Magento\Framework\Math\Random::class);
+        $loggerMock = $this->createMock(\Magento\Payment\Model\Method\Logger::class);
         $this->gatewayMock =$this->_objectManager->create(
-            Gateway::class,
+            \Magento\Paypal\Model\Payflow\Service\Gateway::class,
             [
                 'httpClientFactory' => $httpClientFactoryMock,
                 'mathRandom' => $mathRandomMock,
@@ -69,7 +58,7 @@ class PayflowproTest extends TestCase
             ]
         );
         $this->_model = $this->_objectManager->create(
-            Payflowpro::class,
+            \Magento\Paypal\Model\Payflowpro::class,
             ['gateway' => $this->gatewayMock]
         );
     }
@@ -79,12 +68,12 @@ class PayflowproTest extends TestCase
      */
     public function testReviewPaymentNullResponce()
     {
-        /** @var Order $order */
-        $order = $this->_objectManager->create(Order::class);
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->_objectManager->create(\Magento\Sales\Model\Order::class);
         $order->loadByIncrementId('100000001');
 
-        $this->_httpClientMock->expects($this->any())->method('send')
-            ->willReturn(new DataObject(['body' => 'RESULTval=12&val2=34']));
+        $this->_httpClientMock->expects($this->any())->method('request')
+            ->willReturn(new \Magento\Framework\DataObject(['body' => 'RESULTval=12&val2=34']));
         $expectedResult = ['resultval' => '12', 'val2' => '34', 'result_code' => null];
 
         $this->assertEquals($expectedResult, $this->_model->acceptPayment($order->getPayment()));

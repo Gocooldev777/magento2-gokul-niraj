@@ -1,48 +1,65 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type\Definition;
 
+use Exception;
 use GraphQL\Error\Error;
 use GraphQL\Language\AST\BooleanValueNode;
 use GraphQL\Language\AST\Node;
-use GraphQL\Language\Printer;
 use GraphQL\Utils\Utils;
+use function is_bool;
 
 class BooleanType extends ScalarType
 {
-    public string $name = Type::BOOLEAN;
+    /** @var string */
+    public $name = Type::BOOLEAN;
 
-    public ?string $description = 'The `Boolean` scalar type represents `true` or `false`.';
+    /** @var string */
+    public $description = 'The `Boolean` scalar type represents `true` or `false`.';
 
     /**
-     * Serialize the given value to a Boolean.
+     * Serialize the given value to a boolean.
      *
      * The GraphQL spec leaves this up to the implementations, so we just do what
      * PHP does natively to make this intuitive for developers.
+     *
+     * @param mixed $value
      */
-    public function serialize($value): bool
+    public function serialize($value) : bool
     {
         return (bool) $value;
     }
 
-    /** @throws Error */
-    public function parseValue($value): bool
+    /**
+     * @param mixed $value
+     *
+     * @return bool
+     *
+     * @throws Error
+     */
+    public function parseValue($value)
     {
-        if (\is_bool($value)) {
+        if (is_bool($value)) {
             return $value;
         }
 
-        $notBoolean = Utils::printSafeJson($value);
-        throw new Error("Boolean cannot represent a non boolean value: {$notBoolean}");
+        throw new Error('Boolean cannot represent a non boolean value: ' . Utils::printSafe($value));
     }
 
-    public function parseLiteral(Node $valueNode, ?array $variables = null): bool
+    /**
+     * @param mixed[]|null $variables
+     *
+     * @throws Exception
+     */
+    public function parseLiteral(Node $valueNode, ?array $variables = null)
     {
-        if ($valueNode instanceof BooleanValueNode) {
-            return $valueNode->value;
+        if (! $valueNode instanceof BooleanValueNode) {
+            // Intentionally without message, as all information already in wrapped Exception
+            throw new Error();
         }
 
-        $notBoolean = Printer::doPrint($valueNode);
-        throw new Error("Boolean cannot represent a non boolean value: {$notBoolean}", $valueNode);
+        return $valueNode->value;
     }
 }

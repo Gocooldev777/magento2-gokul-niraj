@@ -9,8 +9,6 @@ namespace Magento\Wishlist\Model\Wishlist\Data;
 
 /**
  * DTO represents Wishlist Item data
- *
- * @api
  */
 class WishlistItem
 {

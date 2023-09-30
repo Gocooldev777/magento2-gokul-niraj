@@ -6,6 +6,7 @@
 namespace Magento\Catalog\Block\Product;
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Category;
 
 /**
  * Product View block
@@ -182,8 +183,7 @@ class View extends AbstractProduct implements \Magento\Framework\DataObject\Iden
         foreach ($tierPricesList as $tierPrice) {
             $tierPriceData = [
                 'qty' => $tierPrice['price_qty'],
-                'price' => $tierPrice['price']->getValue(),
-                'basePrice' => $tierPrice['price']->getBaseAmount()
+                'price' => $tierPrice['website_price'],
             ];
             $tierPrices[] = $tierPriceData;
         }

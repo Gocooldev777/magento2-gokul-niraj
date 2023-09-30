@@ -14,13 +14,9 @@ use Magento\Authorization\Model\RulesFactory;
 use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Catalog\Model\Attribute\ScopeOverriddenValue;
 use Magento\Catalog\Model\Category;
-use Magento\Catalog\Test\Fixture\Category as CategoryFixture;
 use Magento\CatalogUrlRewrite\Model\CategoryUrlRewriteGenerator;
 use Magento\Integration\Api\AdminTokenServiceInterface;
 use Magento\Store\Model\Store;
-use Magento\TestFramework\Fixture\DataFixture;
-use Magento\TestFramework\Fixture\DataFixtureStorage;
-use Magento\TestFramework\Fixture\DataFixtureStorageManager;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\TestCase\WebapiAbstract;
 use Magento\UrlRewrite\Model\Storage\DbStorage;
@@ -33,12 +29,9 @@ use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
  */
 class CategoryRepositoryTest extends WebapiAbstract
 {
-    private const RESOURCE_PATH = '/V1/categories';
-    private const SERVICE_NAME = 'catalogCategoryRepositoryV1';
+    const RESOURCE_PATH = '/V1/categories';
+    const SERVICE_NAME = 'catalogCategoryRepositoryV1';
 
-    /**
-     * @var int
-     */
     private $modelId = 333;
 
     /**
@@ -62,11 +55,6 @@ class CategoryRepositoryTest extends WebapiAbstract
     private $createdCategories;
 
     /**
-     * @var DataFixtureStorage
-     */
-    private $fixtures;
-
-    /**
      * @inheritDoc
      */
     protected function setUp(): void
@@ -76,7 +64,6 @@ class CategoryRepositoryTest extends WebapiAbstract
         $this->roleFactory = Bootstrap::getObjectManager()->get(RoleFactory::class);
         $this->rulesFactory = Bootstrap::getObjectManager()->get(RulesFactory::class);
         $this->adminTokens = Bootstrap::getObjectManager()->get(AdminTokenServiceInterface::class);
-        $this->fixtures = Bootstrap::getObjectManager()->get(DataFixtureStorageManager::class)->getStorage();
     }
 
     /**
@@ -242,12 +229,12 @@ class CategoryRepositoryTest extends WebapiAbstract
             : $translatedMsg;
     }
 
-    #[
-        DataFixture(CategoryFixture::class, as: 'category'),
-    ]
+    /**
+     * @magentoApiDataFixture Magento/Catalog/_files/category.php
+     */
     public function testUpdate()
     {
-        $categoryId = $this->fixtures->get('category')->getId();
+        $categoryId = 333;
         $categoryData = [
             'name' => 'Update Category Test',
             'is_active' => false,
@@ -297,14 +284,14 @@ class CategoryRepositoryTest extends WebapiAbstract
         $this->createdCategories = [$categoryId];
     }
 
-    #[
-        DataFixture(CategoryFixture::class, as: 'category'),
-    ]
+    /**
+     * @magentoApiDataFixture Magento/Catalog/_files/category.php
+     */
     public function testUpdateUrlKey()
     {
         $this->_markTestAsRestOnly('Functionality available in REST mode only.');
 
-        $categoryId = $this->fixtures->get('category')->getId();
+        $categoryId = 333;
         $categoryData = [
             'name' => 'Update Category Test Old Name',
             'custom_attributes' => [
@@ -602,13 +589,12 @@ class CategoryRepositoryTest extends WebapiAbstract
 
     /**
      * Check if repository does not override default values for attributes out of request
+     *
+     * @magentoApiDataFixture Magento/Catalog/_files/category.php
      */
-    #[
-        DataFixture(CategoryFixture::class, as: 'category'),
-    ]
     public function testUpdateScopeAttribute()
     {
-        $categoryId = $this->fixtures->get('category')->getId();
+        $categoryId = 333;
         $categoryData = [
             'name' => 'Scope Specific Value',
         ];

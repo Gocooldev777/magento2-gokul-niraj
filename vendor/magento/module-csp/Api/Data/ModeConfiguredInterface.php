@@ -9,8 +9,6 @@ namespace Magento\Csp\Api\Data;
 
 /**
  * CSP mode.
- *
- * @api
  */
 interface ModeConfiguredInterface
 {

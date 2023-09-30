@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/modal/modal-prompt-content.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<form <%= formAttr %>>\n    <fieldset class=\"fieldset\">\n        <div class=\"field\">\n            <% if(data.label){ %>\n            <label for=\"prompt-field-<%- data.id %>\" class=\"label\">\n                <span><%= data.label %></span>\n            </label>\n            <% } %>\n            <div class=\"control\">\n                <input type=\"text\" data-role=\"promptField\" id=\"prompt-field-<%- data.id %>\" class=\"input-text\" <%= inputAttr %>/>\n            </div>\n        </div>\n    </fieldset>\n</form>\n"}
+}});

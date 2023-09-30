@@ -9,10 +9,9 @@ namespace Magento\CatalogGraphQl\Plugin;
 
 use Magento\Catalog\Model\Product;
 use Magento\Framework\Message\MessageInterface;
+use Magento\Framework\View\DesignLoader as ViewDesignLoader;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Catalog\Block\Product\ImageFactory;
-use Magento\Framework\App\AreaList;
-use Magento\Framework\App\State;
 
 /**
  * Load necessary design files for GraphQL
@@ -20,37 +19,25 @@ use Magento\Framework\App\State;
 class DesignLoader
 {
     /**
+     * @var DesignLoader
+     */
+    private $designLoader;
+
+    /**
      * @var ManagerInterface
      */
     private $messageManager;
 
     /**
-     * Application arealist
-     *
-     * @var AreaList
-     */
-    private $areaList;
-
-    /**
-     * Application State
-     *
-     * @var State
-     */
-    private $appState;
-
-    /**
+     * @param ViewDesignLoader $designLoader
      * @param ManagerInterface $messageManager
-     * @param AreaList $areaList
-     * @param State $appState
      */
     public function __construct(
-        ManagerInterface $messageManager,
-        AreaList $areaList,
-        State $appState
+        ViewDesignLoader $designLoader,
+        ManagerInterface $messageManager
     ) {
+        $this->designLoader = $designLoader;
         $this->messageManager = $messageManager;
-        $this->areaList = $areaList;
-        $this->appState = $appState;
     }
 
     /**
@@ -70,8 +57,7 @@ class DesignLoader
         array $attributes = null
     ) {
         try {
-            $area = $this->areaList->getArea($this->appState->getAreaCode());
-            $area->load(\Magento\Framework\App\Area::PART_DESIGN);
+            $this->designLoader->load();
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
             if ($e->getPrevious() instanceof \Magento\Framework\Config\Dom\ValidationException) {
                 /** @var MessageInterface $message */

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_InventoryInStorePickupFrontend/template/store-pickup.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<li id=\"store-pickup\"\n    if=\"isVisible\"\n    css=\"'selected-shipping': !isStorePickupSelected(), 'selected-store-pickup': isStorePickupSelected()\"\n>\n    <render args=\"deliveryMethodSelectorTemplate\"></render>\n    <if args=\"isStorePickupSelected\">\n        <each args=\"getRegion('store-selector')\">\n            <div template=\" {name: getTemplate()}\"></div>\n        </each>\n    </if>\n</li>\n"}
+}});

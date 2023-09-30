@@ -8,8 +8,6 @@ namespace Magento\Framework\View\Page;
 
 /**
  * Factory class for \Magento\Framework\View\Page\Config
- *
- * @api
  */
 class ConfigFactory
 {

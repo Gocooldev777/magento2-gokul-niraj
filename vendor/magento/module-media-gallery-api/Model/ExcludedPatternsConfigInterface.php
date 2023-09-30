@@ -8,7 +8,6 @@ namespace Magento\MediaGalleryApi\Model;
 
 /**
  * Returns list of excluded regexp patterns
- * @api
  */
 interface ExcludedPatternsConfigInterface
 {

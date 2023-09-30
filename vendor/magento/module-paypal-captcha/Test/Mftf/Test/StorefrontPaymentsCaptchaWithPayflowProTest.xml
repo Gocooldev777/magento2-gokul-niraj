@@ -20,7 +20,6 @@
             <group value="captcha"/>
         </annotations>
         <before>
-            <magentoCLI command="config:set {{EnableFlatRateConfigData.path}} {{EnableFlatRateConfigData.value}}" stepKey="enableFlatRate"/>
             <!-- Configure Paypal Payflow Pro payment method -->
             <createData entity="PaypalPayflowProConfig" stepKey="configurePaypalPayflowProPayment"/>
             <createData entity="EnablePaypalPayflowProWithVault" stepKey="enablePaypalPayflowProPaymentWithVault"/>

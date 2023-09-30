@@ -5,15 +5,13 @@
  */
 namespace Magento\Framework\Validator;
 
-use Laminas\Validator\Translator\TranslatorInterface;
-
 /**
  * Validator constraint delegates validation to wrapped validator.
  *
  * @api
  * @since 100.0.2
  */
-class Constraint extends AbstractValidator
+class Constraint extends \Magento\Framework\Validator\AbstractValidator
 {
     /**
      * @var \Magento\Framework\Validator\ValidatorInterface
@@ -83,10 +81,10 @@ class Constraint extends AbstractValidator
     /**
      * Set translator to wrapped validator.
      *
-     * @param TranslatorInterface|null $translator
-     * @return AbstractValidator
+     * @param \Magento\Framework\Translate\AdapterInterface|null $translator
+     * @return \Magento\Framework\Validator\AbstractValidator
      */
-    public function setTranslator(?TranslatorInterface $translator = null)
+    public function setTranslator($translator = null)
     {
         $this->_wrappedValidator->setTranslator($translator);
         return $this;
@@ -95,7 +93,7 @@ class Constraint extends AbstractValidator
     /**
      * Get translator instance of wrapped validator
      *
-     * @return TranslatorInterface|null
+     * @return \Magento\Framework\Translate\AdapterInterface|null
      */
     public function getTranslator()
     {

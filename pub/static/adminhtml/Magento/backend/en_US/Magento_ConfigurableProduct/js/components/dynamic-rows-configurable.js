@@ -412,7 +412,7 @@ define([
             product = {
                 'id': row.productId,
                 'product_link': row.productUrl,
-                'name': row.name,
+                'name': $('<i></i>').text(row.name).html(),
                 'sku': row.sku,
                 'status': row.status,
                 'price': row.price,

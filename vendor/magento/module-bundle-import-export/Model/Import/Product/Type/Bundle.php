@@ -1,5 +1,8 @@
 <?php
+
 /**
+ * Import entity of bundle product type
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -14,40 +17,37 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory as At
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
-use Magento\ImportExport\Model\Import;
-use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Import entity Bundle product type.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\AbstractType
 {
     /**
      * Delimiter before product option value.
      */
-    public const BEFORE_OPTION_VALUE_DELIMITER = ';';
+    const BEFORE_OPTION_VALUE_DELIMITER = ';';
 
-    public const PAIR_VALUE_SEPARATOR = '=';
+    const PAIR_VALUE_SEPARATOR = '=';
 
     /**
      * Dynamic value.
      */
-    public const VALUE_DYNAMIC = 'dynamic';
+    const VALUE_DYNAMIC = 'dynamic';
 
     /**
      * Fixed value.
      */
-    public const VALUE_FIXED = 'fixed';
+    const VALUE_FIXED = 'fixed';
 
-    public const NOT_FIXED_DYNAMIC_ATTRIBUTE = 'price_view';
+    const NOT_FIXED_DYNAMIC_ATTRIBUTE = 'price_view';
 
-    public const SELECTION_PRICE_TYPE_FIXED = 0;
+    const SELECTION_PRICE_TYPE_FIXED = 0;
 
-    public const SELECTION_PRICE_TYPE_PERCENT = 1;
+    const SELECTION_PRICE_TYPE_PERCENT = 1;
 
     /**
      * Array of cached options.
@@ -89,9 +89,9 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
     ];
 
     /**
-     * Custom fields mapping for bundle product.
+     * Custom fields mapping.
      *
-     * @var array
+     * @inherited
      */
     protected $_customFieldsMapping = [
         'price_type' => 'bundle_price_type',
@@ -102,7 +102,7 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
     ];
 
     /**
-     * Bundle field mapping for bundle product with selection.
+     * Bundle field mapping.
      *
      * @var array
      */
@@ -113,7 +113,7 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
     ];
 
     /**
-     * Option type mapping for bundle product.
+     * Option type mapping.
      *
      * @var array
      */
@@ -202,7 +202,11 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
                     $this->_cachedOptions[$entityId][$option['name']]['selections'] = [];
                 }
                 $this->_cachedOptions[$entityId][$option['name']]['selections'][] = $option;
-                $this->_cachedOptionSelectQuery[] = [(int)$entityId, $option['name']];
+                $this->_cachedOptionSelectQuery[] =
+                    $this->connection->quoteInto(
+                        '(parent_id = ' . (int)$entityId . ' AND title = ?)',
+                        $option['name']
+                    );
             }
         }
         return $selections;
@@ -219,7 +223,7 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
     {
         $option = [];
         foreach ($values as $keyValue) {
-            $keyValue = $keyValue ? trim($keyValue) : '';
+            $keyValue = trim($keyValue);
             $pos = strpos($keyValue, self::PAIR_VALUE_SEPARATOR);
             if ($pos !== false) {
                 $key = substr($keyValue, 0, $pos);
@@ -369,12 +373,12 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
      */
     public function saveData()
     {
-        if ($this->_entityModel->getBehavior() == Import::BEHAVIOR_DELETE) {
+        if ($this->_entityModel->getBehavior() == \Magento\ImportExport\Model\Import::BEHAVIOR_DELETE) {
             $productIds = [];
             $newSku = $this->_entityModel->getNewSku();
             while ($bunch = $this->_entityModel->getNextBunch()) {
-                foreach ($bunch as $rowData) {
-                    $productData = $newSku[strtolower($rowData[Product::COL_SKU] ?? '')];
+                foreach ($bunch as $rowNum => $rowData) {
+                    $productData = $newSku[strtolower($rowData[Product::COL_SKU])];
                     $productIds[] = $productData[$this->getProductEntityLinkField()];
                 }
                 $this->deleteOptionsAndSelections($productIds);
@@ -386,7 +390,7 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
                     if (!$this->_entityModel->isRowAllowedToImport($rowData, $rowNum)) {
                         continue;
                     }
-                    $productData = $newSku[strtolower($rowData[Product::COL_SKU] ?? '')];
+                    $productData = $newSku[strtolower($rowData[Product::COL_SKU])];
                     if ($this->_type != $productData['type_id']) {
                         continue;
                     }
@@ -473,24 +477,18 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
      */
     protected function populateExistingOptions()
     {
-        $select = $this->connection->select()->from(
-            ['bo' => $this->_resource->getTableName('catalog_product_bundle_option')],
-            ['option_id', 'parent_id', 'required', 'position', 'type']
-        )->joinLeft(
-            ['bov' => $this->_resource->getTableName('catalog_product_bundle_option_value')],
-            'bo.option_id = bov.option_id',
-            ['value_id', 'title']
+        $existingOptions = $this->connection->fetchAssoc(
+            $this->connection->select()->from(
+                ['bo' => $this->_resource->getTableName('catalog_product_bundle_option')],
+                ['option_id', 'parent_id', 'required', 'position', 'type']
+            )->joinLeft(
+                ['bov' => $this->_resource->getTableName('catalog_product_bundle_option_value')],
+                'bo.option_id = bov.option_id',
+                ['value_id', 'title']
+            )->where(
+                implode(' OR ', $this->_cachedOptionSelectQuery)
+            )
         );
-        $orWhere = false;
-        foreach ($this->_cachedOptionSelectQuery as $item) {
-            if ($orWhere) {
-                $select->orWhere('parent_id = ' . $item[0] . ' AND title = ?', $item[1]);
-            } else {
-                $select->where('parent_id = ' . $item[0] . ' AND title = ?', $item[1]);
-                $orWhere = true;
-            }
-        }
-        $existingOptions = $this->connection->fetchAssoc($select);
         foreach ($existingOptions as $optionId => $option) {
             $this->_cachedOptions[$option['parent_id']][$option['title']]['option_id'] = $optionId;
             foreach ($option as $key => $value) {
@@ -528,7 +526,9 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
                 $productId = $this->_cachedSkuToProducts[$selection['sku']];
                 if ($productId == $existingSelection['product_id']) {
                     foreach (array_keys($existingSelection) as $origKey) {
-                        $key = $this->_bundleFieldMapping[$origKey] ?? $origKey;
+                        $key = isset($this->_bundleFieldMapping[$origKey])
+                            ? $this->_bundleFieldMapping[$origKey]
+                            : $origKey;
                         if (
                         !isset($this->_cachedOptions[$existingSelection['parent_product_id']][$optionTitle]['selections'][$selectIndex][$key])
                         ) {
@@ -775,7 +775,7 @@ class Bundle extends \Magento\CatalogImportExport\Model\Import\Product\Type\Abst
     private function getStoreIdByCode(string $storeCode): int
     {
         if (!isset($this->storeCodeToId[$storeCode])) {
-            /** @var $store Store */
+            /** @var $store \Magento\Store\Model\Store */
             foreach ($this->storeManager->getStores() as $store) {
                 $this->storeCodeToId[$store->getCode()] = $store->getId();
             }

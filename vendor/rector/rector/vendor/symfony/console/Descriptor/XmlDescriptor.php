@@ -8,13 +8,13 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Descriptor;
+namespace RectorPrefix20211221\Symfony\Component\Console\Descriptor;
 
-use RectorPrefix202304\Symfony\Component\Console\Application;
-use RectorPrefix202304\Symfony\Component\Console\Command\Command;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputArgument;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix202304\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix20211221\Symfony\Component\Console\Application;
+use RectorPrefix20211221\Symfony\Component\Console\Command\Command;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix20211221\Symfony\Component\Console\Input\InputOption;
 /**
  * XML descriptor.
  *
@@ -22,9 +22,9 @@ use RectorPrefix202304\Symfony\Component\Console\Input\InputOption;
  *
  * @internal
  */
-class XmlDescriptor extends Descriptor
+class XmlDescriptor extends \RectorPrefix20211221\Symfony\Component\Console\Descriptor\Descriptor
 {
-    public function getInputDefinitionDocument(InputDefinition $definition) : \DOMDocument
+    public function getInputDefinitionDocument(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition) : \DOMDocument
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->appendChild($definitionXML = $dom->createElement('definition'));
@@ -38,7 +38,7 @@ class XmlDescriptor extends Descriptor
         }
         return $dom;
     }
-    public function getCommandDocument(Command $command, bool $short = \false) : \DOMDocument
+    public function getCommandDocument(\RectorPrefix20211221\Symfony\Component\Console\Command\Command $command, bool $short = \false) : \DOMDocument
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->appendChild($commandXML = $dom->createElement('command'));
@@ -64,7 +64,7 @@ class XmlDescriptor extends Descriptor
         }
         return $dom;
     }
-    public function getApplicationDocument(Application $application, string $namespace = null, bool $short = \false) : \DOMDocument
+    public function getApplicationDocument(\RectorPrefix20211221\Symfony\Component\Console\Application $application, string $namespace = null, bool $short = \false) : \DOMDocument
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->appendChild($rootXml = $dom->createElement('symfony'));
@@ -75,7 +75,7 @@ class XmlDescriptor extends Descriptor
             }
         }
         $rootXml->appendChild($commandsXML = $dom->createElement('commands'));
-        $description = new ApplicationDescription($application, $namespace, \true);
+        $description = new \RectorPrefix20211221\Symfony\Component\Console\Descriptor\ApplicationDescription($application, $namespace, \true);
         if ($namespace) {
             $commandsXML->setAttribute('namespace', $namespace);
         }
@@ -95,23 +95,38 @@ class XmlDescriptor extends Descriptor
         }
         return $dom;
     }
-    protected function describeInputArgument(InputArgument $argument, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputArgument(\RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument $argument, array $options = [])
     {
         $this->writeDocument($this->getInputArgumentDocument($argument));
     }
-    protected function describeInputOption(InputOption $option, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputOption(\RectorPrefix20211221\Symfony\Component\Console\Input\InputOption $option, array $options = [])
     {
         $this->writeDocument($this->getInputOptionDocument($option));
     }
-    protected function describeInputDefinition(InputDefinition $definition, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeInputDefinition(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition, array $options = [])
     {
         $this->writeDocument($this->getInputDefinitionDocument($definition));
     }
-    protected function describeCommand(Command $command, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeCommand(\RectorPrefix20211221\Symfony\Component\Console\Command\Command $command, array $options = [])
     {
         $this->writeDocument($this->getCommandDocument($command, $options['short'] ?? \false));
     }
-    protected function describeApplication(Application $application, array $options = [])
+    /**
+     * {@inheritdoc}
+     */
+    protected function describeApplication(\RectorPrefix20211221\Symfony\Component\Console\Application $application, array $options = [])
     {
         $this->writeDocument($this->getApplicationDocument($application, $options['namespace'] ?? null, $options['short'] ?? \false));
     }
@@ -132,7 +147,7 @@ class XmlDescriptor extends Descriptor
         $dom->formatOutput = \true;
         $this->write($dom->saveXML());
     }
-    private function getInputArgumentDocument(InputArgument $argument) : \DOMDocument
+    private function getInputArgumentDocument(\RectorPrefix20211221\Symfony\Component\Console\Input\InputArgument $argument) : \DOMDocument
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->appendChild($objectXML = $dom->createElement('argument'));
@@ -149,7 +164,7 @@ class XmlDescriptor extends Descriptor
         }
         return $dom;
     }
-    private function getInputOptionDocument(InputOption $option) : \DOMDocument
+    private function getInputOptionDocument(\RectorPrefix20211221\Symfony\Component\Console\Input\InputOption $option) : \DOMDocument
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
         $dom->appendChild($objectXML = $dom->createElement('option'));

@@ -1,25 +1,23 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class VariableDefinitionNode extends Node implements DefinitionNode
 {
-    public string $kind = NodeKind::VARIABLE_DEFINITION;
+    /** @var string */
+    public $kind = NodeKind::VARIABLE_DEFINITION;
 
-    public VariableNode $variable;
+    /** @var VariableNode */
+    public $variable;
 
     /** @var NamedTypeNode|ListTypeNode|NonNullTypeNode */
-    public TypeNode $type;
+    public $type;
 
     /** @var VariableNode|NullValueNode|IntValueNode|FloatValueNode|StringValueNode|BooleanValueNode|EnumValueNode|ListValueNode|ObjectValueNode|null */
-    public ?ValueNode $defaultValue = null;
+    public $defaultValue;
 
     /** @var NodeList<DirectiveNode> */
-    public NodeList $directives;
-
-    public function __construct(array $vars)
-    {
-        parent::__construct($vars);
-        $this->directives ??= new NodeList([]);
-    }
+    public $directives;
 }

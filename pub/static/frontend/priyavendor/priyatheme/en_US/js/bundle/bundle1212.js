@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/tooltip/tooltip.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div data-tooltip=\"tooltip-wrapper\" class=\"data-tooltip-wrapper <%= data.tooltipClasses %>\">\n    <div class=\"data-tooltip-tail\"></div>\n    <div class=\"data-tooltip\">\n        <% if(data.closeButton){ %>\n            <button type=\"button\" class=\"action-close\">\n                <span translate=\"'Close'\"></span>\n            </button>\n        <% } %>\n        <div class=\"data-tooltip-content\"></div>\n    </div>\n</div>\n"}
+}});

@@ -1,12 +1,15 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
 use Rector\Symfony\Rector\MethodCall\ContainerGetToConstructorInjectionRector;
+use Rector\Symfony\Rector\MethodCall\GetParameterToConstructorInjectionRector;
 use Rector\Symfony\Rector\MethodCall\GetToConstructorInjectionRector;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->rule(ContainerGetToConstructorInjectionRector::class);
-    $rectorConfig->rule(GetToConstructorInjectionRector::class);
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\Symfony\Rector\MethodCall\ContainerGetToConstructorInjectionRector::class);
+    $services->set(\Rector\Symfony\Rector\MethodCall\GetParameterToConstructorInjectionRector::class);
+    $services->set(\Rector\Symfony\Rector\MethodCall\GetToConstructorInjectionRector::class);
 };

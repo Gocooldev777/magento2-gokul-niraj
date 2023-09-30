@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"jquery/ui-modules/jquery-var-for-color.js":"( function( factory ) {\n\t\"use strict\";\n\n\tif ( typeof define === \"function\" && define.amd ) {\n\n\t\t// AMD. Register as an anonymous module.\n\t\tdefine( [ \"jquery\", \"./version\" ], factory );\n\t} else {\n\n\t\t// Browser globals\n\t\tfactory( jQuery );\n\t}\n} )( function( $ ) {\n\t\"use strict\";\n\n// Create a local jQuery because jQuery Color relies on it and the\n// global may not exist with AMD and a custom build (#10199).\n// This module is a noop if used as a regular AMD module.\n// eslint-disable-next-line no-unused-vars\nvar jQuery = $;\n\n} );\n"}
+}});

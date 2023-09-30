@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -14,17 +14,17 @@ use Magento\Sales\Model\Order\Payment;
 
 class RiskDataHandler implements HandlerInterface
 {
-    public const RISK_DATA_ID = 'riskDataId';
+    const RISK_DATA_ID = 'riskDataId';
 
     /**
      * The possible values of the risk decision are Not Evaluated, Approve, Review, and Decline
      */
-    public const RISK_DATA_DECISION = 'riskDataDecision';
+    const RISK_DATA_DECISION = 'riskDataDecision';
 
     /**
      * Risk data Review status
      */
-    private const STATUS_REVIEW = 'Review';
+    private static $statusReview = 'Review';
 
     /**
      * @var SubjectReader
@@ -32,13 +32,12 @@ class RiskDataHandler implements HandlerInterface
     private $subjectReader;
 
     /**
-     * RiskDataHandler Constructor
+     * Constructor
      *
      * @param SubjectReader $subjectReader
      */
-    public function __construct(
-        SubjectReader $subjectReader
-    ) {
+    public function __construct(SubjectReader $subjectReader)
+    {
         $this->subjectReader = $subjectReader;
     }
 
@@ -69,7 +68,7 @@ class RiskDataHandler implements HandlerInterface
         $payment->setAdditionalInformation(self::RISK_DATA_DECISION, $transaction->riskData->decision);
 
         // Mark payment as fraud
-        if ($transaction->riskData->decision === self::STATUS_REVIEW) {
+        if ($transaction->riskData->decision === self::$statusReview) {
             // We have to set the transaction to pending, so it is not captured right away.
             $payment->setIsTransactionPending(true);
             $payment->setIsFraudDetected(true);

@@ -11,7 +11,6 @@ use Rector\Core\PhpParser\Comparing\NodeComparator;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeNestingScope\NodeFinder\ScopeAwareNodeFinder;
-use Rector\NodeTypeResolver\Node\AttributeKey;
 final class NodeUsageFinder
 {
     /**
@@ -34,7 +33,7 @@ final class NodeUsageFinder
      * @var \Rector\Core\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
-    public function __construct(NodeNameResolver $nodeNameResolver, BetterNodeFinder $betterNodeFinder, ScopeAwareNodeFinder $scopeAwareNodeFinder, NodeComparator $nodeComparator)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeNestingScope\NodeFinder\ScopeAwareNodeFinder $scopeAwareNodeFinder, \Rector\Core\PhpParser\Comparing\NodeComparator $nodeComparator)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->betterNodeFinder = $betterNodeFinder;
@@ -45,34 +44,30 @@ final class NodeUsageFinder
      * @param Node[] $nodes
      * @return Variable[]
      */
-    public function findVariableUsages(array $nodes, Variable $variable) : array
+    public function findVariableUsages(array $nodes, \PhpParser\Node\Expr\Variable $variable) : array
     {
         $variableName = $this->nodeNameResolver->getName($variable);
         if ($variableName === null) {
             return [];
         }
-        return $this->betterNodeFinder->find($nodes, function (Node $node) use($variable, $variableName) : bool {
-            if (!$node instanceof Variable) {
+        return $this->betterNodeFinder->find($nodes, function (\PhpParser\Node $node) use($variable, $variableName) : bool {
+            if (!$node instanceof \PhpParser\Node\Expr\Variable) {
                 return \false;
             }
             if ($node === $variable) {
                 return \false;
             }
-            if (!$this->nodeNameResolver->isName($node, $variableName)) {
-                return \false;
-            }
-            $assignedTo = $node->getAttribute(AttributeKey::ASSIGNED_TO);
-            return !$assignedTo instanceof Node;
+            return $this->nodeNameResolver->isName($node, $variableName);
         });
     }
-    public function findPreviousForeachNodeUsage(Foreach_ $foreach, Expr $expr) : ?Node
+    public function findPreviousForeachNodeUsage(\PhpParser\Node\Stmt\Foreach_ $foreach, \PhpParser\Node\Expr $expr) : ?\PhpParser\Node
     {
-        return $this->scopeAwareNodeFinder->findParent($foreach, function (Node $node) use($expr) : bool {
+        return $this->scopeAwareNodeFinder->findParent($foreach, function (\PhpParser\Node $node) use($expr) : bool {
             // skip itself
             if ($node === $expr) {
                 return \false;
             }
             return $this->nodeComparator->areNodesEqual($node, $expr);
-        }, [Foreach_::class]);
+        }, [\PhpParser\Node\Stmt\Foreach_::class]);
     }
 }

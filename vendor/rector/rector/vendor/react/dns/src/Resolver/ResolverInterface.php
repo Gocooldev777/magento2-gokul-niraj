@@ -1,6 +1,6 @@
 <?php
 
-namespace RectorPrefix202304\React\Dns\Resolver;
+namespace RectorPrefix20211221\React\Dns\Resolver;
 
 interface ResolverInterface
 {

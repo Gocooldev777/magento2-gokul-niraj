@@ -80,7 +80,6 @@
                 <argument name="StoreGroup" value="customStoreGroup"/>
                 <argument name="customStore" value="customStore"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
         </before>
 
         <after>

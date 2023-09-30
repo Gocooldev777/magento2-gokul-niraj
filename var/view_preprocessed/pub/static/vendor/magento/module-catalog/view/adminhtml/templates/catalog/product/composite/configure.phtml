@@ -34,10 +34,10 @@
 
         require([
             "jquery",
-            "mage/validation"
+            "mage/mage"
         ], function(jQuery){
             jQuery('.product_composite_configure_form').each(function () {
-                jQuery(this).validation({errorElement: 'label'}).valid();
+                jQuery(this).mage('form').mage('validation');
             });
         });
 script; ?> <?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false); ?></div><?= /* @noEscape */ $secureRenderer->renderEventListenerAsTag( 'onload', "window.productConfigure && productConfigure.onLoadIFrame()", 'iframe[name=\'product_composite_configure_iframe\']:last-of-type' ) ?>

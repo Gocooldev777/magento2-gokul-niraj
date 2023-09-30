@@ -9,7 +9,6 @@ namespace Magento\Framework\Api\ExtensionAttribute;
 /**
  * Data holder for extension attribute joins.
  *
- * @api
  * @codeCoverageIgnore
  */
 class JoinData implements JoinDataInterface

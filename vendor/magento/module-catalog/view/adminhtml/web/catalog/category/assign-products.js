@@ -3,6 +3,8 @@
  * See COPYING.txt for license details.
  */
 
+/* global $, $H */
+
 define([
     'mage/adminhtml/grid'
 ], function () {

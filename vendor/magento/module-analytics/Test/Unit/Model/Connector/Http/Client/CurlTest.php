@@ -7,14 +7,12 @@ declare(strict_types=1);
 
 namespace Magento\Analytics\Test\Unit\Model\Connector\Http\Client;
 
-use Laminas\Http\Exception\RuntimeException;
-use Laminas\Http\Request;
-use Laminas\Http\Response;
 use Magento\Analytics\Model\Connector\Http\Client\Curl;
 use Magento\Analytics\Model\Connector\Http\ConverterInterface;
 use Magento\Analytics\Model\Connector\Http\JsonConverter;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Magento\Framework\HTTP\ResponseFactory;
+use Magento\Framework\HTTP\ZendClient;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -96,7 +94,7 @@ class CurlTest extends TestCase
                     'version' => '1.1',
                     'body'=> ['name' => 'value'],
                     'url' => 'http://www.mystore.com',
-                    'method' => Request::METHOD_POST
+                    'method' => ZendClient::POST
                 ]
             ]
         ];
@@ -105,15 +103,13 @@ class CurlTest extends TestCase
     /**
      * @param array $data
      * @return void
-     * @throws RuntimeException
+     * @throws \Zend_Http_Exception
      * @dataProvider getTestData
      */
     public function testRequestSuccess(array $data)
     {
         $responseString = 'This is response.';
-        $response = new Response();
-        $response->setStatusCode(Response::STATUS_CODE_201);
-        $response->setContent($responseString);
+        $response = new  \Zend_Http_Response(201, [], $responseString);
         $this->curlAdapterMock->expects($this->once())
             ->method('write')
             ->with(
@@ -144,13 +140,12 @@ class CurlTest extends TestCase
     /**
      * @param array $data
      * @return void
-     * @throws RuntimeException
+     * @throws \Zend_Http_Exception
      * @dataProvider getTestData
      */
     public function testRequestError(array $data)
     {
-        $response = new Response();
-        $response->setCustomStatusCode(Response::STATUS_CODE_CUSTOM);
+        $response = new  \Zend_Http_Response(0, []);
         $this->curlAdapterMock->expects($this->once())
             ->method('write')
             ->with(

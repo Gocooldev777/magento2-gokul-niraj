@@ -3,19 +3,30 @@
 declare (strict_types=1);
 namespace Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation;
 
+use RectorPrefix20211221\Nette\Utils\Strings;
+use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\NodeAttributes;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
-use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
-abstract class AbstractValuesAwareNode implements PhpDocTagValueNode
+use Rector\Core\Util\StringUtils;
+abstract class AbstractValuesAwareNode implements \PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode
 {
     use NodeAttributes;
+    /**
+     * @var string
+     * @see https://regex101.com/r/H6JjOG/3
+     */
+    private const UNQUOTED_VALUE_REGEX = '#^("|\')(?<content>.*?)("|\')$#';
     /**
      * @var bool
      */
     protected $hasChanged = \false;
     /**
-     * @var ArrayItemNode[]
+     * @var mixed[]
+     */
+    private $originalValues = [];
+    /**
+     * @var mixed[]
      */
     public $values = [];
     /**
@@ -27,74 +38,155 @@ abstract class AbstractValuesAwareNode implements PhpDocTagValueNode
      */
     protected $silentKey;
     /**
-     * @param ArrayItemNode[] $values Must be public so node traverser can go through them
+     * @param mixed[] $values Must be public so node traverser can go through them
      */
     public function __construct(array $values = [], ?string $originalContent = null, ?string $silentKey = null)
     {
         $this->values = $values;
         $this->originalContent = $originalContent;
         $this->silentKey = $silentKey;
+        $this->originalValues = $values;
     }
-    /**
-     * @api
-     */
-    public function removeValue(string $desiredKey) : void
+    public function removeValue(string $key) : void
     {
-        foreach ($this->values as $key => $value) {
-            if ($value->key !== $desiredKey) {
-                continue;
-            }
-            unset($this->values[$key]);
-            // invoke reprint
-            $this->setAttribute(PhpDocAttributeKey::ORIG_NODE, null);
+        $quotedKey = '"' . $key . '"';
+        // isset?
+        if (!isset($this->values[$key]) && !isset($this->values[$quotedKey])) {
+            return;
         }
+        unset($this->values[$key]);
+        unset($this->values[$quotedKey]);
+        // invoke reprint
+        $this->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
     }
     /**
-     * @return ArrayItemNode[]
+     * @return mixed[]
      */
     public function getValues() : array
     {
         return $this->values;
     }
     /**
-     * @return ArrayItemNode[]
+     * @return mixed|Node|null
+     * @param int|string $key
      */
-    public function getValuesWithSilentKey() : array
+    public function getValue($key)
     {
-        if ($this->silentKey === null) {
-            return $this->values;
+        // to allow false as default
+        if (!\array_key_exists($key, $this->values)) {
+            return null;
         }
-        // to keep original values untouched, unless not changed
-        $silentKeyAwareValues = $this->values;
-        foreach ($silentKeyAwareValues as $silentKeyAwareValue) {
-            if ($silentKeyAwareValue->key === null) {
-                $silentKeyAwareValue->key = $this->silentKey;
-                break;
-            }
-        }
-        return $silentKeyAwareValues;
+        return $this->values[$key];
     }
-    public function getValue(string $desiredKey) : ?ArrayItemNode
+    /**
+     * @param mixed $value
+     */
+    public function changeValue(string $key, $value) : void
     {
-        foreach ($this->values as $value) {
-            if ($value->key === $desiredKey) {
-                return $value;
-            }
+        // is quoted?
+        if (isset($this->values[$key]) && \is_string($this->values[$key]) && \Rector\Core\Util\StringUtils::isMatch($this->values[$key], self::UNQUOTED_VALUE_REGEX)) {
+            $value = '"' . $value . '"';
         }
-        return null;
+        $this->values[$key] = $value;
+        // invoke reprint
+        $this->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
     }
-    public function getSilentValue() : ?ArrayItemNode
+    /**
+     * @return mixed|null
+     * @param int|string $key
+     */
+    public function getValueWithoutQuotes($key)
     {
-        foreach ($this->values as $value) {
-            if ($value->key === null) {
-                return $value;
+        $value = $this->getValue($key);
+        if ($value === null) {
+            return null;
+        }
+        return $this->removeQuotes($value);
+    }
+    /**
+     * @param mixed $value
+     */
+    public function changeSilentValue($value) : void
+    {
+        // is quoted?
+        if (\Rector\Core\Util\StringUtils::isMatch($this->values[0], self::UNQUOTED_VALUE_REGEX)) {
+            $value = '"' . $value . '"';
+        }
+        $this->values[0] = $value;
+        $this->hasChanged = \true;
+        // invoke reprint
+        $this->setAttribute(\Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey::ORIG_NODE, null);
+    }
+    /**
+     * @return mixed|null
+     */
+    public function getSilentValue()
+    {
+        $value = $this->values[0] ?? null;
+        if ($value === null) {
+            return null;
+        }
+        return $this->removeQuotes($value);
+    }
+    /**
+     * Useful for attributes
+     * @return array<int|string, mixed>
+     */
+    public function getValuesWithExplicitSilentAndWithoutQuotes() : array
+    {
+        $explicitKeysValues = [];
+        foreach (\array_keys($this->values) as $key) {
+            $valueWithoutQuotes = $this->getValueWithoutQuotes($key);
+            if (\is_int($key) && $this->silentKey !== null) {
+                $explicitKeysValues[$this->silentKey] = $valueWithoutQuotes;
+            } else {
+                $explicitKeysValues[$this->removeQuotes($key)] = $valueWithoutQuotes;
             }
         }
-        return null;
+        return $explicitKeysValues;
     }
     public function markAsChanged() : void
     {
         $this->hasChanged = \true;
+    }
+    /**
+     * @return mixed[]
+     */
+    public function getOriginalValues() : array
+    {
+        return $this->originalValues;
+    }
+    /**
+     * @param mixed|string $value
+     * @return mixed|string
+     */
+    protected function removeQuotes($value)
+    {
+        if (\is_array($value)) {
+            return $this->removeQuotesFromArray($value);
+        }
+        if (!\is_string($value)) {
+            return $value;
+        }
+        $matches = \RectorPrefix20211221\Nette\Utils\Strings::match($value, self::UNQUOTED_VALUE_REGEX);
+        if ($matches === null) {
+            return $value;
+        }
+        return $matches['content'];
+    }
+    /**
+     * @param mixed[] $values
+     * @return array<int|string, mixed>
+     */
+    protected function removeQuotesFromArray(array $values) : array
+    {
+        $unquotedArray = [];
+        foreach ($values as $key => $value) {
+            $unquotedKey = $this->removeQuotes($key);
+            $unquotedValue = $this->removeQuotes($value);
+            $unquotedArray[$unquotedKey] = $unquotedValue;
+        }
+        return $unquotedArray;
     }
     /**
      * @param mixed[] $values

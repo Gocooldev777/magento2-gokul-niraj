@@ -60,6 +60,7 @@ class ResultTest extends \PHPUnit\Framework\TestCase
     /**
      * Verify search value escaping process
      *
+     * @magentoConfigFixture default/catalog/search/engine elasticsearch6
      * @dataProvider toEscapeSearchTextDataProvider
      * @magentoAppArea frontend
      * @param string $searchValue
@@ -72,18 +73,8 @@ class ResultTest extends \PHPUnit\Framework\TestCase
         /** @var Result $searchResultBlock */
         $searchResultBlock = $this->layout->createBlock(Result::class);
         /** @var Template $searchBlock */
-        $searchQueryParams = $this->getMockBuilder(\Magento\Search\ViewModel\AdditionalSearchFormData::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getFormData'])
-            ->getMock();
-        $searchQueryParams->expects($this->any())
-            ->method('getFormData')
-            ->willReturn([]);
         $searchBlock = $this->layout->createBlock(Template::class);
-        $searchBlock->setData([
-            'configProvider' => $this->configProvider,
-            'additionalSearchFormData' => $searchQueryParams,
-        ]);
+        $searchBlock->setData(['configProvider' => $this->configProvider]);
         $searchBlock->setTemplate('Magento_Search::form.mini.phtml');
         /** @var RequestInterface $request */
         $request = $this->objectManager->get(RequestInterface::class);

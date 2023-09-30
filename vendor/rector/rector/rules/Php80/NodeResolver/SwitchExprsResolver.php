@@ -18,31 +18,29 @@ final class SwitchExprsResolver
     /**
      * @return CondAndExpr[]
      */
-    public function resolve(Switch_ $switch) : array
+    public function resolve(\PhpParser\Node\Stmt\Switch_ $switch) : array
     {
-        $newSwitch = clone $switch;
         $condAndExpr = [];
         $collectionEmptyCasesCond = [];
-        $this->moveDefaultCaseToLast($newSwitch);
-        foreach ($newSwitch->cases as $key => $case) {
-            \assert(\is_int($key));
+        $this->moveDefaultCaseToLast($switch);
+        foreach ($switch->cases as $key => $case) {
             if (!$this->isValidCase($case)) {
                 return [];
             }
-            if ($case->stmts === [] && $case->cond instanceof Expr) {
+            if ($case->stmts === [] && $case->cond instanceof \PhpParser\Node\Expr) {
                 $collectionEmptyCasesCond[$key] = $case->cond;
             }
         }
-        foreach ($newSwitch->cases as $key => $case) {
+        foreach ($switch->cases as $key => $case) {
             if ($case->stmts === []) {
                 continue;
             }
             $expr = $case->stmts[0];
-            if ($expr instanceof Expression) {
+            if ($expr instanceof \PhpParser\Node\Stmt\Expression) {
                 $expr = $expr->expr;
             }
             $condExprs = [];
-            if ($case->cond instanceof Expr) {
+            if ($case->cond !== null) {
                 $emptyCasesCond = [];
                 foreach ($collectionEmptyCasesCond as $i => $collectionEmptyCaseCond) {
                     if ($i > $key) {
@@ -54,37 +52,33 @@ final class SwitchExprsResolver
                 $condExprs = $emptyCasesCond;
                 $condExprs[] = $case->cond;
             }
-            if ($expr instanceof Return_) {
+            if ($expr instanceof \PhpParser\Node\Stmt\Return_) {
                 $returnedExpr = $expr->expr;
-                if (!$returnedExpr instanceof Expr) {
+                if (!$returnedExpr instanceof \PhpParser\Node\Expr) {
                     return [];
                 }
-                $condAndExpr[] = new CondAndExpr($condExprs, $returnedExpr, MatchKind::RETURN);
-            } elseif ($expr instanceof Assign) {
-                $condAndExpr[] = new CondAndExpr($condExprs, $expr, MatchKind::ASSIGN);
-            } elseif ($expr instanceof Expr) {
-                $condAndExpr[] = new CondAndExpr($condExprs, $expr, MatchKind::NORMAL);
-            } elseif ($expr instanceof Throw_) {
-                $throwExpr = new Expr\Throw_($expr->expr);
-                $condAndExpr[] = new CondAndExpr($condExprs, $throwExpr, MatchKind::THROW);
+                $condAndExpr[] = new \Rector\Php80\ValueObject\CondAndExpr($condExprs, $returnedExpr, \Rector\Php80\Enum\MatchKind::RETURN());
+            } elseif ($expr instanceof \PhpParser\Node\Expr\Assign) {
+                $condAndExpr[] = new \Rector\Php80\ValueObject\CondAndExpr($condExprs, $expr, \Rector\Php80\Enum\MatchKind::ASSIGN());
+            } elseif ($expr instanceof \PhpParser\Node\Expr) {
+                $condAndExpr[] = new \Rector\Php80\ValueObject\CondAndExpr($condExprs, $expr, \Rector\Php80\Enum\MatchKind::NORMAL());
+            } elseif ($expr instanceof \PhpParser\Node\Stmt\Throw_) {
+                $throwExpr = new \PhpParser\Node\Expr\Throw_($expr->expr);
+                $condAndExpr[] = new \Rector\Php80\ValueObject\CondAndExpr($condExprs, $throwExpr, \Rector\Php80\Enum\MatchKind::THROW());
             } else {
                 return [];
             }
         }
         return $condAndExpr;
     }
-    private function moveDefaultCaseToLast(Switch_ $switch) : void
+    private function moveDefaultCaseToLast(\PhpParser\Node\Stmt\Switch_ $switch) : void
     {
         foreach ($switch->cases as $key => $case) {
-            if ($case->cond instanceof Expr) {
+            if ($case->cond instanceof \PhpParser\Node\Expr) {
                 continue;
             }
             // not has next? default is at the end, no need move
             if (!isset($switch->cases[$key + 1])) {
-                return;
-            }
-            // current default has no stmt? keep as is as rely to next case
-            if ($case->stmts === []) {
                 return;
             }
             for ($loop = $key - 1; $loop >= 0; --$loop) {
@@ -99,13 +93,13 @@ final class SwitchExprsResolver
             break;
         }
     }
-    private function isValidCase(Case_ $case) : bool
+    private function isValidCase(\PhpParser\Node\Stmt\Case_ $case) : bool
     {
         // prepend to previous one
         if ($case->stmts === []) {
             return \true;
         }
-        if (\count($case->stmts) === 2 && $case->stmts[1] instanceof Break_) {
+        if (\count($case->stmts) === 2 && $case->stmts[1] instanceof \PhpParser\Node\Stmt\Break_) {
             return \true;
         }
         // default throws stmts
@@ -113,14 +107,14 @@ final class SwitchExprsResolver
             return \false;
         }
         // throws expressoin
-        if ($case->stmts[0] instanceof Throw_) {
+        if ($case->stmts[0] instanceof \PhpParser\Node\Stmt\Throw_) {
             return \true;
         }
         // instant return
-        if ($case->stmts[0] instanceof Return_) {
+        if ($case->stmts[0] instanceof \PhpParser\Node\Stmt\Return_) {
             return \true;
         }
         // default value
-        return !$case->cond instanceof Expr;
+        return $case->cond === null;
     }
 }

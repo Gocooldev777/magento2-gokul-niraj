@@ -4,58 +4,45 @@ declare (strict_types=1);
 namespace Rector\PHPUnit\Rector\Class_;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
-use Rector\Core\NodeAnalyzer\ClassAnalyzer;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\MethodName;
-use Rector\PHPUnit\NodeAnalyzer\SetUpMethodDecorator;
+use Rector\Nette\NodeAnalyzer\StaticCallAnalyzer;
 use Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer;
-use Rector\Privatization\NodeManipulator\VisibilityManipulator;
+use Rector\PHPUnit\NodeManipulator\SetUpClassMethodNodeManipulator;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @changelog https://github.com/sebastianbergmann/phpunit/issues/3975#issuecomment-562584609
+ * @see https://github.com/sebastianbergmann/phpunit/issues/3975#issuecomment-562584609
  *
  * @see \Rector\PHPUnit\Tests\Rector\Class_\ConstructClassMethodToSetUpTestCaseRector\ConstructClassMethodToSetUpTestCaseRectorTest
  */
-final class ConstructClassMethodToSetUpTestCaseRector extends AbstractRector
+final class ConstructClassMethodToSetUpTestCaseRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @readonly
+     * @var \Rector\PHPUnit\NodeManipulator\SetUpClassMethodNodeManipulator
+     */
+    private $setUpClassMethodNodeManipulator;
+    /**
+     * @var \Rector\Nette\NodeAnalyzer\StaticCallAnalyzer
+     */
+    private $staticCallAnalyzer;
+    /**
      * @var \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer
      */
     private $testsNodeAnalyzer;
-    /**
-     * @readonly
-     * @var \Rector\Core\NodeAnalyzer\ClassAnalyzer
-     */
-    private $classAnalyzer;
-    /**
-     * @readonly
-     * @var \Rector\Privatization\NodeManipulator\VisibilityManipulator
-     */
-    private $visibilityManipulator;
-    /**
-     * @readonly
-     * @var \Rector\PHPUnit\NodeAnalyzer\SetUpMethodDecorator
-     */
-    private $setUpMethodDecorator;
-    public function __construct(TestsNodeAnalyzer $testsNodeAnalyzer, ClassAnalyzer $classAnalyzer, VisibilityManipulator $visibilityManipulator, SetUpMethodDecorator $setUpMethodDecorator)
+    public function __construct(\Rector\PHPUnit\NodeManipulator\SetUpClassMethodNodeManipulator $setUpClassMethodNodeManipulator, \Rector\Nette\NodeAnalyzer\StaticCallAnalyzer $staticCallAnalyzer, \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer $testsNodeAnalyzer)
     {
+        $this->setUpClassMethodNodeManipulator = $setUpClassMethodNodeManipulator;
+        $this->staticCallAnalyzer = $staticCallAnalyzer;
         $this->testsNodeAnalyzer = $testsNodeAnalyzer;
-        $this->classAnalyzer = $classAnalyzer;
-        $this->visibilityManipulator = $visibilityManipulator;
-        $this->setUpMethodDecorator = $setUpMethodDecorator;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Change __construct() method in tests of `PHPUnit\\Framework\\TestCase` to setUp(), to prevent dangerous override', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change __construct() method in tests of `PHPUnit\\Framework\\TestCase` to setUp(), to prevent dangerous override', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use PHPUnit\Framework\TestCase;
 
 final class SomeTest extends TestCase
@@ -91,70 +78,41 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (!$this->testsNodeAnalyzer->isInTestClass($node)) {
             return null;
         }
-        $constructClassMethod = $node->getMethod(MethodName::CONSTRUCT);
-        if (!$constructClassMethod instanceof ClassMethod) {
+        $constructClassMethod = $node->getMethod(\Rector\Core\ValueObject\MethodName::CONSTRUCT);
+        if (!$constructClassMethod instanceof \PhpParser\Node\Stmt\ClassMethod) {
             return null;
         }
-        if ($this->classAnalyzer->isAnonymousClass($node)) {
-            return null;
-        }
+        $this->removeNode($constructClassMethod);
         $addedStmts = $this->resolveStmtsToAddToSetUp($constructClassMethod);
-        $setUpClassMethod = $node->getMethod(MethodName::SET_UP);
-        if (!$setUpClassMethod instanceof ClassMethod) {
-            // no setUp() method yet, rename it to setUp :)
-            $constructClassMethod->name = new Identifier(MethodName::SET_UP);
-            $constructClassMethod->params = [];
-            $constructClassMethod->stmts = $addedStmts;
-            $this->setUpMethodDecorator->decorate($constructClassMethod);
-            $this->visibilityManipulator->makeProtected($constructClassMethod);
-        } else {
-            $this->removeNode($constructClassMethod);
-            $setUpClassMethod->stmts = \array_merge((array) $setUpClassMethod->stmts, $addedStmts);
-        }
+        $this->setUpClassMethodNodeManipulator->decorateOrCreate($node, $addedStmts);
         return $node;
     }
     /**
      * @return Stmt[]
      */
-    private function resolveStmtsToAddToSetUp(ClassMethod $constructClassMethod) : array
+    private function resolveStmtsToAddToSetUp(\PhpParser\Node\Stmt\ClassMethod $constructClassMethod) : array
     {
         $constructorStmts = (array) $constructClassMethod->stmts;
         // remove parent call
         foreach ($constructorStmts as $key => $constructorStmt) {
-            if ($constructorStmt instanceof Expression) {
+            if ($constructorStmt instanceof \PhpParser\Node\Stmt\Expression) {
                 $constructorStmt = clone $constructorStmt->expr;
             }
-            if (!$this->isParentCallNamed($constructorStmt, MethodName::CONSTRUCT)) {
+            if (!$this->staticCallAnalyzer->isParentCallNamed($constructorStmt, \Rector\Core\ValueObject\MethodName::CONSTRUCT)) {
                 continue;
             }
             unset($constructorStmts[$key]);
         }
         return $constructorStmts;
-    }
-    private function isParentCallNamed(Node $node, string $desiredMethodName) : bool
-    {
-        if (!$node instanceof StaticCall) {
-            return \false;
-        }
-        if ($node->class instanceof Expr) {
-            return \false;
-        }
-        if (!$this->nodeNameResolver->isName($node->class, 'parent')) {
-            return \false;
-        }
-        if ($node->name instanceof Expr) {
-            return \false;
-        }
-        return $this->nodeNameResolver->isName($node->name, $desiredMethodName);
     }
 }

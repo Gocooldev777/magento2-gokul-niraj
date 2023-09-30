@@ -5,22 +5,17 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Neon;
+namespace RectorPrefix20211221\Nette\Neon;
 
 /** @internal */
 final class TokenStream
 {
-    /**
-     * @var int
-     */
+    /** @var Token[] */
+    private $tokens;
+    /** @var int */
     private $pos = 0;
-    /**
-     * @var mixed[]
-     */
-    public $tokens;
     public function __construct(array $tokens)
     {
-        /** @var Token[] */
         $this->tokens = $tokens;
     }
     public function getPos() : int
@@ -32,29 +27,23 @@ final class TokenStream
     {
         return $this->tokens;
     }
-    /**
-     * @param int|string ...$types
-     */
     public function isNext(...$types) : bool
     {
-        while (\in_array($this->tokens[$this->pos]->type ?? null, [Token::Comment, Token::Whitespace], \true)) {
+        while (\in_array($this->tokens[$this->pos]->type ?? null, [\RectorPrefix20211221\Nette\Neon\Token::COMMENT, \RectorPrefix20211221\Nette\Neon\Token::WHITESPACE], \true)) {
             $this->pos++;
         }
         return $types ? \in_array($this->tokens[$this->pos]->type ?? null, $types, \true) : isset($this->tokens[$this->pos]);
     }
-    /**
-     * @param int|string ...$types
-     */
-    public function consume(...$types) : ?Token
+    public function consume(...$types) : ?\RectorPrefix20211221\Nette\Neon\Token
     {
         return $this->isNext(...$types) ? $this->tokens[$this->pos++] : null;
     }
     public function getIndentation() : string
     {
-        return \in_array($this->tokens[$this->pos - 2]->type ?? null, [Token::Newline, null], \true) && ($this->tokens[$this->pos - 1]->type ?? null) === Token::Whitespace ? $this->tokens[$this->pos - 1]->value : '';
+        return \in_array($this->tokens[$this->pos - 2]->type ?? null, [\RectorPrefix20211221\Nette\Neon\Token::NEWLINE, null], \true) && ($this->tokens[$this->pos - 1]->type ?? null) === \RectorPrefix20211221\Nette\Neon\Token::WHITESPACE ? $this->tokens[$this->pos - 1]->value : '';
     }
     /** @return never */
-    public function error(?string $message = null, ?int $pos = null) : void
+    public function error(string $message = null, int $pos = null) : void
     {
         $pos = $pos ?? $this->pos;
         $input = '';
@@ -68,6 +57,6 @@ final class TokenStream
         $col = \strlen($input) - \strrpos("\n" . $input, "\n") + 1;
         $token = $this->tokens[$pos] ?? null;
         $message = $message ?? 'Unexpected ' . ($token === null ? 'end' : "'" . \str_replace("\n", '<new line>', \substr($this->tokens[$pos]->value, 0, 40)) . "'");
-        throw new Exception("{$message} on line {$line}, column {$col}.");
+        throw new \RectorPrefix20211221\Nette\Neon\Exception("{$message} on line {$line}, column {$col}.");
     }
 }

@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue\Topology\Config;
 
 /**
  * Instances of this class represent queue config items.
- * @api
  */
 interface QueueConfigItemInterface
 {

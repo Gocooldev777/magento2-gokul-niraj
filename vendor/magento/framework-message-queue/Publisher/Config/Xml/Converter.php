@@ -21,6 +21,8 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
     private $booleanUtils;
 
     /**
+     * Default value provider.
+     *
      * @var DefaultValueProvider
      */
     private $defaultValueProvider;
@@ -38,7 +40,7 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function convert($source)
     {
@@ -53,11 +55,10 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
                 if ($connectionConfig->nodeName != 'connection' || $connectionConfig->nodeType != XML_ELEMENT_NODE) {
                     continue;
                 }
-                $connectionName = $this->getAttributeValue(
-                    $connectionConfig,
-                    'name',
-                    $this->defaultValueProvider->getConnection()
-                );
+                $connectionName = $this->getAttributeValue($connectionConfig, 'name');
+                if (!$connectionName) {
+                    throw new \InvalidArgumentException('Connection name is missing');
+                }
                 $exchangeName = $this->getAttributeValue(
                     $connectionConfig,
                     'exchange',
@@ -68,13 +69,6 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
                     'name' => $connectionName,
                     'exchange' => $exchangeName,
                     'disabled' => $this->booleanUtils->toBoolean($isDisabled),
-                ];
-            }
-            if (count($connections) === 0) {
-                $connections[$this->defaultValueProvider->getConnection()] = [
-                    'name' => $this->defaultValueProvider->getConnection(),
-                    'exchange' => $this->defaultValueProvider->getExchange(),
-                    'disabled' => false
                 ];
             }
             $isDisabled = $this->getAttributeValue($publisherConfig, 'disabled', false);

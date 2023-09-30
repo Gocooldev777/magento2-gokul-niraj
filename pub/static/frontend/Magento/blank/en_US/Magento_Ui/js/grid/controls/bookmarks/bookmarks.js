@@ -104,11 +104,12 @@ define([
         initDefaultView: function () {
             var data = this.getViewData(this.defaultIndex);
 
-            if (!_.size(data) && (this.current.columns && this.current.positions)) {
-                    this.setViewData(this.defaultIndex, this.current)
-                        .saveView(this.defaultIndex);
-                    this.defaultDefined = true;
+            if (!_.size(data)) {
+                this.setViewData(this.defaultIndex, this.current)
+                    .saveView(this.defaultIndex);
             }
+
+            this.defaultDefined = true;
 
             return this;
         },
@@ -447,6 +448,7 @@ define([
          */
         saveState: function () {
             this.store('current');
+
             return this;
         },
 
@@ -552,7 +554,7 @@ define([
          */
         onActiveIndexChange: function () {
             this.activeView = this.getActiveView();
-            this.updateActiveView();
+
             this.store('activeIndex');
         },
 

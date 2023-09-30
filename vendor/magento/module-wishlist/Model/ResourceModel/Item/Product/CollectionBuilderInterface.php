@@ -12,8 +12,6 @@ use Magento\Wishlist\Model\ResourceModel\Item\Collection as WishlistItemCollecti
 
 /**
  * Wishlist items products collection builder
- *
- * @api
  */
 interface CollectionBuilderInterface
 {

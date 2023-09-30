@@ -3,22 +3,29 @@
 declare (strict_types=1);
 namespace Rector\PHPStanStaticTypeMapper\Enum;
 
-final class TypeKind
+use RectorPrefix20211221\MyCLabs\Enum\Enum;
+/**
+ * @method static TypeKind PROPERTY()
+ * @method static TypeKind RETURN()
+ * @method static TypeKind PARAM()
+ * @method static TypeKind ANY()
+ */
+final class TypeKind extends \RectorPrefix20211221\MyCLabs\Enum\Enum
 {
     /**
      * @var string
      */
-    public const PROPERTY = 'property';
+    private const PROPERTY = 'property';
     /**
      * @var string
      */
-    public const RETURN = 'return';
+    private const RETURN = 'return';
     /**
      * @var string
      */
-    public const PARAM = 'param';
+    private const PARAM = 'param';
     /**
      * @var string
      */
-    public const ANY = 'any';
+    private const ANY = 'any';
 }

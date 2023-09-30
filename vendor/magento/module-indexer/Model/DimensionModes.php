@@ -9,8 +9,6 @@ namespace Magento\Indexer\Model;
 
 /**
  * DTO to work with dimension modes
- *
- * @api
  */
 class DimensionModes
 {

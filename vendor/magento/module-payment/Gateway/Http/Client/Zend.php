@@ -5,26 +5,23 @@
  */
 namespace Magento\Payment\Gateway\Http\Client;
 
-use Laminas\Http\Exception\RuntimeException;
-use Laminas\Http\Request;
-use LogicException;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
-use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\HTTP\ZendClientFactory;
 use Magento\Payment\Gateway\Http\ClientInterface;
-use Magento\Payment\Gateway\Http\ConverterException;
 use Magento\Payment\Gateway\Http\ConverterInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Payment\Model\Method\Logger;
 
 /**
+ * Class Zend
+ * @package Magento\Payment\Gateway\Http\Client
  * @api
  * @since 100.0.2
  */
 class Zend implements ClientInterface
 {
     /**
-     * @var LaminasClientFactory
+     * @var ZendClientFactory
      */
     private $clientFactory;
 
@@ -39,12 +36,12 @@ class Zend implements ClientInterface
     private $logger;
 
     /**
-     * @param LaminasClientFactory $clientFactory
+     * @param ZendClientFactory $clientFactory
      * @param Logger $logger
-     * @param ConverterInterface|null $converter
+     * @param ConverterInterface | null $converter
      */
     public function __construct(
-        LaminasClientFactory $clientFactory,
+        ZendClientFactory $clientFactory,
         Logger $logger,
         ConverterInterface $converter = null
     ) {
@@ -54,7 +51,7 @@ class Zend implements ClientInterface
     }
 
     /**
-     * @inheritdoc
+     * {inheritdoc}
      */
     public function placeRequest(TransferInterface $transferObject)
     {
@@ -63,20 +60,21 @@ class Zend implements ClientInterface
             'request_uri' => $transferObject->getUri()
         ];
         $result = [];
-        /** @var LaminasClient $client */
+        /** @var ZendClient $client */
         $client = $this->clientFactory->create();
-        $client->setOptions($transferObject->getClientConfig());
+
+        $client->setConfig($transferObject->getClientConfig());
         $client->setMethod($transferObject->getMethod());
-        $methodParam = is_array($transferObject->getBody()) ? $transferObject->getBody() : [$transferObject->getBody()];
+
         switch ($transferObject->getMethod()) {
-            case Request::METHOD_GET:
-                $client->setParameterGet($methodParam);
+            case \Zend_Http_Client::GET:
+                $client->setParameterGet($transferObject->getBody());
                 break;
-            case Request::METHOD_POST:
-                $client->setParameterPost($methodParam);
+            case \Zend_Http_Client::POST:
+                $client->setParameterPost($transferObject->getBody());
                 break;
             default:
-                throw new LogicException(
+                throw new \LogicException(
                     sprintf(
                         'Unsupported HTTP method %s',
                         $transferObject->getMethod()
@@ -89,15 +87,17 @@ class Zend implements ClientInterface
         $client->setUri($transferObject->getUri());
 
         try {
-            $response = $client->send();
+            $response = $client->request();
 
             $result = $this->converter
                 ? $this->converter->convert($response->getBody())
                 : [$response->getBody()];
             $log['response'] = $result;
-        } catch (RuntimeException $e) {
-            throw new ClientException(__($e->getMessage()));
-        } catch (ConverterException $e) {
+        } catch (\Zend_Http_Client_Exception $e) {
+            throw new \Magento\Payment\Gateway\Http\ClientException(
+                __($e->getMessage())
+            );
+        } catch (\Magento\Payment\Gateway\Http\ConverterException $e) {
             throw $e;
         } finally {
             $this->logger->debug($log);

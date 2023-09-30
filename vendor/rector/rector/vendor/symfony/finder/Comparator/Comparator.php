@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Finder\Comparator;
+namespace RectorPrefix20211221\Symfony\Component\Finder\Comparator;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
@@ -62,8 +62,7 @@ class Comparator
                 return $test <= $this->target;
             case '!=':
                 return $test != $this->target;
-            default:
-                return $test == $this->target;
         }
+        return $test == $this->target;
     }
 }

@@ -3,7 +3,6 @@
 declare (strict_types=1);
 namespace Rector\Transform\ValueObject;
 
-use Rector\Core\Validation\RectorAssert;
 final class FuncCallToStaticCall
 {
     /**
@@ -26,9 +25,6 @@ final class FuncCallToStaticCall
         $this->oldFuncName = $oldFuncName;
         $this->newClassName = $newClassName;
         $this->newMethodName = $newMethodName;
-        RectorAssert::functionName($oldFuncName);
-        RectorAssert::className($newClassName);
-        RectorAssert::methodName($newMethodName);
     }
     public function getOldFuncName() : string
     {

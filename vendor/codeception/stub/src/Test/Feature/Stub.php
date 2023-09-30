@@ -290,7 +290,6 @@ trait Stub
      * @template RealInstanceType of object
      * @param class-string<RealInstanceType>|RealInstanceType|callable(): class-string<RealInstanceType> $class - A class to be mocked
      * @return MockObject&RealInstanceType
-     * @throws \ReflectionException
      */
     public function constructEmptyExcept($class, string $method, array $constructorParams = [], array $params = [])
     {

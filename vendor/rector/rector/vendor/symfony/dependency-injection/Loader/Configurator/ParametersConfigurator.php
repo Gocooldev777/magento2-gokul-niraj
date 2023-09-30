@@ -8,42 +8,36 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Loader\Configurator;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\ExpressionLanguage\Expression;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class ParametersConfigurator extends AbstractConfigurator
+class ParametersConfigurator extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\AbstractConfigurator
 {
     public const FACTORY = 'parameters';
-    /**
-     * @var \Symfony\Component\DependencyInjection\ContainerBuilder
-     */
     private $container;
-    public function __construct(ContainerBuilder $container)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
         $this->container = $container;
     }
     /**
+     * Creates a parameter.
+     *
      * @return $this
-     * @param mixed $value
      */
-    public final function set(string $name, $value)
+    public final function set(string $name, $value) : self
     {
-        if ($value instanceof Expression) {
-            throw new InvalidArgumentException(\sprintf('Using an expression in parameter "%s" is not allowed.', $name));
-        }
         $this->container->setParameter($name, static::processValue($value, \true));
         return $this;
     }
     /**
+     * Creates a parameter.
+     *
      * @return $this
-     * @param mixed $value
      */
-    public final function __invoke(string $name, $value)
+    public final function __invoke(string $name, $value) : self
     {
         return $this->set($name, $value);
     }

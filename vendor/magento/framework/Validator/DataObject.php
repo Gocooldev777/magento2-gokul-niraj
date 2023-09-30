@@ -10,19 +10,16 @@
  */
 namespace Magento\Framework\Validator;
 
-use Laminas\Validator\ValidatorChain;
-use Laminas\Validator\ValidatorInterface;
-
 /**
  * @api
  * @since 100.0.2
  */
-class DataObject implements ValidatorInterface
+class DataObject implements \Zend_Validate_Interface
 {
     /**
      * Validation rules per scope (particular fields or entire entity)
      *
-     * @var ValidatorInterface[]
+     * @var \Zend_Validate_Interface[]
      */
     private $_rules = [];
 
@@ -34,18 +31,18 @@ class DataObject implements ValidatorInterface
     /**
      * Add rule to be applied to a validation scope
      *
-     * @param ValidatorInterface $validator
+     * @param \Zend_Validate_Interface $validator
      * @param string $fieldName Field name to apply validation to, or empty value to validate entity as a whole
      * @return \Magento\Framework\Validator\DataObject
      */
-    public function addRule(ValidatorInterface $validator, $fieldName = '')
+    public function addRule(\Zend_Validate_Interface $validator, $fieldName = '')
     {
         if (!array_key_exists($fieldName, $this->_rules)) {
             $this->_rules[$fieldName] = $validator;
         } else {
             $existingValidator = $this->_rules[$fieldName];
-            if (!$existingValidator instanceof ValidatorChain) {
-                $compositeValidator = new ValidatorChain();
+            if (!$existingValidator instanceof \Zend_Validate) {
+                $compositeValidator = new \Zend_Validate();
                 $compositeValidator->addValidator($existingValidator);
                 $this->_rules[$fieldName] = $compositeValidator;
             }
@@ -65,7 +62,7 @@ class DataObject implements ValidatorInterface
     public function isValid($entity)
     {
         $this->_messages = [];
-        /** @var $validator \Laminas\Validator\ValidatorInterface */
+        /** @var $validator \Zend_Validate_Interface */
         foreach ($this->_rules as $fieldName => $validator) {
             $value = $fieldName ? $entity->getDataUsingMethod($fieldName) : $entity;
             if (!$validator->isValid($value)) {

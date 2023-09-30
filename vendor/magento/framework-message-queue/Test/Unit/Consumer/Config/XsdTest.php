@@ -55,9 +55,7 @@ class XsdTest extends TestCase
         $actualErrors = [];
         $actualResult = $dom->validate($this->schemaFile, $actualErrors);
         $this->assertEquals(empty($expectedErrors), $actualResult, "Validation result is invalid.");
-        foreach ($expectedErrors as $error) {
-            $this->assertContains($error, $actualErrors, "Validation errors does not match.");
-        }
+        $this->assertEquals($expectedErrors, $actualErrors, "Validation errors does not match.");
     }
 
     /**
@@ -101,7 +99,9 @@ class XsdTest extends TestCase
                 </config>',
                 [
                     "Element 'consumer', attribute 'handler': [facet 'pattern'] The value 'handlerClass_One1::handlerMethod1' is not accepted by the pattern '[a-zA-Z0-9\\\\]+::[a-zA-Z0-9]+'.",
-                    "Element 'consumer', attribute 'handler': [facet 'pattern'] The value 'handlerClassOne2::handler_Method2' is not accepted by the pattern '[a-zA-Z0-9\\\\]+::[a-zA-Z0-9]+'."
+                    "Element 'consumer', attribute 'handler': 'handlerClass_One1::handlerMethod1' is not a valid value of the atomic type 'handlerType'.",
+                    "Element 'consumer', attribute 'handler': [facet 'pattern'] The value 'handlerClassOne2::handler_Method2' is not accepted by the pattern '[a-zA-Z0-9\\\\]+::[a-zA-Z0-9]+'.",
+                    "Element 'consumer', attribute 'handler': 'handlerClassOne2::handler_Method2' is not a valid value of the atomic type 'handlerType'.",
                 ],
             ],
             'invalid maxMessages format' => [
@@ -196,9 +196,7 @@ class XsdTest extends TestCase
         $actualErrors = [];
         $actualResult = $dom->validate($this->schemaQueueFile, $actualErrors);
         $this->assertEquals(empty($expectedErrors), $actualResult, "Validation result is invalid.");
-        foreach ($expectedErrors as $error) {
-            $this->assertContains($error, $actualErrors, "Validation errors does not match.");
-        }
+        $this->assertEquals($expectedErrors, $actualErrors, "Validation errors does not match.");
     }
 
     /**
@@ -227,7 +225,9 @@ class XsdTest extends TestCase
                 </config>',
                 [
                     "Element 'queue', attribute 'handler': [facet 'pattern'] The value 'handlerClass_One1::handlerMethod1' is not accepted by the pattern '[a-zA-Z0-9\\\\]+::[a-zA-Z0-9]+'.",
-                    "Element 'queue', attribute 'handler': [facet 'pattern'] The value 'handlerClassOne2::handler_Method2' is not accepted by the pattern '[a-zA-Z0-9\\\\]+::[a-zA-Z0-9]+'."
+                    "Element 'queue', attribute 'handler': 'handlerClass_One1::handlerMethod1' is not a valid value of the atomic type 'handlerType'.",
+                    "Element 'queue', attribute 'handler': [facet 'pattern'] The value 'handlerClassOne2::handler_Method2' is not accepted by the pattern '[a-zA-Z0-9\\\\]+::[a-zA-Z0-9]+'.",
+                    "Element 'queue', attribute 'handler': 'handlerClassOne2::handler_Method2' is not a valid value of the atomic type 'handlerType'.",
                 ],
             ],
             'invalid instance format' => [
@@ -239,7 +239,9 @@ class XsdTest extends TestCase
                 </config>',
                 [
                     "Element 'queue', attribute 'consumerInstance': [facet 'pattern'] The value 'consumer_Class1' is not accepted by the pattern '[a-zA-Z0-9\\\\]+'.",
-                    "Element 'queue', attribute 'consumerInstance': [facet 'pattern'] The value 'consumerClass_2' is not accepted by the pattern '[a-zA-Z0-9\\\\]+'."
+                    "Element 'queue', attribute 'consumerInstance': 'consumer_Class1' is not a valid value of the atomic type 'instanceType'.",
+                    "Element 'queue', attribute 'consumerInstance': [facet 'pattern'] The value 'consumerClass_2' is not accepted by the pattern '[a-zA-Z0-9\\\\]+'.",
+                    "Element 'queue', attribute 'consumerInstance': 'consumerClass_2' is not a valid value of the atomic type 'instanceType'.",
                 ],
             ],
             'invalid maxMessages format' => [

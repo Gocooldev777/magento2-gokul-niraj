@@ -100,7 +100,8 @@ define([
             videoData: '',
             videoSettings: '',
             optionsVideoData: '',
-            dataMergeStrategy: 'replace'
+            dataMergeStrategy: 'replace',
+            vimeoJSFrameworkLoaded: false
         },
 
         /**
@@ -162,6 +163,7 @@ define([
             if (this._checkForVideoExist()) {
                 this._checkFullscreen();
                 this._listenForFullscreen();
+                this._checkForVimeo();
                 this._isVideoBase();
                 this._initFotoramaVideo();
                 this._attachFotoramaEvents();
@@ -398,6 +400,27 @@ define([
          *
          * @private
          */
+        _checkForVimeo: function () {
+            var allVideoData = this.options.videoData,
+                videoItem;
+
+            if (window.Froogaloop) { // prevent duplicated initialization
+                return;
+            }
+
+            for (videoItem in allVideoData) {
+                if (allVideoData[videoItem].provider === this.VI) {
+                    this._loadVimeoJSFramework();
+
+                    return;
+                }
+            }
+        },
+
+        /**
+         *
+         * @private
+         */
         _isVideoBase: function () {
             var allVideoData = this.options.videoData,
                 videoItem,
@@ -423,6 +446,27 @@ define([
             if (!this.isFullscreen) {
                 this._createCloseVideo(this.fotoramaItem.data('fotorama'), this.Base);
             }
+        },
+
+        /**
+         *
+         * @private
+         */
+        _loadVimeoJSFramework: function () {
+            var element = document.createElement('script'),
+                scriptTag = document.getElementsByTagName('script')[0];
+
+            element.async = true;
+            element.src = 'https://f.vimeocdn.com/js/froogaloop2.min.js';
+
+            /**
+             * Vimeo js framework on load callback.
+             */
+            element.onload = function () {
+                this.onVimeoJSFramework();
+                this.vimeoJSFrameworkLoaded = true;
+            }.bind(this);
+            scriptTag.parentNode.insertBefore(element, scriptTag);
         },
 
         /**
@@ -664,7 +708,7 @@ define([
                 $(event.target).removeClass(this.VU);
                 type = $(event.target).find('.' + this.PV).data('type');
 
-                if (type === this.VI) {
+                if (this.vimeoJSFrameworkLoaded && type === this.VI) {
                     $(event.target).find('.' + this.PV).productVideoLoader();
                 } else if (type === this.VI) {
                     this._showLoader();
@@ -688,7 +732,8 @@ define([
          * @private
          */
         _handleBaseVideo: function (fotorama, srcNumber) {
-            var videoData = this.options.videoData,
+            var waitForFroogaloop,
+                videoData = this.options.videoData,
                 activeIndex = fotorama.activeIndex,
                 number = parseInt(srcNumber, 10),
                 activeIndexIsBase = videoData[activeIndex];
@@ -698,11 +743,22 @@ define([
             }
 
             if (activeIndexIsBase && number === 1 && $(window).width() > this.MobileMaxWidth) {
-                setTimeout($.proxy(function () {
-                    fotorama.requestFullScreen();
-                    this.fotoramaItem.data('fotorama').activeFrame.$stageFrame[0].trigger('click');
-                    this.Base = false;
-                }, this), 50);
+                if (this.options.videoData[fotorama.activeIndex].provider === this.VI) {
+                    waitForFroogaloop = setInterval($.proxy(function () {
+                        if (window.Froogaloop) {
+                            clearInterval(waitForFroogaloop);
+                            fotorama.requestFullScreen();
+                            this.fotoramaItem.data('fotorama').activeFrame.$stageFrame[0].trigger('click');
+                            this.Base = false;
+                        }
+                    }, this), 50);
+                } else { //if not a vimeo - play it immediately with a little lag in case for fotorama fullscreen
+                    setTimeout($.proxy(function () {
+                        fotorama.requestFullScreen();
+                        this.fotoramaItem.data('fotorama').activeFrame.$stageFrame[0].trigger('click');
+                        this.Base = false;
+                    }, this), 50);
+                }
             }
         },
 

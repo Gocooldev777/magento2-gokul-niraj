@@ -1,16 +1,21 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
-/**
- * @phpstan-import-type OperationType from OperationDefinitionNode
- */
 class OperationTypeDefinitionNode extends Node
 {
-    public string $kind = NodeKind::OPERATION_TYPE_DEFINITION;
+    /** @var string */
+    public $kind = NodeKind::OPERATION_TYPE_DEFINITION;
 
-    /** @var OperationType */
-    public string $operation;
+    /**
+     * One of 'query' | 'mutation' | 'subscription'
+     *
+     * @var string
+     */
+    public $operation;
 
-    public NamedTypeNode $type;
+    /** @var NamedTypeNode */
+    public $type;
 }

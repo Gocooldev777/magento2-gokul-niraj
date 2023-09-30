@@ -7,12 +7,11 @@ declare(strict_types=1);
 
 namespace Magento\Directory\Model\Currency\Import;
 
-use Laminas\Http\Request;
 use Magento\Directory\Model\CurrencyFactory;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface as ScopeConfig;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\HTTP\ZendClientFactory;
 use Exception;
 
 /**
@@ -27,7 +26,9 @@ class CurrencyConverterApi extends AbstractImport
         . '&q={{CURRENCY_RATES}}&compact=ultra';
 
     /**
-     * @var LaminasClientFactory
+     * Http Client Factory
+     *
+     * @var ZendClientFactory
      */
     private $httpClientFactory;
 
@@ -51,12 +52,12 @@ class CurrencyConverterApi extends AbstractImport
     /**
      * @param CurrencyFactory $currencyFactory
      * @param ScopeConfig $scopeConfig
-     * @param LaminasClientFactory $httpClientFactory
+     * @param ZendClientFactory $httpClientFactory
      */
     public function __construct(
         CurrencyFactory $currencyFactory,
         ScopeConfig $scopeConfig,
-        LaminasClientFactory $httpClientFactory
+        ZendClientFactory $httpClientFactory
     ) {
         parent::__construct($currencyFactory);
         $this->scopeConfig = $scopeConfig;
@@ -187,22 +188,23 @@ class CurrencyConverterApi extends AbstractImport
      */
     private function getServiceResponse($url, $retry = 0): array
     {
-        /** @var LaminasClient $httpClient */
+        /** @var ZendClient $httpClient */
         $httpClient = $this->httpClientFactory->create();
         $response = [];
 
         try {
-            $httpClient->setUri($url);
-            $httpClient->setOptions(
+            $jsonResponse = $httpClient->setUri(
+                $url
+            )->setConfig(
                 [
                     'timeout' => $this->scopeConfig->getValue(
                         'currency/currencyconverterapi/timeout',
                         ScopeInterface::SCOPE_STORE
                     ),
                 ]
-            );
-            $httpClient->setMethod(Request::METHOD_GET);
-            $jsonResponse = $httpClient->send()->getBody();
+            )->request(
+                'GET'
+            )->getBody();
 
             $response = json_decode($jsonResponse, true) ?: [];
         } catch (Exception $e) {

@@ -8,30 +8,29 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Loader;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader;
 
-use RectorPrefix202304\Symfony\Component\Config\Util\XmlUtils;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Config\Util\XmlUtils;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 /**
  * IniFileLoader loads parameters from INI files.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class IniFileLoader extends FileLoader
+class IniFileLoader extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\FileLoader
 {
     /**
      * {@inheritdoc}
-     * @param mixed $resource
-     * @return mixed
+     * @param string|null $type
      */
-    public function load($resource, string $type = null)
+    public function load($resource, $type = null)
     {
         $path = $this->locator->locate($resource);
         $this->container->fileExists($path);
         // first pass to catch parsing errors
         $result = \parse_ini_file($path, \true);
         if (\false === $result || [] === $result) {
-            throw new InvalidArgumentException(\sprintf('The "%s" file is not valid.', $resource));
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('The "%s" file is not valid.', $resource));
         }
         // real raw parsing
         $result = \parse_ini_file($path, \true, \INI_SCANNER_RAW);
@@ -49,9 +48,8 @@ class IniFileLoader extends FileLoader
     }
     /**
      * {@inheritdoc}
-     * @param mixed $resource
      */
-    public function supports($resource, string $type = null) : bool
+    public function supports($resource, string $type = null)
     {
         if (!\is_string($resource)) {
             return \false;
@@ -65,6 +63,7 @@ class IniFileLoader extends FileLoader
      * Note that the following features are not supported:
      *  * strings with escaped quotes are not supported "foo\"bar";
      *  * string concatenation ("foo" "bar").
+     *
      * @return mixed
      */
     private function phpize(string $value)
@@ -77,17 +76,15 @@ class IniFileLoader extends FileLoader
         switch (\true) {
             case \defined($value):
                 return \constant($value);
-            case 'yes' === $lowercaseValue:
-            case 'on' === $lowercaseValue:
+            case 'yes' === $lowercaseValue || 'on' === $lowercaseValue:
                 return \true;
-            case 'no' === $lowercaseValue:
-            case 'off' === $lowercaseValue:
-            case 'none' === $lowercaseValue:
+            case 'no' === $lowercaseValue || 'off' === $lowercaseValue || 'none' === $lowercaseValue:
                 return \false;
             case isset($value[1]) && ("'" === $value[0] && "'" === $value[\strlen($value) - 1] || '"' === $value[0] && '"' === $value[\strlen($value) - 1]):
+                // quoted string
                 return \substr($value, 1, -1);
             default:
-                return XmlUtils::phpize($value);
+                return \RectorPrefix20211221\Symfony\Component\Config\Util\XmlUtils::phpize($value);
         }
     }
 }

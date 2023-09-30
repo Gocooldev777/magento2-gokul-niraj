@@ -1,12 +1,17 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class StringValueNode extends Node implements ValueNode
 {
-    public string $kind = NodeKind::STRING;
+    /** @var string */
+    public $kind = NodeKind::STRING;
 
-    public string $value;
+    /** @var string */
+    public $value;
 
-    public bool $block = false;
+    /** @var bool */
+    public $block;
 }

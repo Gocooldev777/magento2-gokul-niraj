@@ -63,10 +63,6 @@ class CartItemPrices implements ResolverInterface
                 'currency' => $currencyCode,
                 'value' => $cartItem->getCalculationPrice(),
             ],
-            'price_including_tax' => [
-                'currency' => $currencyCode,
-                'value' => $cartItem->getPriceInclTax(),
-            ],
             'row_total' => [
                 'currency' => $currencyCode,
                 'value' => $cartItem->getRowTotal(),

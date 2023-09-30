@@ -8,11 +8,11 @@ use PHPStan\Type\IntersectionType;
 use PHPStan\Type\Type;
 use Rector\StaticTypeMapper\Contract\PhpParser\PhpParserNodeMapperInterface;
 use Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements PhpParserNodeMapperInterface<Node\IntersectionType>
  */
-final class IntersectionTypeNodeMapper implements PhpParserNodeMapperInterface
+final class IntersectionTypeNodeMapper implements \Rector\StaticTypeMapper\Contract\PhpParser\PhpParserNodeMapperInterface
 {
     /**
      * @var \Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper
@@ -21,23 +21,23 @@ final class IntersectionTypeNodeMapper implements PhpParserNodeMapperInterface
     /**
      * @required
      */
-    public function autowire(PhpParserNodeMapper $phpParserNodeMapper) : void
+    public function autowire(\Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper $phpParserNodeMapper) : void
     {
         $this->phpParserNodeMapper = $phpParserNodeMapper;
     }
     public function getNodeType() : string
     {
-        return Node\IntersectionType::class;
+        return \PhpParser\Node\IntersectionType::class;
     }
     /**
      * @param Node\IntersectionType $node
      */
-    public function mapToPHPStan(Node $node) : Type
+    public function mapToPHPStan(\PhpParser\Node $node) : \PHPStan\Type\Type
     {
         $types = [];
         foreach ($node->types as $intersectionedType) {
             $types[] = $this->phpParserNodeMapper->mapToPHPStanType($intersectionedType);
         }
-        return new IntersectionType($types);
+        return new \PHPStan\Type\IntersectionType($types);
     }
 }

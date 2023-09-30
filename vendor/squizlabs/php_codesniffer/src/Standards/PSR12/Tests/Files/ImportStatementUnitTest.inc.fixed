@@ -17,10 +17,3 @@ class ClassName3
 }
 
 $foo = function() use($bar) {};
-
-enum SomeEnum
-{
-    use \FirstTrait;
-    use SecondTrait;
-    use ThirdTrait;
-}

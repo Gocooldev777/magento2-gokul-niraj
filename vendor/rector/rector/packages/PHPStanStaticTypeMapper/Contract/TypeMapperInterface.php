@@ -5,7 +5,6 @@ namespace Rector\PHPStanStaticTypeMapper\Contract;
 
 use PhpParser\Node;
 use PhpParser\Node\ComplexType;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\Type\Type;
@@ -21,13 +20,11 @@ interface TypeMapperInterface
     public function getNodeClass() : string;
     /**
      * @param TType $type
-     * @param TypeKind::* $typeKind
      */
-    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode;
+    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode;
     /**
      * @param TType $type
-     * @param TypeKind::* $typeKind
-     * @return Name|ComplexType|Identifier|null
+     * @return Name|ComplexType|null
      */
-    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node;
+    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node;
 }

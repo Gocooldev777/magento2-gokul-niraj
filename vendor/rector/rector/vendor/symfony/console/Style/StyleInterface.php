@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Style;
+namespace RectorPrefix20211221\Symfony\Component\Console\Style;
 
 /**
  * Output style helpers.
@@ -31,32 +31,32 @@ interface StyleInterface
     public function listing(array $elements);
     /**
      * Formats informational text.
-     * @param string|mixed[] $message
+     * @param mixed[]|string $message
      */
     public function text($message);
     /**
      * Formats a success result bar.
-     * @param string|mixed[] $message
+     * @param mixed[]|string $message
      */
     public function success($message);
     /**
      * Formats an error result bar.
-     * @param string|mixed[] $message
+     * @param mixed[]|string $message
      */
     public function error($message);
     /**
      * Formats an warning result bar.
-     * @param string|mixed[] $message
+     * @param mixed[]|string $message
      */
     public function warning($message);
     /**
      * Formats a note admonition.
-     * @param string|mixed[] $message
+     * @param mixed[]|string $message
      */
     public function note($message);
     /**
      * Formats a caution admonition.
-     * @param string|mixed[] $message
+     * @param mixed[]|string $message
      */
     public function caution($message);
     /**

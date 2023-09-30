@@ -40,6 +40,8 @@ class PluginListGenerator implements ConfigWriterInterface, ConfigLoaderInterfac
     private $cacheId = 'plugin-list';
 
     /**
+     * Loaded scopes
+     *
      * @var array
      */
     private $loadedScopes = [];
@@ -153,7 +155,7 @@ class PluginListGenerator implements ConfigWriterInterface, ConfigLoaderInterfac
                 if (false === in_array($scope, $this->scopePriorityScheme, true)) {
                     $this->scopePriorityScheme[] = $scope;
                 }
-                $cacheId = implode('|', $this->scopePriorityScheme) . "|" . $this->cacheId;
+                $cacheId = implode('-', $this->scopePriorityScheme) . "-" . $this->cacheId;
                 [
                     $virtualTypes,
                     $this->scopePriorityScheme,
@@ -277,7 +279,7 @@ class PluginListGenerator implements ConfigWriterInterface, ConfigLoaderInterfac
      */
     public function inheritPlugins($type, &$pluginData, &$inherited, &$processed)
     {
-        $type = $type !== null ? ltrim($type, '\\') : '';
+        $type = ltrim($type, '\\');
         if (!isset($inherited[$type])) {
             $realType = $this->omConfig->getOriginalInstanceType($type);
 
@@ -353,7 +355,7 @@ class PluginListGenerator implements ConfigWriterInterface, ConfigLoaderInterfac
     public function trimInstanceStartingBackslash(&$plugins)
     {
         foreach ($plugins as &$plugin) {
-            $plugin['instance'] = ltrim($plugin['instance'] ?? '', '\\');
+            $plugin['instance'] = ltrim($plugin['instance'], '\\');
         }
     }
 

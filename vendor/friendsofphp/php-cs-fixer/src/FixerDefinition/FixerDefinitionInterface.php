@@ -31,7 +31,7 @@ interface FixerDefinitionInterface
     /**
      * Array of samples, where single sample is [code, configuration].
      *
-     * @return list<CodeSampleInterface>
+     * @return CodeSampleInterface[]
      */
     public function getCodeSamples(): array;
 }

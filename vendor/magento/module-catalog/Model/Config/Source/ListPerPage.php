@@ -13,6 +13,8 @@ namespace Magento\Catalog\Model\Config\Source;
 class ListPerPage implements \Magento\Framework\Option\ArrayInterface
 {
     /**
+     * Pager Options
+     *
      * @var array
      */
     protected $_pagerOptions;
@@ -24,11 +26,11 @@ class ListPerPage implements \Magento\Framework\Option\ArrayInterface
      */
     public function __construct($options)
     {
-        $this->_pagerOptions = $options !== null ? explode(',', $options) : [];
+        $this->_pagerOptions = explode(',', $options);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function toOptionArray()
     {

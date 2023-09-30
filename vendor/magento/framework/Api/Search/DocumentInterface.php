@@ -8,9 +8,8 @@ namespace Magento\Framework\Api\Search;
 use Magento\Framework\Api\CustomAttributesDataInterface;
 
 /**
- * Interface Search Document
+ * Interface \Magento\Framework\Api\Search\DocumentInterface
  *
- * @api
  */
 interface DocumentInterface extends CustomAttributesDataInterface
 {

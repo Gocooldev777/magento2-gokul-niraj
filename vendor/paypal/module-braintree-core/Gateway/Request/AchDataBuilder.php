@@ -7,7 +7,6 @@ use Braintree\Customer;
 use Braintree\CustomerSearch;
 use Braintree\PaymentMethod;
 use Braintree\Result\UsBankAccountVerification;
-use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PayPal\Braintree\Observer\DataAssignObserver;
 use Magento\Framework\Exception\LocalizedException;
@@ -23,22 +22,13 @@ class AchDataBuilder implements BuilderInterface
     private $subjectReader;
 
     /**
-     * @var BraintreeConfig $braintreeConfig
-     */
-    private $braintreeConfig;
-
-    /**
      * AchDataBuilder constructor.
      *
      * @param SubjectReader $subjectReader
-     * @param BraintreeConfig $braintreeConfig
      */
-    public function __construct(
-        SubjectReader $subjectReader,
-        BraintreeConfig $braintreeConfig
-    ) {
+    public function __construct(SubjectReader $subjectReader)
+    {
         $this->subjectReader = $subjectReader;
-        $this->braintreeConfig = $braintreeConfig;
     }
 
     /**
@@ -78,18 +68,14 @@ class AchDataBuilder implements BuilderInterface
         } else {
             $customerId = $customers->getIds()[0];
         }
-        $createRequest = [
+
+        $result = PaymentMethod::create([
             'customerId' => $customerId,
             'paymentMethodNonce' => $nonce,
             'options' => [
                 'usBankAccountVerificationMethod' => 'network_check'
             ]
-        ];
-        $merchantAccountId = $this->braintreeConfig->getMerchantAccountId($order->getStoreId());
-        if (!empty($merchantAccountId)) {
-            $createRequest['options']['verificationMerchantAccountId'] = $merchantAccountId;
-        }
-        $result = PaymentMethod::create($createRequest);
+        ]);
 
         if ($result->success) {
             return [

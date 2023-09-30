@@ -4,11 +4,12 @@ declare (strict_types=1);
 namespace Rector\Set\ValueObject;
 
 use Rector\Set\Contract\SetListInterface;
-/**
- * @api
- */
-final class SetList implements SetListInterface
+final class SetList implements \Rector\Set\Contract\SetListInterface
 {
+    /**
+     * @var string
+     */
+    public const DEFLUENT = __DIR__ . '/../../../config/set/defluent.php';
     /**
      * @var string
      */
@@ -28,7 +29,23 @@ final class SetList implements SetListInterface
     /**
      * @var string
      */
-    public const GMAGICK_TO_IMAGICK = __DIR__ . '/../../../config/set/gmagick-to-imagick.php';
+    public const FLYSYSTEM_20 = __DIR__ . '/../../../config/set/flysystem-20.php';
+    /**
+     * @var string
+     */
+    public const FRAMEWORK_EXTRA_BUNDLE_40 = __DIR__ . '/../../../config/set/framework-extra-bundle-40.php';
+    /**
+     * @var string
+     */
+    public const FRAMEWORK_EXTRA_BUNDLE_50 = __DIR__ . '/../../../config/set/framework-extra-bundle-50.php';
+    /**
+     * @var string
+     */
+    public const GMAGICK_TO_IMAGICK = __DIR__ . '/../../../config/set/gmagick_to_imagick.php';
+    /**
+     * @var string
+     */
+    public const MONOLOG_20 = __DIR__ . '/../../../config/set/monolog20.php';
     /**
      * @var string
      */
@@ -37,6 +54,22 @@ final class SetList implements SetListInterface
      * @var string
      */
     public const NAMING = __DIR__ . '/../../../config/set/naming.php';
+    /**
+     * @var string
+     */
+    public const ORDER = __DIR__ . '/../../../config/set/order.php';
+    /**
+     * @var string
+     */
+    public const PHPSPEC_30 = __DIR__ . '/../../../config/set/phpspec30.php';
+    /**
+     * @var string
+     */
+    public const PHPSPEC_40 = __DIR__ . '/../../../config/set/phpspec40.php';
+    /**
+     * @var string
+     */
+    public const PHPSPEC_TO_PHPUNIT = __DIR__ . '/../../../config/set/phpspec-to-phpunit.php';
     /**
      * @var string
      */
@@ -88,10 +121,6 @@ final class SetList implements SetListInterface
     /**
      * @var string
      */
-    public const PHP_82 = __DIR__ . '/../../../config/set/php82.php';
-    /**
-     * @var string
-     */
     public const PRIVATIZATION = __DIR__ . '/../../../config/set/privatization.php';
     /**
      * @var string
@@ -100,13 +129,21 @@ final class SetList implements SetListInterface
     /**
      * @var string
      */
+    public const SAFE_07 = __DIR__ . '/../../../config/set/safe07.php';
+    /**
+     * @var string
+     */
     public const TYPE_DECLARATION = __DIR__ . '/../../../config/set/type-declaration.php';
     /**
      * @var string
      */
-    public const EARLY_RETURN = __DIR__ . '/../../../config/set/early-return.php';
+    public const TYPE_DECLARATION_STRICT = __DIR__ . '/../../../config/set/type-declaration-strict.php';
     /**
      * @var string
      */
-    public const INSTANCEOF = __DIR__ . '/../../../config/set/instanceof.php';
+    public const UNWRAP_COMPAT = __DIR__ . '/../../../config/set/unwrap-compat.php';
+    /**
+     * @var string
+     */
+    public const EARLY_RETURN = __DIR__ . '/../../../config/set/early-return.php';
 }

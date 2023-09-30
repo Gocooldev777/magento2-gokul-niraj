@@ -34,59 +34,59 @@ class ProcessCronQueueObserver implements ObserverInterface
     /**#@+
      * Cache key values
      */
-    public const CACHE_KEY_LAST_SCHEDULE_GENERATE_AT = 'cron_last_schedule_generate_at';
+    const CACHE_KEY_LAST_SCHEDULE_GENERATE_AT = 'cron_last_schedule_generate_at';
 
-    public const CACHE_KEY_LAST_HISTORY_CLEANUP_AT = 'cron_last_history_cleanup_at';
+    const CACHE_KEY_LAST_HISTORY_CLEANUP_AT = 'cron_last_history_cleanup_at';
 
     /**
      * Flag for internal communication between processes for running
      * all jobs in a group in parallel as a separate process
      */
-    public const STANDALONE_PROCESS_STARTED = 'standaloneProcessStarted';
+    const STANDALONE_PROCESS_STARTED = 'standaloneProcessStarted';
 
     /**#@-*/
 
     /**#@+
      * List of configurable constants used to calculate and validate during handling cron jobs
      */
-    public const XML_PATH_SCHEDULE_GENERATE_EVERY = 'schedule_generate_every';
+    const XML_PATH_SCHEDULE_GENERATE_EVERY = 'schedule_generate_every';
 
-    public const XML_PATH_SCHEDULE_AHEAD_FOR = 'schedule_ahead_for';
+    const XML_PATH_SCHEDULE_AHEAD_FOR = 'schedule_ahead_for';
 
-    public const XML_PATH_SCHEDULE_LIFETIME = 'schedule_lifetime';
+    const XML_PATH_SCHEDULE_LIFETIME = 'schedule_lifetime';
 
-    public const XML_PATH_HISTORY_CLEANUP_EVERY = 'history_cleanup_every';
+    const XML_PATH_HISTORY_CLEANUP_EVERY = 'history_cleanup_every';
 
-    public const XML_PATH_HISTORY_SUCCESS = 'history_success_lifetime';
+    const XML_PATH_HISTORY_SUCCESS = 'history_success_lifetime';
 
-    public const XML_PATH_HISTORY_FAILURE = 'history_failure_lifetime';
+    const XML_PATH_HISTORY_FAILURE = 'history_failure_lifetime';
 
     /**#@-*/
 
     /**
      * Value of seconds in one minute
      */
-    public const SECONDS_IN_MINUTE = 60;
+    const SECONDS_IN_MINUTE = 60;
 
     /**
      * How long to wait for cron group to become unlocked
      */
-    public const LOCK_TIMEOUT = 60;
+    const LOCK_TIMEOUT = 60;
 
     /**
      * Static lock prefix for cron group locking
      */
-    public const LOCK_PREFIX = 'CRON_';
+    const LOCK_PREFIX = 'CRON_';
 
     /**
      * Timer ID for profiling
      */
-    public const CRON_TIMERID = 'job %s';
+    const CRON_TIMERID = 'job %s';
 
     /**
      * Max retries for acquire locks for cron jobs
      */
-    public const MAX_RETRIES = 5;
+    const MAX_RETRIES = 5;
 
     /**
      * @var ScheduleCollection
@@ -378,7 +378,7 @@ class ProcessCronQueueObserver implements ObserverInterface
             );
             if (!$e instanceof \Exception) {
                 $e = new \RuntimeException(
-                    'Error when running a cron job: ' . $e->getMessage(),
+                    'Error when running a cron job',
                     0,
                     $e
                 );

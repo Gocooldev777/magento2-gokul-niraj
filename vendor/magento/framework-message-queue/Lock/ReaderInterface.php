@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue\Lock;
 
 /**
  * Message lock reader interface
- * @api
  */
 interface ReaderInterface
 {

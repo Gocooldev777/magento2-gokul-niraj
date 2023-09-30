@@ -53,19 +53,19 @@ use Magento\Store\Model\StoreManagerInterface;
  */
 class Subscriber extends AbstractModel
 {
-    public const STATUS_SUBSCRIBED = 1;
-    public const STATUS_NOT_ACTIVE = 2;
-    public const STATUS_UNSUBSCRIBED = 3;
-    public const STATUS_UNCONFIRMED = 4;
+    const STATUS_SUBSCRIBED = 1;
+    const STATUS_NOT_ACTIVE = 2;
+    const STATUS_UNSUBSCRIBED = 3;
+    const STATUS_UNCONFIRMED = 4;
 
-    public const XML_PATH_CONFIRM_EMAIL_TEMPLATE = 'newsletter/subscription/confirm_email_template';
-    public const XML_PATH_CONFIRM_EMAIL_IDENTITY = 'newsletter/subscription/confirm_email_identity';
-    public const XML_PATH_SUCCESS_EMAIL_TEMPLATE = 'newsletter/subscription/success_email_template';
-    public const XML_PATH_SUCCESS_EMAIL_IDENTITY = 'newsletter/subscription/success_email_identity';
-    public const XML_PATH_UNSUBSCRIBE_EMAIL_TEMPLATE = 'newsletter/subscription/un_email_template';
-    public const XML_PATH_UNSUBSCRIBE_EMAIL_IDENTITY = 'newsletter/subscription/un_email_identity';
-    public const XML_PATH_CONFIRMATION_FLAG = 'newsletter/subscription/confirm';
-    public const XML_PATH_ALLOW_GUEST_SUBSCRIBE_FLAG = 'newsletter/subscription/allow_guest_subscribe';
+    const XML_PATH_CONFIRM_EMAIL_TEMPLATE = 'newsletter/subscription/confirm_email_template';
+    const XML_PATH_CONFIRM_EMAIL_IDENTITY = 'newsletter/subscription/confirm_email_identity';
+    const XML_PATH_SUCCESS_EMAIL_TEMPLATE = 'newsletter/subscription/success_email_template';
+    const XML_PATH_SUCCESS_EMAIL_IDENTITY = 'newsletter/subscription/success_email_identity';
+    const XML_PATH_UNSUBSCRIBE_EMAIL_TEMPLATE = 'newsletter/subscription/un_email_template';
+    const XML_PATH_UNSUBSCRIBE_EMAIL_IDENTITY = 'newsletter/subscription/un_email_identity';
+    const XML_PATH_CONFIRMATION_FLAG = 'newsletter/subscription/confirm';
+    const XML_PATH_ALLOW_GUEST_SUBSCRIBE_FLAG = 'newsletter/subscription/allow_guest_subscribe';
 
     /**
      * Prefix of model events names
@@ -91,6 +91,7 @@ class Subscriber extends AbstractModel
     protected $_isStatusChanged = false;
 
     /**
+     * Newsletter data
      *
      * @var Data
      */
@@ -104,6 +105,7 @@ class Subscriber extends AbstractModel
     protected $_scopeConfig;
 
     /**
+     * Customer session
      *
      * @var \Magento\Customer\Model\Session
      */
@@ -116,6 +118,7 @@ class Subscriber extends AbstractModel
     private $dateTime;
 
     /**
+     * Store manager
      *
      * @var StoreManagerInterface
      */
@@ -562,9 +565,8 @@ class Subscriber extends AbstractModel
             ]
         )->setTemplateVars(
             $templateVars
-        )->setFromByScope(
-            $identity,
-            $this->getStoreId()
+        )->setFrom(
+            $identity
         )->addTo(
             $this->getEmail(),
             $this->getName()

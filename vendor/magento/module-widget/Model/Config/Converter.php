@@ -8,11 +8,9 @@ namespace Magento\Widget\Model\Config;
 class Converter implements \Magento\Framework\Config\ConverterInterface
 {
     /**
-     * @inheritdoc
-     *
+     * {@inheritdoc}
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * phpcs:disable Generic.Metrics.NestingLevel
      */
     public function convert($source)
     {
@@ -62,15 +60,15 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
                             if ($container->nodeName === '#text' || $container->nodeName === '#comment') {
                                 continue;
                             }
-                            // phpcs:ignore Magento2.Performance.ForeachArrayMerge
                             $widgetArray['supported_containers'] = array_merge(
                                 $widgetArray['supported_containers'],
                                 $this->_convertContainer($container)
                             );
                         }
                         break;
-                    case '#comment':
                     case "#text":
+                        break;
+                    case '#comment':
                         break;
                     default:
                         throw new \LogicException(
@@ -242,7 +240,7 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
                 ];
 
                 continue;
-            } elseif (!isset($depends[$dependencyName]['values'])) {
+            } else if (!isset($depends[$dependencyName]['values'])) {
                 $depends[$dependencyName]['values'] = [$depends[$dependencyName]['value']];
                 unset($depends[$dependencyName]['value']);
             }
@@ -294,7 +292,7 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
             if ($dataChild instanceof \DOMElement) {
                 $data[$dataChild->attributes->getNamedItem('name')->nodeValue] = $this->_convertData($dataChild);
             } else {
-                if ($dataChild->nodeValue && strlen(trim($dataChild->nodeValue))) {
+                if (strlen(trim($dataChild->nodeValue))) {
                     $data = $dataChild->nodeValue;
                 }
             }

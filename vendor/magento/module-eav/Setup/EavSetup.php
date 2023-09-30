@@ -18,7 +18,6 @@ use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
-use Magento\Framework\Validator\ValidateException;
 
 /**
  * Base eav setup class.
@@ -138,7 +137,6 @@ class EavSetup
      * Gets setup model.
      *
      * @deprecated 102.0.0
-     * @see we don't recommend this approach anymore
      * @return ModuleDataSetupInterface
      */
     public function getSetup()
@@ -614,7 +612,7 @@ class EavSetup
      */
     public function convertToAttributeGroupCode($groupName)
     {
-        return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower((string)$groupName)), '-');
+        return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($groupName)), '-');
     }
 
     /**
@@ -823,7 +821,8 @@ class EavSetup
      * @param string $code
      * @param array $attr
      * @return $this
-     * @throws LocalizedException|ValidateException
+     * @throws LocalizedException
+     * @throws \Zend_Validate_Exception
      */
     public function addAttribute($entityTypeId, $code, array $attr)
     {
@@ -1506,7 +1505,7 @@ class EavSetup
      *
      * @param array $data
      * @throws LocalizedException
-     * @throws ValidateException
+     * @throws \Zend_Validate_Exception
      */
     private function validateAttributeCode(array $data): void
     {

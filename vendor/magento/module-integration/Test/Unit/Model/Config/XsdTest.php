@@ -47,9 +47,7 @@ class XsdTest extends TestCase
         $dom = new Dom($fixtureXml, $validationStateMock, [], null, null, $messageFormat);
         $actualResult = $dom->validate($this->schemaFile, $actualErrors);
         $this->assertEquals(empty($expectedErrors), $actualResult, "Validation result is invalid.");
-        foreach ($expectedErrors as $error) {
-            $this->assertContains($error, $actualErrors, "Validation errors does not match.");
-        }
+        $this->assertEquals($expectedErrors, $actualErrors, "Validation errors does not match.");
     }
 
     /**
@@ -114,7 +112,8 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'email': [facet 'pattern'] The value '' is not " .
-                    "accepted by the pattern '[^@]+@[^\.]+\..+'."
+                    "accepted by the pattern '[^@]+@[^\.]+\..+'.",
+                    "Element 'email': '' is not a valid value of the atomic type 'emailType'."
                 ],
             ],
             'endpoint_url is empty' => [
@@ -126,7 +125,8 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'endpoint_url': [facet 'minLength'] The value has a length of '0'; this underruns" .
-                    " the allowed minimum length of '4'."
+                    " the allowed minimum length of '4'.",
+                    "Element 'endpoint_url': '' is not a valid value of the atomic type 'urlType'."
                 ],
             ],
             'identity_link_url is empty' => [
@@ -139,7 +139,8 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'identity_link_url': [facet 'minLength'] The value has a length of '0'; this underruns" .
-                    " the allowed minimum length of '4'."
+                    " the allowed minimum length of '4'.",
+                    "Element 'identity_link_url': '' is not a valid value of the atomic type 'urlType'."
                 ],
             ],
             /** Invalid structure */
@@ -252,7 +253,9 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'integration', attribute 'name': [facet 'minLength'] The value '' has a length of '0'; " .
-                    "this underruns the allowed minimum length of '2'."
+                    "this underruns the allowed minimum length of '2'.",
+                    "Element 'integration', attribute 'name': " .
+                    "'' is not a valid value of the atomic type 'integrationNameType'."
                 ],
             ],
             /** Invalid values */
@@ -266,7 +269,8 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'email': [facet 'pattern'] The value 'invalid' " .
-                    "is not accepted by the pattern '[^@]+@[^\.]+\..+'."
+                    "is not accepted by the pattern '[^@]+@[^\.]+\..+'.",
+                    "Element 'email': 'invalid' is not a valid value of the atomic type 'emailType'."
                 ],
             ]
         ];

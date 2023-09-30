@@ -47,10 +47,7 @@ class ConstantVisibilitySniff implements Sniff
             return;
         }
 
-        $ignore   = Tokens::$emptyTokens;
-        $ignore[] = T_FINAL;
-
-        $prev = $phpcsFile->findPrevious($ignore, ($stackPtr - 1), null, true);
+        $prev = $phpcsFile->findPrevious(Tokens::$emptyTokens, ($stackPtr - 1), null, true);
         if (isset(Tokens::$scopeModifiers[$tokens[$prev]['code']]) === true) {
             return;
         }

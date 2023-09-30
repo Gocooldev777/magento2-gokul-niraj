@@ -18,19 +18,20 @@ final class CompactFuncCallAnalyzer
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    public function __construct(NodeNameResolver $nodeNameResolver)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
     }
-    public function isInCompact(FuncCall $funcCall, Variable $variable) : bool
+    public function isInCompact(\PhpParser\Node\Expr\FuncCall $funcCall, \PhpParser\Node\Expr\Variable $variable) : bool
     {
         if (!$this->nodeNameResolver->isName($funcCall, 'compact')) {
             return \false;
         }
-        if (!\is_string($variable->name)) {
+        $variableName = $variable->name;
+        if (!\is_string($variableName)) {
             return \false;
         }
-        return $this->isInArgOrArrayItemNodes($funcCall->args, $variable->name);
+        return $this->isInArgOrArrayItemNodes($funcCall->args, $variableName);
     }
     /**
      * @param array<int, Arg|VariadicPlaceholder|ArrayItem|null> $nodes
@@ -42,13 +43,13 @@ final class CompactFuncCallAnalyzer
                 continue;
             }
             /** @var Arg|ArrayItem $node */
-            if ($node->value instanceof Array_) {
+            if ($node->value instanceof \PhpParser\Node\Expr\Array_) {
                 if ($this->isInArgOrArrayItemNodes($node->value->items, $variableName)) {
                     return \true;
                 }
                 continue;
             }
-            if (!$node->value instanceof String_) {
+            if (!$node->value instanceof \PhpParser\Node\Scalar\String_) {
                 continue;
             }
             if ($node->value->value === $variableName) {
@@ -58,13 +59,13 @@ final class CompactFuncCallAnalyzer
         return \false;
     }
     /**
-     * @param \PhpParser\Node\Arg|\PhpParser\Node\VariadicPlaceholder|\PhpParser\Node\Expr\ArrayItem|null $node
+     * @param \PhpParser\Node\Arg|\PhpParser\Node\Expr\ArrayItem|\PhpParser\Node\VariadicPlaceholder|null $node
      */
     private function shouldSkip($node) : bool
     {
         if ($node === null) {
             return \true;
         }
-        return $node instanceof VariadicPlaceholder;
+        return $node instanceof \PhpParser\Node\VariadicPlaceholder;
     }
 }

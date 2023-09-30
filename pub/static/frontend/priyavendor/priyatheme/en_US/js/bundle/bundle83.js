@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"jquery/ui-modules/safe-blur.js":"( function( factory ) {\n\t\"use strict\";\n\n\tif ( typeof define === \"function\" && define.amd ) {\n\n\t\t// AMD. Register as an anonymous module.\n\t\tdefine( [ \"jquery\", \"./version\" ], factory );\n\t} else {\n\n\t\t// Browser globals\n\t\tfactory( jQuery );\n\t}\n} )( function( $ ) {\n\"use strict\";\n\nreturn $.ui.safeBlur = function( element ) {\n\n\t// Support: IE9 - 10 only\n\t// If the <body> is blurred, IE will switch windows, see #9420\n\tif ( element && element.nodeName.toLowerCase() !== \"body\" ) {\n\t\t$( element ).trigger( \"blur\" );\n\t}\n};\n\n} );\n"}
+}});

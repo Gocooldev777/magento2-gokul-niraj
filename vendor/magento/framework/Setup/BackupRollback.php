@@ -25,7 +25,7 @@ class BackupRollback
     /**
      * Default backup directory
      */
-    public const DEFAULT_BACKUP_DIRECTORY = 'backups';
+    const DEFAULT_BACKUP_DIRECTORY = 'backups';
 
     /**
      * Path to backup folder
@@ -35,6 +35,8 @@ class BackupRollback
     private $backupsDir;
 
     /**
+     * Object Manager
+     *
      * @var ObjectManagerInterface
      */
     private $objectManager;
@@ -54,6 +56,8 @@ class BackupRollback
     private $directoryList;
 
     /**
+     * File
+     *
      * @var File
      */
     private $file;
@@ -142,7 +146,7 @@ class BackupRollback
      */
     public function codeRollback($rollbackFile, $type = Factory::TYPE_FILESYSTEM, $keepSourceFile = false)
     {
-        if (!$rollbackFile || preg_match('/[0-9]_(filesystem)_(code|media)\.(tgz)$/', $rollbackFile) !== 1) {
+        if (preg_match('/[0-9]_(filesystem)_(code|media)\.(tgz)$/', $rollbackFile) !== 1) {
             throw new LocalizedException(new Phrase('The rollback file is invalid. Verify the file and try again.'));
         }
         if (!$this->file->isExists($this->backupsDir . '/' . $rollbackFile)) {
@@ -220,7 +224,7 @@ class BackupRollback
      */
     public function dbRollback($rollbackFile, $keepSourceFile = false)
     {
-        if (!$rollbackFile || preg_match('/[0-9]_(db)(.*?).(sql)$/', $rollbackFile) !== 1) {
+        if (preg_match('/[0-9]_(db)(.*?).(sql)$/', $rollbackFile) !== 1) {
             throw new LocalizedException(new Phrase('The rollback file is invalid. Verify the file and try again.'));
         }
         if (!$this->file->isExists($this->backupsDir . '/' . $rollbackFile)) {
@@ -233,7 +237,7 @@ class BackupRollback
         $dbRollback->setBackupExtension('sql');
         $time = explode('_', $rollbackFile);
         if (count($time) === 3) {
-            $thirdPart = explode('.', $time[2] ?? '');
+            $thirdPart = explode('.', $time[2]);
             $dbRollback->setName($thirdPart[0]);
         }
         $dbRollback->setTime($time[0]);
@@ -280,12 +284,12 @@ class BackupRollback
         $ignorePaths = [];
         foreach (new \DirectoryIterator($this->directoryList->getRoot()) as $item) {
             if (!$item->isDot() && ($this->directoryList->getPath(DirectoryList::PUB) !== $item->getPathname())) {
-                $ignorePaths[] = $item->getPathname() !== null ? str_replace('\\', '/', $item->getPathname()) : '';
+                $ignorePaths[] = str_replace('\\', '/', $item->getPathname());
             }
         }
         foreach (new \DirectoryIterator($this->directoryList->getPath(DirectoryList::PUB)) as $item) {
             if (!$item->isDot() && ($this->directoryList->getPath(DirectoryList::MEDIA) !== $item->getPathname())) {
-                $ignorePaths[] = $item->getPathname() !== null ? str_replace('\\', '/', $item->getPathname()) : '';
+                $ignorePaths[] = str_replace('\\', '/', $item->getPathname());
             }
         }
         return $ignorePaths;
@@ -344,7 +348,7 @@ class BackupRollback
     {
         $namePrefix = $dbRollback->getTime() . '_' . $dbRollback->getType();
         //delete prefix.
-        $fileNameWithoutPrefix = $rollbackFile !== null ? str_replace($namePrefix, '', $rollbackFile) : '';
+        $fileNameWithoutPrefix = str_replace($namePrefix, '', $rollbackFile);
         //change '_' to ' '.
         $fileNameWithoutPrefix = str_replace('_', ' ', $fileNameWithoutPrefix);
         //delete file extension.

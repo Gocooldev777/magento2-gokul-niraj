@@ -33,28 +33,28 @@ use Magento\Framework\View\Model\Layout\Update\ValidatorFactory;
  */
 class Instance extends \Magento\Framework\Model\AbstractModel
 {
-    public const SPECIFIC_ENTITIES = 'specific';
+    const SPECIFIC_ENTITIES = 'specific';
 
-    public const ALL_ENTITIES = 'all';
+    const ALL_ENTITIES = 'all';
 
-    public const DEFAULT_LAYOUT_HANDLE = 'default';
+    const DEFAULT_LAYOUT_HANDLE = 'default';
 
-    public const PRODUCT_LAYOUT_HANDLE = 'catalog_product_view';
+    const PRODUCT_LAYOUT_HANDLE = 'catalog_product_view';
 
     /**
      * @deprecated see self::SINGLE_PRODUCT_LAYOUT_HANDLE
      */
-    public const SINGLE_PRODUCT_LAYOUT_HANLDE = self::SINGLE_PRODUCT_LAYOUT_HANDLE;
+    const SINGLE_PRODUCT_LAYOUT_HANLDE = self::SINGLE_PRODUCT_LAYOUT_HANDLE;
 
-    public const SINGLE_PRODUCT_LAYOUT_HANDLE = 'catalog_product_view_id_{{ID}}';
+    const SINGLE_PRODUCT_LAYOUT_HANDLE = 'catalog_product_view_id_{{ID}}';
 
-    public const PRODUCT_TYPE_LAYOUT_HANDLE = 'catalog_product_view_type_{{TYPE}}';
+    const PRODUCT_TYPE_LAYOUT_HANDLE = 'catalog_product_view_type_{{TYPE}}';
 
-    public const ANCHOR_CATEGORY_LAYOUT_HANDLE = 'catalog_category_view_type_layered';
+    const ANCHOR_CATEGORY_LAYOUT_HANDLE = 'catalog_category_view_type_layered';
 
-    public const NOTANCHOR_CATEGORY_LAYOUT_HANDLE = 'catalog_category_view_type_default';
+    const NOTANCHOR_CATEGORY_LAYOUT_HANDLE = 'catalog_category_view_type_default';
 
-    public const SINGLE_CATEGORY_LAYOUT_HANDLE = 'catalog_category_view_id_{{ID}}';
+    const SINGLE_CATEGORY_LAYOUT_HANDLE = 'catalog_category_view_id_{{ID}}';
 
     /**
      * @var array
@@ -268,7 +268,7 @@ class Instance extends \Magento\Framework\Model\AbstractModel
                     ];
                     if ($pageGroupData['for'] == self::SPECIFIC_ENTITIES) {
                         $layoutHandleUpdates = [];
-                        foreach (explode(',', $pageGroupData['entities'] ?? '') as $entity) {
+                        foreach (explode(',', $pageGroupData['entities']) as $entity) {
                             $layoutHandleUpdates[] = str_replace(
                                 '{{ID}}',
                                 $entity,
@@ -644,7 +644,7 @@ class Instance extends \Magento\Framework\Model\AbstractModel
             return '';
         }
         $parameters = $this->getWidgetParameters();
-        $xml = '<body><referenceContainer name="' . $this->_escaper->escapeHtmlAttr($container) . '">';
+        $xml = '<body><referenceContainer name="' . $container . '">';
         $template = '';
         if (isset($parameters['template'])) {
             unset($parameters['template']);

@@ -7,19 +7,18 @@ namespace Magento\Catalog\Model\Indexer\Product\Flat;
 
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Helper\Product\Flat\Indexer;
-use Magento\Catalog\Model\Product\Attribute\Source\Status;
-use Magento\Eav\Model\Entity\Attribute;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Ddl\Table;
-use Magento\Framework\DB\Select;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
-use Zend_Db;
+use Magento\Catalog\Model\Product\Attribute\Source\Status;
+use Magento\Framework\App\ObjectManager;
+use Magento\Eav\Model\Entity\Attribute;
+use Magento\Framework\DB\Select;
 
 /**
  * Class for building flat index
@@ -36,7 +35,7 @@ class FlatTableBuilder
     /**
      * Path to maximum available amount of indexes for flat indexer
      */
-    public const XML_NODE_MAX_INDEX_COUNT = 'catalog/product/flat/max_index_count';
+    const XML_NODE_MAX_INDEX_COUNT = 'catalog/product/flat/max_index_count';
 
     /**
      * @var Indexer
@@ -160,7 +159,7 @@ class FlatTableBuilder
                 $indexProp['fields'],
                 $indexProp['type']
             );
-            $indexProp['type'] = strtoupper($indexProp['type'] ?? '');
+            $indexProp['type'] = strtoupper($indexProp['type']);
             if ($indexProp['type'] == $upperPrimaryKey) {
                 $indexKey = $upperPrimaryKey;
             } else {
@@ -355,7 +354,7 @@ class FlatTableBuilder
                         );
                     if (!empty($changedIds)) {
                         $select->where(
-                            $this->_connection->quoteInto('et.entity_id IN (?)', $changedIds, Zend_Db::INT_TYPE)
+                            $this->_connection->quoteInto('et.entity_id IN (?)', $changedIds, \Zend_Db::INT_TYPE)
                         );
                     }
                     $sql = $select->crossUpdateFromSelect(['et' => $temporaryFlatTableName]);
@@ -383,7 +382,7 @@ class FlatTableBuilder
                             $this->_connection->quoteInto(
                                 'et.entity_id IN (?)',
                                 $changedIds,
-                                Zend_Db::INT_TYPE
+                                \Zend_Db::INT_TYPE
                             )
                         );
                     }

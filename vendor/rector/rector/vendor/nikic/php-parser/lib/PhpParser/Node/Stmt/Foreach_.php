@@ -4,8 +4,7 @@ declare (strict_types=1);
 namespace PhpParser\Node\Stmt;
 
 use PhpParser\Node;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-class Foreach_ extends Node\Stmt implements StmtsAwareInterface
+class Foreach_ extends \PhpParser\Node\Stmt
 {
     /** @var Node\Expr Expression to iterate */
     public $expr;
@@ -28,7 +27,7 @@ class Foreach_ extends Node\Stmt implements StmtsAwareInterface
      *                              'stmts'  => array(): Statements
      * @param array     $attributes Additional attributes
      */
-    public function __construct(Node\Expr $expr, Node\Expr $valueVar, array $subNodes = [], array $attributes = [])
+    public function __construct(\PhpParser\Node\Expr $expr, \PhpParser\Node\Expr $valueVar, array $subNodes = [], array $attributes = [])
     {
         $this->attributes = $attributes;
         $this->expr = $expr;

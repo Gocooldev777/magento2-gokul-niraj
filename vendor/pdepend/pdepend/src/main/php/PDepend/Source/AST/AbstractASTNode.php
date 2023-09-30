@@ -91,18 +91,9 @@ abstract class AbstractASTNode implements ASTNode
      */
     protected $metadata = '::::';
 
-    /**
-     * @template T of array<string, mixed>|string|null
-     *
-     * @param T $data
-     *
-     * @return T
-     */
     public function accept(ASTVisitor $visitor, $data = null)
     {
-        $methodName = 'visit' . substr(get_class($this), 22);
-
-        return call_user_func(array($visitor, $methodName), $this, $data);
+        throw new BadMethodCallException('Accept must be overwritten');
     }
 
     /**
@@ -243,7 +234,7 @@ abstract class AbstractASTNode implements ASTNode
      */
     protected function setMetadataInteger($index, $value)
     {
-        $this->setMetadata($index, (string)$value);
+        $this->setMetadata($index, $value);
     }
 
     /**
@@ -273,7 +264,7 @@ abstract class AbstractASTNode implements ASTNode
      */
     protected function setMetadataBoolean($index, $value)
     {
-        $this->setMetadata($index, $value ? '1' : '0');
+        $this->setMetadata($index, $value ? 1 : 0);
     }
 
     /**
@@ -296,7 +287,6 @@ abstract class AbstractASTNode implements ASTNode
      * container.
      *
      * @param int $index
-     * @param string $value
      *
      * @return void
      *
@@ -385,10 +375,9 @@ abstract class AbstractASTNode implements ASTNode
      * an empty <b>array</b> if no child exists for that.
      *
      * @template T of ASTNode
-     * @template R of T
      *
      * @param class-string<T> $targetType Searched class or interface type.
-     * @param R[]             $results    Already found node instances. This parameter
+     * @param T[]             $results    Already found node instances. This parameter
      *                                    is only for internal usage.
      *
      * @return T[]
@@ -417,8 +406,6 @@ abstract class AbstractASTNode implements ASTNode
 
     /**
      * This method adds a new child node to this node instance.
-     *
-     * @param ASTNode $node
      *
      * @return void
      */

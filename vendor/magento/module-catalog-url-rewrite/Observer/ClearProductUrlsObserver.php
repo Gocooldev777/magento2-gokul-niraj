@@ -12,6 +12,9 @@ use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
 use Magento\Framework\Event\ObserverInterface;
 
+/**
+ * Class ClearProductUrlsObserver
+ */
 class ClearProductUrlsObserver implements ObserverInterface
 {
     /**
@@ -40,7 +43,7 @@ class ClearProductUrlsObserver implements ObserverInterface
             $oldSku = $observer->getEvent()->getAdapter()->getOldSku();
             $idToDelete = [];
             foreach ($products as $product) {
-                $sku = strtolower($product[ImportProduct::COL_SKU] ?? '');
+                $sku = strtolower($product[ImportProduct::COL_SKU]);
                 if (!isset($oldSku[$sku])) {
                     continue;
                 }

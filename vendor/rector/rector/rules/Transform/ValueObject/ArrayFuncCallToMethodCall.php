@@ -5,25 +5,25 @@ namespace Rector\Transform\ValueObject;
 
 use Rector\Core\Validation\RectorAssert;
 use Rector\Transform\Contract\ValueObject\ArgumentFuncCallToMethodCallInterface;
-final class ArrayFuncCallToMethodCall implements ArgumentFuncCallToMethodCallInterface
+final class ArrayFuncCallToMethodCall implements \Rector\Transform\Contract\ValueObject\ArgumentFuncCallToMethodCallInterface
 {
     /**
-     * @var non-empty-string
+     * @var \non-empty-string
      * @readonly
      */
     private $function;
     /**
-     * @var non-empty-string
+     * @var \non-empty-string
      * @readonly
      */
     private $class;
     /**
-     * @var non-empty-string
+     * @var \non-empty-string
      * @readonly
      */
     private $arrayMethod;
     /**
-     * @var non-empty-string
+     * @var \non-empty-string
      * @readonly
      */
     private $nonArrayMethod;
@@ -39,10 +39,7 @@ final class ArrayFuncCallToMethodCall implements ArgumentFuncCallToMethodCallInt
         $this->class = $class;
         $this->arrayMethod = $arrayMethod;
         $this->nonArrayMethod = $nonArrayMethod;
-        RectorAssert::className($class);
-        RectorAssert::functionName($function);
-        RectorAssert::methodName($arrayMethod);
-        RectorAssert::methodName($nonArrayMethod);
+        \Rector\Core\Validation\RectorAssert::className($class);
     }
     public function getFunction() : string
     {

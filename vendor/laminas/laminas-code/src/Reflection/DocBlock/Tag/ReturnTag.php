@@ -9,10 +9,10 @@ use function trim;
 
 class ReturnTag implements TagInterface, PhpDocTypedTagInterface
 {
-    /** @var list<string> */
+    /** @var array */
     protected $types = [];
 
-    /** @var string|null */
+    /** @var string */
     protected $description;
 
     /**
@@ -23,11 +23,14 @@ class ReturnTag implements TagInterface, PhpDocTypedTagInterface
         return 'return';
     }
 
-    /** @inheritDoc */
-    public function initialize($content)
+    /**
+     * @param  string $tagDocBlockLine
+     * @return void
+     */
+    public function initialize($tagDocBlockLine)
     {
         $matches = [];
-        if (! preg_match('#((?:[\w|\\\]+(?:\[\])*\|?)+)(?:\s+(.*))?#s', $content, $matches)) {
+        if (! preg_match('#((?:[\w|\\\]+(?:\[\])*\|?)+)(?:\s+(.*))?#s', $tagDocBlockLine, $matches)) {
             return;
         }
 
@@ -52,14 +55,14 @@ class ReturnTag implements TagInterface, PhpDocTypedTagInterface
         return $this->types[0];
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getTypes()
     {
         return $this->types;
     }
 
     /**
-     * @return string|null
+     * @return string
      */
     public function getDescription()
     {

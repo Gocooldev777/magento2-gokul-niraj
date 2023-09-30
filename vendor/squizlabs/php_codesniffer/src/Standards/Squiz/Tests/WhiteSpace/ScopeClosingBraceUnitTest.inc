@@ -120,15 +120,3 @@ $match = match ($test) {
 <div class="container">
 
 </div> <?php endif; ?>
-
-<?php
-
-enum Enum
-{
-}
-
-enum Suits {}
-
-enum Cards
-{
-    }

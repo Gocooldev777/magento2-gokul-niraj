@@ -8,8 +8,8 @@ $billingAddress = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->c
     \Magento\Sales\Model\Order\Address::class,
     [
         'data' => [
-            'firstname' => 'guestfname',
-            'lastname' => 'guestlname',
+            'firstname' => 'guest',
+            'lastname' => 'guest',
             'email' => 'customer@example.com',
             'street' => 'street',
             'city' => 'Los Angeles',

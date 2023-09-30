@@ -28,25 +28,29 @@ use PhpCsFixer\Tokenizer\Analyzer\Analysis\NamespaceUseAnalysis;
 final class DocBlock
 {
     /**
-     * @var list<Line>
+     * The array of lines.
+     *
+     * @var Line[]
      */
-    private array $lines = [];
+    private $lines = [];
 
     /**
-     * @var null|list<Annotation>
+     * The array of annotations.
+     *
+     * @var null|Annotation[]
      */
-    private ?array $annotations = null;
-
-    private ?NamespaceAnalysis $namespace;
-
-    /**
-     * @var list<NamespaceUseAnalysis>
-     */
-    private array $namespaceUses;
+    private $annotations;
 
     /**
-     * @param list<NamespaceUseAnalysis> $namespaceUses
+     * @var null|NamespaceAnalysis
      */
+    private $namespace;
+
+    /**
+     * @var NamespaceUseAnalysis[]
+     */
+    private $namespaceUses;
+
     public function __construct(string $content, ?NamespaceAnalysis $namespace = null, array $namespaceUses = [])
     {
         foreach (Preg::split('/([^\n\r]+\R*)/', $content, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE) as $line) {
@@ -57,6 +61,9 @@ final class DocBlock
         $this->namespaceUses = $namespaceUses;
     }
 
+    /**
+     * Get the string representation of object.
+     */
     public function __toString(): string
     {
         return $this->getContent();
@@ -65,7 +72,7 @@ final class DocBlock
     /**
      * Get this docblock's lines.
      *
-     * @return list<Line>
+     * @return Line[]
      */
     public function getLines(): array
     {
@@ -83,7 +90,7 @@ final class DocBlock
     /**
      * Get this docblock's annotations.
      *
-     * @return list<Annotation>
+     * @return Annotation[]
      */
     public function getAnnotations(): array
     {
@@ -179,20 +186,23 @@ final class DocBlock
     /**
      * Get specific types of annotations only.
      *
-     * @param list<string>|string $types
+     * If none exist, we're returning an empty array.
      *
-     * @return list<Annotation>
+     * @param string|string[] $types
+     *
+     * @return Annotation[]
      */
     public function getAnnotationsOfType($types): array
     {
-        $typesToSearchFor = (array) $types;
-
         $annotations = [];
+        $types = (array) $types;
 
         foreach ($this->getAnnotations() as $annotation) {
-            $tagName = $annotation->getTag()->getName();
-            if (\in_array($tagName, $typesToSearchFor, true)) {
-                $annotations[] = $annotation;
+            $tag = $annotation->getTag()->getName();
+            foreach ($types as $type) {
+                if ($type === $tag) {
+                    $annotations[] = $annotation;
+                }
             }
         }
 

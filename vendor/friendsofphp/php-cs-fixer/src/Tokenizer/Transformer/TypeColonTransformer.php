@@ -57,15 +57,6 @@ final class TypeColonTransformer extends AbstractTransformer
 
         $endIndex = $tokens->getPrevMeaningfulToken($index);
 
-        if (
-            \defined('T_ENUM') // @TODO: drop condition when PHP 8.1+ is required
-            && $tokens[$tokens->getPrevMeaningfulToken($endIndex)]->isGivenKind(T_ENUM)
-        ) {
-            $tokens[$index] = new Token([CT::T_TYPE_COLON, ':']);
-
-            return;
-        }
-
         if (!$tokens[$endIndex]->equals(')')) {
             return;
         }
@@ -80,7 +71,13 @@ final class TypeColonTransformer extends AbstractTransformer
             $prevToken = $tokens[$prevIndex];
         }
 
-        if ($prevToken->isGivenKind([T_FUNCTION, CT::T_RETURN_REF, CT::T_USE_LAMBDA, T_FN])) {
+        $prevKinds = [T_FUNCTION, CT::T_RETURN_REF, CT::T_USE_LAMBDA];
+
+        if (\defined('T_FN')) { // @TODO: drop condition when PHP 7.4+ is required
+            $prevKinds[] = T_FN;
+        }
+
+        if ($prevToken->isGivenKind($prevKinds)) {
             $tokens[$index] = new Token([CT::T_TYPE_COLON, ':']);
         }
     }

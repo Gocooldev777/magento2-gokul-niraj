@@ -207,15 +207,3 @@ class Foo implements Bar
      */
     use Baz;
 }
-
-enum SomeEnum1
-{
-    use FirstTrait;
-}
-
-enum SomeEnum2
-{
-
-    use   FirstTrait;
-
-}

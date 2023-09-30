@@ -8,9 +8,6 @@ namespace Braintree;
  */
 class IsNode
 {
-    public $name;
-    public $searchTerms;
-
     // phpcs:ignore PEAR.Commenting.FunctionComment.Missing
     public function __construct($name)
     {

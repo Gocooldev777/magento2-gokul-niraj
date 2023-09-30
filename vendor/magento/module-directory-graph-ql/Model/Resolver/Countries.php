@@ -55,9 +55,7 @@ class Countries implements ResolverInterface
 
         $output = [];
         foreach ($countries as $country) {
-            if (!empty($country->getFullNameLocale())) {
-                $output[] = $this->dataProcessor->buildOutputDataArray($country, CountryInformationInterface::class);
-            }
+            $output[] = $this->dataProcessor->buildOutputDataArray($country, CountryInformationInterface::class);
         }
 
         return $output;

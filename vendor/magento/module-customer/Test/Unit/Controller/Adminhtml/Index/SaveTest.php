@@ -44,8 +44,6 @@ use Magento\Framework\View\Result\Page;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Newsletter\Model\SubscriberFactory;
 use Magento\Newsletter\Model\SubscriptionManagerInterface;
-use Magento\Store\Api\Data\WebsiteInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -286,13 +284,6 @@ class SaveTest extends TestCase
         $this->emailNotificationMock = $this->getMockBuilder(EmailNotificationInterface::class)
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
-        $website = $this->createPartialMock(\Magento\Store\Model\Website::class, ['getStoreIds']);
-        $website->method('getStoreIds')
-            ->willReturn([1]);
-        $storeManager = $this->getMockBuilder(StoreManagerInterface::class)
-            ->getMockForAbstractClass();
-        $storeManager->method('getWebsite')
-            ->willReturn($website);
 
         $objectManager = new ObjectManager($this);
 
@@ -319,7 +310,6 @@ class SaveTest extends TestCase
                 'addressRepository' => $this->customerAddressRepositoryMock,
                 'addressMapper' => $this->customerAddressMapperMock,
                 'subscriptionManager' => $this->subscriptionManager,
-                'storeManager' => $storeManager,
             ]
         );
 

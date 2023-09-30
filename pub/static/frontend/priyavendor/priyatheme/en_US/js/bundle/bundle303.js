@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_CardinalCommerce/js/cardinal-factory.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([\n    'jquery'\n], function ($) {\n    'use strict';\n\n    return function (environment) {\n        var deferred = $.Deferred(),\n            dependency = 'cardinaljs';\n\n        if (environment === 'sandbox') {\n            dependency = 'cardinaljsSandbox';\n        }\n\n        require(\n            [dependency],\n            function (Cardinal) {\n                deferred.resolve(Cardinal);\n            },\n            deferred.reject\n        );\n\n        return deferred.promise();\n    };\n});\n"}
+}});

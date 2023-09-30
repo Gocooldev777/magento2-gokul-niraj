@@ -5,7 +5,6 @@
  */
 namespace Magento\Analytics\Model\Connector\Http\Client;
 
-use Laminas\Http\Response;
 use Magento\Analytics\Model\Connector\Http\ConverterInterface;
 use Psr\Log\LoggerInterface;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
@@ -57,12 +56,11 @@ class Curl implements \Magento\Analytics\Model\Connector\Http\ClientInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function request($method, $url, array $body = [], array $headers = [], $version = '1.1')
     {
-        $response = new Response();
-        $response->setCustomStatusCode(Response::STATUS_CODE_CUSTOM);
+        $response = new \Zend_Http_Response(0, []);
 
         try {
             $curl = $this->curlFactory->create();
@@ -95,8 +93,6 @@ class Curl implements \Magento\Analytics\Model\Connector\Http\ClientInterface
     }
 
     /**
-     * Apply content type header from converter
-     *
      * @param array $headers
      *
      * @return array

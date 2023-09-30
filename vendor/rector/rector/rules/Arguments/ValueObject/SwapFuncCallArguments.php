@@ -11,7 +11,7 @@ final class SwapFuncCallArguments
      */
     private $function;
     /**
-     * @var array<int, int>
+     * @var int[]
      * @readonly
      */
     private $order;

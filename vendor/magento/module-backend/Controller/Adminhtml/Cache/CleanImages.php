@@ -17,10 +17,10 @@ class CleanImages extends \Magento\Backend\Controller\Adminhtml\Cache implements
      *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'Magento_Backend::flush_catalog_images';
+    const ADMIN_RESOURCE = 'Magento_Backend::flush_catalog_images';
 
     /**
-     * Clean image cache
+     * Clean JS/css files cache
      *
      * @return \Magento\Backend\Model\View\Result\Redirect
      */

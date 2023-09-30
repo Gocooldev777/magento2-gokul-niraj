@@ -12,8 +12,6 @@ use Magento\Framework\Controller\Result\Redirect;
 
 /**
  * Delegating account actions from outside of customer module.
- *
- * @api
  */
 interface AccountDelegationInterface
 {

@@ -30,6 +30,8 @@ class BundleOptions implements ResolverInterface
     private const OPTION_TYPE = 'bundle';
 
     /**
+     * Serializer
+     *
      * @var Json
      */
     private $serializer;
@@ -146,7 +148,7 @@ class BundleOptions implements ResolverInterface
                 $optionDetails = [
                     self::OPTION_TYPE,
                     $bundleChildAttributes['option_id'],
-                    is_array($options) ? implode(',', $options) : $options,
+                    implode(',', $options),
                     (int) $childOrderItemOptions['info_buyRequest']['qty']
                 ];
 

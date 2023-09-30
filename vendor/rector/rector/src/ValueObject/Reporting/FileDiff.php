@@ -3,13 +3,11 @@
 declare (strict_types=1);
 namespace Rector\Core\ValueObject\Reporting;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use Rector\ChangesReporting\ValueObject\RectorWithLineChange;
 use Rector\Core\Contract\Rector\RectorInterface;
-use Rector\Parallel\ValueObject\Name;
-use RectorPrefix202304\Symplify\EasyParallel\Contract\SerializableInterface;
-use RectorPrefix202304\Webmozart\Assert\Assert;
-final class FileDiff implements SerializableInterface
+use RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface;
+final class FileDiff implements \RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface
 {
     /**
      * @var string
@@ -20,6 +18,22 @@ final class FileDiff implements SerializableInterface
      * @var string
      */
     private const FIRST_LINE_KEY = 'first_line';
+    /**
+     * @var string
+     */
+    private const KEY_RELATIVE_FILE_PATH = 'relative_file_path';
+    /**
+     * @var string
+     */
+    private const KEY_DIFF = 'diff';
+    /**
+     * @var string
+     */
+    private const KEY_DIFF_CONSOLE_FORMATTED = 'diff_console_formatted';
+    /**
+     * @var string
+     */
+    private const KEY_RECTORS_WITH_LINE_CHANGES = 'rectors_with_line_changes';
     /**
      * @readonly
      * @var string
@@ -36,7 +50,7 @@ final class FileDiff implements SerializableInterface
      */
     private $diffConsoleFormatted;
     /**
-     * @var RectorWithLineChange[]
+     * @var \Rector\ChangesReporting\ValueObject\RectorWithLineChange[]
      * @readonly
      */
     private $rectorsWithLineChanges = [];
@@ -49,7 +63,6 @@ final class FileDiff implements SerializableInterface
         $this->diff = $diff;
         $this->diffConsoleFormatted = $diffConsoleFormatted;
         $this->rectorsWithLineChanges = $rectorsWithLineChanges;
-        Assert::allIsInstanceOf($rectorsWithLineChanges, RectorWithLineChange::class);
     }
     public function getDiff() : string
     {
@@ -83,7 +96,7 @@ final class FileDiff implements SerializableInterface
     }
     public function getFirstLineNumber() : ?int
     {
-        $match = Strings::match($this->diff, self::FIRST_LINE_REGEX);
+        $match = \RectorPrefix20211221\Nette\Utils\Strings::match($this->diff, self::FIRST_LINE_REGEX);
         // probably some error in diff
         if (!isset($match[self::FIRST_LINE_KEY])) {
             return null;
@@ -91,22 +104,18 @@ final class FileDiff implements SerializableInterface
         return (int) $match[self::FIRST_LINE_KEY] - 1;
     }
     /**
-     * @return array{relative_file_path: string, diff: string, diff_console_formatted: string, rectors_with_line_changes: RectorWithLineChange[]}
+     * @return array<string, mixed>
      */
     public function jsonSerialize() : array
     {
-        return [Name::RELATIVE_FILE_PATH => $this->relativeFilePath, Name::DIFF => $this->diff, Name::DIFF_CONSOLE_FORMATTED => $this->diffConsoleFormatted, Name::RECTORS_WITH_LINE_CHANGES => $this->rectorsWithLineChanges];
+        return [self::KEY_RELATIVE_FILE_PATH => $this->relativeFilePath, self::KEY_DIFF => $this->diff, self::KEY_DIFF_CONSOLE_FORMATTED => $this->diffConsoleFormatted, self::KEY_RECTORS_WITH_LINE_CHANGES => $this->rectorsWithLineChanges];
     }
     /**
      * @param array<string, mixed> $json
      */
-    public static function decode(array $json) : SerializableInterface
+    public static function decode(array $json) : \RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface
     {
-        $rectorWithLineChanges = [];
-        foreach ($json[Name::RECTORS_WITH_LINE_CHANGES] as $rectorWithLineChangesJson) {
-            $rectorWithLineChanges[] = RectorWithLineChange::decode($rectorWithLineChangesJson);
-        }
-        return new self($json[Name::RELATIVE_FILE_PATH], $json[Name::DIFF], $json[Name::DIFF_CONSOLE_FORMATTED], $rectorWithLineChanges);
+        return new self($json[self::KEY_RELATIVE_FILE_PATH], $json[self::KEY_DIFF], $json[self::KEY_DIFF_CONSOLE_FORMATTED], $json[self::KEY_RECTORS_WITH_LINE_CHANGES]);
     }
     /**
      * @template TType as object

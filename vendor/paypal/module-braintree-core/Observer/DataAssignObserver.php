@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Observer;
@@ -11,9 +11,9 @@ use Magento\Quote\Api\Data\PaymentInterface;
 
 class DataAssignObserver extends AbstractDataAssignObserver
 {
-    public const PAYMENT_METHOD_NONCE = 'payment_method_nonce';
-    public const DEVICE_DATA = 'device_data';
-    public const CAPTCHA_RESPONSE = 'g-recaptcha-response';
+    const PAYMENT_METHOD_NONCE = 'payment_method_nonce';
+    const DEVICE_DATA = 'device_data';
+    const CAPTCHA_RESPONSE = 'g-recaptcha-response';
 
     /**
      * @var array
@@ -25,8 +25,6 @@ class DataAssignObserver extends AbstractDataAssignObserver
     ];
 
     /**
-     * Assign additional payment information
-     *
      * @param Observer $observer
      * @return void
      */

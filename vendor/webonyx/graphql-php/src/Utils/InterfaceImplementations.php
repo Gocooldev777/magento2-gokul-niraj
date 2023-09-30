@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Utils;
 
@@ -24,18 +26,22 @@ class InterfaceImplementations
      */
     public function __construct(array $objects, array $interfaces)
     {
-        $this->objects = $objects;
+        $this->objects    = $objects;
         $this->interfaces = $interfaces;
     }
 
-    /** @return array<int, ObjectType> */
-    public function objects(): array
+    /**
+     * @return array<int, ObjectType>
+     */
+    public function objects() : array
     {
         return $this->objects;
     }
 
-    /** @return array<int, InterfaceType> */
-    public function interfaces(): array
+    /**
+     * @return array<int, InterfaceType>
+     */
+    public function interfaces() : array
     {
         return $this->interfaces;
     }

@@ -6,11 +6,11 @@ namespace Rector\PostRector\Rector;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Namespace_;
 use Rector\CodingStyle\Application\UseImportsAdder;
-use Rector\Core\Exception\ShouldNotHappenException;
+use Rector\CodingStyle\Application\UseImportsRemover;
+use Rector\Core\Configuration\RenamedClassesDataCollector;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
 use Rector\Core\Provider\CurrentFileProvider;
-use Rector\Core\ValueObject\Application\File;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
 use Rector\PostRector\Collector\UseNodesToAddCollector;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
@@ -35,6 +35,11 @@ final class UseAddingPostRector extends \Rector\PostRector\Rector\AbstractPostRe
     private $useImportsAdder;
     /**
      * @readonly
+     * @var \Rector\CodingStyle\Application\UseImportsRemover
+     */
+    private $useImportsRemover;
+    /**
+     * @readonly
      * @var \Rector\PostRector\Collector\UseNodesToAddCollector
      */
     private $useNodesToAddCollector;
@@ -43,53 +48,71 @@ final class UseAddingPostRector extends \Rector\PostRector\Rector\AbstractPostRe
      * @var \Rector\Core\Provider\CurrentFileProvider
      */
     private $currentFileProvider;
-    public function __construct(BetterNodeFinder $betterNodeFinder, TypeFactory $typeFactory, UseImportsAdder $useImportsAdder, UseNodesToAddCollector $useNodesToAddCollector, CurrentFileProvider $currentFileProvider)
+    /**
+     * @readonly
+     * @var \Rector\Core\Configuration\RenamedClassesDataCollector
+     */
+    private $renamedClassesDataCollector;
+    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeTypeResolver\PHPStan\Type\TypeFactory $typeFactory, \Rector\CodingStyle\Application\UseImportsAdder $useImportsAdder, \Rector\CodingStyle\Application\UseImportsRemover $useImportsRemover, \Rector\PostRector\Collector\UseNodesToAddCollector $useNodesToAddCollector, \Rector\Core\Provider\CurrentFileProvider $currentFileProvider, \Rector\Core\Configuration\RenamedClassesDataCollector $renamedClassesDataCollector)
     {
         $this->betterNodeFinder = $betterNodeFinder;
         $this->typeFactory = $typeFactory;
         $this->useImportsAdder = $useImportsAdder;
+        $this->useImportsRemover = $useImportsRemover;
         $this->useNodesToAddCollector = $useNodesToAddCollector;
         $this->currentFileProvider = $currentFileProvider;
+        $this->renamedClassesDataCollector = $renamedClassesDataCollector;
     }
     /**
      * @param Stmt[] $nodes
      * @return Stmt[]
      */
-    public function beforeTraverse(array $nodes) : array
+    public function beforeTraverse(array $nodes) : ?array
     {
         // no nodes → just return
         if ($nodes === []) {
             return $nodes;
         }
         $file = $this->currentFileProvider->getFile();
-        if (!$file instanceof File) {
-            throw new ShouldNotHappenException();
-        }
-        $useImportTypes = $this->useNodesToAddCollector->getObjectImportsByFilePath($file->getFilePath());
-        $functionUseImportTypes = $this->useNodesToAddCollector->getFunctionImportsByFilePath($file->getFilePath());
-        if ($useImportTypes === [] && $functionUseImportTypes === []) {
+        $smartFileInfo = $file->getSmartFileInfo();
+        $useImportTypes = $this->useNodesToAddCollector->getObjectImportsByFileInfo($smartFileInfo);
+        $functionUseImportTypes = $this->useNodesToAddCollector->getFunctionImportsByFileInfo($smartFileInfo);
+        $oldToNewClasses = $this->renamedClassesDataCollector->getOldToNewClasses();
+        // nothing to import or remove
+        if ($useImportTypes === [] && $functionUseImportTypes === [] && $oldToNewClasses === []) {
             return $nodes;
         }
         /** @var FullyQualifiedObjectType[] $useImportTypes */
         $useImportTypes = $this->typeFactory->uniquateTypes($useImportTypes);
-        $firstNode = $nodes[0];
-        if ($firstNode instanceof FileWithoutNamespace) {
-            $nodes = $firstNode->stmts;
-        }
-        $namespace = $this->betterNodeFinder->findFirstInstanceOf($nodes, Namespace_::class);
-        if (!$firstNode instanceof FileWithoutNamespace && !$namespace instanceof Namespace_) {
+        // A. has namespace? add under it
+        $namespace = $this->betterNodeFinder->findFirstInstanceOf($nodes, \PhpParser\Node\Stmt\Namespace_::class);
+        if ($namespace instanceof \PhpParser\Node\Stmt\Namespace_) {
+            // first clean
+            //$this->useImportsRemover->removeImportsFromNamespace($namespace, $removedShortUses);
+            // then add, to prevent adding + removing false positive of same short use
+            $this->useImportsAdder->addImportsToNamespace($namespace, $useImportTypes, $functionUseImportTypes);
             return $nodes;
         }
-        return $this->resolveNodesWithImportedUses($nodes, $useImportTypes, $functionUseImportTypes, $namespace);
+        $firstNode = $nodes[0];
+        if ($firstNode instanceof \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace) {
+            $nodes = $firstNode->stmts;
+        }
+        $removedShortUses = $this->renamedClassesDataCollector->getOldClasses();
+        // B. no namespace? add in the top
+        // first clean
+        $nodes = $this->useImportsRemover->removeImportsFromStmts($nodes, $removedShortUses);
+        $useImportTypes = $this->filterOutNonNamespacedNames($useImportTypes);
+        // then add, to prevent adding + removing false positive of same short use
+        return $this->useImportsAdder->addImportsToStmts($nodes, $useImportTypes, $functionUseImportTypes);
     }
     public function getPriority() : int
     {
         // must be after name importing
         return 500;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Add unique use imports collected during Rector run', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add unique use imports collected during Rector run', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run(AnotherClass $anotherClass)
@@ -108,25 +131,6 @@ class SomeClass
 }
 CODE_SAMPLE
 )]);
-    }
-    /**
-     * @param Stmt[] $nodes
-     * @param FullyQualifiedObjectType[] $useImportTypes
-     * @param FullyQualifiedObjectType[] $functionUseImportTypes
-     * @return Stmt[]
-     */
-    private function resolveNodesWithImportedUses(array $nodes, array $useImportTypes, array $functionUseImportTypes, ?Namespace_ $namespace) : array
-    {
-        // A. has namespace? add under it
-        if ($namespace instanceof Namespace_) {
-            // then add, to prevent adding + removing false positive of same short use
-            $this->useImportsAdder->addImportsToNamespace($namespace, $useImportTypes, $functionUseImportTypes);
-            return $nodes;
-        }
-        // B. no namespace? add in the top
-        $useImportTypes = $this->filterOutNonNamespacedNames($useImportTypes);
-        // then add, to prevent adding + removing false positive of same short use
-        return $this->useImportsAdder->addImportsToStmts($nodes, $useImportTypes, $functionUseImportTypes);
     }
     /**
      * Prevents

@@ -60,7 +60,6 @@ class CreateByPaths implements CreateDirectoriesByPathsInterface
                 continue;
             }
             try {
-                $path = $path !== null ? $path : '';
                 //phpcs:ignore Magento2.Functions.DiscouragedFunction
                 $name = basename($path);
                 //phpcs:ignore Magento2.Functions.DiscouragedFunction

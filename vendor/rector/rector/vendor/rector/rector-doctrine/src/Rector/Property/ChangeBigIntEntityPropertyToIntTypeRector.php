@@ -10,7 +10,6 @@ use PHPStan\Type\BooleanType;
 use PHPStan\Type\FloatType;
 use PHPStan\Type\IntegerType;
 use PHPStan\Type\StringType;
-use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer;
@@ -22,20 +21,19 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Doctrine\Tests\Rector\Property\ChangeBigIntEntityPropertyToIntTypeRector\ChangeBigIntEntityPropertyToIntTypeRectorTest
  */
-final class ChangeBigIntEntityPropertyToIntTypeRector extends AbstractRector
+final class ChangeBigIntEntityPropertyToIntTypeRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @readonly
      * @var \Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer
      */
     private $docBlockClassRenamer;
-    public function __construct(DocBlockClassRenamer $docBlockClassRenamer)
+    public function __construct(\Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer $docBlockClassRenamer)
     {
         $this->docBlockClassRenamer = $docBlockClassRenamer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Change database type "bigint" for @var/type declaration to string', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Change database type "bigint" for @var/type declaration to string', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -72,30 +70,27 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Property::class];
+        return [\PhpParser\Node\Stmt\Property::class];
     }
     /**
      * @param Property $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         $doctrineAnnotationTagValueNode = $phpDocInfo->getByAnnotationClass('Doctrine\\ORM\\Mapping\\Column');
-        if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
+        if (!$doctrineAnnotationTagValueNode instanceof \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode) {
             return null;
         }
-        $typeArrayItemNode = $doctrineAnnotationTagValueNode->getValue('type');
-        if (!$typeArrayItemNode instanceof ArrayItemNode) {
-            return null;
-        }
-        if ($typeArrayItemNode->value !== 'bigint') {
+        $type = $doctrineAnnotationTagValueNode->getValueWithoutQuotes('type');
+        if ($type !== 'bigint') {
             return null;
         }
         $varTagValueNode = $phpDocInfo->getVarTagValueNode();
-        if (!$varTagValueNode instanceof VarTagValueNode) {
+        if (!$varTagValueNode instanceof \PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode) {
             return null;
         }
-        $oldToNewTypes = [new OldToNewType(new IntegerType(), new StringType()), new OldToNewType(new FloatType(), new StringType()), new OldToNewType(new BooleanType(), new StringType())];
+        $oldToNewTypes = [new \Rector\NodeTypeResolver\ValueObject\OldToNewType(new \PHPStan\Type\IntegerType(), new \PHPStan\Type\StringType()), new \Rector\NodeTypeResolver\ValueObject\OldToNewType(new \PHPStan\Type\FloatType(), new \PHPStan\Type\StringType()), new \Rector\NodeTypeResolver\ValueObject\OldToNewType(new \PHPStan\Type\BooleanType(), new \PHPStan\Type\StringType())];
         $this->docBlockClassRenamer->renamePhpDocType($phpDocInfo, $oldToNewTypes);
         return $node;
     }

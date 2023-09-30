@@ -3,19 +3,15 @@
 declare (strict_types=1);
 namespace Rector\PhpAttribute\AnnotationToAttributeMapper;
 
-use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
-use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Expr;
 use Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\CurlyListNode;
 use Rector\PhpAttribute\AnnotationToAttributeMapper;
 use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
-use Rector\PhpAttribute\Enum\DocTagNodeState;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements AnnotationToAttributeMapperInterface<CurlyListNode>
  */
-final class CurlyListNodeAnnotationToAttributeMapper implements AnnotationToAttributeMapperInterface
+final class CurlyListNodeAnnotationToAttributeMapper implements \Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface
 {
     /**
      * @var \Rector\PhpAttribute\AnnotationToAttributeMapper
@@ -25,7 +21,7 @@ final class CurlyListNodeAnnotationToAttributeMapper implements AnnotationToAttr
      * Avoid circular reference
      * @required
      */
-    public function autowire(AnnotationToAttributeMapper $annotationToAttributeMapper) : void
+    public function autowire(\Rector\PhpAttribute\AnnotationToAttributeMapper $annotationToAttributeMapper) : void
     {
         $this->annotationToAttributeMapper = $annotationToAttributeMapper;
     }
@@ -34,36 +30,16 @@ final class CurlyListNodeAnnotationToAttributeMapper implements AnnotationToAttr
      */
     public function isCandidate($value) : bool
     {
-        return $value instanceof CurlyListNode;
+        return $value instanceof \Rector\BetterPhpDocParser\ValueObject\PhpDoc\DoctrineAnnotation\CurlyListNode;
     }
     /**
      * @param CurlyListNode $value
+     * @return mixed[]|\PhpParser\Node\Expr
      */
-    public function map($value) : \PhpParser\Node\Expr
+    public function map($value)
     {
-        $arrayItems = [];
-        $arrayItemNodes = $value->getValues();
-        $loop = -1;
-        foreach ($arrayItemNodes as $arrayItemNode) {
-            $valueExpr = $this->annotationToAttributeMapper->map($arrayItemNode);
-            // remove node
-            if ($valueExpr === DocTagNodeState::REMOVE_ARRAY) {
-                continue;
-            }
-            Assert::isInstanceOf($valueExpr, ArrayItem::class);
-            if (!\is_numeric($arrayItemNode->key)) {
-                $arrayItems[] = $valueExpr;
-                continue;
-            }
-            ++$loop;
-            $arrayItemNodeKey = (int) $arrayItemNode->key;
-            if ($loop === $arrayItemNodeKey) {
-                $arrayItems[] = $valueExpr;
-                continue;
-            }
-            $valueExpr->key = new LNumber($arrayItemNodeKey);
-            $arrayItems[] = $valueExpr;
-        }
-        return new Array_($arrayItems);
+        return \array_map(function ($node) {
+            return $this->annotationToAttributeMapper->map($node);
+        }, $value->getValuesWithExplicitSilentAndWithoutQuotes());
     }
 }

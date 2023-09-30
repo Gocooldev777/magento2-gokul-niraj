@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Output;
+namespace RectorPrefix20211221\Symfony\Component\Console\Output;
 
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatterInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface;
 /**
  * OutputInterface is the interface implemented by all Output classes.
  *
@@ -29,18 +29,14 @@ interface OutputInterface
     /**
      * Writes a message to the output.
      *
-     * @param bool $newline Whether to add a newline
-     * @param int  $options A bitmask of options (one of the OUTPUT or VERBOSITY constants),
-     *                      0 is considered the same as self::OUTPUT_NORMAL | self::VERBOSITY_NORMAL
-     * @param string|mixed[] $messages
+     * @param $newline Whether to add a newline
+     * @param $options A bitmask of options (one of the OUTPUT or VERBOSITY constants), 0 is considered the same as self::OUTPUT_NORMAL | self::VERBOSITY_NORMAL
      */
     public function write($messages, bool $newline = \false, int $options = 0);
     /**
      * Writes a message to the output and adds a newline at the end.
      *
-     * @param int $options A bitmask of options (one of the OUTPUT or VERBOSITY constants),
-     *                     0 is considered the same as self::OUTPUT_NORMAL | self::VERBOSITY_NORMAL
-     * @param string|mixed[] $messages
+     * @param $options A bitmask of options (one of the OUTPUT or VERBOSITY constants), 0 is considered the same as self::OUTPUT_NORMAL | self::VERBOSITY_NORMAL
      */
     public function writeln($messages, int $options = 0);
     /**
@@ -75,9 +71,9 @@ interface OutputInterface
      * Gets the decorated flag.
      */
     public function isDecorated() : bool;
-    public function setFormatter(OutputFormatterInterface $formatter);
+    public function setFormatter(\RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface $formatter);
     /**
      * Returns current output formatter instance.
      */
-    public function getFormatter() : OutputFormatterInterface;
+    public function getFormatter() : \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface;
 }

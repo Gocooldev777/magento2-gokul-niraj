@@ -16,9 +16,9 @@ class ReplaceNewDateTimeNullTest extends AbstractRectorTestCase
     /**
      * @dataProvider provideData()
      */
-    public function test(string $fileInfo): void
+    public function test(SmartFileInfo $fileInfo): void
     {
-        $this->doTestFile($fileInfo);
+        $this->doTestFileInfo($fileInfo);
     }
 
     /**

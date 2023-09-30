@@ -44,8 +44,6 @@ class MappableConditionsProcessor
     }
 
     /**
-     * Method to rebuild conditions tree.
-     *
      * @param Combine $conditions
      * @return Combine
      */
@@ -55,8 +53,6 @@ class MappableConditionsProcessor
     }
 
     /**
-     * Method to rebuild combined condition.
-     *
      * @param Combine $originalConditions
      * @return Combine
      * @throws InputException
@@ -93,9 +89,9 @@ class MappableConditionsProcessor
                 __('Undefined condition type "%1" passed in.', $condition->getType())
             );
         }
-        $aggregator = $originalConditions->getAggregator() ? strtolower($originalConditions->getAggregator()) : '';
+
         // if resulted condition group has left no mappable conditions - we can remove it at all
-        if (count($invalidConditions) > 0 && $aggregator === 'any') {
+        if (count($invalidConditions) > 0 && strtolower($originalConditions->getAggregator()) === 'any') {
             $validConditions = [];
         }
 
@@ -106,8 +102,6 @@ class MappableConditionsProcessor
     }
 
     /**
-     * Method to validate simple condition.
-     *
      * @param Product $originalConditions
      * @return bool
      */

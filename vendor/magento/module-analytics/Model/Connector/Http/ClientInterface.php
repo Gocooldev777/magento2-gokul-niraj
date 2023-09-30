@@ -5,12 +5,10 @@
  */
 namespace Magento\Analytics\Model\Connector\Http;
 
-use Laminas\Http\Response;
-
 /**
  * An interface for an HTTP client.
  *
- * Send requests via a proper adapter.
+ * Sends requests via a proper adapter.
  */
 interface ClientInterface
 {
@@ -25,7 +23,7 @@ interface ClientInterface
      * @param array $headers
      * @param string $version
      *
-     * @return Response
+     * @return \Zend_Http_Response
      */
     public function request($method, $url, array $body = [], array $headers = [], $version = '1.1');
 }

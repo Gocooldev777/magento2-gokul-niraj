@@ -5,13 +5,11 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-
 /**
  * @deprecated As money_format() was removed in PHP 8.0
  * @see https://www.php.net/manual/en/function.money-format.php
  */
-class Money implements FilterInterface
+class Money implements \Zend_Filter_Interface
 {
     /**
      * @var string
@@ -20,23 +18,24 @@ class Money implements FilterInterface
 
     /**
      * @param string $format
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct($format)
     {
-        trigger_error('Class is deprecated', E_USER_DEPRECATED);
+        $this->_format = $format;
     }
 
     /**
      * Returns the result of filtering $value
      *
      * @param float $value
+     *
      * @return string
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @deprecated
      */
     public function filter($value)
     {
+        trigger_error('Class is deprecated', E_USER_DEPRECATED);
         return '';
     }
 }

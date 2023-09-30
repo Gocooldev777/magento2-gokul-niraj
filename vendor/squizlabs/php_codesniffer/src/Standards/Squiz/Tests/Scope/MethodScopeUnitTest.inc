@@ -40,18 +40,3 @@ class Nested {
         };
     }
 }
-
-enum SomeEnum
-{
-    function func1() {}
-    public function func1() {}
-    private function func1() {}
-    protected function func1() {}
-}
-
-class UnconventionalSpacing {
-    public
-    static
-    function
-    myFunction() {}
-}

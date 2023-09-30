@@ -79,6 +79,7 @@ class AdapterTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @magentoAppIsolation enabled
+     * @magentoConfigFixture current_store catalog/search/elasticsearch_index_prefix adaptertest
      * @return void
      */
     public function testQuery()

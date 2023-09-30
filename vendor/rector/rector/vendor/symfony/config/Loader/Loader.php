@@ -8,15 +8,15 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Loader;
+namespace RectorPrefix20211221\Symfony\Component\Config\Loader;
 
-use RectorPrefix202304\Symfony\Component\Config\Exception\LoaderLoadException;
+use RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException;
 /**
  * Loader is the abstract class used by all built-in loaders.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-abstract class Loader implements LoaderInterface
+abstract class Loader implements \RectorPrefix20211221\Symfony\Component\Config\Loader\LoaderInterface
 {
     protected $resolver;
     protected $env;
@@ -24,38 +24,50 @@ abstract class Loader implements LoaderInterface
     {
         $this->env = $env;
     }
-    public function getResolver() : LoaderResolverInterface
+    /**
+     * {@inheritdoc}
+     */
+    public function getResolver()
     {
         return $this->resolver;
     }
-    public function setResolver(LoaderResolverInterface $resolver)
+    /**
+     * {@inheritdoc}
+     */
+    public function setResolver(\RectorPrefix20211221\Symfony\Component\Config\Loader\LoaderResolverInterface $resolver)
     {
         $this->resolver = $resolver;
     }
     /**
      * Imports a resource.
      *
+     * @param mixed       $resource A resource
+     * @param string|null $type     The resource type or null if unknown
+     *
      * @return mixed
-     * @param mixed $resource
      */
-    public function import($resource, string $type = null)
+    public function import($resource, $type = null)
     {
         return $this->resolve($resource, $type)->load($resource, $type);
     }
     /**
      * Finds a loader able to load an imported resource.
      *
+     * @param mixed       $resource A resource
+     * @param string|null $type     The resource type or null if unknown
+     *
+     * @return LoaderInterface
+     *
      * @throws LoaderLoadException If no loader is found
-     * @param mixed $resource
      */
-    public function resolve($resource, string $type = null) : LoaderInterface
+    public function resolve($resource, string $type = null)
     {
         if ($this->supports($resource, $type)) {
             return $this;
         }
         $loader = null === $this->resolver ? \false : $this->resolver->resolve($resource, $type);
         if (\false === $loader) {
-            throw new LoaderLoadException($resource, null, 0, null, $type);
+            throw new \RectorPrefix20211221\Symfony\Component\Config\Exception\LoaderLoadException($resource, null, 0, null, $type);
         }
         return $loader;
     }

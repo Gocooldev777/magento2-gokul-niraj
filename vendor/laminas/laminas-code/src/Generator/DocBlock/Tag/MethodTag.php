@@ -6,17 +6,17 @@ use function rtrim;
 
 class MethodTag extends AbstractTypeableTag implements TagInterface
 {
-    /** @var string|null */
+    /** @var string */
     protected $methodName;
 
     /** @var bool */
     protected $isStatic = false;
 
     /**
-     * @param string|null $methodName
-     * @param string[]    $types
-     * @param string      $description
-     * @param bool        $isStatic
+     * @param string $methodName
+     * @param array $types
+     * @param string $description
+     * @param bool $isStatic
      */
     public function __construct($methodName = null, $types = [], $description = null, $isStatic = false)
     {
@@ -56,7 +56,7 @@ class MethodTag extends AbstractTypeableTag implements TagInterface
     }
 
     /**
-     * @param non-empty-string $methodName
+     * @param string $methodName
      * @return MethodTag
      */
     public function setMethodName($methodName)
@@ -65,13 +65,17 @@ class MethodTag extends AbstractTypeableTag implements TagInterface
         return $this;
     }
 
-    /** @return string|null */
+    /**
+     * @return string
+     */
     public function getMethodName()
     {
         return $this->methodName;
     }
 
-    /** @return non-empty-string */
+    /**
+     * @return string
+     */
     public function generate()
     {
         return '@method'

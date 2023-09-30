@@ -111,9 +111,6 @@ abstract class AbstractFixer implements FixerInterface
         return true;
     }
 
-    /**
-     * @param array<string, mixed> $configuration
-     */
     public function configure(array $configuration): void
     {
         if (!$this instanceof ConfigurableFixerInterface) {

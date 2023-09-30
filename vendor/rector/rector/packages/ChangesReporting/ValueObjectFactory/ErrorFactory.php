@@ -5,8 +5,8 @@ namespace Rector\ChangesReporting\ValueObjectFactory;
 
 use PHPStan\AnalysedCodeException;
 use Rector\Core\Error\ExceptionCorrector;
-use Rector\Core\FileSystem\FilePathHelper;
-use Rector\Core\ValueObject\Error\SystemError;
+use Rector\Core\ValueObject\Application\SystemError;
+use Symplify\SmartFileSystem\SmartFileInfo;
 final class ErrorFactory
 {
     /**
@@ -14,20 +14,13 @@ final class ErrorFactory
      * @var \Rector\Core\Error\ExceptionCorrector
      */
     private $exceptionCorrector;
-    /**
-     * @readonly
-     * @var \Rector\Core\FileSystem\FilePathHelper
-     */
-    private $filePathHelper;
-    public function __construct(ExceptionCorrector $exceptionCorrector, FilePathHelper $filePathHelper)
+    public function __construct(\Rector\Core\Error\ExceptionCorrector $exceptionCorrector)
     {
         $this->exceptionCorrector = $exceptionCorrector;
-        $this->filePathHelper = $filePathHelper;
     }
-    public function createAutoloadError(AnalysedCodeException $analysedCodeException, string $filePath) : SystemError
+    public function createAutoloadError(\PHPStan\AnalysedCodeException $analysedCodeException, \Symplify\SmartFileSystem\SmartFileInfo $smartFileInfo) : \Rector\Core\ValueObject\Application\SystemError
     {
         $message = $this->exceptionCorrector->getAutoloadExceptionMessageAndAddLocation($analysedCodeException);
-        $relativeFilePath = $this->filePathHelper->relativePath($filePath);
-        return new SystemError($message, $relativeFilePath);
+        return new \Rector\Core\ValueObject\Application\SystemError($message, $smartFileInfo->getRelativeFilePathFromCwd());
     }
 }

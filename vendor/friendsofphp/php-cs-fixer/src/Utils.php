@@ -27,9 +27,9 @@ use PhpCsFixer\Tokenizer\Token;
 final class Utils
 {
     /**
-     * @var array<string, true>
+     * @var array<string,true>
      */
-    private static array $deprecations = [];
+    private static $deprecations = [];
 
     private function __construct()
     {
@@ -163,9 +163,6 @@ final class Utils
         @trigger_error($message, E_USER_DEPRECATED);
     }
 
-    /**
-     * @return list<string>
-     */
     public static function getTriggeredDeprecations(): array
     {
         $triggeredDeprecations = array_keys(self::$deprecations);

@@ -29,20 +29,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-require_once 'vendor/autoload.php';
 require_once 'RedisBackendTest.php';
 
 /**
  * @copyright  Copyright (c) 2012 Colin Mollenhour (http://colin.mollenhour.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class RedisBackendAutoExpiryTest extends RedisBackendTest
-{
+class Zend_Cache_RedisAutoExpiryBackendTest extends Zend_Cache_RedisBackendTest {
+
     protected $autoExpireLifetime = 3600;
 
     protected $autoExpireRefreshOnLoad = 1;
 
-    public function testAutoExpiry(): void
+    public function testAutoExpiry()
     {
         $id = 'REQEST';
         $data = 'foo';

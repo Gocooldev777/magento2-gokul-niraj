@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 namespace Magento\Catalog\Ui\DataProvider\Product\Modifier;
 
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Currency;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\CurrencyInterface;
-use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Ui\DataProvider\Modifier\ModifierInterface;
 
@@ -30,14 +30,9 @@ class PriceAttributes implements ModifierInterface
     private $storeManager;
 
     /**
-     * @var array
+     * @var CurrencyInterface
      */
-    private $excludeProductTypes;
-
-    /**
-     * @var PriceCurrencyInterface
-     */
-    private $priceCurrency;
+    private $localeCurrency;
 
     /**
      * PriceAttributes constructor.
@@ -45,21 +40,15 @@ class PriceAttributes implements ModifierInterface
      * @param StoreManagerInterface $storeManager
      * @param CurrencyInterface $localeCurrency
      * @param array $priceAttributeList
-     * @param array $excludeProductTypes
-     * @param PriceCurrencyInterface|null $priceCurrency
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct(
         StoreManagerInterface $storeManager,
         CurrencyInterface $localeCurrency,
-        array $priceAttributeList = [],
-        array $excludeProductTypes = [],
-        ?PriceCurrencyInterface $priceCurrency = null
+        array $priceAttributeList = []
     ) {
         $this->storeManager = $storeManager;
+        $this->localeCurrency = $localeCurrency;
         $this->priceAttributeList = $priceAttributeList;
-        $this->excludeProductTypes = $excludeProductTypes;
-        $this->priceCurrency = $priceCurrency ?? ObjectManager::getInstance()->get(PriceCurrencyInterface::class);
     }
 
     /**
@@ -72,18 +61,9 @@ class PriceAttributes implements ModifierInterface
         }
 
         foreach ($data['items'] as &$item) {
-            if (!isset($item[ProductInterface::TYPE_ID])
-                || !in_array($item[ProductInterface::TYPE_ID], $this->excludeProductTypes, true)
-            ) {
-                foreach ($this->priceAttributeList as $priceAttribute) {
-                    if (isset($item[$priceAttribute])) {
-                        $item[$priceAttribute] = $this->priceCurrency->format(
-                            sprintf("%F", $item[$priceAttribute]),
-                            false,
-                            PriceCurrencyInterface::DEFAULT_PRECISION,
-                            $this->storeManager->getStore($item['store_id'] ?? null)
-                        );
-                    }
+            foreach ($this->priceAttributeList as $priceAttribute) {
+                if (isset($item[$priceAttribute])) {
+                    $item[$priceAttribute] = $this->getCurrency()->toCurrency(sprintf("%f", $item[$priceAttribute]));
                 }
             }
         }
@@ -97,5 +77,29 @@ class PriceAttributes implements ModifierInterface
     public function modifyMeta(array $meta): array
     {
         return $meta;
+    }
+
+    /**
+     * Retrieve store
+     *
+     * @return StoreInterface
+     * @throws NoSuchEntityException
+     */
+    private function getStore(): StoreInterface
+    {
+        return $this->storeManager->getStore();
+    }
+
+    /**
+     * Retrieve currency
+     *
+     * @return Currency
+     * @throws NoSuchEntityException
+     */
+    private function getCurrency(): Currency
+    {
+        $baseCurrencyCode = $this->getStore()->getBaseCurrencyCode();
+
+        return $this->localeCurrency->getCurrency($baseCurrencyCode);
     }
 }

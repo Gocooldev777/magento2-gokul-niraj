@@ -26,37 +26,37 @@ class Storage extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Parameter name of node
      */
-    public const PARAM_NODE = 'node';
+    const PARAM_NODE = 'node';
 
     /**
      * Parameter name of content type
      */
-    public const PARAM_CONTENT_TYPE = 'content_type';
+    const PARAM_CONTENT_TYPE = 'content_type';
 
     /**
      * Parameter name of theme identification number
      */
-    public const PARAM_THEME_ID = 'theme_id';
+    const PARAM_THEME_ID = 'theme_id';
 
     /**
      * Parameter name of filename
      */
-    public const PARAM_FILENAME = 'filename';
+    const PARAM_FILENAME = 'filename';
 
     /**
      * Root node value identification number
      */
-    public const NODE_ROOT = 'root';
+    const NODE_ROOT = 'root';
 
     /**
      * Display name for images storage type
      */
-    public const IMAGES = 'Images';
+    const IMAGES = 'Images';
 
     /**
      * Display name for fonts storage type
      */
-    public const FONTS = 'Fonts';
+    const FONTS = 'Fonts';
 
     /**
      * Current directory path
@@ -232,7 +232,7 @@ class Storage extends \Magento\Framework\App\Helper\AbstractHelper
     public function getRelativeUrl()
     {
         $pathPieces = ['..', $this->getStorageType()];
-        $node = $this->_getRequest()->getParam(self::PARAM_NODE, '');
+        $node = $this->_getRequest()->getParam(self::PARAM_NODE);
         if ($node !== self::NODE_ROOT) {
             $node = $this->urlDecoder->decode($node);
             $nodes = explode('/', trim($node, '/'));

@@ -26,18 +26,18 @@ use PhpCsFixer\Tokenizer\TokensAnalyzer;
 final class NamespaceUsesAnalyzer
 {
     /**
-     * @return list<NamespaceUseAnalysis>
+     * @return NamespaceUseAnalysis[]
      */
     public function getDeclarationsFromTokens(Tokens $tokens): array
     {
         $tokenAnalyzer = new TokensAnalyzer($tokens);
-        $useIndices = $tokenAnalyzer->getImportUseIndexes();
+        $useIndexes = $tokenAnalyzer->getImportUseIndexes();
 
-        return $this->getDeclarations($tokens, $useIndices);
+        return $this->getDeclarations($tokens, $useIndexes);
     }
 
     /**
-     * @return list<NamespaceUseAnalysis>
+     * @return NamespaceUseAnalysis[]
      */
     public function getDeclarationsInNamespace(Tokens $tokens, NamespaceAnalysis $namespace): array
     {
@@ -53,15 +53,13 @@ final class NamespaceUsesAnalyzer
     }
 
     /**
-     * @param list<int> $useIndices
-     *
-     * @return list<NamespaceUseAnalysis>
+     * @return NamespaceUseAnalysis[]
      */
-    private function getDeclarations(Tokens $tokens, array $useIndices): array
+    private function getDeclarations(Tokens $tokens, array $useIndexes): array
     {
         $uses = [];
 
-        foreach ($useIndices as $index) {
+        foreach ($useIndexes as $index) {
             $endIndex = $tokens->getNextTokenOfKind($index, [';', [T_CLOSE_TAG]]);
             $analysis = $this->parseDeclaration($tokens, $index, $endIndex);
 

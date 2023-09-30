@@ -23,9 +23,7 @@
             <createData entity="_defaultProduct" stepKey="createSimpleProduct">
                 <requiredEntity createDataKey="createCategory"/>
             </createData>
-            <actionGroup ref="CliIndexerReindexActionGroup" stepKey="runCronReindex">
-                <argument name="indices" value=""/>
-            </actionGroup>
+            <magentoCron stepKey="runCronReindex" groups="index"/>
         </before>
         <after>
             <deleteData createDataKey="createSimpleProduct" stepKey="deleteProduct"/>

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_PageBuilder/js/utils/breakpoints.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([\n    'underscore'\n], function (_) {\n    'use strict';\n\n    return {\n        /**\n         * Build media query.\n         *\n         * @param {Object} conditions\n         * @returns {String}\n         */\n        buildMedia: function (conditions) {\n            var result = _.map(_.pairs(conditions), function (condition) {\n                return '(' + condition.join(': ') + ')';\n            });\n\n            return result.join(' and ');\n        }\n    };\n});\n"}
+}});

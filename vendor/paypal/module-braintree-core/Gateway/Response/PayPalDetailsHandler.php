@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -12,8 +12,9 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 
 class PayPalDetailsHandler implements HandlerInterface
 {
-    private const PAYMENT_ID = 'paymentId';
-    private const PAYER_EMAIL = 'payerEmail';
+    const PAYMENT_ID = 'paymentId';
+
+    const PAYER_EMAIL = 'payerEmail';
 
     /**
      * @var SubjectReader
@@ -21,7 +22,7 @@ class PayPalDetailsHandler implements HandlerInterface
     private $subjectReader;
 
     /**
-     * PayPalDetailsHandler Constructor
+     * Constructor
      *
      * @param SubjectReader $subjectReader
      */

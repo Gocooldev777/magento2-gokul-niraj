@@ -29,11 +29,6 @@ class DepersonalizePlugin
     private $checkoutSession;
 
     /**
-     * @var int
-     */
-    private $quoteId;
-
-    /**
      * @param DepersonalizeChecker $depersonalizeChecker
      * @param CheckoutSession $checkoutSession
      * @codeCoverageIgnore
@@ -47,19 +42,6 @@ class DepersonalizePlugin
     }
 
     /**
-     * Resolve quote data if the depersonalization is needed.
-     *
-     * @param LayoutInterface $subject
-     * @return void
-     */
-    public function beforeGenerateXml(LayoutInterface $subject)
-    {
-        if ($this->depersonalizeChecker->checkIfDepersonalize($subject)) {
-            $this->quoteId = $this->checkoutSession->getQuoteId();
-        }
-    }
-
-    /**
      * Change sensitive customer data if the depersonalization is needed.
      *
      * @param LayoutInterface $subject
@@ -69,7 +51,6 @@ class DepersonalizePlugin
     {
         if ($this->depersonalizeChecker->checkIfDepersonalize($subject)) {
             $this->checkoutSession->clearStorage();
-            $this->checkoutSession->setQuoteId($this->quoteId);
         }
     }
 }

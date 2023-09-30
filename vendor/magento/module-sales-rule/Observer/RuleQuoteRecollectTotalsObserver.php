@@ -43,9 +43,7 @@ class RuleQuoteRecollectTotalsObserver implements ObserverInterface
     {
         /** @var Rule $rule */
         $rule = $observer->getRule();
-        if (!$rule->isObjectNew()
-            && ($rule->isDeleted() || ($rule->dataHasChangedFor('is_active') && !$rule->getIsActive()))
-        ) {
+        if (!$rule->isObjectNew() && (!$rule->getIsActive() || $rule->isDeleted())) {
             $this->recollectTotals->execute((int) $rule->getId());
         }
     }

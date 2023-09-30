@@ -5,24 +5,21 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Neon\Node;
+namespace RectorPrefix20211221\Nette\Neon\Node;
 
-use RectorPrefix202304\Nette\Neon\Node;
+use RectorPrefix20211221\Nette\Neon\Node;
 /** @internal */
-final class ArrayItemNode extends Node
+final class ArrayItemNode extends \RectorPrefix20211221\Nette\Neon\Node
 {
-    /**
-     * @var \Nette\Neon\Node|null
-     */
+    /** @var ?Node */
     public $key;
-    /**
-     * @var \Nette\Neon\Node
-     */
+    /** @var Node */
     public $value;
-    /**
-     * @param  self[]  $items
-     * @return mixed[]
-     */
+    public function __construct(int $pos = null)
+    {
+        $this->startPos = $this->endPos = $pos;
+    }
+    /** @param  self[]  $items */
     public static function itemsToArray(array $items) : array
     {
         $res = [];
@@ -50,13 +47,10 @@ final class ArrayItemNode extends Node
         $res = '';
         foreach ($items as $item) {
             $v = $item->value->toString();
-            $res .= ($item->key ? $item->key->toString() . ':' : '-') . ($item->value instanceof BlockArrayNode && $item->value->items ? "\n" . $v . (\substr($v, -2, 1) === "\n" ? '' : "\n") : ' ' . $v . "\n");
+            $res .= ($item->key ? $item->key->toString() . ':' : '-') . ($item->value instanceof \RectorPrefix20211221\Nette\Neon\Node\BlockArrayNode && $item->value->items ? "\n" . $v . (\substr($v, -2, 1) === "\n" ? '' : "\n") : ' ' . $v . "\n");
         }
         return $res;
     }
-    /**
-     * @return mixed
-     */
     public function toValue()
     {
         throw new \LogicException();
@@ -65,11 +59,8 @@ final class ArrayItemNode extends Node
     {
         throw new \LogicException();
     }
-    public function &getIterator() : \Generator
+    public function getSubNodes() : array
     {
-        if ($this->key) {
-            (yield $this->key);
-        }
-        (yield $this->value);
+        return $this->key ? [&$this->key, &$this->value] : [&$this->value];
     }
 }

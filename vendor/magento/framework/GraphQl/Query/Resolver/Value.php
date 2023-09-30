@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Query\ResolverInterface;
 
 /**
  * Return value for @see ResolverInterface
- *
- * @api
  */
 class Value extends \GraphQL\Deferred
 {

@@ -8,14 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Helper;
+namespace RectorPrefix20211221\Symfony\Component\Console\Helper;
 
-use RectorPrefix202304\Symfony\Component\Console\Cursor;
-use RectorPrefix202304\Symfony\Component\Console\Exception\LogicException;
-use RectorPrefix202304\Symfony\Component\Console\Output\ConsoleOutputInterface;
-use RectorPrefix202304\Symfony\Component\Console\Output\ConsoleSectionOutput;
-use RectorPrefix202304\Symfony\Component\Console\Output\OutputInterface;
-use RectorPrefix202304\Symfony\Component\Console\Terminal;
+use RectorPrefix20211221\Symfony\Component\Console\Cursor;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException;
+use RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleOutputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleSectionOutput;
+use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Terminal;
 /**
  * The ProgressBar provides helpers to display progress output.
  *
@@ -59,7 +59,7 @@ final class ProgressBar
     /**
      * @var int|null
      */
-    private $redrawFreq = 1;
+    private $redrawFreq;
     /**
      * @var int
      */
@@ -76,18 +76,11 @@ final class ProgressBar
      * @var float
      */
     private $maxSecondsBetweenRedraws = 1;
-    /**
-     * @var \Symfony\Component\Console\Output\OutputInterface
-     */
     private $output;
     /**
      * @var int
      */
     private $step = 0;
-    /**
-     * @var int
-     */
-    private $startingStep = 0;
     /**
      * @var int|null
      */
@@ -105,6 +98,10 @@ final class ProgressBar
      */
     private $percent = 0.0;
     /**
+     * @var int
+     */
+    private $formatLineCount;
+    /**
      * @var mixed[]
      */
     private $messages = [];
@@ -112,17 +109,11 @@ final class ProgressBar
      * @var bool
      */
     private $overwrite = \true;
-    /**
-     * @var \Symfony\Component\Console\Terminal
-     */
     private $terminal;
     /**
      * @var string|null
      */
     private $previousMessage;
-    /**
-     * @var \Symfony\Component\Console\Cursor
-     */
     private $cursor;
     /**
      * @var mixed[]
@@ -135,14 +126,14 @@ final class ProgressBar
     /**
      * @param int $max Maximum steps (0 if unknown)
      */
-    public function __construct(OutputInterface $output, int $max = 0, float $minSecondsBetweenRedraws = 1 / 25)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output, int $max = 0, float $minSecondsBetweenRedraws = 1 / 25)
     {
-        if ($output instanceof ConsoleOutputInterface) {
+        if ($output instanceof \RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleOutputInterface) {
             $output = $output->getErrorOutput();
         }
         $this->output = $output;
         $this->setMaxSteps($max);
-        $this->terminal = new Terminal();
+        $this->terminal = new \RectorPrefix20211221\Symfony\Component\Console\Terminal();
         if (0 < $minSecondsBetweenRedraws) {
             $this->redrawFreq = null;
             $this->minSecondsBetweenRedraws = $minSecondsBetweenRedraws;
@@ -154,7 +145,7 @@ final class ProgressBar
             $this->redrawFreq = null;
         }
         $this->startTime = \time();
-        $this->cursor = new Cursor($output);
+        $this->cursor = new \RectorPrefix20211221\Symfony\Component\Console\Cursor($output);
     }
     /**
      * Sets a placeholder formatter for a given name.
@@ -246,17 +237,17 @@ final class ProgressBar
     }
     public function getEstimated() : float
     {
-        if (0 === $this->step || $this->step === $this->startingStep) {
+        if (!$this->step) {
             return 0;
         }
-        return \round((\time() - $this->startTime) / ($this->step - $this->startingStep) * $this->max);
+        return \round((\time() - $this->startTime) / $this->step * $this->max);
     }
     public function getRemaining() : float
     {
         if (!$this->step) {
             return 0;
         }
-        return \round((\time() - $this->startTime) / ($this->step - $this->startingStep) * ($this->max - $this->step));
+        return \round((\time() - $this->startTime) / $this->step * ($this->max - $this->step));
     }
     public function setBarWidth(int $size)
     {
@@ -329,15 +320,13 @@ final class ProgressBar
     /**
      * Starts the progress output.
      *
-     * @param int|null $max     Number of steps to complete the bar (0 if indeterminate), null to leave unchanged
-     * @param int      $startAt The starting point of the bar (useful e.g. when resuming a previously started bar)
+     * @param int|null $max Number of steps to complete the bar (0 if indeterminate), null to leave unchanged
      */
-    public function start(int $max = null, int $startAt = 0) : void
+    public function start(int $max = null)
     {
         $this->startTime = \time();
-        $this->step = $startAt;
-        $this->startingStep = $startAt;
-        $startAt > 0 ? $this->setProgress($startAt) : ($this->percent = 0.0);
+        $this->step = 0;
+        $this->percent = 0.0;
         if (null !== $max) {
             $this->setMaxSteps($max);
         }
@@ -390,7 +379,7 @@ final class ProgressBar
     {
         $this->format = null;
         $this->max = \max(0, $max);
-        $this->stepWidth = $this->max ? Helper::width((string) $this->max) : 4;
+        $this->stepWidth = $this->max ? \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width((string) $this->max) : 4;
     }
     /**
      * Finishes the progress output.
@@ -411,7 +400,7 @@ final class ProgressBar
      */
     public function display() : void
     {
-        if (OutputInterface::VERBOSITY_QUIET === $this->output->getVerbosity()) {
+        if (\RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_QUIET === $this->output->getVerbosity()) {
             return;
         }
         if (null === $this->format) {
@@ -446,6 +435,7 @@ final class ProgressBar
         } else {
             $this->format = $format;
         }
+        $this->formatLineCount = \substr_count($this->format, "\n");
     }
     /**
      * Overwrites a previous message to the output.
@@ -458,19 +448,18 @@ final class ProgressBar
         $originalMessage = $message;
         if ($this->overwrite) {
             if (null !== $this->previousMessage) {
-                if ($this->output instanceof ConsoleSectionOutput) {
-                    $messageLines = \explode("\n", $this->previousMessage);
+                if ($this->output instanceof \RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleSectionOutput) {
+                    $messageLines = \explode("\n", $message);
                     $lineCount = \count($messageLines);
                     foreach ($messageLines as $messageLine) {
-                        $messageLineLength = Helper::width(Helper::removeDecoration($this->output->getFormatter(), $messageLine));
+                        $messageLineLength = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($this->output->getFormatter(), $messageLine));
                         if ($messageLineLength > $this->terminal->getWidth()) {
                             $lineCount += \floor($messageLineLength / $this->terminal->getWidth());
                         }
                     }
                     $this->output->clear($lineCount);
                 } else {
-                    $lineCount = \substr_count($this->previousMessage, "\n");
-                    for ($i = 0; $i < $lineCount; ++$i) {
+                    for ($i = 0; $i < $this->formatLineCount; ++$i) {
                         $this->cursor->moveToColumn(1);
                         $this->cursor->clearLine();
                         $this->cursor->moveUp();
@@ -490,11 +479,12 @@ final class ProgressBar
     private function determineBestFormat() : string
     {
         switch ($this->output->getVerbosity()) {
-            case OutputInterface::VERBOSITY_VERBOSE:
+            // OutputInterface::VERBOSITY_QUIET: display is disabled anyway
+            case \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE:
                 return $this->max ? self::FORMAT_VERBOSE : self::FORMAT_VERBOSE_NOMAX;
-            case OutputInterface::VERBOSITY_VERY_VERBOSE:
+            case \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERY_VERBOSE:
                 return $this->max ? self::FORMAT_VERY_VERBOSE : self::FORMAT_VERY_VERBOSE_NOMAX;
-            case OutputInterface::VERBOSITY_DEBUG:
+            case \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_DEBUG:
                 return $this->max ? self::FORMAT_DEBUG : self::FORMAT_DEBUG_NOMAX;
             default:
                 return $this->max ? self::FORMAT_NORMAL : self::FORMAT_NORMAL_NOMAX;
@@ -502,28 +492,28 @@ final class ProgressBar
     }
     private static function initPlaceholderFormatters() : array
     {
-        return ['bar' => function (self $bar, OutputInterface $output) {
+        return ['bar' => function (self $bar, \RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output) {
             $completeBars = $bar->getBarOffset();
             $display = \str_repeat($bar->getBarCharacter(), $completeBars);
             if ($completeBars < $bar->getBarWidth()) {
-                $emptyBars = $bar->getBarWidth() - $completeBars - Helper::length(Helper::removeDecoration($output->getFormatter(), $bar->getProgressCharacter()));
+                $emptyBars = $bar->getBarWidth() - $completeBars - \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::length(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($output->getFormatter(), $bar->getProgressCharacter()));
                 $display .= $bar->getProgressCharacter() . \str_repeat($bar->getEmptyBarCharacter(), $emptyBars);
             }
             return $display;
         }, 'elapsed' => function (self $bar) {
-            return Helper::formatTime(\time() - $bar->getStartTime());
+            return \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::formatTime(\time() - $bar->getStartTime());
         }, 'remaining' => function (self $bar) {
             if (!$bar->getMaxSteps()) {
-                throw new LogicException('Unable to display the remaining time if the maximum number of steps is not set.');
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException('Unable to display the remaining time if the maximum number of steps is not set.');
             }
-            return Helper::formatTime($bar->getRemaining());
+            return \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::formatTime($bar->getRemaining());
         }, 'estimated' => function (self $bar) {
             if (!$bar->getMaxSteps()) {
-                throw new LogicException('Unable to display the estimated time if the maximum number of steps is not set.');
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException('Unable to display the estimated time if the maximum number of steps is not set.');
             }
-            return Helper::formatTime($bar->getEstimated());
+            return \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::formatTime($bar->getEstimated());
         }, 'memory' => function (self $bar) {
-            return Helper::formatMemory(\memory_get_usage(\true));
+            return \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::formatMemory(\memory_get_usage(\true));
         }, 'current' => function (self $bar) {
             return \str_pad($bar->getProgress(), $bar->getStepWidth(), ' ', \STR_PAD_LEFT);
         }, 'max' => function (self $bar) {
@@ -556,7 +546,7 @@ final class ProgressBar
         $line = \preg_replace_callback($regex, $callback, $this->format);
         // gets string length for each sub line with multiline format
         $linesLength = \array_map(function ($subLine) {
-            return Helper::width(Helper::removeDecoration($this->output->getFormatter(), \rtrim($subLine, "\r")));
+            return \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($this->output->getFormatter(), \rtrim($subLine, "\r")));
         }, \explode("\n", $line));
         $linesWidth = \max($linesLength);
         $terminalWidth = $this->terminal->getWidth();

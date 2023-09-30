@@ -8,26 +8,24 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * Looks for definitions with autowiring enabled and registers their corresponding "@required" methods as setters.
  *
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class AutowireRequiredMethodsPass extends AbstractRecursivePass
+class AutowireRequiredMethodsPass extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AbstractRecursivePass
 {
     /**
      * {@inheritdoc}
-     * @param mixed $value
-     * @return mixed
      */
     protected function processValue($value, bool $isRoot = \false)
     {
         $value = parent::processValue($value, $isRoot);
-        if (!$value instanceof Definition || !$value->isAutowired() || $value->isAbstract() || !$value->getClass()) {
+        if (!$value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || !$value->isAutowired() || $value->isAbstract() || !$value->getClass()) {
             return $value;
         }
         if (!($reflectionClass = $this->container->getReflectionClass($value->getClass(), \false))) {
@@ -44,7 +42,7 @@ class AutowireRequiredMethodsPass extends AbstractRecursivePass
                 continue;
             }
             while (\true) {
-                if (\method_exists($r, 'getAttributes') ? $r->getAttributes(Required::class) : []) {
+                if (\PHP_VERSION_ID >= 80000 && (\method_exists($r, 'getAttributes') ? $r->getAttributes(\RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required::class) : [])) {
                     if ($this->isWither($r, $r->getDocComment() ?: '')) {
                         $withers[] = [$r->name, [], \true];
                     } else {
@@ -67,7 +65,7 @@ class AutowireRequiredMethodsPass extends AbstractRecursivePass
                 }
                 try {
                     $r = $r->getPrototype();
-                } catch (\ReflectionException $exception) {
+                } catch (\ReflectionException $e) {
                     break;
                     // method has no prototype
                 }

@@ -370,11 +370,8 @@ class ProductDataMapper implements BatchDataMapperInterface
             return $attributeLabels;
         }
 
-        // array_flip() + foreach { isset() }  is much faster than foreach { in_array() } when there are many options
-        $attributeValues = array_flip($attributeValues);
-
         foreach ($options as $option) {
-            if (isset($attributeValues[$option['value']])) {
+            if (\in_array($option['value'], $attributeValues)) {
                 $attributeLabels[] = $option['label'];
             }
         }

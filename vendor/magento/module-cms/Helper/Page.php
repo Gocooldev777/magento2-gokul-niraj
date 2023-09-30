@@ -26,17 +26,17 @@ class Page extends AbstractHelper
     /**
      * CMS no-route config path
      */
-    public const XML_PATH_NO_ROUTE_PAGE = 'web/default/cms_no_route';
+    const XML_PATH_NO_ROUTE_PAGE = 'web/default/cms_no_route';
 
     /**
      * CMS no cookies config path
      */
-    public const XML_PATH_NO_COOKIES_PAGE = 'web/default/cms_no_cookies';
+    const XML_PATH_NO_COOKIES_PAGE = 'web/default/cms_no_cookies';
 
     /**
      * CMS home page config path
      */
-    public const XML_PATH_HOME_PAGE = 'web/default/cms_home_page';
+    const XML_PATH_HOME_PAGE = 'web/default/cms_home_page';
 
     /**
      * Design package instance
@@ -61,11 +61,15 @@ class Page extends AbstractHelper
     protected $_localeDate;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
+     * Page factory
+     *
      * @var \Magento\Cms\Model\PageFactory
      */
     protected $_pageFactory;
@@ -183,9 +187,7 @@ class Page extends AbstractHelper
         $resultPage = $this->resultPageFactory->create();
         $this->setLayoutType($inRange, $resultPage);
         $resultPage->addHandle('cms_page_view');
-        $pageHandles = [
-            'id' => $this->_page->getIdentifier() === null ? '' : str_replace('/', '_', $this->_page->getIdentifier())
-        ];
+        $pageHandles = ['id' => str_replace('/', '_', $this->_page->getIdentifier())];
         //Selected custom updates.
         try {
             $this->customLayoutManager->applyUpdate(

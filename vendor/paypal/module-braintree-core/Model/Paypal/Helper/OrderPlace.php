@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model\Paypal\Helper;
@@ -15,9 +15,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Checkout\Api\AgreementsValidatorInterface;
 use PayPal\Braintree\Model\Paypal\OrderCancellationService;
 
-/**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.CookieAndSessionMisuse)
+/** @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class OrderPlace extends AbstractHelper
 {

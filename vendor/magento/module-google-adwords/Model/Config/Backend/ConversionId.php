@@ -1,22 +1,22 @@
 <?php
 /**
+ * Google AdWords Conversion Id Backend model
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace Magento\GoogleAdwords\Model\Config\Backend;
 
-use Laminas\Validator\ValidatorInterface;
-
 /**
  * @api
  * @since 100.0.2
  */
-class ConversionId extends AbstractConversion
+class ConversionId extends \Magento\GoogleAdwords\Model\Config\Backend\AbstractConversion
 {
     /**
      * Validation rule conversion id
      *
-     * @return ValidatorInterface|null
+     * @return \Zend_Validate_Interface|null
      */
     protected function _getValidationRulesBeforeSave()
     {

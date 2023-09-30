@@ -12,7 +12,6 @@ use Magento\Sales\Model\ValidatorResultInterface;
 
 /**
  * Interface CreditmemoValidatorInterface
- * @api
  */
 interface CreditmemoValidatorInterface
 {

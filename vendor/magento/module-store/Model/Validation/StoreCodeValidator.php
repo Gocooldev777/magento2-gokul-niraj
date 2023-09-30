@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Store\Model\Validation;
 
-use Laminas\Validator\Regex;
 use Magento\Framework\Validator\AbstractValidator;
 use Magento\Framework\Validator\RegexFactory;
 
@@ -40,7 +39,7 @@ class StoreCodeValidator extends AbstractValidator
                 'The store code may contain only letters (a-z), numbers (0-9) or underscore (_),'
                 . ' and the first character must be a letter.'
             ),
-            Regex::NOT_MATCH
+            \Zend_Validate_Regex::NOT_MATCH
         );
         $result = $validator->isValid($value);
         $this->_messages = $validator->getMessages();

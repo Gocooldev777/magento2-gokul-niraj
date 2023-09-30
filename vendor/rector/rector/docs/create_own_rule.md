@@ -146,11 +146,17 @@ composer dump-autoload
 ## 2. Register It
 
 ```php
-use Utils\Rector\Rector\MyFirstRector;
-use Rector\Config\RectorConfig;
+<?php
+// rector.php
 
-return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->rule(MyFirstRector::class);
+declare(strict_types=1);
+
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Utils\Rector\Rector\MyFirstRector;
+
+return static function (ContainerConfigurator $containerConfigurator): void {
+    $services = $containerConfigurator->services();
+    $services->set(MyFirstRector::class);
 };
 ```
 
@@ -167,3 +173,11 @@ vendor/bin/rector process src
 ```
 
 That's it!
+
+<br>
+
+## Generating a Rector Rule
+
+Do you want to save time with making rules and tests?
+
+Use [the `generate` command](https://github.com/rectorphp/rector-generator).

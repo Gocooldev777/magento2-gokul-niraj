@@ -75,9 +75,15 @@ final class ConfigurationResolver
      */
     private $configFile;
 
-    private string $cwd;
+    /**
+     * @var string
+     */
+    private $cwd;
 
-    private ConfigInterface $defaultConfig;
+    /**
+     * @var ConfigInterface
+     */
+    private $defaultConfig;
 
     /**
      * @var null|ReporterInterface
@@ -104,12 +110,15 @@ final class ConfigurationResolver
      */
     private $configFinderIsOverridden;
 
-    private ToolInfoInterface $toolInfo;
+    /**
+     * @var ToolInfoInterface
+     */
+    private $toolInfo;
 
     /**
-     * @var array<string, mixed>
+     * @var array
      */
-    private array $options = [
+    private $options = [
         'allow-risky' => null,
         'cache-file' => null,
         'config' => null,
@@ -146,21 +155,18 @@ final class ConfigurationResolver
     private $directory;
 
     /**
-     * @var null|iterable<\SplFileInfo>
+     * @var null|iterable
      */
-    private ?iterable $finder = null;
+    private $finder;
 
-    private ?string $format = null;
+    private $format;
 
     /**
      * @var null|Linter
      */
     private $linter;
 
-    /**
-     * @var null|list<string>
-     */
-    private ?array $path = null;
+    private $path;
 
     /**
      * @var null|string
@@ -182,17 +188,14 @@ final class ConfigurationResolver
      */
     private $fixerFactory;
 
-    /**
-     * @param array<string, mixed> $options
-     */
     public function __construct(
         ConfigInterface $config,
         array $options,
         string $cwd,
         ToolInfoInterface $toolInfo
     ) {
-        $this->defaultConfig = $config;
         $this->cwd = $cwd;
+        $this->defaultConfig = $config;
         $this->toolInfo = $toolInfo;
 
         foreach ($options as $name => $value) {
@@ -354,7 +357,7 @@ final class ConfigurationResolver
     public function getLinter(): LinterInterface
     {
         if (null === $this->linter) {
-            $this->linter = new Linter();
+            $this->linter = new Linter($this->getConfig()->getPhpExecutable());
         }
 
         return $this->linter;
@@ -468,8 +471,6 @@ final class ConfigurationResolver
 
     /**
      * Returns rules.
-     *
-     * @return array<string, array<string, mixed>|bool>
      */
     public function getRules(): array
     {
@@ -491,9 +492,6 @@ final class ConfigurationResolver
         return $this->usingCache;
     }
 
-    /**
-     * @return iterable<\SplFileInfo>
-     */
     public function getFinder(): iterable
     {
         if (null === $this->finder) {
@@ -624,20 +622,13 @@ final class ConfigurationResolver
         return $this->isStdIn;
     }
 
-    /**
-     * @template T
-     *
-     * @param iterable<T> $iterable
-     *
-     * @return \Traversable<T>
-     */
     private function iterableToTraversable(iterable $iterable): \Traversable
     {
         return \is_array($iterable) ? new \ArrayIterator($iterable) : $iterable;
     }
 
     /**
-     * @return array<mixed>
+     * Compute rules.
      */
     private function parseRules(): array
     {
@@ -680,8 +671,6 @@ final class ConfigurationResolver
     }
 
     /**
-     * @param array<mixed> $rules
-     *
      * @throws InvalidConfigurationException
      */
     private function validateRules(array $rules): void
@@ -703,13 +692,20 @@ final class ConfigurationResolver
 
         $ruleSet = new RuleSet($ruleSet);
 
+        /** @var string[] $configuredFixers */
         $configuredFixers = array_keys($ruleSet->getRules());
 
         $fixers = $this->createFixerFactory()->getFixers();
 
-        $availableFixers = array_map(static fn (FixerInterface $fixer): string => $fixer->getName(), $fixers);
+        /** @var string[] $availableFixers */
+        $availableFixers = array_map(static function (FixerInterface $fixer): string {
+            return $fixer->getName();
+        }, $fixers);
 
-        $unknownFixers = array_diff($configuredFixers, $availableFixers);
+        $unknownFixers = array_diff(
+            $configuredFixers,
+            $availableFixers
+        );
 
         if (\count($unknownFixers) > 0) {
             $renamedRules = [
@@ -791,7 +787,7 @@ final class ConfigurationResolver
             $message = substr($message, 0, -2).'.';
 
             if ($hasOldRule) {
-                $message .= "\nFor more info about updating see: https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/blob/v3.0.0/UPGRADE-v3.md#renamed-ruless.";
+                $message .= "\nFor more info about updating see: https://github.com/FriendsOfPHP/PHP-CS-Fixer/blob/v3.0.0/UPGRADE-v3.md#renamed-ruless.";
             }
 
             throw new InvalidConfigurationException($message);
@@ -812,8 +808,6 @@ final class ConfigurationResolver
 
     /**
      * Apply path on config instance.
-     *
-     * @return iterable<\SplFileInfo>
      */
     private function resolveFinder(): iterable
     {

@@ -27,6 +27,16 @@ use PhpCsFixer\Tokenizer\Tokens;
  */
 final class TokenizerLinter implements LinterInterface
 {
+    public function __construct()
+    {
+        if (
+            // @TODO: drop condition when PHP 7.3+ is required
+            false === class_exists(\CompileError::class)
+        ) {
+            throw new UnavailableLinterException('Cannot use tokenizer as linter.');
+        }
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -58,7 +68,9 @@ final class TokenizerLinter implements LinterInterface
             Tokens::fromCode($source);
 
             return new TokenizerLintingResult();
-        } catch (\ParseError|\CompileError $e) {
+        } catch (\ParseError $e) {
+            return new TokenizerLintingResult($e);
+        } catch (\CompileError $e) {
             return new TokenizerLintingResult($e);
         }
     }

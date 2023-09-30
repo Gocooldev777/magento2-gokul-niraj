@@ -4,6 +4,7 @@ declare (strict_types=1);
 namespace Rector\Naming\Guard\PropertyConflictingNameGuard;
 
 use PhpParser\Node\Stmt\ClassLike;
+use Rector\Naming\Contract\RenameValueObjectInterface;
 use Rector\Naming\ExpectedNameResolver\MatchPropertyTypeExpectedNameResolver;
 use Rector\Naming\PhpArray\ArrayFilter;
 use Rector\Naming\ValueObject\PropertyRename;
@@ -25,25 +26,28 @@ final class MatchPropertyTypeConflictingNameGuard
      * @var \Rector\Naming\PhpArray\ArrayFilter
      */
     private $arrayFilter;
-    public function __construct(MatchPropertyTypeExpectedNameResolver $matchPropertyTypeExpectedNameResolver, NodeNameResolver $nodeNameResolver, ArrayFilter $arrayFilter)
+    public function __construct(\Rector\Naming\ExpectedNameResolver\MatchPropertyTypeExpectedNameResolver $matchPropertyTypeExpectedNameResolver, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Naming\PhpArray\ArrayFilter $arrayFilter)
     {
         $this->matchPropertyTypeExpectedNameResolver = $matchPropertyTypeExpectedNameResolver;
         $this->nodeNameResolver = $nodeNameResolver;
         $this->arrayFilter = $arrayFilter;
     }
-    public function isConflicting(PropertyRename $propertyRename) : bool
+    /**
+     * @param PropertyRename $renameValueObject
+     */
+    public function isConflicting(\Rector\Naming\Contract\RenameValueObjectInterface $renameValueObject) : bool
     {
-        $conflictingPropertyNames = $this->resolve($propertyRename->getClassLike());
-        return \in_array($propertyRename->getExpectedName(), $conflictingPropertyNames, \true);
+        $conflictingPropertyNames = $this->resolve($renameValueObject->getClassLike());
+        return \in_array($renameValueObject->getExpectedName(), $conflictingPropertyNames, \true);
     }
     /**
      * @return string[]
      */
-    private function resolve(ClassLike $classLike) : array
+    public function resolve(\PhpParser\Node\Stmt\ClassLike $classLike) : array
     {
         $expectedNames = [];
         foreach ($classLike->getProperties() as $property) {
-            $expectedName = $this->matchPropertyTypeExpectedNameResolver->resolve($property, $classLike);
+            $expectedName = $this->matchPropertyTypeExpectedNameResolver->resolve($property);
             if ($expectedName === null) {
                 // fallback to existing name
                 $expectedName = $this->nodeNameResolver->getName($property);

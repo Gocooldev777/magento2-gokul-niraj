@@ -24,7 +24,6 @@
             <actionGroup ref="DeleteCustomStoreActionGroup" stepKey="deleteCustomStore">
                 <argument name="storeGroupName" value="customStoreGroup.name"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
             <actionGroup ref="DeleteCategoryActionGroup" stepKey="deleteCreatedNewRootCategory">
                 <argument name="categoryEntity" value="NewRootCategory"/>
             </actionGroup>
@@ -54,7 +53,6 @@
             <argument name="StoreGroup" value="customStoreGroup"/>
             <argument name="customStore" value="customStore"/>
         </actionGroup>
-        <magentoCron groups="index" stepKey="reindex"/>
         <!--Go to store front page-->
         <actionGroup ref="StorefrontOpenHomePageActionGroup" stepKey="openHomepage"/>
         <!--Verify subcategory displayed in store front page-->

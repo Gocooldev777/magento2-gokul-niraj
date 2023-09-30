@@ -5,12 +5,7 @@
  */
 namespace Magento\NewRelicReporting\Model\Apm;
 
-use Laminas\Http\Exception\RuntimeException;
-use Laminas\Http\Request;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
-use Magento\NewRelicReporting\Model\Config;
-use Psr\Log\LoggerInterface;
+use \Magento\Framework\HTTP\ZendClient;
 
 /**
  * Performs the request to make the deployment
@@ -20,34 +15,34 @@ class Deployments
     /**
      * API URL for New Relic deployments
      */
-    private const API_URL = 'https://api.newrelic.com/v2/applications/%s/deployments.json';
+    const API_URL = 'https://api.newrelic.com/deployments.xml';
 
     /**
-     * @var Config
+     * @var \Magento\NewRelicReporting\Model\Config
      */
     protected $config;
 
     /**
-     * @var LoggerInterface
+     * @var \Psr\Log\LoggerInterface
      */
     protected $logger;
 
     /**
-     * @var LaminasClientFactory $clientFactory
+     * @var \Magento\Framework\HTTP\ZendClientFactory $clientFactory
      */
     protected $clientFactory;
 
     /**
      * Constructor
      *
-     * @param Config $config
-     * @param LoggerInterface $logger
-     * @param LaminasClientFactory $clientFactory
+     * @param \Magento\NewRelicReporting\Model\Config $config
+     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Magento\Framework\HTTP\ZendClientFactory $clientFactory
      */
     public function __construct(
-        Config $config,
-        LoggerInterface $logger,
-        LaminasClientFactory $clientFactory
+        \Magento\NewRelicReporting\Model\Config $config,
+        \Psr\Log\LoggerInterface $logger,
+        \Magento\Framework\HTTP\ZendClientFactory $clientFactory
     ) {
         $this->config = $config;
         $this->logger = $logger;
@@ -60,54 +55,43 @@ class Deployments
      * @param string $description
      * @param bool $change
      * @param bool $user
-     * @param ?string $revision
      *
      * @return bool|string
      */
-    public function setDeployment($description, $change = false, $user = false, $revision = null)
+    public function setDeployment($description, $change = false, $user = false)
     {
         $apiUrl = $this->config->getNewRelicApiUrl();
+
         if (empty($apiUrl)) {
             $this->logger->notice('New Relic API URL is blank, using fallback URL');
             $apiUrl = self::API_URL;
         }
 
-        $apiUrl = sprintf($apiUrl, $this->config->getNewRelicAppId());
-
-        /** @var LaminasClient $client */
+        /** @var \Magento\Framework\HTTP\ZendClient $client */
         $client = $this->clientFactory->create();
         $client->setUri($apiUrl);
-        $client->setMethod(Request::METHOD_POST);
-        $client->setHeaders(
-            [
-                'Api-Key' => $this->config->getNewRelicApiKey(),
-                'Content-Type' => 'application/json'
-            ]
-        );
+        $client->setMethod(ZendClient::POST);
 
-        if (!$revision) {
-            $revision = hash('sha256', time());
-        }
+        $client->setHeaders(['x-api-key' => $this->config->getNewRelicApiKey()]);
 
         $params = [
-            'deployment' => [
-                'description' => $description,
-                'changelog' => $change,
-                'user' => $user,
-                'revision' => $revision
-            ]
+            'deployment[app_name]'       => $this->config->getNewRelicAppName(),
+            'deployment[application_id]' => $this->config->getNewRelicAppId(),
+            'deployment[description]'    => $description,
+            'deployment[changelog]'      => $change,
+            'deployment[user]'           => $user
         ];
 
         $client->setParameterPost($params);
 
         try {
-            $response = $client->send();
-        } catch (RuntimeException $e) {
+            $response = $client->request();
+        } catch (\Zend_Http_Client_Exception $e) {
             $this->logger->critical($e);
             return false;
         }
 
-        if ($response->getStatusCode() < 200 || $response->getStatusCode() > 210) {
+        if ($response->getStatus() < 200 || $response->getStatus() > 210) {
             $this->logger->warning('Deployment marker request did not send a 200 status code.');
             return false;
         }

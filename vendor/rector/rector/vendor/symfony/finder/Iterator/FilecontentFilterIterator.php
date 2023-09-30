@@ -8,18 +8,17 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Finder\Iterator;
+namespace RectorPrefix20211221\Symfony\Component\Finder\Iterator;
 
-use RectorPrefix202304\Symfony\Component\Finder\SplFileInfo;
 /**
  * FilecontentFilterIterator filters files by their contents using patterns (regexps or strings).
  *
  * @author Fabien Potencier  <fabien@symfony.com>
  * @author Włodzimierz Gajda <gajdaw@gajdaw.pl>
  *
- * @extends MultiplePcreFilterIterator<string, SplFileInfo>
+ * @extends MultiplePcreFilterIterator<string, \SplFileInfo>
  */
-class FilecontentFilterIterator extends MultiplePcreFilterIterator
+class FilecontentFilterIterator extends \RectorPrefix20211221\Symfony\Component\Finder\Iterator\MultiplePcreFilterIterator
 {
     /**
      * Filters the iterator values.

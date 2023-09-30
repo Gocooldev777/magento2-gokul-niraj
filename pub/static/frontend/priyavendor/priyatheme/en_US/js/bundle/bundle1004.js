@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Checkout/template/billing-address/list.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div class=\"field field-select-billing\">\n    <label class=\"label\"><span data-bind=\"i18n: 'Billing Address'\"></span></label>\n    <div class=\"control\" data-bind=\"if: (addressOptions.length > 1)\">\n        <select class=\"select\" name=\"billing_address_id\" data-bind=\"\n        options: addressOptions,\n        optionsText: addressOptionsText,\n        value: selectedAddress,\n        event: {change: onAddressChange(selectedAddress())};\n    \"></select>\n    </div>\n</div>\n"}
+}});

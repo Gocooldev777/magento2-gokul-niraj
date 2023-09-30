@@ -6,20 +6,18 @@
 
 namespace Magento\Catalog\Model;
 
-use Magento\Eav\Model\ResourceModel\Entity\Type\CollectionFactory;
 use Magento\Framework\Serialize\SerializerInterface;
 
 /**
  * Catalog config model.
  *
- * @api
  * @SuppressWarnings(PHPMD.LongVariable)
  * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Config extends \Magento\Eav\Model\Config
 {
-    public const XML_PATH_LIST_DEFAULT_SORT_BY = 'catalog/frontend/default_sort_by';
+    const XML_PATH_LIST_DEFAULT_SORT_BY = 'catalog/frontend/default_sort_by';
 
     /**
      * @var mixed
@@ -85,31 +83,43 @@ class Config extends \Magento\Eav\Model\Config
     protected $_scopeConfig;
 
     /**
+     * Eav config
+     *
      * @var \Magento\Eav\Model\Config
      */
     protected $_eavConfig;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
+     * Set collection factory
+     *
      * @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\Set\CollectionFactory
      */
     protected $_setCollectionFactory;
 
     /**
+     * Group collection factory
+     *
      * @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\Group\CollectionFactory
      */
     protected $_groupCollectionFactory;
 
     /**
+     * Product type factory
+     *
      * @var \Magento\Catalog\Model\Product\TypeFactory
      */
     protected $_productTypeFactory;
 
     /**
+     * Config factory
+     *
      * @var \Magento\Catalog\Model\ResourceModel\ConfigFactory
      */
     protected $_configFactory;
@@ -119,7 +129,7 @@ class Config extends \Magento\Eav\Model\Config
      *
      * @param \Magento\Framework\App\CacheInterface $cache
      * @param \Magento\Eav\Model\Entity\TypeFactory $entityTypeFactory
-     * @param \Magento\Eav\Model\ResourceModel\Entity\Type\CollectionFactory $entityTypeCollectionFactory
+     * @param \Magento\Eav\Model\ResourceModel\Entity\Type\CollectionFactory $entityTypeCollectionFactory,
      * @param \Magento\Framework\App\Cache\StateInterface $cacheState
      * @param \Magento\Framework\Validator\UniversalFactory $universalFactory
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
@@ -196,8 +206,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Loads all Attribute Sets
-     *
      * @return $this
      */
     public function loadAttributeSets()
@@ -220,8 +228,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Returns Attribute's Set Name
-     *
      * @param string|int|float $entityTypeId
      * @param float|int $id
      * @return false|string
@@ -242,8 +248,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Returns Attribute's Set ID
-     *
      * @param string|int|float $entityTypeId
      * @param string|null $name
      * @return false|string|int
@@ -258,15 +262,13 @@ class Config extends \Magento\Eav\Model\Config
         if (!is_numeric($entityTypeId)) {
             $entityTypeId = $this->getEntityType($entityTypeId)->getId();
         }
-        $name = $name !== null ? strtolower($name) : '';
+        $name = strtolower($name);
         return isset(
             $this->_attributeSetsByName[$entityTypeId][$name]
         ) ? $this->_attributeSetsByName[$entityTypeId][$name] : false;
     }
 
     /**
-     * Loads all attribute Groups
-     *
      * @return $this
      */
     public function loadAttributeGroups()
@@ -289,8 +291,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Returns the Attribute's Group Name
-     *
      * @param float|int|string $attributeSetId
      * @param float|int|string $id
      * @return bool|string
@@ -312,8 +312,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Returns the Attribute's Group ID
-     *
      * @param float|int|string $attributeSetId
      * @param string $name
      * @return bool|string|int|float
@@ -329,15 +327,13 @@ class Config extends \Magento\Eav\Model\Config
         if (!is_numeric($attributeSetId)) {
             $attributeSetId = $this->getAttributeSetId($attributeSetId);
         }
-        $name = $name !== null ? strtolower($name) : '';
+        $name = strtolower($name);
         return isset(
             $this->_attributeGroupsByName[$attributeSetId][$name]
         ) ? $this->_attributeGroupsByName[$attributeSetId][$name] : false;
     }
 
     /**
-     * Loads all product types
-     *
      * @return $this
      */
     public function loadProductTypes()
@@ -359,8 +355,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Returns ID of the Product Type
-     *
      * @param string $name
      * @return false|string
      */
@@ -372,13 +366,11 @@ class Config extends \Magento\Eav\Model\Config
 
         $this->loadProductTypes();
 
-        $name = $name !== null ? strtolower($name) : '';
+        $name = strtolower($name);
         return isset($this->_productTypesByName[$name]) ? $this->_productTypesByName[$name] : false;
     }
 
     /**
-     * Returns the name of Product Type
-     *
      * @param float|int|string $id
      * @return false|string
      */
@@ -394,8 +386,6 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Return Source option ID if exists
-     *
      * @param \Magento\Framework\DataObject $source
      * @param string $value
      * @return null|mixed
@@ -477,7 +467,8 @@ class Config extends \Magento\Eav\Model\Config
     }
 
     /**
-     * Retrieve Attributes Used for Sort by as array: key = code, value = name
+     * Retrieve Attributes Used for Sort by as array
+     * key = code, value = name
      *
      * @return array
      */

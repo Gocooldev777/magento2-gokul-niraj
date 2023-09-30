@@ -6,36 +6,40 @@
 
 namespace Magento\Developer\Console\Command;
 
-use InvalidArgumentException;
-use Magento\Framework\App\DeploymentConfig\Writer;
-use Magento\Framework\Config\File\ConfigFilePool;
-use Magento\Framework\Console\Cli;
 use Magento\Framework\DB\Logger\LoggerProxy;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Magento\Framework\App\DeploymentConfig\Writer;
+use Magento\Framework\Config\File\ConfigFilePool;
 
 class QueryLogEnableCommand extends Command
 {
     /**
      * input parameter log-all-queries
      */
-    public const INPUT_ARG_LOG_ALL_QUERIES = 'include-all-queries';
+    const INPUT_ARG_LOG_ALL_QUERIES = 'include-all-queries';
 
     /**
      * input parameter log-query-time
      */
-    public const INPUT_ARG_LOG_QUERY_TIME = 'query-time-threshold';
+    const INPUT_ARG_LOG_QUERY_TIME = 'query-time-threshold';
 
     /**
      * input parameter log-call-stack
      */
-    public const INPUT_ARG_LOG_CALL_STACK = 'include-call-stack';
+    const INPUT_ARG_LOG_CALL_STACK = 'include-call-stack';
 
-    public const COMMAND_NAME = 'dev:query-log:enable';
+    /**
+     * command name
+     */
+    const COMMAND_NAME = 'dev:query-log:enable';
 
-    public const SUCCESS_MESSAGE = "DB query logging enabled.";
+    /**
+     * Success message
+     */
+    const SUCCESS_MESSAGE = "DB query logging enabled.";
 
     /**
      * @var Writer
@@ -45,7 +49,7 @@ class QueryLogEnableCommand extends Command
     /**
      * QueryLogEnableCommand constructor.
      * @param Writer $deployConfigWriter
-     * @param ?string $name
+     * @param null $name
      */
     public function __construct(
         Writer $deployConfigWriter,
@@ -56,7 +60,7 @@ class QueryLogEnableCommand extends Command
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function configure()
     {
@@ -92,9 +96,8 @@ class QueryLogEnableCommand extends Command
     }
 
     /**
-     * @inheritdoc
-     *
-     * @throws InvalidArgumentException
+     * {@inheritdoc}
+     * @throws \InvalidArgumentException
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -113,7 +116,5 @@ class QueryLogEnableCommand extends Command
         $this->deployConfigWriter->saveConfig([ConfigFilePool::APP_ENV => $configGroup]);
 
         $output->writeln("<info>". self::SUCCESS_MESSAGE . "</info>");
-
-        return Cli::RETURN_SUCCESS;
     }
 }

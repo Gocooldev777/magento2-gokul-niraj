@@ -469,7 +469,7 @@ class FindStartOfStatementTest extends AbstractMethodUnitTest
 
 
     /**
-     * Test PHP open tag.
+     * Test nested match expressions.
      *
      * @return void
      */
@@ -485,7 +485,7 @@ class FindStartOfStatementTest extends AbstractMethodUnitTest
 
 
     /**
-     * Test PHP short open echo tag.
+     * Test nested match expressions.
      *
      * @return void
      */

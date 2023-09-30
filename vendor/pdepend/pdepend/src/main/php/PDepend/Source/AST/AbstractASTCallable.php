@@ -227,7 +227,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
     {
         return (array) $this->cache
             ->type('tokens')
-            ->restore($this->getId());
+            ->restore($this->id);
     }
 
     /**
@@ -244,7 +244,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
 
         $this->cache
             ->type('tokens')
-            ->store($this->getId(), $tokens);
+            ->store($this->id, $tokens);
     }
 
     /**
@@ -437,8 +437,11 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
             'PDepend\\Source\\AST\\ASTStaticVariableDeclaration'
         );
         foreach ($declarations as $declaration) {
+            /** @var ASTVariableDeclarator[] */
+            $variables = array();
             $variables = $declaration->findChildrenOfType(
-                'PDepend\\Source\\AST\\ASTVariableDeclarator'
+                'PDepend\\Source\\AST\\ASTVariableDeclarator',
+                $variables
             );
             foreach ($variables as $variable) {
                 $image = $variable->getImage();

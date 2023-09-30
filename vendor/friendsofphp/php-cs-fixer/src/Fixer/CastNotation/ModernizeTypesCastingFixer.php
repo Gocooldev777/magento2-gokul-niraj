@@ -52,16 +52,6 @@ final class ModernizeTypesCastingFixer extends AbstractFunctionReferenceFixer
 
     /**
      * {@inheritdoc}
-     *
-     * Must run before NoUnneededControlParenthesesFixer.
-     */
-    public function getPriority(): int
-    {
-        return 31;
-    }
-
-    /**
-     * {@inheritdoc}
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
@@ -111,7 +101,7 @@ final class ModernizeTypesCastingFixer extends AbstractFunctionReferenceFixer
                 $countParamTokens = 0;
 
                 for ($paramContentIndex = $openParenthesis + 1; $paramContentIndex < $paramContentEnd; ++$paramContentIndex) {
-                    // not a space, means some sensible token
+                    //not a space, means some sensible token
                     if (!$tokens[$paramContentIndex]->isGivenKind(T_WHITESPACE)) {
                         ++$countParamTokens;
                     }

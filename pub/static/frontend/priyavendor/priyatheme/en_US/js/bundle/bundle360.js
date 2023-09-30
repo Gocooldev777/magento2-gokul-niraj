@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Checkout/js/action/redirect-on-success.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/**\n * @api\n */\ndefine(\n    [\n        'mage/url',\n        'Magento_Checkout/js/model/full-screen-loader'\n    ],\n    function (url, fullScreenLoader) {\n        'use strict';\n\n        return {\n            redirectUrl: window.checkoutConfig.defaultSuccessPageUrl,\n\n            /**\n             * Provide redirect to page\n             */\n            execute: function () {\n                fullScreenLoader.startLoader();\n                window.location.replace(url.build(this.redirectUrl));\n            }\n        };\n    }\n);\n"}
+}});

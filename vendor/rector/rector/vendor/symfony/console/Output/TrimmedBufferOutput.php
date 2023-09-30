@@ -8,16 +8,16 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Output;
+namespace RectorPrefix20211221\Symfony\Component\Console\Output;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatterInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface;
 /**
  * A BufferedOutput that keeps only the last N chars.
  *
  * @author Jérémy Derussé <jeremy@derusse.com>
  */
-class TrimmedBufferOutput extends Output
+class TrimmedBufferOutput extends \RectorPrefix20211221\Symfony\Component\Console\Output\Output
 {
     /**
      * @var int
@@ -27,10 +27,10 @@ class TrimmedBufferOutput extends Output
      * @var string
      */
     private $buffer = '';
-    public function __construct(int $maxLength, ?int $verbosity = self::VERBOSITY_NORMAL, bool $decorated = \false, OutputFormatterInterface $formatter = null)
+    public function __construct(int $maxLength, ?int $verbosity = self::VERBOSITY_NORMAL, bool $decorated = \false, \RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface $formatter = null)
     {
         if ($maxLength <= 0) {
-            throw new InvalidArgumentException(\sprintf('"%s()" expects a strictly positive maxLength. Got %d.', __METHOD__, $maxLength));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('"%s()" expects a strictly positive maxLength. Got %d.', __METHOD__, $maxLength));
         }
         parent::__construct($verbosity, $decorated, $formatter);
         $this->maxLength = $maxLength;
@@ -44,6 +44,9 @@ class TrimmedBufferOutput extends Output
         $this->buffer = '';
         return $content;
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function doWrite(string $message, bool $newline)
     {
         $this->buffer .= $message;

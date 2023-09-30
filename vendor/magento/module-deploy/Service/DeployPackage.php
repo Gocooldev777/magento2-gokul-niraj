@@ -224,7 +224,6 @@ class DeployPackage
     private function checkFileSkip($filePath, array $options)
     {
         if ($filePath !== '.') {
-            $filePath = (string)$filePath;
             // phpcs:ignore Magento2.Functions.DiscouragedFunction
             $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
             // phpcs:ignore Magento2.Functions.DiscouragedFunction

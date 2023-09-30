@@ -3,19 +3,24 @@
 declare (strict_types=1);
 namespace Rector\CodeQuality\NodeFactory;
 
-use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\PropertyProperty;
 use PHPStan\Type\Type;
+use Rector\Core\PhpParser\Node\NodeFactory;
 final class MissingPropertiesFactory
 {
+    /**
+     * @readonly
+     * @var \Rector\Core\PhpParser\Node\NodeFactory
+     */
+    private $nodeFactory;
     /**
      * @readonly
      * @var \Rector\CodeQuality\NodeFactory\PropertyTypeDecorator
      */
     private $propertyTypeDecorator;
-    public function __construct(\Rector\CodeQuality\NodeFactory\PropertyTypeDecorator $propertyTypeDecorator)
+    public function __construct(\Rector\Core\PhpParser\Node\NodeFactory $nodeFactory, \Rector\CodeQuality\NodeFactory\PropertyTypeDecorator $propertyTypeDecorator)
     {
+        $this->nodeFactory = $nodeFactory;
         $this->propertyTypeDecorator = $propertyTypeDecorator;
     }
     /**
@@ -30,7 +35,7 @@ final class MissingPropertiesFactory
             if (!\in_array($propertyName, $propertyNamesToComplete, \true)) {
                 continue;
             }
-            $property = new Property(Class_::MODIFIER_PUBLIC, [new PropertyProperty($propertyName)]);
+            $property = $this->nodeFactory->createPublicProperty($propertyName);
             $this->propertyTypeDecorator->decorateProperty($property, $propertyType);
             $newProperties[] = $property;
         }

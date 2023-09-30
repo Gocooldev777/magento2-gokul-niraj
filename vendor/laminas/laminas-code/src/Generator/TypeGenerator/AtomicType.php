@@ -3,9 +3,8 @@
 namespace Laminas\Code\Generator\TypeGenerator;
 
 use Laminas\Code\Generator\Exception\InvalidArgumentException;
-use ReflectionClass;
-use ReflectionNamedType;
 
+use function array_filter;
 use function array_key_exists;
 use function assert;
 use function implode;
@@ -43,16 +42,14 @@ final class AtomicType
         'mixed'    => 10,
         'void'     => 11,
         'false'    => 12,
-        'true'     => 13,
-        'null'     => 14,
-        'never'    => 15,
+        'null'     => 13,
+        'never'    => 14,
     ];
 
     /** @psalm-var array<non-empty-string, null> */
     private const NOT_NULLABLE_TYPES = [
         'null'  => null,
         'false' => null,
-        'true'  => null,
         'void'  => null,
         'mixed' => null,
         'never' => null,
@@ -115,26 +112,10 @@ final class AtomicType
         return new self($trimmedType, 0);
     }
 
-    /**
-     * @psalm-pure
-     * @throws InvalidArgumentException
-     */
-    public static function fromReflectionNamedTypeAndClass(
-        ReflectionNamedType $type,
-        ?ReflectionClass $currentClass
-    ): self {
-        $name          = $type->getName();
-        $lowerCaseName = strtolower($name);
-
-        if ('self' === $lowerCaseName && $currentClass) {
-            return new self($currentClass->getName(), 0);
-        }
-
-        if ('parent' === $lowerCaseName && $currentClass && $parentClass = $currentClass->getParentClass()) {
-            return new self($parentClass->getName(), 0);
-        }
-
-        return self::fromString($name);
+    /** @psalm-pure */
+    public static function null(): self
+    {
+        return new self('null', self::BUILT_IN_TYPES_PRECEDENCE['null']);
     }
 
     /** @psalm-return non-empty-string */
@@ -145,21 +126,12 @@ final class AtomicType
             : '\\' . $this->type;
     }
 
-    /** @return non-empty-string */
-    public function toString(): string
+    /**
+     * @psalm-param non-empty-array<self> $others
+     * @throws InvalidArgumentException
+     */
+    public function assertCanUnionWith(array $others): void
     {
-        return $this->type;
-    }
-
-    /** @throws InvalidArgumentException */
-    public function assertCanUnionWith(self|IntersectionType $other): void
-    {
-        if ($other instanceof IntersectionType) {
-            $other->assertCanUnionWith($this);
-
-            return;
-        }
-
         if (
             'mixed' === $this->type
             || 'void' === $this->type
@@ -171,28 +143,32 @@ final class AtomicType
             ));
         }
 
-        if ($other->type === $this->type) {
-            throw new InvalidArgumentException(sprintf(
-                'Type "%s" cannot be composed in a union with the same type "%s"',
-                $this->type,
-                $other->type
-            ));
+        foreach ($others as $other) {
+            if ($other->type === $this->type) {
+                throw new InvalidArgumentException(sprintf(
+                    'Type "%s" cannot be composed in a union with the same type "%s"',
+                    $this->type,
+                    $other->type
+                ));
+            }
         }
 
         if (
-            ('true' === $other->type && 'false' === $this->type) ||
-            ('false' === $other->type && 'true' === $this->type)
+            $this->requiresUnionWithStandaloneType() &&
+            [] === array_filter($others, static fn (self $type): bool => ! $type->requiresUnionWithStandaloneType())
         ) {
             throw new InvalidArgumentException(sprintf(
-                'Type "%s" cannot be composed in a union with type "%s"',
-                $this->type,
-                $other->type
+                'Type "%s" requires to be composed with non-standalone types',
+                $this->type
             ));
         }
     }
 
-    /** @throws InvalidArgumentException */
-    public function assertCanIntersectWith(AtomicType $other): void
+    /**
+     * @psalm-param non-empty-array<self> $others
+     * @throws InvalidArgumentException
+     */
+    public function assertCanIntersectWith(array $others): void
     {
         if (array_key_exists($this->type, self::BUILT_IN_TYPES_PRECEDENCE)) {
             throw new InvalidArgumentException(sprintf(
@@ -201,11 +177,34 @@ final class AtomicType
             ));
         }
 
-        if ($other->type === $this->type) {
+        foreach ($others as $other) {
+            if ($other->type === $this->type) {
+                throw new InvalidArgumentException(sprintf(
+                    'Type "%s" cannot be composed in an intersection with the same type "%s"',
+                    $this->type,
+                    $other->type
+                ));
+            }
+        }
+
+        if (
+            $this->requiresUnionWithStandaloneType() &&
+            [] === array_filter($others, static fn (self $type): bool => ! $type->requiresUnionWithStandaloneType())
+        ) {
             throw new InvalidArgumentException(sprintf(
-                'Type "%s" cannot be composed in an intersection with the same type "%s"',
-                $this->type,
-                $other->type
+                'Type "%s" requires to be composed with non-standalone types',
+                $this->type
+            ));
+        }
+    }
+
+    /** @throws InvalidArgumentException */
+    public function assertCanBeAStandaloneType(): void
+    {
+        if ($this->requiresUnionWithStandaloneType()) {
+            throw new InvalidArgumentException(sprintf(
+                'Type "%s" cannot be used standalone, and must be part of a union type',
+                $this->type
             ));
         }
     }
@@ -219,5 +218,10 @@ final class AtomicType
                 $this->type
             ));
         }
+    }
+
+    private function requiresUnionWithStandaloneType(): bool
+    {
+        return 'null' === $this->type || 'false' === $this->type;
     }
 }

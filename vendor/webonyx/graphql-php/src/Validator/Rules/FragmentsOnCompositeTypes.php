@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Validator\Rules;
 
@@ -8,33 +10,34 @@ use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\Printer;
 use GraphQL\Type\Definition\Type;
-use GraphQL\Utils\AST;
-use GraphQL\Validator\QueryValidationContext;
+use GraphQL\Utils\TypeInfo;
+use GraphQL\Validator\ValidationContext;
+use function sprintf;
 
 class FragmentsOnCompositeTypes extends ValidationRule
 {
-    public function getVisitor(QueryValidationContext $context): array
+    public function getVisitor(ValidationContext $context)
     {
         return [
-            NodeKind::INLINE_FRAGMENT => static function (InlineFragmentNode $node) use ($context): void {
-                if ($node->typeCondition === null) {
+            NodeKind::INLINE_FRAGMENT     => static function (InlineFragmentNode $node) use ($context) : void {
+                if (! $node->typeCondition) {
                     return;
                 }
 
-                $type = AST::typeFromAST([$context->getSchema(), 'getType'], $node->typeCondition);
-                if ($type === null || Type::isCompositeType($type)) {
+                $type = TypeInfo::typeFromAST($context->getSchema(), $node->typeCondition);
+                if (! $type || Type::isCompositeType($type)) {
                     return;
                 }
 
                 $context->reportError(new Error(
-                    static::inlineFragmentOnNonCompositeErrorMessage($type->toString()),
+                    static::inlineFragmentOnNonCompositeErrorMessage($type),
                     [$node->typeCondition]
                 ));
             },
-            NodeKind::FRAGMENT_DEFINITION => static function (FragmentDefinitionNode $node) use ($context): void {
-                $type = AST::typeFromAST([$context->getSchema(), 'getType'], $node->typeCondition);
+            NodeKind::FRAGMENT_DEFINITION => static function (FragmentDefinitionNode $node) use ($context) : void {
+                $type = TypeInfo::typeFromAST($context->getSchema(), $node->typeCondition);
 
-                if ($type === null || Type::isCompositeType($type)) {
+                if (! $type || Type::isCompositeType($type)) {
                     return;
                 }
 
@@ -49,13 +52,13 @@ class FragmentsOnCompositeTypes extends ValidationRule
         ];
     }
 
-    public static function inlineFragmentOnNonCompositeErrorMessage(string $type): string
+    public static function inlineFragmentOnNonCompositeErrorMessage($type)
     {
-        return "Fragment cannot condition on non composite type \"{$type}\".";
+        return sprintf('Fragment cannot condition on non composite type "%s".', $type);
     }
 
-    public static function fragmentOnNonCompositeErrorMessage(string $fragName, string $type): string
+    public static function fragmentOnNonCompositeErrorMessage($fragName, $type)
     {
-        return "Fragment \"{$fragName}\" cannot condition on non composite type \"{$type}\".";
+        return sprintf('Fragment "%s" cannot condition on non composite type "%s".', $fragName, $type);
     }
 }

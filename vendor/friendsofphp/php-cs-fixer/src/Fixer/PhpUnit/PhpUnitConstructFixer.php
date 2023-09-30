@@ -35,7 +35,7 @@ final class PhpUnitConstructFixer extends AbstractPhpUnitFixer implements Config
     /**
      * @var array<string,string>
      */
-    private static array $assertionFixers = [
+    private static $assertionFixers = [
         'assertSame' => 'fixAssertPositive',
         'assertEquals' => 'fixAssertPositive',
         'assertNotEquals' => 'fixAssertNegative',
@@ -182,29 +182,29 @@ final class FooTest extends \PHPUnit_Framework_TestCase {
             return null;
         }
 
-        $sequenceIndices = array_keys($sequence);
+        $sequenceIndexes = array_keys($sequence);
 
-        if (!$functionsAnalyzer->isTheSameClassCall($tokens, $sequenceIndices[0])) {
+        if (!$functionsAnalyzer->isTheSameClassCall($tokens, $sequenceIndexes[0])) {
             return null;
         }
 
-        $sequenceIndices[2] = $tokens->getNextMeaningfulToken($sequenceIndices[1]);
-        $firstParameterToken = $tokens[$sequenceIndices[2]];
+        $sequenceIndexes[2] = $tokens->getNextMeaningfulToken($sequenceIndexes[1]);
+        $firstParameterToken = $tokens[$sequenceIndexes[2]];
 
         if (!$firstParameterToken->isNativeConstant()) {
-            return $sequenceIndices[2];
+            return $sequenceIndexes[2];
         }
 
-        $sequenceIndices[3] = $tokens->getNextMeaningfulToken($sequenceIndices[2]);
+        $sequenceIndexes[3] = $tokens->getNextMeaningfulToken($sequenceIndexes[2]);
 
         // return if first method argument is an expression, not value
-        if (!$tokens[$sequenceIndices[3]]->equals(',')) {
-            return $sequenceIndices[3];
+        if (!$tokens[$sequenceIndexes[3]]->equals(',')) {
+            return $sequenceIndexes[3];
         }
 
-        $tokens[$sequenceIndices[0]] = new Token([T_STRING, $map[strtolower($firstParameterToken->getContent())]]);
-        $tokens->clearRange($sequenceIndices[2], $tokens->getNextNonWhitespace($sequenceIndices[3]) - 1);
+        $tokens[$sequenceIndexes[0]] = new Token([T_STRING, $map[strtolower($firstParameterToken->getContent())]]);
+        $tokens->clearRange($sequenceIndexes[2], $tokens->getNextNonWhitespace($sequenceIndexes[3]) - 1);
 
-        return $sequenceIndices[3];
+        return $sequenceIndexes[3];
     }
 }

@@ -55,11 +55,7 @@ define([
          * @returns {String}
          */
         getCode: function () {
-            if (window.checkoutConfig.payment[this.code]) {
-                return this.code;
-            } else {
-                return 'braintree_paypal';
-            }
+            return this.code;
         },
 
         /**
@@ -77,40 +73,39 @@ define([
             return window.checkoutConfig.payment[this.getCode()].environment;
         },
 
-        getCurrentCode: function (paypalType = null) {
-            var code = 'braintree_paypal';
-            if (paypalType !== 'paypal') {
-                code = code + '_' + paypalType;
-            }
-            return code;
+        /**
+         * @returns {String}
+         */
+        getColor: function () {
+            return window.checkoutConfig.payment[this.getCode()].style.color;
         },
 
         /**
          * @returns {String}
          */
-        getColor: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.color;
+        getShape: function () {
+            return window.checkoutConfig.payment[this.getCode()].style.shape;
         },
 
         /**
          * @returns {String}
          */
-        getShape: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.shape;
+        getLayout: function () {
+            return window.checkoutConfig.payment[this.getCode()].style.layout;
         },
 
         /**
          * @returns {String}
          */
-        getSize: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.size;
+        getSize: function () {
+            return window.checkoutConfig.payment[this.getCode()].style.size;
         },
 
         /**
          * @returns {String}
          */
-        getLabel: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.label;
+        getLabel: function () {
+            return null;
         },
 
         /**
@@ -213,6 +208,8 @@ define([
 
                 if (typeof this.config.dataCollector === 'object' && typeof this.config.dataCollector.paypal === 'boolean') {
                     options.paypal = true;
+                } else {
+                    options.kount = true;
                 }
 
                 dataCollector.create(options, function (err, dataCollectorInstance) {

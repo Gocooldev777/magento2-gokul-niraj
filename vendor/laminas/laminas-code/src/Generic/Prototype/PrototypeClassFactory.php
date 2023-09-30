@@ -21,7 +21,7 @@ use function str_replace;
  */
 class PrototypeClassFactory
 {
-    /** @var array<string, PrototypeInterface> */
+    /** @var array */
     protected $prototypes = [];
 
     /** @var PrototypeGenericInterface|null */
@@ -30,9 +30,9 @@ class PrototypeClassFactory
     /**
      * @param PrototypeInterface[] $prototypes
      */
-    public function __construct(array $prototypes = [], ?PrototypeGenericInterface $genericPrototype = null)
+    public function __construct($prototypes = [], ?PrototypeGenericInterface $genericPrototype = null)
     {
-        foreach ($prototypes as $prototype) {
+        foreach ((array) $prototypes as $prototype) {
             $this->addPrototype($prototype);
         }
 
@@ -44,7 +44,7 @@ class PrototypeClassFactory
     /**
      * @throws Exception\InvalidArgumentException
      */
-    public function addPrototype(PrototypeInterface $prototype): void
+    public function addPrototype(PrototypeInterface $prototype)
     {
         $prototypeName = $this->normalizeName($prototype->getName());
 
@@ -58,7 +58,7 @@ class PrototypeClassFactory
     /**
      * @throws Exception\InvalidArgumentException
      */
-    public function setGenericPrototype(PrototypeGenericInterface $prototype): void
+    public function setGenericPrototype(PrototypeGenericInterface $prototype)
     {
         if (isset($this->genericPrototype)) {
             throw new Exception\InvalidArgumentException('A default prototype is already set');
@@ -102,10 +102,10 @@ class PrototypeClassFactory
         if (! $this->hasPrototype($prototypeName)) {
             $newPrototype = clone $this->genericPrototype;
             $newPrototype->setName($prototypeName);
-
-            return $newPrototype;
+        } else {
+            $newPrototype = clone $this->prototypes[$prototypeName];
         }
 
-        return clone $this->prototypes[$prototypeName];
+        return $newPrototype;
     }
 }

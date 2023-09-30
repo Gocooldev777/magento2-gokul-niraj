@@ -3,7 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
 
 namespace Magento\Framework\App\Cache\Type;
 
@@ -12,8 +11,6 @@ use Magento\Framework\Config\CacheInterface;
 
 /**
  * System / Cache Management / Cache type "Configuration"
- *
- * @api
  */
 class Config extends TagScope implements CacheInterface
 {

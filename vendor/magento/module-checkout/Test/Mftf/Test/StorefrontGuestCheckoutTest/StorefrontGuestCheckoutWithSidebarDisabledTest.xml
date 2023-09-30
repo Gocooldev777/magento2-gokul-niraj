@@ -18,7 +18,6 @@
             <group value="checkout"/>
         </annotations>
         <before>
-            <magentoCLI command="config:set {{EnableFlatRateConfigData.path}} {{EnableFlatRateConfigData.value}}" stepKey="enableFlatRate"/>
             <magentoCLI stepKey="disableSidebar" command="config:set checkout/sidebar/display 0"/>
         </before>
         <after>

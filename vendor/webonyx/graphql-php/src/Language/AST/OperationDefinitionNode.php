@@ -1,36 +1,27 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
-/**
- * @phpstan-type OperationType 'query'|'mutation'|'subscription'
- */
+#[\AllowDynamicProperties]
 class OperationDefinitionNode extends Node implements ExecutableDefinitionNode, HasSelectionSet
 {
-    public string $kind = NodeKind::OPERATION_DEFINITION;
+    /** @var string */
+    public $kind = NodeKind::OPERATION_DEFINITION;
 
-    public ?NameNode $name = null;
+    /** @var NameNode|null */
+    public $name;
 
-    /** @var OperationType */
-    public string $operation;
+    /** @var string (oneOf 'query', 'mutation', 'subscription')) */
+    public $operation;
 
     /** @var NodeList<VariableDefinitionNode> */
-    public NodeList $variableDefinitions;
+    public $variableDefinitions;
 
     /** @var NodeList<DirectiveNode> */
-    public NodeList $directives;
+    public $directives;
 
-    public SelectionSetNode $selectionSet;
-
-    public function __construct(array $vars)
-    {
-        parent::__construct($vars);
-        $this->directives ??= new NodeList([]);
-        $this->variableDefinitions ??= new NodeList([]);
-    }
-
-    public function getSelectionSet(): SelectionSetNode
-    {
-        return $this->selectionSet;
-    }
+    /** @var SelectionSetNode */
+    public $selectionSet;
 }

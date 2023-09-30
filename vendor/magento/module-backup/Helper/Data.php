@@ -8,14 +8,8 @@ declare(strict_types=1);
 
 namespace Magento\Backup\Helper;
 
-use Magento\Backup\Model\Backup;
-use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\MaintenanceMode;
-use Magento\Framework\AuthorizationInterface;
-use Magento\Framework\Backup\Factory;
 use Magento\Framework\Filesystem;
 
 /**
@@ -23,7 +17,7 @@ use Magento\Framework\Filesystem;
  * @api
  * @since 100.0.2
  */
-class Data extends AbstractHelper
+class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
     /**
      * @var Filesystem
@@ -31,28 +25,28 @@ class Data extends AbstractHelper
     protected $_filesystem;
 
     /**
-     * @var AuthorizationInterface
+     * @var \Magento\Framework\AuthorizationInterface
      */
     protected $_authorization;
 
     /**
-     * @var TypeListInterface
+     * @var \Magento\Framework\App\Cache\TypeListInterface
      */
     protected $_cacheTypeList;
 
     /**
      * Construct
      *
-     * @param Context $context
+     * @param \Magento\Framework\App\Helper\Context $context
      * @param Filesystem $filesystem
-     * @param AuthorizationInterface $authorization
-     * @param TypeListInterface $cacheTypeList
+     * @param \Magento\Framework\AuthorizationInterface $authorization
+     * @param \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
      */
     public function __construct(
-        Context $context,
+        \Magento\Framework\App\Helper\Context $context,
         Filesystem $filesystem,
-        AuthorizationInterface $authorization,
-        TypeListInterface $cacheTypeList
+        \Magento\Framework\AuthorizationInterface $authorization,
+        \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList
     ) {
         parent::__construct($context);
         $this->_authorization = $authorization;
@@ -68,10 +62,10 @@ class Data extends AbstractHelper
     public function getBackupTypes()
     {
         return [
-            Factory::TYPE_DB => __('Database'),
-            Factory::TYPE_MEDIA => __('Database and Media'),
-            Factory::TYPE_SYSTEM_SNAPSHOT => __('System'),
-            Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA => __('System (excluding Media)')
+            \Magento\Framework\Backup\Factory::TYPE_DB => __('Database'),
+            \Magento\Framework\Backup\Factory::TYPE_MEDIA => __('Database and Media'),
+            \Magento\Framework\Backup\Factory::TYPE_SYSTEM_SNAPSHOT => __('System'),
+            \Magento\Framework\Backup\Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA => __('System (excluding Media)')
         ];
     }
 
@@ -83,10 +77,10 @@ class Data extends AbstractHelper
     public function getBackupTypesList()
     {
         return [
-            Factory::TYPE_DB,
-            Factory::TYPE_SYSTEM_SNAPSHOT,
-            Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA,
-            Factory::TYPE_MEDIA
+            \Magento\Framework\Backup\Factory::TYPE_DB,
+            \Magento\Framework\Backup\Factory::TYPE_SYSTEM_SNAPSHOT,
+            \Magento\Framework\Backup\Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA,
+            \Magento\Framework\Backup\Factory::TYPE_MEDIA
         ];
     }
 
@@ -97,7 +91,7 @@ class Data extends AbstractHelper
      */
     public function getDefaultBackupType()
     {
-        return Factory::TYPE_DB;
+        return \Magento\Framework\Backup\Factory::TYPE_DB;
     }
 
     /**
@@ -130,22 +124,22 @@ class Data extends AbstractHelper
     public function getExtensions()
     {
         return [
-            Factory::TYPE_SYSTEM_SNAPSHOT => 'tgz',
-            Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA => 'tgz',
-            Factory::TYPE_MEDIA => 'tgz',
-            Factory::TYPE_DB => 'sql'
+            \Magento\Framework\Backup\Factory::TYPE_SYSTEM_SNAPSHOT => 'tgz',
+            \Magento\Framework\Backup\Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA => 'tgz',
+            \Magento\Framework\Backup\Factory::TYPE_MEDIA => 'tgz',
+            \Magento\Framework\Backup\Factory::TYPE_DB => 'sql'
         ];
     }
 
     /**
      * Generate backup download name
      *
-     * @param Backup $backup
+     * @param \Magento\Backup\Model\Backup $backup
      * @return string
      */
-    public function generateBackupDownloadName(Backup $backup)
+    public function generateBackupDownloadName(\Magento\Backup\Model\Backup $backup)
     {
-        $additionalExtension = $backup->getType() == Factory::TYPE_DB ? '.sql' : '';
+        $additionalExtension = $backup->getType() == \Magento\Framework\Backup\Factory::TYPE_DB ? '.sql' : '';
         return $backup->getTime() .
             '_' .
             $backup->getType() .
@@ -219,12 +213,12 @@ class Data extends AbstractHelper
     public function getCreateSuccessMessageByType($type)
     {
         $messagesMap = [
-            Factory::TYPE_SYSTEM_SNAPSHOT => __('You created the system backup.'),
-            Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA => __(
+            \Magento\Framework\Backup\Factory::TYPE_SYSTEM_SNAPSHOT => __('You created the system backup.'),
+            \Magento\Framework\Backup\Factory::TYPE_SNAPSHOT_WITHOUT_MEDIA => __(
                 'You created the system backup (excluding media).'
             ),
-            Factory::TYPE_MEDIA => __('You created the database and media backup.'),
-            Factory::TYPE_DB => __('You created the database backup.'),
+            \Magento\Framework\Backup\Factory::TYPE_MEDIA => __('You created the database and media backup.'),
+            \Magento\Framework\Backup\Factory::TYPE_DB => __('You created the database backup.'),
         ];
 
         if (!isset($messagesMap[$type])) {
@@ -269,7 +263,7 @@ class Data extends AbstractHelper
     {
         $extensions = $this->getExtensions();
 
-        $filenameWithoutExtension = $filename ?: '';
+        $filenameWithoutExtension = $filename;
 
         foreach ($extensions as $extension) {
             $filenameWithoutExtension = preg_replace(

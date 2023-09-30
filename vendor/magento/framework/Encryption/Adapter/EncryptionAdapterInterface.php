@@ -8,11 +8,6 @@ declare(strict_types=1);
 
 namespace Magento\Framework\Encryption\Adapter;
 
-/**
- * Encryption adapter interface
- *
- * @api
- */
 interface EncryptionAdapterInterface
 {
     /**

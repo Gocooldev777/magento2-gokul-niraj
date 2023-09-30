@@ -10,7 +10,7 @@ namespace Magento\Framework\Data\Wysiwyg;
  */
 class Normalizer
 {
-    public const WYSIWYG_RESERVED_CHARACTERS_REPLACEMENT_MAP = [
+    const WYSIWYG_RESERVED_CHARACTERS_REPLACEMENT_MAP = [
         '{' => '^[',
         '}' => '^]',
         '"' => '`',
@@ -27,11 +27,11 @@ class Normalizer
      */
     public function replaceReservedCharacters($content)
     {
-        return $content !== null ? str_replace(
+        return str_replace(
             array_keys(Normalizer::WYSIWYG_RESERVED_CHARACTERS_REPLACEMENT_MAP),
             array_values(Normalizer::WYSIWYG_RESERVED_CHARACTERS_REPLACEMENT_MAP),
             $content
-        ) : '';
+        );
     }
 
     /**
@@ -42,10 +42,10 @@ class Normalizer
      */
     public function restoreReservedCharacters($content)
     {
-        return $content !== null ? str_replace(
+        return str_replace(
             array_values(Normalizer::WYSIWYG_RESERVED_CHARACTERS_REPLACEMENT_MAP),
             array_keys(Normalizer::WYSIWYG_RESERVED_CHARACTERS_REPLACEMENT_MAP),
             $content
-        ) : '';
+        );
     }
 }

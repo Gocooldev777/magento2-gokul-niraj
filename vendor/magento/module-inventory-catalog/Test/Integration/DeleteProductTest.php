@@ -8,12 +8,13 @@ declare(strict_types=1);
 namespace Magento\InventoryCatalog\Test\Integration;
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Framework\MessageQueue\ConsumerFactory;
 use Magento\Framework\MessageQueue\MessageEncoder;
+use Magento\Framework\MessageQueue\QueueFactoryInterface;
+use Magento\Framework\MessageQueue\QueueInterface;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\InventoryApi\Api\GetSourceItemsBySkuInterface;
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\TestFramework\MessageQueue\ClearQueueProcessor;
+use Magento\TestFramework\MysqlMq\DeleteTopicRelatedMessages;
 use PHPUnit\Framework\TestCase;
 use Magento\InventoryCatalog\Model\DeleteSourceItemsBySkus;
 use Magento\InventoryLowQuantityNotification\Model\ResourceModel\SourceItemConfiguration\GetBySku;
@@ -31,6 +32,11 @@ class DeleteProductTest extends TestCase
     private $objectManager;
 
     /**
+     * @var QueueInterface
+     */
+    private $queue;
+
+    /**
      * @var MessageEncoder
      */
     private $messageEncoder;
@@ -41,9 +47,9 @@ class DeleteProductTest extends TestCase
     private $handler;
 
     /**
-     * @var ClearQueueProcessor
+     * @var DeleteTopicRelatedMessages
      */
-    private $clearQueueProcessor;
+    private $deleteTopicMessages;
 
     /**
      * @var GetBySku
@@ -60,9 +66,6 @@ class DeleteProductTest extends TestCase
      */
     private $getSourceItemsBySku;
 
-    /** @var ConsumerFactory */
-    private $consumerFactory;
-
     /**
      * @inheritdoc
      */
@@ -71,14 +74,17 @@ class DeleteProductTest extends TestCase
         parent::setUp();
 
         $this->objectManager = Bootstrap::getObjectManager();
+        $this->queue = $this->objectManager->get(QueueFactoryInterface::class)->create(
+            'inventory.source.items.cleanup',
+            'db'
+        );
         $this->messageEncoder = $this->objectManager->get(MessageEncoder::class);
         $this->handler = $this->objectManager->get(DeleteSourceItemsBySkus::class);
-        $this->clearQueueProcessor = $this->objectManager->get(ClearQueueProcessor::class);
+        $this->deleteTopicMessages = $this->objectManager->get(DeleteTopicRelatedMessages::class);
         $this->getBySku = $this->objectManager->get(GetBySku::class);
         $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
         $this->productRepository->cleanCache();
         $this->getSourceItemsBySku = $this->objectManager->get(GetSourceItemsBySkuInterface::class);
-        $this->consumerFactory = $this->objectManager->get(ConsumerFactory::class);
     }
 
     /**
@@ -93,10 +99,10 @@ class DeleteProductTest extends TestCase
      */
     public function testSourceItemDeletedOnProductImport(): void
     {
-        $this->clearQueueProcessor->execute('inventory.source.items.cleanup');
+        $this->deleteTopicMessages->execute('inventory.source.items.cleanup');
         $productSku = 'SKU-1';
         $this->productRepository->deleteById($productSku);
-        $this->processMessages();
+        $this->processMessages('inventory.source.items.cleanup');
 
         $sourceItems = $this->getSourceItemsBySku->execute($productSku);
         self::assertEmpty($sourceItems);
@@ -106,13 +112,15 @@ class DeleteProductTest extends TestCase
     }
 
     /**
-     * Process messages
+     * Process topic messages
      *
+     * @param string $topicName
      * @return void
      */
-    private function processMessages(): void
+    private function processMessages(string $topicName): void
     {
-        $consumer = $this->consumerFactory->get('inventory.source.items.cleanup');
-        $consumer->process(1);
+        $envelope = $this->queue->dequeue();
+        $decodedMessage = $this->messageEncoder->decode($topicName, $envelope->getBody());
+        $this->handler->execute($decodedMessage);
     }
 }

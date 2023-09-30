@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Analytics\Test\Unit\Model\Connector;
 
-use Laminas\Http\Request;
-use Laminas\Http\Response;
 use Magento\Analytics\Model\AnalyticsToken;
 use Magento\Analytics\Model\Connector\Http\ClientInterface;
 use Magento\Analytics\Model\Connector\Http\JsonConverter;
@@ -16,6 +14,7 @@ use Magento\Analytics\Model\Connector\Http\ResponseHandlerInterface;
 use Magento\Analytics\Model\Connector\Http\ResponseResolver;
 use Magento\Analytics\Model\Connector\NotifyDataChangedCommand;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\HTTP\ZendClient;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -104,15 +103,13 @@ class NotifyDataChangedCommandTest extends TestCase
         $this->analyticsTokenMock->expects($this->once())
             ->method('getToken')
             ->willReturn($token);
-        $response = new Response();
-        $response->setStatusCode(Response::STATUS_CODE_201);
         $this->httpClientMock->expects($this->once())
             ->method('request')
             ->with(
-                Request::METHOD_POST,
+                ZendClient::POST,
                 $configVal,
                 ['access-token' => $token, 'url' => $configVal]
-            )->willReturn($response);
+            )->willReturn(new \Zend_Http_Response(201, []));
         $this->assertTrue($this->notifyDataChangedCommand->execute());
     }
 

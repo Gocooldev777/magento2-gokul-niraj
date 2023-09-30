@@ -7,7 +7,6 @@ namespace Magento\Sales\Model\Order\Invoice;
 
 /**
  * Interface for notification sender for Invoice.
- * @api
  */
 interface SenderInterface
 {

@@ -20,6 +20,7 @@ use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
 use PhpCsFixer\FixerDefinition\FixerDefinitionInterface;
 use PhpCsFixer\Preg;
+use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
 /**
@@ -92,7 +93,11 @@ final class NoWhitespaceInBlankLineFixer extends AbstractFixer implements Whites
                 $lines[$l] = Preg::replace('/^\h+$/', '', $lines[$l]);
             }
             $content = implode($this->whitespacesConfig->getLineEnding(), $lines);
-            $tokens->ensureWhitespaceAtIndex($index, 0, $content);
+            if ('' !== $content) {
+                $tokens[$index] = new Token([T_WHITESPACE, $content]);
+            } else {
+                $tokens->clearAt($index);
+            }
         }
     }
 }

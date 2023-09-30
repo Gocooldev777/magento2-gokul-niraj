@@ -61,9 +61,7 @@ class TranslitUrlTest extends TestCase
                 'eur',
                 $isIconv
             ],
-            ['™', 'tm', 'tm', $isIconv],
-            ['ñandú', 'nandu', 'nandu', $isIconv],
-            ['ÑANDÚ', 'nandu', 'nandu', $isIconv],
+            ['™', 'tm', 'tm', $isIconv]
         ];
     }
 }

@@ -3,46 +3,37 @@
 declare (strict_types=1);
 namespace Rector\Symfony\DataProvider;
 
-use Rector\Core\Configuration\Option;
-use Rector\Core\Configuration\Parameter\ParameterProvider;
 use Rector\Symfony\ValueObject\ServiceMap\ServiceMap;
 use Rector\Symfony\ValueObjectFactory\ServiceMapFactory;
+use RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider;
 /**
  * Inspired by https://github.com/phpstan/phpstan-symfony/tree/master/src/Symfony
  */
 final class ServiceMapProvider
 {
     /**
-     * @readonly
-     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
+     * @var string
+     */
+    private const SYMFONY_CONTAINER_XML_PATH_PARAMETER = 'symfony_container_xml_path';
+    /**
+     * @var \Symplify\PackageBuilder\Parameter\ParameterProvider
      */
     private $parameterProvider;
     /**
-     * @readonly
      * @var \Rector\Symfony\ValueObjectFactory\ServiceMapFactory
      */
     private $serviceMapFactory;
-    /**
-     * @var \Rector\Symfony\ValueObject\ServiceMap\ServiceMap|null
-     */
-    private $serviceMap;
-    public function __construct(ParameterProvider $parameterProvider, ServiceMapFactory $serviceMapFactory, ?ServiceMap $serviceMap = null)
+    public function __construct(\RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider $parameterProvider, \Rector\Symfony\ValueObjectFactory\ServiceMapFactory $serviceMapFactory)
     {
         $this->parameterProvider = $parameterProvider;
         $this->serviceMapFactory = $serviceMapFactory;
-        $this->serviceMap = $serviceMap;
     }
-    public function provide() : ServiceMap
+    public function provide() : \Rector\Symfony\ValueObject\ServiceMap\ServiceMap
     {
-        if ($this->serviceMap instanceof ServiceMap) {
-            return $this->serviceMap;
-        }
-        $symfonyContainerXmlPath = (string) $this->parameterProvider->provideParameter(Option::SYMFONY_CONTAINER_XML_PATH_PARAMETER);
+        $symfonyContainerXmlPath = (string) $this->parameterProvider->provideParameter(self::SYMFONY_CONTAINER_XML_PATH_PARAMETER);
         if ($symfonyContainerXmlPath === '') {
-            $this->serviceMap = $this->serviceMapFactory->createEmpty();
-        } else {
-            $this->serviceMap = $this->serviceMapFactory->createFromFileContent($symfonyContainerXmlPath);
+            return $this->serviceMapFactory->createEmpty();
         }
-        return $this->serviceMap;
+        return $this->serviceMapFactory->createFromFileContent($symfonyContainerXmlPath);
     }
 }

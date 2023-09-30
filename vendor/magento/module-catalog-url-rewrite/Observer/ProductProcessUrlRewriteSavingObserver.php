@@ -10,7 +10,6 @@ use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\CatalogUrlRewrite\Model\Products\AppendUrlRewritesToProducts;
 use Magento\CatalogUrlRewrite\Model\ProductUrlRewriteGenerator;
-use Magento\CatalogUrlRewrite\Service\V1\StoreViewService;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -48,29 +47,21 @@ class ProductProcessUrlRewriteSavingObserver implements ObserverInterface
     private $getStoresList;
 
     /**
-     * @var StoreViewService
-     */
-    private $storeViewService;
-
-    /**
      * @param UrlPersistInterface $urlPersist
-     * @param AppendUrlRewritesToProducts $appendRewrites
+     * @param AppendUrlRewritesToProducts|null $appendRewrites
      * @param ScopeConfigInterface $scopeConfig
      * @param GetStoresListByWebsiteIds $getStoresList
-     * @param StoreViewService $storeViewService
      */
     public function __construct(
         UrlPersistInterface $urlPersist,
         AppendUrlRewritesToProducts $appendRewrites,
         ScopeConfigInterface $scopeConfig,
-        GetStoresListByWebsiteIds $getStoresList,
-        StoreViewService $storeViewService
+        GetStoresListByWebsiteIds $getStoresList
     ) {
         $this->urlPersist = $urlPersist;
         $this->appendRewrites = $appendRewrites;
         $this->scopeConfig = $scopeConfig;
         $this->getStoresList = $getStoresList;
-        $this->storeViewService = $storeViewService;
     }
 
     /**
@@ -91,23 +82,6 @@ class ProductProcessUrlRewriteSavingObserver implements ObserverInterface
             $storesToAdd = $this->getStoresList->execute(
                 array_diff($product->getWebsiteIds(), $oldWebsiteIds)
             );
-
-            if ($product->getStoreId() === Store::DEFAULT_STORE_ID
-                && $product->dataHasChangedFor('visibility')
-                && (int) $product->getOrigData('visibility') === Visibility::VISIBILITY_NOT_VISIBLE
-            ) {
-                foreach ($product->getStoreIds() as $storeId) {
-                    if (!$this->storeViewService->doesEntityHaveOverriddenVisibilityForStore(
-                        $storeId,
-                        $product->getId(),
-                        Product::ENTITY
-                    )
-                    ) {
-                        $storesToAdd[] = $storeId;
-                    }
-                }
-                $storesToAdd = array_unique($storesToAdd);
-            }
             $this->appendRewrites->execute([$product], $storesToAdd);
         }
     }
@@ -128,23 +102,9 @@ class ProductProcessUrlRewriteSavingObserver implements ObserverInterface
             array_diff($oldWebsiteIds, $product->getWebsiteIds())
         );
         if ((int)$product->getVisibility() === Visibility::VISIBILITY_NOT_VISIBLE) {
-            if ($product->getStoreId() === Store::DEFAULT_STORE_ID) {
-                foreach ($product->getStoreIds() as $storeId) {
-                    if (!$this->storeViewService->doesEntityHaveOverriddenVisibilityForStore(
-                        $storeId,
-                        $product->getId(),
-                        Product::ENTITY
-                    )
-                    ) {
-                        $storesToRemove[] = $storeId;
-                    }
-                }
-            } else {
-                $storesToRemove[] = $product->getStoreId();
-            }
-            $storesToRemove = array_unique($storesToRemove);
+            $isGlobalScope = $product->getStoreId() == Store::DEFAULT_STORE_ID;
+            $storesToRemove[] = $isGlobalScope ? $product->getStoreIds() : $product->getStoreId();
         }
-        $storesToRemove = array_filter($storesToRemove);
         if ($storesToRemove) {
             $this->urlPersist->deleteByData(
                 [
@@ -169,6 +129,7 @@ class ProductProcessUrlRewriteSavingObserver implements ObserverInterface
 
         return array_diff($oldWebsiteIds, $newWebsiteIds) || array_diff($newWebsiteIds, $oldWebsiteIds);
     }
+
 
     /**
      * Is product rewrites need to be updated

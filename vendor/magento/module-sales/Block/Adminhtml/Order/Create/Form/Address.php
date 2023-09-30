@@ -20,21 +20,21 @@ use Magento\Eav\Model\AttributeDataFactory;
 class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractForm
 {
     /**
-     * Customer Metadata form factory
+     * Customer form factory
      *
      * @var \Magento\Customer\Model\Metadata\FormFactory
      */
     protected $_customerFormFactory;
 
     /**
-     * Framework Json encoder
+     * Json encoder
      *
      * @var \Magento\Framework\Json\EncoderInterface
      */
     protected $_jsonEncoder;
 
     /**
-     * Directory helper Data
+     * Directory helper
      *
      * @var \Magento\Directory\Helper\Data
      */
@@ -48,28 +48,28 @@ class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractF
     protected $options;
 
     /**
-     * Address service - AddressRepositoryInterface
+     * Address service
      *
      * @var \Magento\Customer\Api\AddressRepositoryInterface
      */
     protected $addressService;
 
     /**
-     * Customer Address helper
+     * Address helper
      *
      * @var \Magento\Customer\Helper\Address
      */
     protected $_addressHelper;
 
     /**
-     * Search criteria builder for getList calls
+     * Search criteria builder
      *
      * @var \Magento\Framework\Api\SearchCriteriaBuilder
      */
     protected $searchCriteriaBuilder;
 
     /**
-     * Filter builder for getList calls
+     * Filter builder
      *
      * @var \Magento\Framework\Api\FilterBuilder
      */
@@ -235,13 +235,9 @@ class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractF
         if ($prefixElement) {
             $prefixOptions = $this->options->getNamePrefixOptions($this->getStore());
             if (!empty($prefixOptions)) {
-                $mappedPrefixOptions = [];
-                foreach ($prefixOptions as $prefix) {
-                    $mappedPrefixOptions[$prefix] = $prefix;
-                }
                 $fieldset->removeField($prefixElement->getId());
                 $prefixField = $fieldset->addField($prefixElement->getId(), 'select', $prefixElement->getData(), '^');
-                $prefixField->setValues($mappedPrefixOptions);
+                $prefixField->setValues($prefixOptions);
                 if ($this->getAddressId()) {
                     $prefixField->addElementValues($this->getAddress()->getPrefix());
                 }
@@ -326,7 +322,6 @@ class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractF
      * Retrieve Directory Countries collection
      *
      * @deprecated 100.1.3
-     * @see MAGETWO-711174: Introduce deprecated and since doc blocks.
      * @return \Magento\Directory\Model\ResourceModel\Country\Collection
      */
     private function getCountriesCollection()
@@ -343,7 +338,6 @@ class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractF
      * Retrieve Backend Quote Session
      *
      * @deprecated 100.1.3
-     * @see MAGETWO-711174: Introduce deprecated and since doc blocks.
      * @return Quote
      */
     private function getBackendQuoteSession()

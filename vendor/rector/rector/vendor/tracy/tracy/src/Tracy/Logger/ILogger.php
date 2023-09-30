@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Tracy;
+namespace RectorPrefix20211221\Tracy;
 
 /**
  * Logger.
@@ -13,8 +13,5 @@ namespace RectorPrefix202304\Tracy;
 interface ILogger
 {
     public const DEBUG = 'debug', INFO = 'info', WARNING = 'warning', ERROR = 'error', EXCEPTION = 'exception', CRITICAL = 'critical';
-    /**
-     * @param mixed $value
-     */
-    function log($value, string $level = self::INFO);
+    function log($value, $level = self::INFO);
 }

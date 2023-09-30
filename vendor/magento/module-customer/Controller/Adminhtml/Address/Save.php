@@ -7,14 +7,11 @@ declare(strict_types=1);
 namespace Magento\Customer\Controller\Adminhtml\Address;
 
 use Magento\Backend\App\Action;
-use Magento\Customer\Model\CustomerRegistry;
 use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Store\Model\StoreManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,16 +63,6 @@ class Save extends Action implements HttpPostActionInterface
     private $resultJsonFactory;
 
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var CustomerRegistry
-     */
-    private $customerRegistry;
-
-    /**
      * @param Action\Context $context
      * @param \Magento\Customer\Api\AddressRepositoryInterface $addressRepository
      * @param \Magento\Customer\Model\Metadata\FormFactory $formFactory
@@ -84,9 +71,6 @@ class Save extends Action implements HttpPostActionInterface
      * @param \Magento\Customer\Api\Data\AddressInterfaceFactory $addressDataFactory
      * @param LoggerInterface $logger
      * @param JsonFactory $resultJsonFactory
-     * @param StoreManagerInterface|null $storeManager
-     * @param CustomerRegistry|null $customerRegistry
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Action\Context $context,
@@ -96,9 +80,7 @@ class Save extends Action implements HttpPostActionInterface
         \Magento\Framework\Api\DataObjectHelper $dataObjectHelper,
         \Magento\Customer\Api\Data\AddressInterfaceFactory $addressDataFactory,
         LoggerInterface $logger,
-        JsonFactory $resultJsonFactory,
-        ?StoreManagerInterface $storeManager = null,
-        ?CustomerRegistry $customerRegistry = null
+        JsonFactory $resultJsonFactory
     ) {
         parent::__construct($context);
         $this->addressRepository = $addressRepository;
@@ -108,10 +90,6 @@ class Save extends Action implements HttpPostActionInterface
         $this->addressDataFactory = $addressDataFactory;
         $this->logger = $logger;
         $this->resultJsonFactory = $resultJsonFactory;
-        $this->storeManager = $storeManager
-            ?? ObjectManager::getInstance()->get(StoreManagerInterface::class);
-        $this->customerRegistry = $customerRegistry
-            ?? ObjectManager::getInstance()->get(CustomerRegistry::class);
     }
 
     /**
@@ -126,10 +104,6 @@ class Save extends Action implements HttpPostActionInterface
 
         $error = false;
         try {
-            $customerModel = $this->customerRegistry->retrieve($customerId);
-            if ($customerModel->getStoreId()) {
-                $this->storeManager->setCurrentStore($customerModel->getStoreId());
-            }
             /** @var \Magento\Customer\Api\Data\CustomerInterface $customer */
             $customer = $this->customerRepository->getById($customerId);
 

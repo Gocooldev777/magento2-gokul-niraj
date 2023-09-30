@@ -20,10 +20,10 @@ abstract class AbstractIO
     /** @var int|float */
     protected $connection_timeout;
 
-    /** @var float */
+    /** @var int|float */
     protected $read_timeout;
 
-    /** @var float */
+    /** @var int|float */
     protected $write_timeout;
 
     /** @var int */
@@ -161,11 +161,6 @@ abstract class AbstractIO
     public function getLastActivity()
     {
         return max($this->last_read, $this->last_write);
-    }
-
-    public function getReadTimeout(): float
-    {
-        return $this->read_timeout;
     }
 
     /**

@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Backend\Block\Widget\Grid;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -20,7 +18,6 @@ use Magento\Framework\App\Filesystem\DirectoryList;
  * @SuppressWarnings(PHPMD.NumberOfChildren)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @since 100.0.2
- * @see \Magento\Backend\Block\Widget\Grid
  */
 class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Backend\Block\Widget\Grid\ExportInterface
 {
@@ -90,6 +87,8 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
     protected $_massactionIdFilter;
 
     /**
+     * Massaction block name
+     *
      * @var string
      */
     protected $_massactionBlockName = \Magento\Backend\Block\Widget\Grid\Massaction\Extended::class;
@@ -123,6 +122,8 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
     protected $_headersVisibility = true;
 
     /**
+     * Filter visibility
+     *
      * @var boolean
      */
     protected $_filterVisibility = true;
@@ -147,11 +148,15 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
     protected $_isCollapsed;
 
     /**
+     * Count subtotals
+     *
      * @var boolean
      */
     protected $_countSubTotals = false;
 
     /**
+     * SubTotals
+     *
      * @var \Magento\Framework\DataObject[]
      */
     protected $_subtotals = [];
@@ -1043,7 +1048,6 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
      * Retrieve Grid data as CSV
      *
      * @return string
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function getCsv()
     {
@@ -1067,11 +1071,10 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
             $data = [];
             foreach ($this->getColumns() as $column) {
                 if (!$column->getIsSystem()) {
-                    $exportField = (string)$column->getRowFieldExport($item);
                     $data[] = '"' . str_replace(
                         ['"', '\\'],
                         ['""', '\\\\'],
-                        $exportField ?: ''
+                        $column->getRowFieldExport($item)
                     ) . '"';
                 }
             }
@@ -1085,7 +1088,7 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
                     $data[] = '"' . str_replace(
                         ['"', '\\'],
                         ['""', '\\\\'],
-                        $column->getRowFieldExport($this->getTotals()) ?: ''
+                        $column->getRowFieldExport($this->getTotals())
                     ) . '"';
                 }
             }
@@ -1155,7 +1158,7 @@ class Extended extends \Magento\Backend\Block\Widget\Grid implements \Magento\Ba
     {
         $this->_isExport = true;
         $this->_prepareGrid();
-        $this->getCollection()->setPageSize(0);
+
         $convert = new \Magento\Framework\Convert\Excel(
             $this->getCollection()->getIterator(),
             [$this, 'getRowRecord']

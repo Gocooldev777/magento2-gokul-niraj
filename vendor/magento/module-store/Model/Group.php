@@ -9,12 +9,8 @@
  */
 namespace Magento\Store\Model;
 
-use Magento\Framework\App\ObjectManager;
-use Magento\Framework\MessageQueue\PoisonPill\PoisonPillPutInterface;
-use Magento\Store\Model\Validation\StoreValidator;
-
 /**
- * Store Group model class used to retrieve and format group information
+ * Class Group
  *
  * @api
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -25,9 +21,9 @@ class Group extends \Magento\Framework\Model\AbstractExtensibleModel implements
     \Magento\Store\Api\Data\GroupInterface,
     \Magento\Framework\App\ScopeInterface
 {
-    public const ENTITY = 'store_group';
+    const ENTITY = 'store_group';
 
-    public const CACHE_TAG = 'store_group';
+    const CACHE_TAG = 'store_group';
 
     /**
      * @var bool
@@ -105,14 +101,9 @@ class Group extends \Magento\Framework\Model\AbstractExtensibleModel implements
     private $eventManager;
 
     /**
-     * @var PoisonPillPutInterface
+     * @var \Magento\Framework\MessageQueue\PoisonPill\PoisonPillPutInterface
      */
     private $pillPut;
-
-    /**
-     * @var StoreValidator
-     */
-    private $modelValidator;
 
     /**
      * @param \Magento\Framework\Model\Context $context
@@ -126,8 +117,7 @@ class Group extends \Magento\Framework\Model\AbstractExtensibleModel implements
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
      * @param \Magento\Framework\Event\ManagerInterface|null $eventManager
-     * @param PoisonPillPutInterface|null $pillPut
-     * @param StoreValidator|null $modelValidator
+     * @param \Magento\Framework\MessageQueue\PoisonPill\PoisonPillPutInterface|null $pillPut
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -142,8 +132,7 @@ class Group extends \Magento\Framework\Model\AbstractExtensibleModel implements
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = [],
         \Magento\Framework\Event\ManagerInterface $eventManager = null,
-        PoisonPillPutInterface $pillPut = null,
-        StoreValidator $modelValidator = null
+        \Magento\Framework\MessageQueue\PoisonPill\PoisonPillPutInterface $pillPut = null
     ) {
         $this->_configDataResource = $configDataResource;
         $this->_storeListFactory = $storeListFactory;
@@ -151,9 +140,7 @@ class Group extends \Magento\Framework\Model\AbstractExtensibleModel implements
         $this->eventManager = $eventManager ?: \Magento\Framework\App\ObjectManager::getInstance()
             ->get(\Magento\Framework\Event\ManagerInterface::class);
         $this->pillPut = $pillPut ?: \Magento\Framework\App\ObjectManager::getInstance()
-            ->get(PoisonPillPutInterface::class);
-        $this->modelValidator = $modelValidator ?: ObjectManager::getInstance()
-            ->get(StoreValidator::class);
+            ->get(\Magento\Framework\MessageQueue\PoisonPill\PoisonPillPutInterface::class);
         parent::__construct(
             $context,
             $registry,
@@ -173,14 +160,6 @@ class Group extends \Magento\Framework\Model\AbstractExtensibleModel implements
     protected function _construct()
     {
         $this->_init(\Magento\Store\Model\ResourceModel\Group::class);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function _getValidationRulesBeforeSave()
-    {
-        return $this->modelValidator;
     }
 
     /**

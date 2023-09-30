@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/element/split-button.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n\n<div class=\"action-select-wrap\" >\n    <div each=\"getRegion('button')\" render=\"\"></div>\n    <button type=\"button\" class=\"action-select\" click=\"$data.toggleOpened\"></button>\n    <ul class=\"action-menu\" css=\"_active: $data.opened\" >\n        <!-- ko foreach: $data.elems() -->\n            <li>\n                <!--ko template: getTemplate()-->\n                <!-- /ko -->\n            </li>\n        <!-- /ko -->\n    </ul>\n</div>\n"}
+}});

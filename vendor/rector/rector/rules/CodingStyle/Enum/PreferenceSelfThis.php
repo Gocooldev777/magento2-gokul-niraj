@@ -3,16 +3,21 @@
 declare (strict_types=1);
 namespace Rector\CodingStyle\Enum;
 
-final class PreferenceSelfThis
+use RectorPrefix20211221\MyCLabs\Enum\Enum;
+/**
+ * @method static PreferenceSelfThis PREFER_THIS()
+ * @method static PreferenceSelfThis PREFER_SELF()
+ */
+final class PreferenceSelfThis extends \RectorPrefix20211221\MyCLabs\Enum\Enum
 {
     /**
      * @api
      * @var string
      */
-    public const PREFER_THIS = 'prefer_this';
+    private const PREFER_THIS = 'prefer_this';
     /**
      * @api
      * @var string
      */
-    public const PREFER_SELF = 'prefer_self';
+    private const PREFER_SELF = 'prefer_self';
 }

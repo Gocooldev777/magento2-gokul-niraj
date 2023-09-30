@@ -12,8 +12,6 @@ use Magento\Framework\App\ActionInterface;
 
 /**
  * Marker for actions processing TRACE requests.
- *
- * @api
  */
 interface HttpTraceActionInterface extends ActionInterface
 {

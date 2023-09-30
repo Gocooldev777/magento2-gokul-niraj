@@ -4,6 +4,7 @@ declare (strict_types=1);
 namespace Rector\NodeTypeResolver\NodeTypeResolver;
 
 use PhpParser\Node;
+use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -12,11 +13,11 @@ use PHPStan\Type\Type;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\NodeTypeResolver\Contract\NodeTypeResolverInterface;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements NodeTypeResolverInterface<ClassMethod|ClassConst>
  */
-final class ClassMethodOrClassConstTypeResolver implements NodeTypeResolverInterface
+final class ClassMethodOrClassConstTypeResolver implements \Rector\NodeTypeResolver\Contract\NodeTypeResolverInterface
 {
     /**
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
@@ -27,14 +28,14 @@ final class ClassMethodOrClassConstTypeResolver implements NodeTypeResolverInter
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(BetterNodeFinder $betterNodeFinder)
+    public function __construct(\Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
     {
         $this->betterNodeFinder = $betterNodeFinder;
     }
     /**
      * @required
      */
-    public function autowire(NodeTypeResolver $nodeTypeResolver) : void
+    public function autowire(\Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver) : void
     {
         $this->nodeTypeResolver = $nodeTypeResolver;
     }
@@ -43,17 +44,17 @@ final class ClassMethodOrClassConstTypeResolver implements NodeTypeResolverInter
      */
     public function getNodeClasses() : array
     {
-        return [ClassMethod::class, ClassConst::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\ClassConst::class];
     }
     /**
      * @param ClassMethod|ClassConst $node
      */
-    public function resolve(Node $node) : Type
+    public function resolve(\PhpParser\Node $node) : \PHPStan\Type\Type
     {
-        $classLike = $this->betterNodeFinder->findParentType($node, ClassLike::class);
-        if (!$classLike instanceof ClassLike) {
+        $classLike = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassLike::class);
+        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
             // anonymous class
-            return new ObjectWithoutClassType();
+            return new \PHPStan\Type\ObjectWithoutClassType();
         }
         return $this->nodeTypeResolver->getType($classLike);
     }

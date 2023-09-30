@@ -7,7 +7,6 @@ namespace Magento\Framework\MessageQueue\Publisher\Config;
 
 /**
  * Publisher config data validator.
- * @api
  */
 interface ValidatorInterface
 {

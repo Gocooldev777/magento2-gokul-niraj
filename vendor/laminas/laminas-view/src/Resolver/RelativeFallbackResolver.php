@@ -1,18 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Resolver;
 
 use Laminas\View\Helper\ViewModel as ViewModelHelper;
 use Laminas\View\Model\ModelInterface;
 use Laminas\View\Renderer\RendererInterface;
-use Laminas\View\Resolver\ResolverInterface;
-
-use function call_user_func;
-use function is_callable;
-use function strrpos;
-use function substr;
 
 /**
  * Relative fallback resolver - resolves to view templates in a sub-path of the
@@ -23,10 +15,18 @@ use function substr;
  */
 class RelativeFallbackResolver implements ResolverInterface
 {
-    public const NS_SEPARATOR = '/';
+    const NS_SEPARATOR = '/';
 
-    private ResolverInterface $resolver;
+    /**
+     * @var ResolverInterface
+     */
+    private $resolver;
 
+    /**
+     * Constructor
+     *
+     * @param ResolverInterface $resolver
+     */
     public function __construct(ResolverInterface $resolver)
     {
         $this->resolver = $resolver;
@@ -35,7 +35,7 @@ class RelativeFallbackResolver implements ResolverInterface
     /**
      * {@inheritDoc}
      */
-    public function resolve($name, ?RendererInterface $renderer = null)
+    public function resolve($name, RendererInterface $renderer = null)
     {
         $plugin = [$renderer, 'plugin'];
 

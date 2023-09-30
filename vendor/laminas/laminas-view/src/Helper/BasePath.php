@@ -1,33 +1,20 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
-use Laminas\View\Exception\RuntimeException;
-
-use function ltrim;
-use function rtrim;
-use function sprintf;
+use Laminas\View\Exception;
 
 /**
  * Helper for retrieving the base path.
- *
- * @final
  */
 class BasePath extends AbstractHelper
 {
-    use DeprecatedAbstractHelperHierarchyTrait;
-
-    /** @var string|null */
+    /**
+     * Base path
+     *
+     * @var string
+     */
     protected $basePath;
-
-    public function __construct(?string $basePath = null)
-    {
-        if ($basePath !== null) {
-            $this->setBasePath($basePath);
-        }
-    }
 
     /**
      * Returns site's base path, or file with base path prepended.
@@ -35,24 +22,20 @@ class BasePath extends AbstractHelper
      * $file is appended to the base path for simplicity.
      *
      * @param  string|null $file
-     * @throws RuntimeException
+     * @throws Exception\RuntimeException
      * @return string
      */
     public function __invoke($file = null)
     {
-        if ($this->basePath === null) {
-            throw new RuntimeException('No base path provided');
+        if (null === $this->basePath) {
+            throw new Exception\RuntimeException('No base path provided');
         }
 
-        if ($file !== null && $file !== '') {
-            return sprintf(
-                '%s/%s',
-                $this->basePath,
-                ltrim($file, '/')
-            );
+        if (null !== $file) {
+            $file = '/' . ltrim($file, '/');
         }
 
-        return $this->basePath;
+        return $this->basePath . $file;
     }
 
     /**

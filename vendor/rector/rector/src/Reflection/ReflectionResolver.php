@@ -3,7 +3,6 @@
 declare (strict_types=1);
 namespace Rector\Core\Reflection;
 
-use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -22,22 +21,15 @@ use PHPStan\Reflection\Php\PhpPropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\TypeUtils;
 use PHPStan\Type\TypeWithClassName;
-use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\Core\NodeAnalyzer\ClassAnalyzer;
-use Rector\Core\PhpParser\AstResolver;
 use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\Core\PHPStan\Reflection\TypeToCallReflectionResolver\TypeToCallReflectionResolverRegistry;
 use Rector\Core\ValueObject\MethodName;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
 final class ReflectionResolver
 {
-    /**
-     * @var \Rector\Core\PhpParser\AstResolver
-     */
-    private $astResolver;
     /**
      * @readonly
      * @var \PHPStan\Reflection\ReflectionProvider
@@ -68,7 +60,7 @@ final class ReflectionResolver
      * @var \Rector\Core\NodeAnalyzer\ClassAnalyzer
      */
     private $classAnalyzer;
-    public function __construct(ReflectionProvider $reflectionProvider, BetterNodeFinder $betterNodeFinder, NodeTypeResolver $nodeTypeResolver, NodeNameResolver $nodeNameResolver, TypeToCallReflectionResolverRegistry $typeToCallReflectionResolverRegistry, ClassAnalyzer $classAnalyzer)
+    public function __construct(\PHPStan\Reflection\ReflectionProvider $reflectionProvider, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PHPStan\Reflection\TypeToCallReflectionResolver\TypeToCallReflectionResolverRegistry $typeToCallReflectionResolverRegistry, \Rector\Core\NodeAnalyzer\ClassAnalyzer $classAnalyzer)
     {
         $this->reflectionProvider = $reflectionProvider;
         $this->betterNodeFinder = $betterNodeFinder;
@@ -77,69 +69,25 @@ final class ReflectionResolver
         $this->typeToCallReflectionResolverRegistry = $typeToCallReflectionResolverRegistry;
         $this->classAnalyzer = $classAnalyzer;
     }
-    /**
-     * @required
-     */
-    public function autowire(AstResolver $astResolver) : void
+    public function resolveClassAndAnonymousClass(\PhpParser\Node\Stmt\ClassLike $classLike) : \PHPStan\Reflection\ClassReflection
     {
-        $this->astResolver = $astResolver;
-    }
-    /**
-     * @api
-     */
-    public function resolveClassAndAnonymousClass(ClassLike $classLike) : ClassReflection
-    {
-        if ($classLike instanceof Class_ && $this->classAnalyzer->isAnonymousClass($classLike)) {
-            $classLikeScope = $classLike->getAttribute(AttributeKey::SCOPE);
-            if (!$classLikeScope instanceof Scope) {
-                throw new ShouldNotHappenException();
-            }
-            return $this->reflectionProvider->getAnonymousClassReflection($classLike, $classLikeScope);
+        if ($classLike instanceof \PhpParser\Node\Stmt\Class_ && $this->classAnalyzer->isAnonymousClass($classLike)) {
+            return $this->reflectionProvider->getAnonymousClassReflection($classLike, $classLike->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE));
         }
         $className = (string) $this->nodeNameResolver->getName($classLike);
         return $this->reflectionProvider->getClass($className);
     }
-    public function resolveClassReflection(?Node $node) : ?ClassReflection
-    {
-        if (!$node instanceof Node) {
-            return null;
-        }
-        $scope = $node->getAttribute(AttributeKey::SCOPE);
-        if (!$scope instanceof Scope) {
-            return null;
-        }
-        return $scope->getClassReflection();
-    }
-    /**
-     * @param \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticPropertyFetch $node
-     */
-    public function resolveClassReflectionSourceObject($node) : ?ClassReflection
-    {
-        if ($node instanceof PropertyFetch || $node instanceof StaticPropertyFetch) {
-            $objectType = $node instanceof PropertyFetch ? $this->nodeTypeResolver->getType($node->var) : $this->nodeTypeResolver->getType($node->class);
-            if (!$objectType instanceof TypeWithClassName) {
-                return null;
-            }
-            $className = $objectType->getClassName();
-            if (!$this->reflectionProvider->hasClass($className)) {
-                return null;
-            }
-            return $this->reflectionProvider->getClass($className);
-        }
-        $classMethod = $this->astResolver->resolveClassMethodFromCall($node);
-        return $this->resolveClassReflection($classMethod);
-    }
     /**
      * @param class-string $className
      */
-    public function resolveMethodReflection(string $className, string $methodName, ?Scope $scope) : ?MethodReflection
+    public function resolveMethodReflection(string $className, string $methodName, ?\PHPStan\Analyser\Scope $scope) : ?\PHPStan\Reflection\MethodReflection
     {
         if (!$this->reflectionProvider->hasClass($className)) {
             return null;
         }
         $classReflection = $this->reflectionProvider->getClass($className);
         // better, with support for "@method" annotation methods
-        if ($scope instanceof Scope) {
+        if ($scope instanceof \PHPStan\Analyser\Scope) {
             if ($classReflection->hasMethod($methodName)) {
                 return $classReflection->getMethod($methodName, $scope);
             }
@@ -148,55 +96,55 @@ final class ReflectionResolver
         }
         return null;
     }
-    public function resolveMethodReflectionFromStaticCall(StaticCall $staticCall) : ?MethodReflection
+    public function resolveMethodReflectionFromStaticCall(\PhpParser\Node\Expr\StaticCall $staticCall) : ?\PHPStan\Reflection\MethodReflection
     {
         $objectType = $this->nodeTypeResolver->getType($staticCall->class);
         /** @var array<class-string> $classNames */
-        $classNames = TypeUtils::getDirectClassNames($objectType);
+        $classNames = \PHPStan\Type\TypeUtils::getDirectClassNames($objectType);
         $methodName = $this->nodeNameResolver->getName($staticCall->name);
         if ($methodName === null) {
             return null;
         }
-        $scope = $staticCall->getAttribute(AttributeKey::SCOPE);
+        $scope = $staticCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
         foreach ($classNames as $className) {
             $methodReflection = $this->resolveMethodReflection($className, $methodName, $scope);
-            if ($methodReflection instanceof MethodReflection) {
+            if ($methodReflection instanceof \PHPStan\Reflection\MethodReflection) {
                 return $methodReflection;
             }
         }
         return null;
     }
-    public function resolveMethodReflectionFromMethodCall(MethodCall $methodCall) : ?MethodReflection
+    public function resolveMethodReflectionFromMethodCall(\PhpParser\Node\Expr\MethodCall $methodCall) : ?\PHPStan\Reflection\MethodReflection
     {
         $callerType = $this->nodeTypeResolver->getType($methodCall->var);
-        if (!$callerType instanceof TypeWithClassName) {
+        if (!$callerType instanceof \PHPStan\Type\TypeWithClassName) {
             return null;
         }
         $methodName = $this->nodeNameResolver->getName($methodCall->name);
         if ($methodName === null) {
             return null;
         }
-        $scope = $methodCall->getAttribute(AttributeKey::SCOPE);
+        $scope = $methodCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
         return $this->resolveMethodReflection($callerType->getClassName(), $methodName, $scope);
     }
     /**
-     * @param \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\StaticCall $call
-     * @return \PHPStan\Reflection\MethodReflection|\PHPStan\Reflection\FunctionReflection|null
+     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $call
+     * @return \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection|null
      */
     public function resolveFunctionLikeReflectionFromCall($call)
     {
-        if ($call instanceof MethodCall) {
+        if ($call instanceof \PhpParser\Node\Expr\MethodCall) {
             return $this->resolveMethodReflectionFromMethodCall($call);
         }
-        if ($call instanceof StaticCall) {
+        if ($call instanceof \PhpParser\Node\Expr\StaticCall) {
             return $this->resolveMethodReflectionFromStaticCall($call);
         }
         return $this->resolveFunctionReflectionFromFuncCall($call);
     }
-    public function resolveMethodReflectionFromClassMethod(ClassMethod $classMethod) : ?MethodReflection
+    public function resolveMethodReflectionFromClassMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod) : ?\PHPStan\Reflection\MethodReflection
     {
-        $classLike = $this->betterNodeFinder->findParentType($classMethod, ClassLike::class);
-        if (!$classLike instanceof ClassLike) {
+        $classLike = $this->betterNodeFinder->findParentType($classMethod, \PhpParser\Node\Stmt\ClassLike::class);
+        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
             return null;
         }
         $className = $this->nodeNameResolver->getName($classLike);
@@ -204,25 +152,25 @@ final class ReflectionResolver
             return null;
         }
         $methodName = $this->nodeNameResolver->getName($classMethod);
-        $scope = $classMethod->getAttribute(AttributeKey::SCOPE);
+        $scope = $classMethod->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
         return $this->resolveMethodReflection($className, $methodName, $scope);
     }
-    public function resolveMethodReflectionFromNew(New_ $new) : ?MethodReflection
+    public function resolveMethodReflectionFromNew(\PhpParser\Node\Expr\New_ $new) : ?\PHPStan\Reflection\MethodReflection
     {
         $newClassType = $this->nodeTypeResolver->getType($new->class);
-        if (!$newClassType instanceof TypeWithClassName) {
+        if (!$newClassType instanceof \PHPStan\Type\TypeWithClassName) {
             return null;
         }
-        $scope = $new->getAttribute(AttributeKey::SCOPE);
-        return $this->resolveMethodReflection($newClassType->getClassName(), MethodName::CONSTRUCT, $scope);
+        $scope = $new->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        return $this->resolveMethodReflection($newClassType->getClassName(), \Rector\Core\ValueObject\MethodName::CONSTRUCT, $scope);
     }
     /**
      * @param \PhpParser\Node\Expr\PropertyFetch|\PhpParser\Node\Expr\StaticPropertyFetch $propertyFetch
      */
-    public function resolvePropertyReflectionFromPropertyFetch($propertyFetch) : ?PhpPropertyReflection
+    public function resolvePropertyReflectionFromPropertyFetch($propertyFetch) : ?\PHPStan\Reflection\Php\PhpPropertyReflection
     {
-        $fetcheeType = $propertyFetch instanceof PropertyFetch ? $this->nodeTypeResolver->getType($propertyFetch->var) : $this->nodeTypeResolver->getType($propertyFetch->class);
-        if (!$fetcheeType instanceof TypeWithClassName) {
+        $fetcheeType = $propertyFetch instanceof \PhpParser\Node\Expr\PropertyFetch ? $this->nodeTypeResolver->getType($propertyFetch->var) : $this->nodeTypeResolver->getType($propertyFetch->class);
+        if (!$fetcheeType instanceof \PHPStan\Type\TypeWithClassName) {
             return null;
         }
         if (!$this->reflectionProvider->hasClass($fetcheeType->getClassName())) {
@@ -236,11 +184,11 @@ final class ReflectionResolver
         if (!$classReflection->hasProperty($propertyName)) {
             return null;
         }
-        $scope = $propertyFetch->getAttribute(AttributeKey::SCOPE);
-        if ($scope instanceof Scope) {
-            $propertyReflection = $classReflection->getProperty($propertyName, $scope);
-            if ($propertyReflection instanceof PhpPropertyReflection) {
-                return $propertyReflection;
+        $scope = $propertyFetch->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if ($scope instanceof \PHPStan\Analyser\Scope) {
+            $propertyRelfection = $classReflection->getProperty($propertyName, $scope);
+            if ($propertyRelfection instanceof \PHPStan\Reflection\Php\PhpPropertyReflection) {
+                return $propertyRelfection;
             }
             return null;
         }
@@ -249,16 +197,16 @@ final class ReflectionResolver
     /**
      * @return \PHPStan\Reflection\FunctionReflection|\PHPStan\Reflection\MethodReflection|null
      */
-    private function resolveFunctionReflectionFromFuncCall(FuncCall $funcCall)
+    private function resolveFunctionReflectionFromFuncCall(\PhpParser\Node\Expr\FuncCall $funcCall)
     {
-        $scope = $funcCall->getAttribute(AttributeKey::SCOPE);
-        if ($funcCall->name instanceof Name) {
+        $scope = $funcCall->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if ($funcCall->name instanceof \PhpParser\Node\Name) {
             if ($this->reflectionProvider->hasFunction($funcCall->name, $scope)) {
                 return $this->reflectionProvider->getFunction($funcCall->name, $scope);
             }
             return null;
         }
-        if (!$scope instanceof Scope) {
+        if (!$scope instanceof \PHPStan\Analyser\Scope) {
             return null;
         }
         // fallback to callable

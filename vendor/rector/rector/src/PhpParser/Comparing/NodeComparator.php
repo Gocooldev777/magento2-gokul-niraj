@@ -5,8 +5,8 @@ namespace Rector\Core\PhpParser\Comparing;
 
 use PhpParser\Node;
 use Rector\Comments\CommentRemover;
-use Rector\Core\Contract\PhpParser\NodePrinterInterface;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use Rector\Core\PhpParser\Printer\BetterStandardPrinter;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 final class NodeComparator
 {
     /**
@@ -16,57 +16,44 @@ final class NodeComparator
     private $commentRemover;
     /**
      * @readonly
-     * @var \Rector\Core\Contract\PhpParser\NodePrinterInterface
+     * @var \Rector\Core\PhpParser\Printer\BetterStandardPrinter
      */
-    private $nodePrinter;
-    public function __construct(CommentRemover $commentRemover, NodePrinterInterface $nodePrinter)
+    private $betterStandardPrinter;
+    public function __construct(\Rector\Comments\CommentRemover $commentRemover, \Rector\Core\PhpParser\Printer\BetterStandardPrinter $betterStandardPrinter)
     {
         $this->commentRemover = $commentRemover;
-        $this->nodePrinter = $nodePrinter;
+        $this->betterStandardPrinter = $betterStandardPrinter;
     }
     /**
      * Removes all comments from both nodes
-     * @param \PhpParser\Node|mixed[]|null $node
+     * @param mixed[]|\PhpParser\Node|null $node
      */
     public function printWithoutComments($node) : string
     {
         $node = $this->commentRemover->removeFromNode($node);
-        $content = $this->nodePrinter->print($node);
+        $content = $this->betterStandardPrinter->print($node);
         return \trim($content);
     }
     /**
-     * @param \PhpParser\Node|mixed[]|null $firstNode
-     * @param \PhpParser\Node|mixed[]|null $secondNode
+     * @param mixed[]|\PhpParser\Node|null $firstNode
+     * @param mixed[]|\PhpParser\Node|null $secondNode
      */
     public function areNodesEqual($firstNode, $secondNode) : bool
     {
-        if ($firstNode instanceof Node && $secondNode === null) {
-            return \false;
-        }
-        if ($secondNode instanceof Node && $firstNode === null) {
-            return \false;
-        }
-        if (\is_array($firstNode)) {
-            Assert::allIsAOf($firstNode, Node::class);
-            if ($secondNode === null) {
-                return \false;
-            }
-        }
-        if (\is_array($secondNode)) {
-            Assert::allIsAOf($secondNode, Node::class);
-            if ($firstNode === null) {
-                return \false;
-            }
-        }
         return $this->printWithoutComments($firstNode) === $this->printWithoutComments($secondNode);
     }
     /**
-     * @api
      * @param Node[] $availableNodes
      */
-    public function isNodeEqual(Node $singleNode, array $availableNodes) : bool
+    public function isNodeEqual(\PhpParser\Node $singleNode, array $availableNodes) : bool
     {
+        // remove comments, only content is relevant
+        $singleNode = clone $singleNode;
+        $singleNode->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS, null);
         foreach ($availableNodes as $availableNode) {
+            // remove comments, only content is relevant
+            $availableNode = clone $availableNode;
+            $availableNode->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::COMMENTS, null);
             if ($this->areNodesEqual($singleNode, $availableNode)) {
                 return \true;
             }
@@ -76,15 +63,10 @@ final class NodeComparator
     /**
      * Checks even clone nodes
      */
-    public function areSameNode(Node $firstNode, Node $secondNode) : bool
+    public function areSameNode(\PhpParser\Node $firstNode, \PhpParser\Node $secondNode) : bool
     {
         if ($firstNode === $secondNode) {
             return \true;
-        }
-        $firstClass = \get_class($firstNode);
-        $secondClass = \get_class($secondNode);
-        if ($firstClass !== $secondClass) {
-            return \false;
         }
         if ($firstNode->getStartTokenPos() !== $secondNode->getStartTokenPos()) {
             return \false;
@@ -92,8 +74,8 @@ final class NodeComparator
         if ($firstNode->getEndTokenPos() !== $secondNode->getEndTokenPos()) {
             return \false;
         }
-        $printFirstNode = $this->nodePrinter->print($firstNode);
-        $printSecondNode = $this->nodePrinter->print($secondNode);
-        return $printFirstNode === $printSecondNode;
+        $firstClass = \get_class($firstNode);
+        $secondClass = \get_class($secondNode);
+        return $firstClass === $secondClass;
     }
 }

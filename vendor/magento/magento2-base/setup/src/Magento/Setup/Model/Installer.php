@@ -30,7 +30,6 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\Model\ResourceModel\Db\Context;
 use Magento\Framework\Module\ModuleList\Loader as ModuleLoader;
 use Magento\Framework\Module\ModuleListInterface;
-use Magento\Framework\Module\ModuleResource;
 use Magento\Framework\Mview\TriggerCleaner;
 use Magento\Framework\Setup\Declaration\Schema\DryRunLogger;
 use Magento\Framework\Setup\FilePermissions;
@@ -90,8 +89,6 @@ class Installer
     public const DATA_UPGRADE = \Magento\Framework\Setup\UpgradeDataInterface::class;
 
     public const INFO_MESSAGE = 'message';
-
-    public const ENTITY_TYPE_ORDER = 'order';
 
     /**
      * The lowest supported MySQL verion
@@ -1019,7 +1016,7 @@ class Installer
             // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw  new Exception("Unsupported operation type $type is requested");
         }
-        $resource = $this->getModuleResource();
+        $resource = new \Magento\Framework\Module\ModuleResource($this->context);
         $verType = $type . '-version';
         $installType = $type . '-install';
         $upgradeType = $type . '-upgrade';
@@ -1121,16 +1118,6 @@ class Installer
             }
             $this->logProgress();
         }
-    }
-
-    /**
-     * Get a module Resource object
-     *
-     * @return ModuleResource
-     */
-    public function getModuleResource(): ModuleResource
-    {
-        return new ModuleResource($this->context);
     }
 
     /**
@@ -1272,15 +1259,14 @@ class Installer
         // get entity_type_id for order
         $select = $dbConnection->select()
             ->from($setup->getTable('eav_entity_type'), 'entity_type_id')
-            ->where('entity_type_code = ?', self::ENTITY_TYPE_ORDER);
+            ->where('entity_type_code = \'order\'');
         $entityTypeId = $dbConnection->fetchOne($select);
 
         // See if row already exists
-        $eavEntityStore = $dbConnection->select()
-            ->from($setup->getTable('eav_entity_store'))
-            ->where('entity_type_id = ?', $entityTypeId)
-            ->where('store_id = ?', Store::DISTRO_STORE_ID);
-        $incrementRow = $dbConnection->fetchRow($eavEntityStore);
+        $incrementRow = $dbConnection->fetchRow(
+            'SELECT * FROM ' . $setup->getTable('eav_entity_store') . ' WHERE entity_type_id = ? AND store_id = ?',
+            [$entityTypeId, Store::DISTRO_STORE_ID]
+        );
 
         if (!empty($incrementRow)) {
             // row exists, update it
@@ -1298,28 +1284,6 @@ class Installer
                 'increment_prefix' => $orderIncrementPrefix,
             ];
             $dbConnection->insert($setup->getTable('eav_entity_store'), $rowData);
-        }
-
-        // Get meta id for adding in profile table for order prefix
-        $selectMeta = $dbConnection->select()
-            ->from($setup->getTable('sales_sequence_meta'), 'meta_id')
-            ->where('entity_type = ?', self::ENTITY_TYPE_ORDER)
-            ->where('store_id = ?', Store::DISTRO_STORE_ID);
-        $metaId = $dbConnection->fetchOne($selectMeta);
-
-        // See if row already exists
-        $profile = $dbConnection->select()
-            ->from($setup->getTable('sales_sequence_profile'))
-            ->where('meta_id = ?', $metaId);
-        $incrementRow = $dbConnection->fetchRow($profile);
-
-        if (!empty($incrementRow)) {
-            // Row exists, update it
-            $dbConnection->update(
-                $setup->getTable('sales_sequence_profile'),
-                ['prefix' => $orderIncrementPrefix, 'is_active' => '1'],
-                'profile_id = ' . $incrementRow['profile_id']
-            );
         }
     }
 
@@ -1686,7 +1650,7 @@ class Installer
     /**
      * Generates list of ModuleContext
      *
-     * @param ModuleResource $resource
+     * @param \Magento\Framework\Module\ModuleResource $resource
      * @param string $type
      * @return ModuleContext[]
      * @throws Exception

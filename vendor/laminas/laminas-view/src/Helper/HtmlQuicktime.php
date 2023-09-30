@@ -1,28 +1,23 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
-use function array_merge;
-
-/** @deprecated */
 class HtmlQuicktime extends AbstractHtmlElement
 {
     /**
      * Default file type for a movie applet
      */
-    public const TYPE = 'video/quicktime';
+    const TYPE = 'video/quicktime';
 
     /**
      * Object classid
      */
-    public const ATTRIB_CLASSID = 'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B';
+    const ATTRIB_CLASSID  = 'clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B';
 
     /**
      * Object Codebase
      */
-    public const ATTRIB_CODEBASE = 'http://www.apple.com/qtactivex/qtplugin.cab';
+    const ATTRIB_CODEBASE = 'http://www.apple.com/qtactivex/qtplugin.cab';
 
     /**
      * Default attributes

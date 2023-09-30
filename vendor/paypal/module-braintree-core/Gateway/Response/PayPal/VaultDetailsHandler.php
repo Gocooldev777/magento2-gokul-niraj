@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response\PayPal;
@@ -87,7 +87,7 @@ class VaultDetailsHandler implements HandlerInterface
     private function getVaultPaymentToken(Transaction $transaction)
     {
         // Check token existing in gateway response
-        if (!empty($transaction->paypalDetails->implicitlyVaultedPaymentMethodToken)) {
+        if(!empty($transaction->paypalDetails->implicitlyVaultedPaymentMethodToken)) {
             $token = $transaction->paypalDetails->implicitlyVaultedPaymentMethodToken;
         } else {
             $token = $transaction->paypalDetails->token;
@@ -110,8 +110,6 @@ class VaultDetailsHandler implements HandlerInterface
     }
 
     /**
-     * Get expiration date
-     *
      * @return string
      * @throws Exception
      */
@@ -124,7 +122,6 @@ class VaultDetailsHandler implements HandlerInterface
 
     /**
      * Get payment extension attributes
-     *
      * @param InfoInterface $payment
      * @return OrderPaymentExtensionInterface
      */

@@ -101,7 +101,7 @@ class IndexerReindexCommand extends AbstractIndexerManageCommand
 
                 $output->write($indexer->getTitle() . ' index ');
 
-                $startTime = new \DateTimeImmutable();
+                $startTime = microtime(true);
                 $indexerConfig = $this->getConfig()->getIndexer($indexer->getId());
                 $sharedIndex = $indexerConfig['shared_index'] ?? null;
 
@@ -112,15 +112,10 @@ class IndexerReindexCommand extends AbstractIndexerManageCommand
                         $this->sharedIndexesComplete[] = $sharedIndex;
                     }
                 }
-                $endTime = new \DateTimeImmutable();
-                $interval = $startTime->diff($endTime);
-                $days = $interval->format('%d');
-                $hours = $days > 0 ? $days * 24 + $interval->format('%H') : $interval->format('%H');
-                $minutes = $interval->format('%I');
-                $seconds = $interval->format('%S');
+                $resultTime = microtime(true) - $startTime;
 
                 $output->writeln(
-                    __('has been rebuilt successfully in %1:%2:%3', $hours, $minutes, $seconds)
+                    __('has been rebuilt successfully in %time', ['time' => gmdate('H:i:s', (int) $resultTime)])
                 );
             } catch (\Throwable $e) {
                 $output->writeln('process error during indexation process:');
@@ -243,9 +238,7 @@ class IndexerReindexCommand extends AbstractIndexerManageCommand
      * Get config
      *
      * @return ConfigInterface
-     * @deprecated 100.1.0 We don't recommend this approach anymore
-     * @see Add a new optional parameter to the constructor at the end of the arguments list instead
-     * and fetch the dependency using Magento\Framework\App\ObjectManager::getInstance() in the constructor body
+     * @deprecated 100.1.0
      */
     private function getConfig()
     {
@@ -259,9 +252,7 @@ class IndexerReindexCommand extends AbstractIndexerManageCommand
      * Get dependency info provider
      *
      * @return DependencyInfoProvider
-     * @deprecated 100.2.0 We don't recommend this approach anymore
-     * @see Add a new optional parameter to the constructor at the end of the arguments list instead
-     * and fetch the dependency using Magento\Framework\App\ObjectManager::getInstance() in the constructor body
+     * @deprecated 100.2.0
      */
     private function getDependencyInfoProvider()
     {

@@ -3,14 +3,17 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
-namespace Magento\Widget\Block;
 
 /**
  * Widget Block Interface
  *
- * @api
+ * @author      Magento Core Team <core@magentocommerce.com>
+ */
+namespace Magento\Widget\Block;
+
+/**
+ * Interface \Magento\Widget\Block\BlockInterface
+ *
  */
 interface BlockInterface
 {

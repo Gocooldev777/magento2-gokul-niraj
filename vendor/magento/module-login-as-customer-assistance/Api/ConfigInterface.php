@@ -9,8 +9,6 @@ namespace Magento\LoginAsCustomerAssistance\Api;
 
 /**
  * LoginAsCustomerAssistance config.
- *
- * @api
  */
 interface ConfigInterface
 {

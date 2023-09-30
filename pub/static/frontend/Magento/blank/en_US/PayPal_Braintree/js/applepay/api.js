@@ -198,7 +198,7 @@ define(
                         let productItems = customerData.get('cart')().items;
                         _.each(productItems,
                             function (item) {
-                                if (item.is_virtual || item.product_type == 'bundle') {
+                                if (item.is_virtual) {
                                     virtualFlag = true;
                                 } else {
                                     virtualFlag = false;
@@ -333,7 +333,7 @@ define(
             /**
              * Place the order
              */
-            startPlaceOrder: function (nonce, event, session, device_data) {
+            startPlaceOrder: function (nonce, event, session) {
                 let shippingContact = event.payment.shippingContact,
                     billingContact = event.payment.billingContact,
                     payload = {
@@ -386,8 +386,7 @@ define(
                             "paymentMethod": {
                                 "method": "braintree_applepay",
                                 "additional_data": {
-                                    "payment_method_nonce": nonce,
-                                    "device_data": device_data
+                                    "payment_method_nonce": nonce
                                 }
                             }
                         };

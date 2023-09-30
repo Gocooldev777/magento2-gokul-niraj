@@ -33,7 +33,6 @@
             <actionGroup ref="CreateCustomStoreViewActionGroup" stepKey="createCustomStoreView">
                 <argument name="storeGroupName" value="$$storeGroup.group[name]$$"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
         </before>
 
         <after>
@@ -46,7 +45,6 @@
                 <argument name="storeGroupName" value="$$storeGroup.group[name]$$"/>
             </actionGroup>
             <actionGroup ref="ClearFiltersAdminDataGridActionGroup" stepKey="clearWebsitesGridFilter"/>
-            <magentoCron groups="index" stepKey="reindex"/>
 
             <!--Clear products filter-->
             <actionGroup ref="AdminOpenProductIndexPageActionGroup" stepKey="navigateToProductIndex"/>
@@ -95,9 +93,7 @@
         <actionGroup ref="StorefrontOpenProductEntityPageActionGroup" stepKey="navigateToProductPageOnDefaultStore">
             <argument name="product" value="$product$"/>
         </actionGroup>
-        <actionGroup ref="AssertStorefrontProductInfoMainProductNameActionGroup" stepKey="assertFirstProductNameTitle">
-            <argument name="value" value="$$product.name$$"/>
-        </actionGroup>
+        <see userInput="$$product.name$$" selector="{{StorefrontProductInfoMainSection.productName}}" stepKey="assertFirstProductNameTitle"/>
         <click selector="{{StorefrontProductPageSection.addToWishlist}}" stepKey="addFirstProductToWishlist"/>
         <waitForPageLoad stepKey="waitForPageLoad"/>
         <see userInput="$$product.name$$" selector="{{StorefrontCustomerWishlistSection.productItemNameText}}" stepKey="seeProduct1InWishlistOnSecondStore"/>
@@ -108,9 +104,7 @@
         <actionGroup ref="StorefrontOpenProductEntityPageActionGroup" stepKey="navigateToProductPageOnSecondStore">
             <argument name="product" value="$secondProduct$"/>
         </actionGroup>
-        <actionGroup ref="AssertStorefrontProductInfoMainProductNameActionGroup" stepKey="assertSecondProductNameTitle">
-            <argument name="value" value="$$secondProduct.name$$"/>
-        </actionGroup>
+        <see userInput="$$secondProduct.name$$" selector="{{StorefrontProductInfoMainSection.productName}}" stepKey="assertSecondProductNameTitle"/>
         <click selector="{{StorefrontProductPageSection.addToWishlist}}" stepKey="addSecondProductToWishlist"/>
         <waitForPageLoad stepKey="waitForPageLoad2"/>
         <see userInput="$$secondProduct.name$$" selector="{{StorefrontCustomerWishlistSection.productItemNameText}}" stepKey="seeProduct2InWishlistOnSecondStore"/>

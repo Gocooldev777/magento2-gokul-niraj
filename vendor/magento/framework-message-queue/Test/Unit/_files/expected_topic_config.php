@@ -19,9 +19,9 @@ return [
             'connection' => 'db',
             'exchange' => 'magento',
         ],
-        '-magento' => [
-            'name' => '-magento',
-            'connection' => null,
+        'amqp-magento' => [
+            'name' => 'amqp-magento',
+            'connection' => 'amqp',
             'exchange' => 'magento',
         ],
     ],
@@ -41,10 +41,10 @@ return [
     ],
     'exchange_topic_to_queues_map' => [
         'amqp-ex.01--top.01' => ['q.01'],
+        'amqp-magento--top.03' => ['q.03', 'q.04'],
         'db-magento--top.04' => ['q.04', 'q.05', 'q.06'],
-        '-magento--user.created.remote' => ['q.log'],
-        '-magento--product.created.local' => ['q.log'],
-        '-magento--top.03' => ['q.03','q.04']
+        'amqp-magento--user.created.remote' => ['q.log'],
+        'amqp-magento--product.created.local' => ['q.log'],
     ],
     'consumers' => [
         'cons.01' => [
@@ -80,7 +80,7 @@ return [
             'instance_type' => 'Magento\Framework\MessageQueue\ConsumerInterface',
             'consumer_type' => 'async',
             'max_messages' => null,
-            'connection' => null,
+            'connection' => 'amqp',
             'queue' => 'q.03'
         ],
         'cons.04' => [
@@ -148,7 +148,7 @@ return [
             'instance_type' => 'Magento\Framework\MessageQueue\ConsumerInterface',
             'consumer_type' => 'async',
             'max_messages' => null,
-            'connection' => null,
+            'connection' => 'amqp',
             'queue' => 'q.04'
         ],
         'cons.logger' => [
@@ -164,7 +164,7 @@ return [
             'instance_type' => 'Magento\Framework\MessageQueue\ConsumerInterface',
             'consumer_type' => 'async',
             'max_messages' => null,
-            'connection' => null,
+            'connection' => 'amqp',
             'queue' => 'q.log'
         ],
     ],
@@ -192,7 +192,7 @@ return [
                 'schema_type' => 'object',
                 'schema_value' => CustomerInterface::class
             ],
-            'publisher' => '-magento',
+            'publisher' => 'amqp-magento',
             'is_synchronous' => false,
         ],
         'top.04' => [
@@ -218,7 +218,7 @@ return [
                 'schema_type' => 'object',
                 'schema_value' => CustomerInterface::class
             ],
-            'publisher' => '-magento',
+            'publisher' => 'amqp-magento',
             'is_synchronous' => false,
         ],
         'product.created.local' => [
@@ -231,7 +231,7 @@ return [
                 'schema_type' => 'object',
                 'schema_value' => CustomerInterface::class
             ],
-            'publisher' => '-magento',
+            'publisher' => 'amqp-magento',
             'is_synchronous' => false,
         ],
     ]

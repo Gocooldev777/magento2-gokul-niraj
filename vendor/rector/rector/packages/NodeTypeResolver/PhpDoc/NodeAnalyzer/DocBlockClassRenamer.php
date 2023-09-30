@@ -4,9 +4,9 @@ declare (strict_types=1);
 namespace Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer;
 
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
+use Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\RenamingPhpDocNodeVisitorFactory;
 use Rector\NodeTypeResolver\PhpDocNodeVisitor\ClassRenamePhpDocNodeVisitor;
 use Rector\NodeTypeResolver\ValueObject\OldToNewType;
-use Rector\PhpDocParser\PhpDocParser\PhpDocNodeTraverser;
 final class DocBlockClassRenamer
 {
     /**
@@ -14,20 +14,25 @@ final class DocBlockClassRenamer
      * @var \Rector\NodeTypeResolver\PhpDocNodeVisitor\ClassRenamePhpDocNodeVisitor
      */
     private $classRenamePhpDocNodeVisitor;
-    public function __construct(ClassRenamePhpDocNodeVisitor $classRenamePhpDocNodeVisitor)
+    /**
+     * @readonly
+     * @var \Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\RenamingPhpDocNodeVisitorFactory
+     */
+    private $renamingPhpDocNodeVisitorFactory;
+    public function __construct(\Rector\NodeTypeResolver\PhpDocNodeVisitor\ClassRenamePhpDocNodeVisitor $classRenamePhpDocNodeVisitor, \Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\RenamingPhpDocNodeVisitorFactory $renamingPhpDocNodeVisitorFactory)
     {
         $this->classRenamePhpDocNodeVisitor = $classRenamePhpDocNodeVisitor;
+        $this->renamingPhpDocNodeVisitorFactory = $renamingPhpDocNodeVisitorFactory;
     }
     /**
      * @param OldToNewType[] $oldToNewTypes
      */
-    public function renamePhpDocType(PhpDocInfo $phpDocInfo, array $oldToNewTypes) : void
+    public function renamePhpDocType(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo, array $oldToNewTypes) : void
     {
         if ($oldToNewTypes === []) {
             return;
         }
-        $phpDocNodeTraverser = new PhpDocNodeTraverser();
-        $phpDocNodeTraverser->addPhpDocNodeVisitor($this->classRenamePhpDocNodeVisitor);
+        $phpDocNodeTraverser = $this->renamingPhpDocNodeVisitorFactory->create();
         $this->classRenamePhpDocNodeVisitor->setOldToNewTypes($oldToNewTypes);
         $phpDocNodeTraverser->traverse($phpDocInfo->getPhpDocNode());
     }

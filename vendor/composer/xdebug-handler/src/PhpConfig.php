@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /*
  * This file is part of composer/xdebug-handler.
  *
@@ -25,10 +23,10 @@ class PhpConfig
      *
      * @return string[] Empty array of PHP cli options
      */
-    public function useOriginal(): array
+    public function useOriginal()
     {
         $this->getDataAndReset();
-        return [];
+        return array();
     }
 
     /**
@@ -36,14 +34,14 @@ class PhpConfig
      *
      * @return string[] PHP cli options
      */
-    public function useStandard(): array
+    public function useStandard()
     {
         $data = $this->getDataAndReset();
         if ($data !== null) {
-            return ['-n', '-c', $data['tmpIni']];
+            return array('-n', '-c', $data['tmpIni']);
         }
 
-        return [];
+        return array();
     }
 
     /**
@@ -51,7 +49,7 @@ class PhpConfig
      *
      * @return string[] Empty array of PHP cli options
      */
-    public function usePersistent(): array
+    public function usePersistent()
     {
         $data = $this->getDataAndReset();
         if ($data !== null) {
@@ -59,15 +57,16 @@ class PhpConfig
             $this->updateEnv('PHP_INI_SCAN_DIR', '');
         }
 
-        return [];
+        return array();
     }
 
     /**
      * Returns restart data if available and resets the environment
      *
+     * @return array|null
      * @phpstan-return restartData|null
      */
-    private function getDataAndReset(): ?array
+    private function getDataAndReset()
     {
         $data = XdebugHandler::getRestartSettings();
         if ($data !== null) {
@@ -83,8 +82,10 @@ class PhpConfig
      *
      * @param string $name
      * @param string|false $value
+     *
+     * @return void
      */
-    private function updateEnv(string $name, $value): void
+    private function updateEnv($name, $value)
     {
         Process::setEnv($name, false !== $value ? $value : null);
     }

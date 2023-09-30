@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Contracts\EventDispatcher;
+namespace RectorPrefix20211221\Symfony\Contracts\EventDispatcher;
 
-use RectorPrefix202304\Psr\EventDispatcher\StoppableEventInterface;
+use RectorPrefix20211221\Psr\EventDispatcher\StoppableEventInterface;
 /**
  * Event is the base class for classes containing event data.
  *
@@ -26,12 +26,12 @@ use RectorPrefix202304\Psr\EventDispatcher\StoppableEventInterface;
  * @author Bernhard Schussek <bschussek@gmail.com>
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class Event implements StoppableEventInterface
+class Event implements \RectorPrefix20211221\Psr\EventDispatcher\StoppableEventInterface
 {
-    /**
-     * @var bool
-     */
     private $propagationStopped = \false;
+    /**
+     * {@inheritdoc}
+     */
     public function isPropagationStopped() : bool
     {
         return $this->propagationStopped;

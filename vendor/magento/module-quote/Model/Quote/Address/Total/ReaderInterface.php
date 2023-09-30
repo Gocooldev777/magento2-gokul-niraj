@@ -8,7 +8,6 @@ namespace Magento\Quote\Model\Quote\Address\Total;
 /**
  * Interface \Magento\Quote\Model\Quote\Address\Total\ReaderInterface
  *
- * @api
  */
 interface ReaderInterface
 {

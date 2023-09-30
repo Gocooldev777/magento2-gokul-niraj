@@ -10,8 +10,6 @@ namespace Magento\Framework\HTTP\AsyncClient;
 
 /**
  * Http response.
- *
- * @api
  */
 class Response
 {

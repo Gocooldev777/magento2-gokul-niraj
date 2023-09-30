@@ -1,5 +1,7 @@
 <?php
 
+
+
 /*
  * This file is part of the Symfony package.
  *
@@ -8,15 +10,19 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
-use Symfony\Polyfill\Intl\Normalizer as p;
-
-if (!function_exists('normalizer_is_normalized')) {
-    function normalizer_is_normalized(?string $string, ?int $form = p\Normalizer::FORM_C): bool { return p\Normalizer::isNormalized((string) $string, (int) $form); }
+use RectorPrefix20211221\Symfony\Polyfill\Intl\Normalizer as p;
+if (!\function_exists('normalizer_is_normalized')) {
+    function normalizer_is_normalized(?string $string, ?int $form = \RectorPrefix20211221\Symfony\Polyfill\Intl\Normalizer\Normalizer::FORM_C) : bool
+    {
+        return \RectorPrefix20211221\Symfony\Polyfill\Intl\Normalizer\Normalizer::isNormalized((string) $string, (int) $form);
+    }
 }
-if (!function_exists('normalizer_normalize')) {
+if (!\function_exists('normalizer_normalize')) {
     /**
-     * @return string|false
+     * @return bool|string
      */
-    function normalizer_normalize(?string $string, ?int $form = p\Normalizer::FORM_C) { return p\Normalizer::normalize((string) $string, (int) $form); }
+    function normalizer_normalize(?string $string, ?int $form = \RectorPrefix20211221\Symfony\Polyfill\Intl\Normalizer\Normalizer::FORM_C)
+    {
+        return \RectorPrefix20211221\Symfony\Polyfill\Intl\Normalizer\Normalizer::normalize((string) $string, (int) $form);
+    }
 }

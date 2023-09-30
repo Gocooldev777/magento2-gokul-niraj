@@ -42,7 +42,6 @@
 
 namespace PDepend\Metrics;
 
-use PDepend\Source\AST\ASTArtifactList;
 use PDepend\Source\AST\ASTNamespace;
 
 /**
@@ -73,7 +72,7 @@ interface Analyzer
     /**
      * Processes all {@link ASTNamespace} code nodes.
      *
-     * @param ASTArtifactList<ASTNamespace> $namespaces
+     * @param ASTNamespace[] $namespaces
      *
      * @return void
      */

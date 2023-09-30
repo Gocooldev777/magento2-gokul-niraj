@@ -4,40 +4,24 @@ declare (strict_types=1);
 namespace Rector\PhpAttribute\AnnotationToAttributeMapper;
 
 use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
-use PhpParser\Node\Expr\ClassConstFetch;
-use PhpParser\Node\Name;
-use PhpParser\Node\Scalar\String_;
-use Rector\Core\PhpParser\Node\Value\ValueResolver;
 use Rector\PhpAttribute\AnnotationToAttributeMapper;
 use Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface;
 use Rector\PhpAttribute\Enum\DocTagNodeState;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements AnnotationToAttributeMapperInterface<mixed[]>
  */
-final class ArrayAnnotationToAttributeMapper implements AnnotationToAttributeMapperInterface
+final class ArrayAnnotationToAttributeMapper implements \Rector\PhpAttribute\Contract\AnnotationToAttributeMapperInterface
 {
     /**
      * @var \Rector\PhpAttribute\AnnotationToAttributeMapper
      */
     private $annotationToAttributeMapper;
     /**
-     * @readonly
-     * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
-     */
-    private $valueResolver;
-    public function __construct(ValueResolver $valueResolver)
-    {
-        $this->valueResolver = $valueResolver;
-    }
-    /**
      * Avoid circular reference
      * @required
      */
-    public function autowire(AnnotationToAttributeMapper $annotationToAttributeMapper) : void
+    public function autowire(\Rector\PhpAttribute\AnnotationToAttributeMapper $annotationToAttributeMapper) : void
     {
         $this->annotationToAttributeMapper = $annotationToAttributeMapper;
     }
@@ -50,50 +34,30 @@ final class ArrayAnnotationToAttributeMapper implements AnnotationToAttributeMap
     }
     /**
      * @param mixed[] $value
+     * @return mixed[]|\PhpParser\Node\Expr
      */
-    public function map($value) : Expr
+    public function map($value)
     {
-        $arrayItems = [];
-        foreach ($value as $key => $singleValue) {
-            $valueExpr = $this->annotationToAttributeMapper->map($singleValue);
-            // remove node
-            if ($valueExpr === DocTagNodeState::REMOVE_ARRAY) {
+        $values = \array_map(function ($item) {
+            return $this->annotationToAttributeMapper->map($item);
+        }, $value);
+        foreach ($values as $key => $value) {
+            // remove the key and value? useful in case of unwrapping nested attributes
+            if (!$this->isRemoveArrayPlaceholder($value)) {
                 continue;
             }
-            // remove value
-            if ($this->isRemoveArrayPlaceholder($singleValue)) {
-                continue;
-            }
-            if ($valueExpr instanceof ArrayItem) {
-                $valueExpr = $this->resolveValueExprWithSingleQuoteHandling($valueExpr);
-                $arrayItems[] = $this->resolveValueExprWithSingleQuoteHandling($valueExpr);
-            } else {
-                $keyExpr = null;
-                if (!\is_int($key)) {
-                    $keyExpr = $this->annotationToAttributeMapper->map($key);
-                    Assert::isInstanceOf($keyExpr, Expr::class);
-                }
-                $arrayItems[] = new ArrayItem($valueExpr, $keyExpr);
-            }
+            unset($values[$key]);
         }
-        return new Array_($arrayItems);
-    }
-    private function resolveValueExprWithSingleQuoteHandling(ArrayItem $arrayItem) : ArrayItem
-    {
-        if (!$arrayItem->key instanceof Expr && $arrayItem->value instanceof ClassConstFetch && $arrayItem->value->class instanceof Name && \strpos((string) $arrayItem->value->class, "'") !== \false) {
-            $arrayItem->value = new String_($this->valueResolver->getValue($arrayItem->value));
-            return $arrayItem;
-        }
-        return $arrayItem;
+        return $values;
     }
     /**
-     * @param mixed $value
+     * @param mixed[]|\PhpParser\Node\Expr $value
      */
     private function isRemoveArrayPlaceholder($value) : bool
     {
         if (!\is_array($value)) {
             return \false;
         }
-        return \in_array(DocTagNodeState::REMOVE_ARRAY, $value, \true);
+        return \in_array(\Rector\PhpAttribute\Enum\DocTagNodeState::REMOVE_ARRAY, $value, \true);
     }
 }

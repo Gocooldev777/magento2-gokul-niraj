@@ -9,8 +9,6 @@ use Magento\Framework\View\Element\UiComponentInterface;
 
 /**
  * Interface DataTypeInterface
- *
- * @api
  */
 interface DataTypeInterface extends UiComponentInterface
 {

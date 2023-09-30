@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 /**
+ * Unit Test for \Magento\Framework\Validator\Config
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -13,7 +15,6 @@ use Magento\Framework\DataObject;
 use Magento\Framework\ObjectManager\Factory\Dynamic\Developer;
 use Magento\Framework\ObjectManager\Relations\Runtime;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use Magento\Framework\Validator\AbstractValidator;
 use Magento\Framework\Validator\Builder;
 use Magento\Framework\Validator\Config;
 use Magento\Framework\Validator\Constraint\Option;
@@ -172,7 +173,6 @@ class ConfigTest extends TestCase
     {
         $this->_initConfig();
         $validator = $this->_config->createValidator($entityName, $groupName);
-        AbstractValidator::setDefaultTranslator();
         $actualResult = $validator->isValid($value);
         $this->assertEquals($expectedMessages, $validator->getMessages());
         $this->assertEquals($expectedResult, $actualResult);

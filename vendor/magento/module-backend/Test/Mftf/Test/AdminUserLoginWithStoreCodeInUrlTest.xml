@@ -25,9 +25,6 @@
         </before>
         <after>
             <magentoCLI command="config:set {{StorefrontDisableAddStoreCodeToUrls.path}} {{StorefrontDisableAddStoreCodeToUrls.value}}" stepKey="addStoreCodeToUrlDisable"/>
-            <actionGroup ref="CliCacheFlushActionGroup" stepKey="cliCacheFlushActionGroup">
-                <argument name="tags" value="" />
-            </actionGroup>
         </after>
 
         <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>

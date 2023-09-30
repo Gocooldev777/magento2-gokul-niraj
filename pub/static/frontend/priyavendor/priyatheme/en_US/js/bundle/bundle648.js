@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_SalesRule/js/view/cart/totals/discount.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\ndefine([\n    'Magento_SalesRule/js/view/summary/discount'\n], function (Component) {\n    'use strict';\n\n    return Component.extend({\n        defaults: {\n            template: 'Magento_SalesRule/cart/totals/discount'\n        },\n\n        /**\n         * @override\n         *\n         * @returns {Boolean}\n         */\n        isDisplayed: function () {\n            return this.getPureValue() != 0; //eslint-disable-line eqeqeq\n        }\n    });\n});\n"}
+}});

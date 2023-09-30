@@ -13,6 +13,7 @@ use Rector\Core\Enum\ObjectReference;
 use Rector\Core\Php\PhpVersionProvider;
 use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface;
+use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 use Rector\StaticTypeMapper\ValueObject\Type\SelfStaticType;
 use Rector\StaticTypeMapper\ValueObject\Type\SimpleStaticType;
 /**
@@ -20,14 +21,14 @@ use Rector\StaticTypeMapper\ValueObject\Type\SimpleStaticType;
  *
  * @implements TypeMapperInterface<StaticType>
  */
-final class StaticTypeMapper implements TypeMapperInterface
+final class StaticTypeMapper implements \Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface
 {
     /**
      * @readonly
      * @var \Rector\Core\Php\PhpVersionProvider
      */
     private $phpVersionProvider;
-    public function __construct(PhpVersionProvider $phpVersionProvider)
+    public function __construct(\Rector\Core\Php\PhpVersionProvider $phpVersionProvider)
     {
         $this->phpVersionProvider = $phpVersionProvider;
     }
@@ -36,30 +37,30 @@ final class StaticTypeMapper implements TypeMapperInterface
      */
     public function getNodeClass() : string
     {
-        return StaticType::class;
+        return \PHPStan\Type\StaticType::class;
     }
     /**
      * @param StaticType $type
      */
-    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode
+    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
     {
-        return new ThisTypeNode();
+        return new \PHPStan\PhpDocParser\Ast\Type\ThisTypeNode();
     }
     /**
      * @param StaticType $type
      */
-    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node
+    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node
     {
         // special case, for autocomplete of return type
-        if ($type instanceof SimpleStaticType) {
-            return new Name(ObjectReference::STATIC);
+        if ($type instanceof \Rector\StaticTypeMapper\ValueObject\Type\SimpleStaticType) {
+            return new \PhpParser\Node\Name(\Rector\Core\Enum\ObjectReference::STATIC()->getValue());
         }
-        if ($type instanceof SelfStaticType) {
-            return new Name(ObjectReference::SELF);
+        if ($type instanceof \Rector\StaticTypeMapper\ValueObject\Type\SelfStaticType) {
+            return new \PhpParser\Node\Name(\Rector\Core\Enum\ObjectReference::SELF()->getValue());
         }
-        if ($this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::STATIC_RETURN_TYPE)) {
-            return new Name(ObjectReference::STATIC);
+        if ($this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::STATIC_RETURN_TYPE)) {
+            return new \PhpParser\Node\Name(\Rector\Core\Enum\ObjectReference::STATIC()->getValue());
         }
-        return new Name(ObjectReference::SELF);
+        return new \PhpParser\Node\Name(\Rector\Core\Enum\ObjectReference::SELF()->getValue());
     }
 }

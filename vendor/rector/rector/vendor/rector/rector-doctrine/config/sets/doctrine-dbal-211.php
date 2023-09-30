@@ -1,36 +1,37 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
 use Rector\Renaming\Rector\MethodCall\RenameMethodRector;
 use Rector\Renaming\Rector\Name\RenameClassRector;
 use Rector\Renaming\ValueObject\MethodCallRename;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->ruleWithConfiguration(RenameMethodRector::class, [
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\Renaming\Rector\MethodCall\RenameMethodRector::class)->configure([
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#deprecations-in-the-wrapper-connection-class
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'executeUpdate', 'executeStatement'),
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'exec', 'executeStatement'),
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'query', 'executeQuery'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'executeUpdate', 'executeStatement'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'exec', 'executeStatement'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'query', 'executeQuery'),
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#driverexceptiongeterrorcode-is-deprecated
-        new MethodCallRename('Doctrine\\DBAL\\Driver\\DriverException', 'getErrorCode', 'getSQLState'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Driver\\DriverException', 'getErrorCode', 'getSQLState'),
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#deprecated-expressionbuilder-methods
-        new MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\ExpressionBuilder', 'andX', 'and'),
-        new MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\ExpressionBuilder', 'orX', 'or'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\ExpressionBuilder', 'andX', 'and'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\ExpressionBuilder', 'orX', 'or'),
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#deprecated-compositeexpression-methods
-        new MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\CompositeExpression', 'add', 'with'),
-        new MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\CompositeExpression', 'addMultiple', 'with'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\CompositeExpression', 'add', 'with'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Query\\Expression\\CompositeExpression', 'addMultiple', 'with'),
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#deprecated-fetchmode-and-the-corresponding-methods
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchAssoc', 'fetchAssociative'),
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchArray', 'fetchNumeric'),
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchColumn', 'fetchOne'),
-        new MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchAll', 'fetchAllAssociative'),
-        new MethodCallRename('Doctrine\\DBAL\\Statement', 'fetchAssoc', 'fetchAssociative'),
-        new MethodCallRename('Doctrine\\DBAL\\Statement', 'fetchColumn', 'fetchOne'),
-        new MethodCallRename('Doctrine\\DBAL\\Statement', 'fetchAll', 'fetchAllAssociative'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchAssoc', 'fetchAssociative'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchArray', 'fetchNumeric'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchColumn', 'fetchOne'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Connection', 'fetchAll', 'fetchAllAssociative'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Statement', 'fetchAssoc', 'fetchAssociative'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Statement', 'fetchColumn', 'fetchOne'),
+        new \Rector\Renaming\ValueObject\MethodCallRename('Doctrine\\DBAL\\Statement', 'fetchAll', 'fetchAllAssociative'),
     ]);
-    $rectorConfig->ruleWithConfiguration(RenameClassRector::class, [
+    $services->set(\Rector\Renaming\Rector\Name\RenameClassRector::class)->configure([\Rector\Renaming\Rector\Name\RenameClassRector::OLD_TO_NEW_CLASSES => [
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#pdo-related-classes-outside-of-the-pdo-namespace-are-deprecated
         'Doctrine\\DBAL\\Driver\\PDOMySql\\Driver' => 'Doctrine\\DBAL\\Driver\\PDO\\MySQL\\Driver',
         'Doctrine\\DBAL\\Driver\\PDOOracle\\Driver' => 'Doctrine\\DBAL\\Driver\\PDO\\OCI\\Driver',
@@ -57,5 +58,5 @@ return static function (RectorConfig $rectorConfig) : void {
         'Doctrine\\DBAL\\Driver\\PDOStatement' => 'Doctrine\\DBAL\\Driver\\PDO\\Statement',
         // https://github.com/doctrine/dbal/blob/master/UPGRADE.md#deprecated-masterslaveconnection-use-primaryreadreplicaconnection
         'Doctrine\\DBAL\\Connections\\MasterSlaveConnection' => 'Doctrine\\DBAL\\Connections\\PrimaryReadReplicaConnection',
-    ]);
+    ]]);
 };

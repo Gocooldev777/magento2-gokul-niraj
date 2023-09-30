@@ -7,8 +7,8 @@
 namespace Magento\Framework\View\Asset;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Filesystem\Directory\ReadFactory;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\View\Asset\PreProcessor\ChainFactoryInterface;
 use Magento\Framework\View\Design\FileResolution\Fallback\Resolver\Simple;
 use Magento\Framework\View\Design\Theme\ThemeProviderInterface;
@@ -165,20 +165,16 @@ class Source
     }
 
     /**
-     * Method to get source content type.
-     *
      * @param LocalInterface $asset
      * @return string
      */
     public function getSourceContentType(LocalInterface $asset)
     {
-        list(, , $type) = $this->preProcess($asset);
+        list(,,$type) = $this->preProcess($asset);
         return $type;
     }
 
     /**
-     * Method to find source.
-     *
      * @param LocalInterface $asset
      * @return bool|string
      */
@@ -195,7 +191,7 @@ class Source
      */
     public function getContentType($path)
     {
-        return $path !== null ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : '';
+        return strtolower(pathinfo($path, PATHINFO_EXTENSION));
     }
 
     /**
@@ -244,8 +240,6 @@ class Source
     }
 
     /**
-     * Method to get theme provider.
-     *
      * @return ThemeProviderInterface
      */
     private function getThemeProvider()
@@ -272,8 +266,6 @@ class Source
     }
 
     /**
-     * Method to find relative source file path.
-     *
      * @param \Magento\Framework\View\Asset\LocalInterface $asset
      *
      * @return bool|string

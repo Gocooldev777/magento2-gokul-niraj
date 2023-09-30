@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Contracts\Service;
+namespace RectorPrefix20211221\Symfony\Contracts\Service;
 
 /**
  * Provides a way to reset an object to its initial state.
@@ -25,8 +25,5 @@ namespace RectorPrefix202304\Symfony\Contracts\Service;
  */
 interface ResetInterface
 {
-    /**
-     * @return void
-     */
     public function reset();
 }

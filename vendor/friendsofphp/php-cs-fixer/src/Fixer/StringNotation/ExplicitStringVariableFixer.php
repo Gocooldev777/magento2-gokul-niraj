@@ -55,6 +55,7 @@ EOT
     /**
      * {@inheritdoc}
      *
+     * Must run before SimpleToComplexStringVariableFixer.
      * Must run after BacktickToShellExecFixer.
      */
     public function getPriority(): int
@@ -78,7 +79,6 @@ EOT
         $backtickStarted = false;
         for ($index = \count($tokens) - 1; $index > 0; --$index) {
             $token = $tokens[$index];
-
             if ($token->equals('`')) {
                 $backtickStarted = !$backtickStarted;
 
@@ -90,7 +90,6 @@ EOT
             }
 
             $prevToken = $tokens[$index - 1];
-
             if (!$this->isStringPartToken($prevToken)) {
                 continue;
             }
@@ -106,7 +105,6 @@ EOT
 
             $nextIndex = $index + 1;
             $squareBracketCount = 0;
-
             while (!$this->isStringPartToken($tokens[$nextIndex])) {
                 if ($tokens[$nextIndex]->isGivenKind(T_CURLY_OPEN)) {
                     $nextIndex = $tokens->getNextTokenOfKind($nextIndex, [[CT::T_CURLY_CLOSE]]);
@@ -135,9 +133,9 @@ EOT
                     $singleVariableIndex = key($distinctVariableSet['tokens']);
                     $singleVariableToken = current($distinctVariableSet['tokens']);
                     $tokens->overrideRange($singleVariableIndex, $singleVariableIndex, [
-                        new Token([T_CURLY_OPEN, '{']),
-                        new Token([T_VARIABLE, $singleVariableToken->getContent()]),
-                        new Token([CT::T_CURLY_CLOSE, '}']),
+                        new Token([T_DOLLAR_OPEN_CURLY_BRACES, '${']),
+                        new Token([T_STRING_VARNAME, substr($singleVariableToken->getContent(), 1)]),
+                        new Token([CT::T_DOLLAR_CLOSE_CURLY_BRACES, '}']),
                     ]);
                 } else {
                     foreach ($distinctVariableSet['tokens'] as $variablePartIndex => $variablePartToken) {

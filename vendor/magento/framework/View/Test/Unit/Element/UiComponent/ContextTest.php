@@ -45,71 +45,36 @@ class ContextTest extends TestCase
      */
     private $authorization;
 
-    /**
-     * @var LayoutInterface
-     */
-    private $pageLayout;
-
-    /**
-     * @var ButtonProviderFactory
-     */
-    private $buttonProviderFactory;
-
-    /**
-     * @var ActionPoolFactory
-     */
-    private $actionPoolFactory;
-
-    /**
-     * @var ContentTypeFactory
-     */
-    private $contentTypeFactory;
-
-    /**
-     * @var UrlInterface
-     */
-    private $urlBuilder;
-
-    /**
-     * @var Processor
-     */
-    private $processor;
-
-    /**
-     * @var UiComponentFactory
-     */
-    private $uiComponentFactory;
-
     protected function setUp(): void
     {
-        $this->pageLayout = $this->getMockBuilder(LayoutInterface::class)
+        $pageLayout = $this->getMockBuilder(LayoutInterface::class)
             ->getMock();
         $request = $this->getMockBuilder(Http::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['getHeader'])
             ->getMock();
         $request->method('getHeader')->willReturn('');
-        $this->buttonProviderFactory =
+        $buttonProviderFactory =
             $this->getMockBuilder(ButtonProviderFactory::class)
                 ->disableOriginalConstructor()
                 ->getMock();
-        $this->actionPoolFactory =
+        $actionPoolFactory =
             $this->getMockBuilder(ActionPoolFactory::class)
                 ->disableOriginalConstructor()
                 ->getMock();
         $this->actionPool = $this->getMockBuilder(ActionPoolInterface::class)
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
-        $this->actionPoolFactory->method('create')->willReturn($this->actionPool);
-        $this->contentTypeFactory =
+        $actionPoolFactory->method('create')->willReturn($this->actionPool);
+        $contentTypeFactory =
             $this->getMockBuilder(ContentTypeFactory::class)
                 ->disableOriginalConstructor()
                 ->getMock();
-        $this->urlBuilder = $this->getMockBuilder(UrlInterface::class)
+        $urlBuilder = $this->getMockBuilder(UrlInterface::class)
             ->getMock();
-        $this->processor = $this->getMockBuilder(Processor::class)
+        $processor = $this->getMockBuilder(Processor::class)
             ->getMock();
-        $this->uiComponentFactory =
+        $uiComponentFactory =
             $this->getMockBuilder(UiComponentFactory::class)
                 ->disableOriginalConstructor()
                 ->getMock();
@@ -121,14 +86,14 @@ class ContextTest extends TestCase
         $this->context = $objectManagerHelper->getObject(
             Context::class,
             [
-                'pageLayout'            => $this->pageLayout,
+                'pageLayout'            => $pageLayout,
                 'request'               => $request,
-                'buttonProviderFactory' => $this->buttonProviderFactory,
-                'actionPoolFactory'     => $this->actionPoolFactory,
-                'contentTypeFactory'    => $this->contentTypeFactory,
-                'urlBuilder'            => $this->urlBuilder,
-                'processor'             => $this->processor,
-                'uiComponentFactory'    => $this->uiComponentFactory,
+                'buttonProviderFactory' => $buttonProviderFactory,
+                'actionPoolFactory'     => $actionPoolFactory,
+                'contentTypeFactory'    => $contentTypeFactory,
+                'urlBuilder'            => $urlBuilder,
+                'processor'             => $processor,
+                'uiComponentFactory'    => $uiComponentFactory,
                 'authorization'         => $this->authorization,
             ]
         );
@@ -195,60 +160,6 @@ class ContextTest extends TestCase
             $this->context->addComponentDefinition($component['name'], $component['config']);
         }
         $this->assertEquals($expected, $this->context->getComponentsDefinitions());
-    }
-
-    /**
-     * @param string $headerAccept
-     * @param string $acceptType
-     *
-     * @dataProvider getAcceptTypeDataProvider
-     */
-    public function testGetAcceptType($headerAccept, $acceptType)
-    {
-        $request = $this->getMockBuilder(Http::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getHeader'])
-            ->getMock();
-        $request->method('getHeader')
-            ->with('Accept')
-            ->willReturn($headerAccept);
-
-        $objectManagerHelper = new ObjectManagerHelper($this);
-        $context = $objectManagerHelper->getObject(
-            Context::class,
-            [
-                'pageLayout'            => $this->pageLayout,
-                'request'               => $request,
-                'buttonProviderFactory' => $this->buttonProviderFactory,
-                'actionPoolFactory'     => $this->actionPoolFactory,
-                'contentTypeFactory'    => $this->contentTypeFactory,
-                'urlBuilder'            => $this->urlBuilder,
-                'processor'             => $this->processor,
-                'uiComponentFactory'    => $this->uiComponentFactory,
-                'authorization'         => $this->authorization,
-            ]
-        );
-
-        $this->assertEquals($acceptType, $context->getAcceptType());
-    }
-
-    /**
-     * @return array
-     */
-    public function getAcceptTypeDataProvider()
-    {
-        return [
-            ['json', 'json'],
-            ['text/html,application/xhtml+xml,application/json;q=0.9,
-            application/javascript;q=0.9,text/javascript;q=0.9,application/xml;q=0.9,
-            text/plain;q=0.8,*/*;q=0.7', 'html'],
-            ['application/json, text/javascript, */*;q=0.01', 'json'],
-            ['text/html, application/xhtml+xml, application/xml;q=0.9,
-            image/avif, image/webp, image/apng, */*;q=0.8,
-            application/signed-exchange;v=b3;q=0.9', 'html'],
-            ['xml', 'xml'],
-            ['text/html, application/json', 'json']
-        ];
     }
 
     /**

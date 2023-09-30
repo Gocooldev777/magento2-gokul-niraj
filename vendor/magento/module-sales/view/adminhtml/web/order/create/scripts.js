@@ -3,7 +3,7 @@
  * See COPYING.txt for license details.
  */
 
- define([
+define([
     'jquery',
     'Magento_Ui/js/modal/confirm',
     'Magento_Ui/js/modal/alert',
@@ -158,7 +158,6 @@
             //this.loadArea(['header', 'sidebar','data'], true);
             this.dataShow();
             this.loadArea(['header', 'data'], true);
-            location.reload();
         },
 
         setCurrencyId: function (id) {
@@ -586,7 +585,7 @@
         applyCoupon: function (code) {
             this.loadArea(['items', 'shipping_method', 'totals', 'billing_method'], true, {
                 'order[coupon][code]': code,
-                reset_shipping: true
+                reset_shipping: 0
             });
             this.orderItemChanged = false;
             jQuery('html, body').animate({

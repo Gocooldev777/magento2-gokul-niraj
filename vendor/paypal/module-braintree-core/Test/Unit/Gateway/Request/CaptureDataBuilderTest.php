@@ -5,47 +5,37 @@
  */
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
-use Magento\Payment\Gateway\Data\OrderAdapterInterface;
+use PayPal\Braintree\Gateway\Request\CaptureDataBuilder;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Sales\Model\Order\Payment;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
-use PayPal\Braintree\Gateway\Request\CaptureDataBuilder;
-use PHPUnit\Framework\MockObject\MockObject;
 
 class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var CaptureDataBuilder
+     * @var \PayPal\Braintree\Gateway\Request\CaptureDataBuilder
      */
     private $builder;
 
     /**
-     * @var Payment|MockObject
+     * @var Payment|\PHPUnit\Framework\MockObject\MockObject
      */
     private $payment;
 
     /**
-     * @var Payment|MockObject
+     * @var \Magento\Sales\Model\Order\Payment|\PHPUnit\Framework\MockObject\MockObject
      */
     private $paymentDO;
 
     /**
-     * @var SubjectReader|MockObject
+     * @var SubjectReader|\PHPUnit\Framework\MockObject\MockObject
      */
     private $subjectReaderMock;
-
-    /**
-     * @var OrderAdapterInterface|MockObject
-     */
-    private $order;
 
     protected function setUp(): void
     {
         $this->paymentDO = $this->createMock(PaymentDataObjectInterface::class);
         $this->payment = $this->getMockBuilder(Payment::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->order = $this->getMockBuilder(OrderAdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
         $this->subjectReaderMock = $this->getMockBuilder(SubjectReader::class)
@@ -93,12 +83,10 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
     {
         $transactionId = 'b3b99d';
         $amount = 10.00;
-        $orderId = '000000002';
 
         $expected = [
             'transaction_id' => $transactionId,
-            'amount' => $amount,
-            'orderId' => $orderId
+            'amount' => $amount
         ];
 
         $buildSubject = [
@@ -122,14 +110,6 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
             ->method('readAmount')
             ->with($buildSubject)
             ->willReturn($amount);
-
-        $this->paymentDO->expects(static::once())
-            ->method('getOrder')
-            ->willReturn($this->order);
-
-        $this->order->expects(static::once())
-            ->method('getOrderIncrementId')
-            ->willReturn($orderId);
 
         static::assertEquals($expected, $this->builder->build($buildSubject));
     }

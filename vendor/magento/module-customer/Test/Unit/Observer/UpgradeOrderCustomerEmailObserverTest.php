@@ -171,7 +171,7 @@ class UpgradeOrderCustomerEmailObserverTest extends TestCase
 
     private function setCustomerEmail(MockObject $originalCustomer, string $email): void
     {
-        $originalCustomer->expects($this->atLeastOnce())
+        $originalCustomer->expects($this->once())
             ->method('getEmail')
             ->willReturn($email);
     }
@@ -186,7 +186,7 @@ class UpgradeOrderCustomerEmailObserverTest extends TestCase
             ->method('create')
             ->willReturn($searchCriteriaMock);
 
-        $this->searchCriteriaBuilderMock->expects($this->atLeastOnce())
+        $this->searchCriteriaBuilderMock->expects($this->once())
             ->method('addFilter')
             ->willReturn($this->searchCriteriaBuilderMock);
 

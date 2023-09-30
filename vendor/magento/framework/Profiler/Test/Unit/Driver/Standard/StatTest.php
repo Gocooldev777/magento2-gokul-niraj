@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 /**
+ * Test class for \Magento\Framework\Profiler\Driver\Standard\Stat
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -236,24 +238,13 @@ class StatTest extends TestCase
                     ['start', 'root'],
                     ['start', 'root->init'],
                     ['start', 'root->system'],
-                    ['start', 'root->system->init_config'],
-                    ['stop', 'root->system->init_config'],
-                    ['start', 'root->system->init_store'],
-                    ['stop', 'root->system->init_store'],
                     ['stop', 'root->system'],
                     ['start', 'root->init->init_config'],
                     ['stop', 'root->init->init_config'],
                     ['stop', 'root->init'],
                     ['stop', 'root'],
                 ],
-                'expected' => [
-                    'root',
-                    'root->init',
-                    'root->init->init_config',
-                    'root->system',
-                    'root->system->init_config',
-                    'root->system->init_store',
-                ],
+                'expected' => ['root', 'root->init', 'root->init->init_config', 'root->system'],
             ]
         ];
     }

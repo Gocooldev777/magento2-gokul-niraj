@@ -10,9 +10,7 @@ use Magento\Payment\Model\InfoInterface;
 
 /**
  * Interface HandlerInterface used for error handling of gateway response
- *
  * @package Magento\Paypal\Model\Payflow\Service\Response\Handler
- * @api
  */
 interface HandlerInterface
 {

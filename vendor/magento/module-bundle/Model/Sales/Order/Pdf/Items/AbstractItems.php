@@ -23,7 +23,7 @@ use Magento\Tax\Helper\Data;
 abstract class AbstractItems extends \Magento\Sales\Model\Order\Pdf\Items\AbstractItems
 {
     /**
-     * Serializer interface instance.
+     * Serializer
      *
      * @var Json
      */
@@ -263,8 +263,7 @@ abstract class AbstractItems extends \Magento\Sales\Model\Order\Pdf\Items\Abstra
         if (!$this->isShipmentSeparately($item)) {
             $attributes = $this->getSelectionAttributes($item);
             if ($attributes) {
-                $qty = $this->filterManager->sprintf($attributes['qty'], ['format' => '%f']);
-                $result = (float) $qty . ' x ' . $result;
+                $result = $this->filterManager->sprintf($attributes['qty'], ['format' => '%d']) . ' x ' . $result;
             }
         }
         if (!$this->isChildCalculated($item)) {

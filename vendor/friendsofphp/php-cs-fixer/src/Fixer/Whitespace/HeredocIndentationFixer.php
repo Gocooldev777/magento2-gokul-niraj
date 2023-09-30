@@ -85,20 +85,10 @@ SAMPLE
 
     /**
      * {@inheritdoc}
-     *
-     * Must run after BracesFixer, StatementIndentationFixer.
-     */
-    public function getPriority(): int
-    {
-        return -26;
-    }
-
-    /**
-     * {@inheritdoc}
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isTokenKindFound(T_START_HEREDOC);
+        return \PHP_VERSION_ID >= 70300 && $tokens->isTokenKindFound(T_START_HEREDOC);
     }
 
     /**
@@ -174,7 +164,7 @@ SAMPLE
 
         $content = $tokens[$index]->getContent();
 
-        if (!\in_array($content[0], ["\r", "\n"], true) && (!$currentIndent || str_starts_with($content, $currentIndent))) {
+        if (!\in_array($content[0], ["\r", "\n"], true) && (!$currentIndent || $currentIndent === substr($content, 0, $currentIndentLength))) {
             $content = $indent.substr($content, $currentIndentLength);
         } elseif ($currentIndent) {
             $content = Preg::replace('/^(?!'.$currentIndent.')\h+/', '', $content);

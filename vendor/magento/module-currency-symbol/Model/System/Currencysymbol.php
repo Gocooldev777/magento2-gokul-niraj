@@ -27,14 +27,14 @@ class Currencysymbol
     protected $_symbolsData = [];
 
     /**
-     * Current store id
+     * Store id
      *
      * @var string|null
      */
     protected $_storeId;
 
     /**
-     * Current website id
+     * Website id
      *
      * @var string|null
      */
@@ -55,19 +55,19 @@ class Currencysymbol
     /**
      * Config path to custom currency symbol value
      */
-    public const XML_PATH_CUSTOM_CURRENCY_SYMBOL = 'currency/options/customsymbol';
+    const XML_PATH_CUSTOM_CURRENCY_SYMBOL = 'currency/options/customsymbol';
 
-    public const XML_PATH_ALLOWED_CURRENCIES = \Magento\Directory\Model\Currency::XML_PATH_CURRENCY_ALLOW;
+    const XML_PATH_ALLOWED_CURRENCIES = \Magento\Directory\Model\Currency::XML_PATH_CURRENCY_ALLOW;
 
     /*
      * Separator used in config in allowed currencies list
      */
-    public const ALLOWED_CURRENCIES_CONFIG_SEPARATOR = ',';
+    const ALLOWED_CURRENCIES_CONFIG_SEPARATOR = ',';
 
     /**
      * Config currency section
      */
-    public const CONFIG_SECTION = 'currency';
+    const CONFIG_SECTION = 'currency';
 
     /**
      * Core event manager proxy
@@ -174,11 +174,11 @@ class Currencysymbol
 
             if (isset($currentSymbols[$code]) && !empty($currentSymbols[$code])) {
                 $this->_symbolsData[$code]['displaySymbol'] = $currentSymbols[$code];
-                $this->_symbolsData[$code]['inherited'] = false;
             } else {
                 $this->_symbolsData[$code]['displaySymbol'] = $this->_symbolsData[$code]['parentSymbol'];
-                $this->_symbolsData[$code]['inherited'] = true;
             }
+            $this->_symbolsData[$code]['inherited'] =
+                ($this->_symbolsData[$code]['parentSymbol'] == $this->_symbolsData[$code]['displaySymbol']);
         }
 
         return $this->_symbolsData;
@@ -193,8 +193,8 @@ class Currencysymbol
     public function setCurrencySymbolsData($symbols = [])
     {
         if (!$this->_storeManager->isSingleStoreMode()) {
-            foreach (array_keys($this->getCurrencySymbolsData()) as $code) {
-                if (isset($symbols[$code]) && empty($symbols[$code])) {
+            foreach ($this->getCurrencySymbolsData() as $code => $values) {
+                if (isset($symbols[$code]) && ($symbols[$code] == $values['parentSymbol'] || empty($symbols[$code]))) {
                     unset($symbols[$code]);
                 }
             }

@@ -9,8 +9,6 @@ namespace Magento\PageCache\Model\Spi;
 
 /**
  * Interface for page tags preprocessors
- *
- * @api
  */
 interface PageCacheTagsPreprocessorInterface
 {

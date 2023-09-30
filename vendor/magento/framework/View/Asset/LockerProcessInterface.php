@@ -7,8 +7,6 @@ namespace Magento\Framework\View\Asset;
 
 /**
  * Interface LockerProcessInterface
- *
- * @api
  */
 interface LockerProcessInterface
 {

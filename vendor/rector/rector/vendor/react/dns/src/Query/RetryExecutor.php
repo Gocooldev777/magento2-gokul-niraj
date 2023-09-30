@@ -1,26 +1,27 @@
 <?php
 
-namespace RectorPrefix202304\React\Dns\Query;
+namespace RectorPrefix20211221\React\Dns\Query;
 
-use RectorPrefix202304\React\Promise\Deferred;
-use RectorPrefix202304\React\Promise\PromiseInterface;
-final class RetryExecutor implements ExecutorInterface
+use RectorPrefix20211221\React\Promise\CancellablePromiseInterface;
+use RectorPrefix20211221\React\Promise\Deferred;
+use RectorPrefix20211221\React\Promise\PromiseInterface;
+final class RetryExecutor implements \RectorPrefix20211221\React\Dns\Query\ExecutorInterface
 {
     private $executor;
     private $retries;
-    public function __construct(ExecutorInterface $executor, $retries = 2)
+    public function __construct(\RectorPrefix20211221\React\Dns\Query\ExecutorInterface $executor, $retries = 2)
     {
         $this->executor = $executor;
         $this->retries = $retries;
     }
-    public function query(Query $query)
+    public function query(\RectorPrefix20211221\React\Dns\Query\Query $query)
     {
         return $this->tryQuery($query, $this->retries);
     }
-    public function tryQuery(Query $query, $retries)
+    public function tryQuery(\RectorPrefix20211221\React\Dns\Query\Query $query, $retries)
     {
-        $deferred = new Deferred(function () use(&$promise) {
-            if ($promise instanceof PromiseInterface && \method_exists($promise, 'cancel')) {
+        $deferred = new \RectorPrefix20211221\React\Promise\Deferred(function () use(&$promise) {
+            if ($promise instanceof \RectorPrefix20211221\React\Promise\CancellablePromiseInterface || !\interface_exists('RectorPrefix20211221\\React\\Promise\\CancellablePromiseInterface') && \method_exists($promise, 'cancel')) {
                 $promise->cancel();
             }
         });
@@ -30,7 +31,7 @@ final class RetryExecutor implements ExecutorInterface
         };
         $executor = $this->executor;
         $errorback = function ($e) use($deferred, &$promise, $query, $success, &$errorback, &$retries, $executor) {
-            if (!$e instanceof TimeoutException) {
+            if (!$e instanceof \RectorPrefix20211221\React\Dns\Query\TimeoutException) {
                 $errorback = null;
                 $deferred->reject($e);
             } elseif ($retries <= 0) {
@@ -43,11 +44,11 @@ final class RetryExecutor implements ExecutorInterface
                 $trace = $r->getValue($e);
                 // Exception trace arguments are not available on some PHP 7.4 installs
                 // @codeCoverageIgnoreStart
-                foreach ($trace as $ti => $one) {
+                foreach ($trace as &$one) {
                     if (isset($one['args'])) {
-                        foreach ($one['args'] as $ai => $arg) {
+                        foreach ($one['args'] as &$arg) {
                             if ($arg instanceof \Closure) {
-                                $trace[$ti]['args'][$ai] = 'Object(' . \get_class($arg) . ')';
+                                $arg = 'Object(' . \get_class($arg) . ')';
                             }
                         }
                     }

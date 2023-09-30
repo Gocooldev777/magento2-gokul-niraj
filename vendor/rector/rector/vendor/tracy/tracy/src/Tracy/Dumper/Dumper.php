@@ -5,12 +5,12 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Tracy;
+namespace RectorPrefix20211221\Tracy;
 
-use RectorPrefix202304\Ds;
-use RectorPrefix202304\Tracy\Dumper\Describer;
-use RectorPrefix202304\Tracy\Dumper\Exposer;
-use RectorPrefix202304\Tracy\Dumper\Renderer;
+use RectorPrefix20211221\Ds;
+use RectorPrefix20211221\Tracy\Dumper\Describer;
+use RectorPrefix20211221\Tracy\Dumper\Exposer;
+use RectorPrefix20211221\Tracy\Dumper\Renderer;
 /**
  * Dumps a variable.
  */
@@ -20,55 +20,42 @@ class Dumper
     // show object and reference hashes (defaults to true)
     public const LOCATION_CLASS = 0b1, LOCATION_SOURCE = 0b11, LOCATION_LINK = self::LOCATION_SOURCE;
     // deprecated
-    public const HIDDEN_VALUE = Describer::HiddenValue;
+    public const HIDDEN_VALUE = \RectorPrefix20211221\Tracy\Dumper\Describer::HIDDEN_VALUE;
     /** @var Dumper\Value[] */
     public static $liveSnapshot = [];
-    /**
-     * @var mixed[]|null
-     */
+    /** @var array */
     public static $terminalColors = ['bool' => '1;33', 'null' => '1;33', 'number' => '1;32', 'string' => '1;36', 'array' => '1;31', 'public' => '1;37', 'protected' => '1;37', 'private' => '1;37', 'dynamic' => '1;37', 'virtual' => '1;37', 'object' => '1;31', 'resource' => '1;37', 'indent' => '1;30'];
-    /**
-     * @var mixed[]
-     */
+    /** @var array */
     public static $resources = ['stream' => 'stream_get_meta_data', 'stream-context' => 'stream_context_get_options', 'curl' => 'curl_getinfo'];
-    /**
-     * @var mixed[]
-     */
-    public static $objectExporters = [\Closure::class => [Exposer::class, 'exposeClosure'], \UnitEnum::class => [Exposer::class, 'exposeEnum'], \ArrayObject::class => [Exposer::class, 'exposeArrayObject'], \SplFileInfo::class => [Exposer::class, 'exposeSplFileInfo'], \SplObjectStorage::class => [Exposer::class, 'exposeSplObjectStorage'], \__PHP_Incomplete_Class::class => [Exposer::class, 'exposePhpIncompleteClass'], \Generator::class => [Exposer::class, 'exposeGenerator'], \Fiber::class => [Exposer::class, 'exposeFiber'], \DOMNode::class => [Exposer::class, 'exposeDOMNode'], \DOMNodeList::class => [Exposer::class, 'exposeDOMNodeList'], \DOMNamedNodeMap::class => [Exposer::class, 'exposeDOMNodeList'], Ds\Collection::class => [Exposer::class, 'exposeDsCollection'], Ds\Map::class => [Exposer::class, 'exposeDsMap']];
-    /** @var array<string, array{bool, string[]}> */
-    private static $enumProperties = [];
-    /**
-     * @var \Tracy\Dumper\Describer
-     */
+    /** @var array */
+    public static $objectExporters = [\Closure::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeClosure'], \RectorPrefix20211221\UnitEnum::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeEnum'], \ArrayObject::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeArrayObject'], \SplFileInfo::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeSplFileInfo'], \SplObjectStorage::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeSplObjectStorage'], \__PHP_Incomplete_Class::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposePhpIncompleteClass'], \DOMNode::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeDOMNode'], \DOMNodeList::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeDOMNodeList'], \DOMNamedNodeMap::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeDOMNodeList'], \Ds\Collection::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeDsCollection'], \Ds\Map::class => [\RectorPrefix20211221\Tracy\Dumper\Exposer::class, 'exposeDsMap']];
+    /** @var Describer */
     private $describer;
-    /**
-     * @var \Tracy\Dumper\Renderer
-     */
+    /** @var Renderer */
     private $renderer;
     /**
      * Dumps variable to the output.
-     * @param mixed $var
-     * @return mixed
+     * @return mixed  variable
      */
     public static function dump($var, array $options = [])
     {
-        if (Helpers::isCli()) {
-            $useColors = self::$terminalColors && Helpers::detectColors();
+        if (\RectorPrefix20211221\Tracy\Helpers::isCli()) {
+            $useColors = self::$terminalColors && \RectorPrefix20211221\Tracy\Helpers::detectColors();
             $dumper = new self($options);
             \fwrite(\STDOUT, $dumper->asTerminal($var, $useColors ? self::$terminalColors : []));
-        } elseif (Helpers::isHtmlMode()) {
+        } elseif (\preg_match('#^Content-Type: (?!text/html)#im', \implode("\n", \headers_list()))) {
+            // non-html
+            echo self::toText($var, $options);
+        } else {
+            // html
             $options[self::LOCATION] = $options[self::LOCATION] ?? \true;
             self::renderAssets();
             echo self::toHtml($var, $options);
-        } else {
-            echo self::toText($var, $options);
         }
         return $var;
     }
     /**
      * Dumps variable to HTML.
-     * @param mixed $var
-     * @param mixed $key
      */
     public static function toHtml($var, array $options = [], $key = null) : string
     {
@@ -76,7 +63,6 @@ class Dumper
     }
     /**
      * Dumps variable to plain text.
-     * @param mixed $var
      */
     public static function toText($var, array $options = []) : string
     {
@@ -84,7 +70,6 @@ class Dumper
     }
     /**
      * Dumps variable to x-terminal.
-     * @param mixed $var
      */
     public static function toTerminal($var, array $options = []) : string
     {
@@ -96,24 +81,24 @@ class Dumper
     public static function renderAssets() : void
     {
         static $sent;
-        if (Debugger::$productionMode === \true || $sent) {
+        if (\RectorPrefix20211221\Tracy\Debugger::$productionMode === \true || $sent) {
             return;
         }
         $sent = \true;
-        $nonce = Helpers::getNonce();
-        $nonceAttr = $nonce ? ' nonce="' . Helpers::escapeHtml($nonce) . '"' : '';
+        $nonce = \RectorPrefix20211221\Tracy\Helpers::getNonce();
+        $nonceAttr = $nonce ? ' nonce="' . \RectorPrefix20211221\Tracy\Helpers::escapeHtml($nonce) . '"' : '';
         $s = \file_get_contents(__DIR__ . '/../assets/toggle.css') . \file_get_contents(__DIR__ . '/assets/dumper-light.css') . \file_get_contents(__DIR__ . '/assets/dumper-dark.css');
-        echo "<style{$nonceAttr}>", \str_replace('</', '<\\/', Helpers::minifyCss($s)), "</style>\n";
-        if (!Debugger::isEnabled()) {
+        echo "<style{$nonceAttr}>", \str_replace('</', '<\\/', \RectorPrefix20211221\Tracy\Helpers::minifyCss($s)), "</style>\n";
+        if (!\RectorPrefix20211221\Tracy\Debugger::isEnabled()) {
             $s = '(function(){' . \file_get_contents(__DIR__ . '/../assets/toggle.js') . '})();' . '(function(){' . \file_get_contents(__DIR__ . '/../Dumper/assets/dumper.js') . '})();';
-            echo "<script{$nonceAttr}>", \str_replace(['<!--', '</s'], ['<\\!--', '<\\/s'], Helpers::minifyJs($s)), "</script>\n";
+            echo "<script{$nonceAttr}>", \str_replace(['<!--', '</s'], ['<\\!--', '<\\/s'], \RectorPrefix20211221\Tracy\Helpers::minifyJs($s)), "</script>\n";
         }
     }
     private function __construct(array $options = [])
     {
         $location = $options[self::LOCATION] ?? 0;
         $location = $location === \true ? ~0 : (int) $location;
-        $describer = $this->describer = new Describer();
+        $describer = $this->describer = new \RectorPrefix20211221\Tracy\Dumper\Describer();
         $describer->maxDepth = (int) ($options[self::DEPTH] ?? $describer->maxDepth);
         $describer->maxLength = (int) ($options[self::TRUNCATE] ?? $describer->maxLength);
         $describer->maxItems = (int) ($options[self::ITEMS] ?? $describer->maxItems);
@@ -122,7 +107,6 @@ class Dumper
         $describer->keysToHide = \array_flip(\array_map('strtolower', $options[self::KEYS_TO_HIDE] ?? []));
         $describer->resourceExposers = ($options['resourceExporters'] ?? []) + self::$resources;
         $describer->objectExposers = ($options[self::OBJECT_EXPORTERS] ?? []) + self::$objectExporters;
-        $describer->enumProperties = self::$enumProperties;
         $describer->location = (bool) $location;
         if ($options[self::LIVE] ?? \false) {
             $tmp =& self::$liveSnapshot;
@@ -135,20 +119,18 @@ class Dumper
             $describer->snapshot =& $tmp[0];
             $describer->references =& $tmp[1];
         }
-        $renderer = $this->renderer = new Renderer();
+        $renderer = $this->renderer = new \RectorPrefix20211221\Tracy\Dumper\Renderer();
         $renderer->collapseTop = $options[self::COLLAPSE] ?? $renderer->collapseTop;
         $renderer->collapseSub = $options[self::COLLAPSE_COUNT] ?? $renderer->collapseSub;
         $renderer->collectingMode = isset($options[self::SNAPSHOT]) || !empty($options[self::LIVE]);
         $renderer->lazy = $renderer->collectingMode ? \true : $options[self::LAZY] ?? $renderer->lazy;
         $renderer->sourceLocation = !(~$location & self::LOCATION_SOURCE);
         $renderer->classLocation = !(~$location & self::LOCATION_CLASS);
-        $renderer->theme = $options[self::THEME] ?? $renderer->theme ?: null;
+        $renderer->theme = $options[self::THEME] ?? $renderer->theme;
         $renderer->hash = $options[self::HASH] ?? \true;
     }
     /**
      * Dumps variable to HTML.
-     * @param mixed $var
-     * @param mixed $key
      */
     private function asHtml($var, $key = null) : string
     {
@@ -162,7 +144,6 @@ class Dumper
     }
     /**
      * Dumps variable to x-terminal.
-     * @param mixed $var
      */
     private function asTerminal($var, array $colors = []) : string
     {
@@ -171,12 +152,8 @@ class Dumper
     }
     public static function formatSnapshotAttribute(array &$snapshot) : string
     {
-        $res = "'" . Renderer::jsonEncode($snapshot[0] ?? []) . "'";
+        $res = "'" . \RectorPrefix20211221\Tracy\Dumper\Renderer::jsonEncode($snapshot[0] ?? []) . "'";
         $snapshot = [];
         return $res;
-    }
-    public static function addEnumProperty(string $class, string $property, array $constants, bool $set = \false) : void
-    {
-        self::$enumProperties["{$class}::{$property}"] = [$set, $constants];
     }
 }

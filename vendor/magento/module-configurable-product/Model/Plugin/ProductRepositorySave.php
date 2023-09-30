@@ -49,7 +49,7 @@ class ProductRepositorySave
      * @param ProductRepositoryInterface $subject
      * @param ProductInterface $product
      * @param bool $saveOptions
-     * @return void
+     * @return array
      * @throws InputException
      * @throws NoSuchEntityException
      *
@@ -59,23 +59,34 @@ class ProductRepositorySave
         ProductRepositoryInterface $subject,
         ProductInterface $product,
         $saveOptions = false
-    ): void {
-        $extensionAttributes = $product->getExtensionAttributes();
-        if ($extensionAttributes !== null && $product->getTypeId() === Configurable::TYPE_CODE) {
-            $configurableLinks = (array) $extensionAttributes->getConfigurableProductLinks();
-            $configurableOptions = (array) $extensionAttributes->getConfigurableProductOptions();
-
-            if (!empty($configurableLinks) || !empty($configurableOptions)) {
-                $attributeCodes = [];
-                /** @var OptionInterface $configurableOption */
-                foreach ($configurableOptions as $configurableOption) {
-                    $eavAttribute = $this->productAttributeRepository->get($configurableOption->getAttributeId());
-                    $attributeCode = $eavAttribute->getAttributeCode();
-                    $attributeCodes[] = $attributeCode;
-                }
-                $this->validateProductLinks($attributeCodes, $configurableLinks);
-            }
+    ): array {
+        $result[] = $product;
+        if ($product->getTypeId() !== Configurable::TYPE_CODE) {
+            return $result;
         }
+
+        $extensionAttributes = $product->getExtensionAttributes();
+        if ($extensionAttributes === null) {
+            return $result;
+        }
+
+        $configurableLinks = (array) $extensionAttributes->getConfigurableProductLinks();
+        $configurableOptions = (array) $extensionAttributes->getConfigurableProductOptions();
+
+        if (empty($configurableLinks) && empty($configurableOptions)) {
+            return $result;
+        }
+
+        $attributeCodes = [];
+        /** @var OptionInterface $configurableOption */
+        foreach ($configurableOptions as $configurableOption) {
+            $eavAttribute = $this->productAttributeRepository->get($configurableOption->getAttributeId());
+            $attributeCode = $eavAttribute->getAttributeCode();
+            $attributeCodes[] = $attributeCode;
+        }
+        $this->validateProductLinks($attributeCodes, $configurableLinks);
+
+        return $result;
     }
 
     /**

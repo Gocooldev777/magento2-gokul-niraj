@@ -15,7 +15,6 @@
 
         <click selector="{{AdminEnhancedMediaGalleryImageActionsSection.openContextMenu}}" stepKey="openContextMenu"/>
         <click selector="{{AdminEnhancedMediaGalleryImageActionsSection.viewDetails}}" stepKey="viewDetails"/>
-        <waitForPageLoad stepKey="waitForLoadingMaskToDisappear"/>
-        <waitForElementVisible selector="{{AdminEnhancedMediaGalleryViewDetailsSection.modalTitle}}" stepKey="waitForSlideOut"/>
+        <waitForElementVisible selector="{{AdminEnhancedMediaGalleryViewDetailsSection.modalTitle}}" stepKey="waitForLoadingMaskToDisappear"/>
     </actionGroup>
 </actionGroups>

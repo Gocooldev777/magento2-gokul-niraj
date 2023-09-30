@@ -1,38 +1,39 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Executor\Promise;
 
-use Amp\Promise as AmpPromise;
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Executor\Promise\Adapter\SyncPromise;
-use React\Promise\PromiseInterface as ReactPromise;
+use GraphQL\Utils\Utils;
+use React\Promise\Promise as ReactPromise;
 
 /**
- * Convenience wrapper for promises represented by Promise Adapter.
+ * Convenience wrapper for promises represented by Promise Adapter
  */
 class Promise
 {
-    /** @var SyncPromise|ReactPromise|AmpPromise<mixed> */
+    /** @var SyncPromise|ReactPromise */
     public $adoptedPromise;
 
-    private PromiseAdapter $adapter;
+    /** @var PromiseAdapter */
+    private $adapter;
 
     /**
      * @param mixed $adoptedPromise
-     *
-     * @throws InvariantViolation
      */
     public function __construct($adoptedPromise, PromiseAdapter $adapter)
     {
-        if ($adoptedPromise instanceof self) {
-            throw new InvariantViolation('Expecting promise from adapted system, got ' . self::class);
-        }
+        Utils::invariant(! $adoptedPromise instanceof self, 'Expecting promise from adapted system, got ' . self::class);
 
+        $this->adapter        = $adapter;
         $this->adoptedPromise = $adoptedPromise;
-        $this->adapter = $adapter;
     }
 
-    public function then(?callable $onFulfilled = null, ?callable $onRejected = null): Promise
+    /**
+     * @return Promise
+     */
+    public function then(?callable $onFulfilled = null, ?callable $onRejected = null)
     {
         return $this->adapter->then($this, $onFulfilled, $onRejected);
     }

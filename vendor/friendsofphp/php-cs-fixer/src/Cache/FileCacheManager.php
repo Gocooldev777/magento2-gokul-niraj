@@ -32,18 +32,30 @@ namespace PhpCsFixer\Cache;
  */
 final class FileCacheManager implements CacheManagerInterface
 {
-    private FileHandlerInterface $handler;
+    /**
+     * @var FileHandlerInterface
+     */
+    private $handler;
 
-    private SignatureInterface $signature;
-
-    private bool $isDryRun;
-
-    private DirectoryInterface $cacheDirectory;
+    /**
+     * @var SignatureInterface
+     */
+    private $signature;
 
     /**
      * @var CacheInterface
      */
     private $cache;
+
+    /**
+     * @var bool
+     */
+    private $isDryRun;
+
+    /**
+     * @var DirectoryInterface
+     */
+    private $cacheDirectory;
 
     public function __construct(
         FileHandlerInterface $handler,
@@ -122,8 +134,8 @@ final class FileCacheManager implements CacheManagerInterface
         $this->handler->write($this->cache);
     }
 
-    private function calcHash(string $content): string
+    private function calcHash(string $content): int
     {
-        return md5($content);
+        return crc32($content);
     }
 }

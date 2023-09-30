@@ -12,8 +12,6 @@ use Magento\Framework\App\ActionInterface;
 
 /**
  * Marker for actions processing PROPFIND requests.
- *
- * @api
  */
 interface HttpPropfindActionInterface extends ActionInterface
 {

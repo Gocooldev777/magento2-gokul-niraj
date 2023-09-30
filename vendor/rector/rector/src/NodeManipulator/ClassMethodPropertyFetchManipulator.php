@@ -7,20 +7,17 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeTraverser;
-use Rector\Core\PhpParser\Node\BetterNodeFinder;
 use Rector\NodeNameResolver\NodeNameResolver;
-use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
+use RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
 final class ClassMethodPropertyFetchManipulator
 {
     /**
      * @readonly
-     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
@@ -28,22 +25,10 @@ final class ClassMethodPropertyFetchManipulator
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
-    /**
-     * @readonly
-     * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
-     */
-    private $betterNodeFinder;
-    /**
-     * @readonly
-     * @var \Rector\Core\NodeManipulator\FunctionLikeManipulator
-     */
-    private $functionLikeManipulator;
-    public function __construct(SimpleCallableNodeTraverser $simpleCallableNodeTraverser, NodeNameResolver $nodeNameResolver, BetterNodeFinder $betterNodeFinder, \Rector\Core\NodeManipulator\FunctionLikeManipulator $functionLikeManipulator)
+    public function __construct(\RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser $simpleCallableNodeTraverser, \Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver)
     {
         $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
         $this->nodeNameResolver = $nodeNameResolver;
-        $this->betterNodeFinder = $betterNodeFinder;
-        $this->functionLikeManipulator = $functionLikeManipulator;
     }
     /**
      * In case the property name is different to param name:
@@ -54,28 +39,21 @@ final class ClassMethodPropertyFetchManipulator
      * ↓
      * (SomeType $anotherValue)
      */
-    public function findParamAssignToPropertyName(ClassMethod $classMethod, string $propertyName) : ?Param
+    public function findParamAssignToPropertyName(\PhpParser\Node\Stmt\ClassMethod $classMethod, string $propertyName) : ?\PhpParser\Node\Param
     {
         $assignedParamName = null;
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use($propertyName, &$assignedParamName, $classMethod) : ?int {
-            if (!$node instanceof Assign) {
-                return null;
-            }
-            if (!$node->var instanceof PropertyFetch && !$node->var instanceof StaticPropertyFetch) {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $classMethod->stmts, function (\PhpParser\Node $node) use($propertyName, &$assignedParamName) : ?int {
+            if (!$node instanceof \PhpParser\Node\Expr\Assign) {
                 return null;
             }
             if (!$this->nodeNameResolver->isName($node->var, $propertyName)) {
                 return null;
             }
-            if ($node->expr instanceof MethodCall || $node->expr instanceof StaticCall) {
-                return null;
-            }
-            $parentClassMethod = $this->betterNodeFinder->findParentType($node, ClassMethod::class);
-            if ($parentClassMethod !== $classMethod) {
+            if ($node->expr instanceof \PhpParser\Node\Expr\MethodCall || $node->expr instanceof \PhpParser\Node\Expr\StaticCall) {
                 return null;
             }
             $assignedParamName = $this->nodeNameResolver->getName($node->expr);
-            return NodeTraverser::STOP_TRAVERSAL;
+            return \PhpParser\NodeTraverser::STOP_TRAVERSAL;
         });
         /** @var string|null $assignedParamName */
         if ($assignedParamName === null) {
@@ -98,15 +76,12 @@ final class ClassMethodPropertyFetchManipulator
      *
      * @return Expr[]
      */
-    public function findAssignsToPropertyName(ClassMethod $classMethod, string $propertyName) : array
+    public function findAssignsToPropertyName(\PhpParser\Node\Stmt\ClassMethod $classMethod, string $propertyName) : array
     {
         $assignExprs = [];
-        $paramNames = $this->functionLikeManipulator->resolveParamNames($classMethod);
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use($propertyName, &$assignExprs, $paramNames, $classMethod) : ?int {
-            if (!$node instanceof Assign) {
-                return null;
-            }
-            if (!$node->var instanceof PropertyFetch && !$node->var instanceof StaticPropertyFetch) {
+        $paramNames = $this->getParamNames($classMethod);
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable((array) $classMethod->stmts, function (\PhpParser\Node $node) use($propertyName, &$assignExprs, $paramNames) : ?int {
+            if (!$node instanceof \PhpParser\Node\Expr\Assign) {
                 return null;
             }
             if (!$this->nodeNameResolver->isName($node->var, $propertyName)) {
@@ -116,13 +91,20 @@ final class ClassMethodPropertyFetchManipulator
             if ($this->nodeNameResolver->isNames($node->expr, $paramNames)) {
                 return null;
             }
-            $parentClassMethod = $this->betterNodeFinder->findParentType($node, ClassMethod::class);
-            if ($parentClassMethod !== $classMethod) {
-                return null;
-            }
             $assignExprs[] = $node->expr;
             return null;
         });
         return $assignExprs;
+    }
+    /**
+     * @return string[]
+     */
+    private function getParamNames(\PhpParser\Node\Stmt\ClassMethod $classMethod) : array
+    {
+        $paramNames = [];
+        foreach ($classMethod->getParams() as $param) {
+            $paramNames[] = $this->nodeNameResolver->getName($param);
+        }
+        return $paramNames;
     }
 }

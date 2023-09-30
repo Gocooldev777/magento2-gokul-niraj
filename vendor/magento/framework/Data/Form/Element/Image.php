@@ -3,22 +3,20 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
-namespace Magento\Framework\Data\Form\Element;
-
-use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Escaper;
-use Magento\Framework\Math\Random;
-use Magento\Framework\UrlInterface;
-use Magento\Framework\View\Helper\SecureHtmlRenderer;
 
 /**
  * Category form input image element
  *
- * @api
+ * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Image extends AbstractElement
+namespace Magento\Framework\Data\Form\Element;
+
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Math\Random;
+use Magento\Framework\UrlInterface;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+
+class Image extends \Magento\Framework\Data\Form\Element\AbstractElement
 {
     /**
      * @var UrlInterface
@@ -38,7 +36,7 @@ class Image extends AbstractElement
     /**
      * @param Factory $factoryElement
      * @param CollectionFactory $factoryCollection
-     * @param Escaper $escaper
+     * @param \Magento\Framework\Escaper $escaper
      * @param UrlInterface $urlBuilder
      * @param array $data
      * @param SecureHtmlRenderer|null $secureRenderer
@@ -47,7 +45,7 @@ class Image extends AbstractElement
     public function __construct(
         Factory $factoryElement,
         CollectionFactory $factoryCollection,
-        Escaper $escaper,
+        \Magento\Framework\Escaper $escaper,
         UrlInterface $urlBuilder,
         $data = [],
         ?SecureHtmlRenderer $secureRenderer = null,

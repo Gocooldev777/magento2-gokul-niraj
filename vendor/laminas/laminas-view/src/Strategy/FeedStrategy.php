@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Strategy;
 
 use Laminas\EventManager\AbstractListenerAggregate;
@@ -11,13 +9,18 @@ use Laminas\View\Model;
 use Laminas\View\Renderer\FeedRenderer;
 use Laminas\View\ViewEvent;
 
-use function is_string;
-
 class FeedStrategy extends AbstractListenerAggregate
 {
-    /** @var FeedRenderer */
+    /**
+     * @var FeedRenderer
+     */
     protected $renderer;
 
+    /**
+     * Constructor
+     *
+     * @param  FeedRenderer $renderer
+     */
     public function __construct(FeedRenderer $renderer)
     {
         $this->renderer = $renderer;
@@ -25,8 +28,6 @@ class FeedStrategy extends AbstractListenerAggregate
 
     /**
      * {@inheritDoc}
-     *
-     * @param int $priority
      */
     public function attach(EventManagerInterface $events, $priority = 1)
     {
@@ -37,6 +38,7 @@ class FeedStrategy extends AbstractListenerAggregate
     /**
      * Detect if we should use the FeedRenderer based on model type
      *
+     * @param  ViewEvent $e
      * @return null|FeedRenderer
      */
     public function selectRenderer(ViewEvent $e)
@@ -55,18 +57,18 @@ class FeedStrategy extends AbstractListenerAggregate
     /**
      * Inject the response with the feed payload and appropriate Content-Type header
      *
+     * @param  ViewEvent $e
      * @return void
      */
     public function injectResponse(ViewEvent $e)
     {
-        /** @var FeedRenderer $renderer */
         $renderer = $e->getRenderer();
         if ($renderer !== $this->renderer) {
             // Discovered renderer is not ours; do nothing
             return;
         }
 
-        $result = $e->getResult();
+        $result   = $e->getResult();
         if (! is_string($result) && ! $result instanceof Feed) {
             // We don't have a string, and thus, no feed
             return;
@@ -79,7 +81,7 @@ class FeedStrategy extends AbstractListenerAggregate
 
         // Get the content-type header based on feed type
         $feedType = $renderer->getFeedType();
-        $feedType = 'rss' === $feedType
+        $feedType = ('rss' == $feedType)
                   ? 'application/rss+xml'
                   : 'application/atom+xml';
 
@@ -89,7 +91,7 @@ class FeedStrategy extends AbstractListenerAggregate
         if ($model instanceof Model\FeedModel) {
             $feed = $model->getFeed();
 
-            $charset = '; charset=' . (string) $feed->getEncoding() . ';';
+            $charset = '; charset=' . $feed->getEncoding() . ';';
         }
 
         // Populate response

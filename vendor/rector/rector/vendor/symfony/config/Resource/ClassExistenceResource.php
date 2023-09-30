@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Resource;
+namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
 
 /**
  * ClassExistenceResource represents a class existence.
@@ -20,31 +20,16 @@ namespace RectorPrefix202304\Symfony\Component\Config\Resource;
  *
  * @final
  */
-class ClassExistenceResource implements SelfCheckingResourceInterface
+class ClassExistenceResource implements \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceInterface
 {
-    /**
-     * @var string
-     */
     private $resource;
-    /**
-     * @var mixed[]|null
-     */
     private $exists;
-    /**
-     * @var int
-     */
     private static $autoloadLevel = 0;
-    /**
-     * @var string|null
-     */
     private static $autoloadedClass;
-    /**
-     * @var mixed[]
-     */
     private static $existsCache = [];
     /**
      * @param string    $resource The fully-qualified class name
-     * @param bool|null $exists   Boolean when the existence check has already been done
+     * @param bool|null $exists   Boolean when the existency check has already been done
      */
     public function __construct(string $resource, bool $exists = null)
     {
@@ -62,6 +47,8 @@ class ClassExistenceResource implements SelfCheckingResourceInterface
         return $this->resource;
     }
     /**
+     * {@inheritdoc}
+     *
      * @throws \ReflectionException when a parent class/interface/trait is not found
      */
     public function isFresh(int $timestamp) : bool
@@ -100,7 +87,9 @@ class ClassExistenceResource implements SelfCheckingResourceInterface
                 }
             }
         }
-        $this->exists = $this->exists ?? $exists;
+        if (null === $this->exists) {
+            $this->exists = $exists;
+        }
         return $this->exists[0] xor !$exists[0];
     }
     /**
@@ -166,7 +155,7 @@ class ClassExistenceResource implements SelfCheckingResourceInterface
         }
         $trace = \debug_backtrace();
         $autoloadFrame = ['function' => 'spl_autoload_call', 'args' => [$class]];
-        if (isset($trace[1])) {
+        if (\PHP_VERSION_ID >= 80000 && isset($trace[1])) {
             $callerFrame = $trace[1];
             $i = 2;
         } elseif (\false !== ($i = \array_search($autoloadFrame, $trace, \true))) {
@@ -196,6 +185,7 @@ class ClassExistenceResource implements SelfCheckingResourceInterface
             foreach ($props as $p => $v) {
                 if (null !== $v) {
                     $r = new \ReflectionProperty(\Exception::class, $p);
+                    $r->setAccessible(\true);
                     $r->setValue($e, $v);
                 }
             }

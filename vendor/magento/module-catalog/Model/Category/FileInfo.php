@@ -26,7 +26,7 @@ class FileInfo
     /**
      * Path in /pub/media directory
      */
-    public const ENTITY_MEDIA_PATH = '/catalog/category';
+    const ENTITY_MEDIA_PATH = '/catalog/category';
 
     /**
      * @var Filesystem
@@ -54,6 +54,8 @@ class FileInfo
     private $pubDirectory;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     private $storeManager;
@@ -214,7 +216,7 @@ class FileInfo
     {
         $result = $path;
         try {
-            $storeUrl = $this->storeManager->getStore()->getBaseUrl() ?? '';
+            $storeUrl = $this->storeManager->getStore()->getBaseUrl();
         } catch (NoSuchEntityException $e) {
             return $result;
         }

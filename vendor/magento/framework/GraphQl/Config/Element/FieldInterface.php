@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Config\ConfigElementInterface;
 
 /**
  * Defines contract for fields data as GraphQL objects.
- *
- * @api
  */
 interface FieldInterface extends ConfigElementInterface
 {
@@ -21,7 +19,7 @@ interface FieldInterface extends ConfigElementInterface
      *
      * @return string
      */
-    public function getTypeName(): string;
+    public function getTypeName() : string;
 
     /**
      * Return true if argument is a list of input items, otherwise false if it is a single object/scalar.

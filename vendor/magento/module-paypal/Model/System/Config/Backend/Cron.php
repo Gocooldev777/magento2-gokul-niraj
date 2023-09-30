@@ -7,9 +7,9 @@ namespace Magento\Paypal\Model\System\Config\Backend;
 
 class Cron extends \Magento\Framework\App\Config\Value
 {
-    public const CRON_STRING_PATH = 'crontab/default/jobs/paypal_fetch_settlement_reports/schedule/cron_expr';
+    const CRON_STRING_PATH = 'crontab/default/jobs/paypal_fetch_settlement_reports/schedule/cron_expr';
 
-    public const CRON_MODEL_PATH_INTERVAL = 'paypal/fetch_reports/schedule';
+    const CRON_MODEL_PATH_INTERVAL = 'paypal/fetch_reports/schedule';
 
     /**
      * @var \Magento\Framework\App\Config\ValueFactory
@@ -48,8 +48,10 @@ class Cron extends \Magento\Framework\App\Config\Value
     public function afterSave()
     {
         $cronExprString = '';
-        $timeFromConfig = $this->_configValueFactory->create()->load('paypal/fetch_reports/time', 'path')->getValue();
-        $time = $timeFromConfig !== null ? explode(',', $timeFromConfig) : [];
+        $time = explode(
+            ',',
+            $this->_configValueFactory->create()->load('paypal/fetch_reports/time', 'path')->getValue()
+        );
 
         if ($this->_configValueFactory->create()->load('paypal/fetch_reports/active', 'path')->getValue()) {
             $interval = $this->_configValueFactory->create()->load(self::CRON_MODEL_PATH_INTERVAL, 'path')->getValue();

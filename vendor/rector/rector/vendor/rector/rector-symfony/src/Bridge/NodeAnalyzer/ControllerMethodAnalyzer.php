@@ -5,29 +5,38 @@ namespace Rector\Symfony\Bridge\NodeAnalyzer;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
-use Rector\Symfony\TypeAnalyzer\ControllerAnalyzer;
+use PHPStan\Analyser\Scope;
+use Rector\NodeCollector\ScopeResolver\ParentClassScopeResolver;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 final class ControllerMethodAnalyzer
 {
     /**
-     * @readonly
-     * @var \Rector\Symfony\TypeAnalyzer\ControllerAnalyzer
+     * @var \Rector\NodeCollector\ScopeResolver\ParentClassScopeResolver
      */
-    private $controllerAnalyzer;
-    public function __construct(ControllerAnalyzer $controllerAnalyzer)
+    private $parentClassScopeResolver;
+    public function __construct(\Rector\NodeCollector\ScopeResolver\ParentClassScopeResolver $parentClassScopeResolver)
     {
-        $this->controllerAnalyzer = $controllerAnalyzer;
+        $this->parentClassScopeResolver = $parentClassScopeResolver;
     }
     /**
      * Detect if is <some>Action() in Controller
      */
-    public function isAction(Node $node) : bool
+    public function isAction(\PhpParser\Node $node) : bool
     {
-        if (!$node instanceof ClassMethod) {
+        if (!$node instanceof \PhpParser\Node\Stmt\ClassMethod) {
             return \false;
         }
-        if (!$this->controllerAnalyzer->isInsideController($node)) {
+        $scope = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::SCOPE);
+        if (!$scope instanceof \PHPStan\Analyser\Scope) {
             return \false;
         }
-        return $node->isPublic() && !$node->isStatic();
+        $parentClassName = (string) $this->parentClassScopeResolver->resolveParentClassName($scope);
+        if (\substr_compare($parentClassName, 'Controller', -\strlen('Controller')) === 0) {
+            return \true;
+        }
+        if (\substr_compare((string) $node->name, 'Action', -\strlen('Action')) === 0) {
+            return \true;
+        }
+        return $node->isPublic();
     }
 }

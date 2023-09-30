@@ -5,31 +5,22 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Neon;
+namespace RectorPrefix20211221\Nette\Neon;
 
 /**
  * Representation of NEON entity 'foo(bar=1)'
  */
 final class Entity extends \stdClass
 {
-    /**
-     * @var mixed
-     */
+    /** @var mixed */
     public $value;
-    /**
-     * @var mixed[]
-     */
-    public $attributes = [];
-    /**
-     * @param mixed $value
-     */
-    public function __construct($value, array $attributes = [])
+    /** @var array */
+    public $attributes;
+    public function __construct($value, array $attrs = [])
     {
         $this->value = $value;
-        /** @var mixed[] */
-        $this->attributes = $attributes;
+        $this->attributes = $attrs;
     }
-    /** @param  mixed[]  $properties */
     public static function __set_state(array $properties)
     {
         return new self($properties['value'], $properties['attributes']);

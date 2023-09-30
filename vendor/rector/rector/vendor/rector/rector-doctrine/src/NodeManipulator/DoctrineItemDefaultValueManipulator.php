@@ -6,45 +6,37 @@ namespace Rector\Doctrine\NodeManipulator;
 use PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprFalseNode;
 use PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprIntegerNode;
 use PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprTrueNode;
-use Rector\BetterPhpDocParser\PhpDoc\ArrayItemNode;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
-use Rector\BetterPhpDocParser\ValueObject\PhpDocAttributeKey;
 final class DoctrineItemDefaultValueManipulator
 {
     /**
-     * @param string|bool|int $defaultValue
+     * @param bool|int|string $defaultValue
      */
-    public function clearDoctrineAnnotationTagValueNode(PhpDocInfo $phpDocInfo, DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, string $item, $defaultValue) : bool
+    public function remove(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo, \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode $doctrineTagValueNode, string $item, $defaultValue) : void
     {
-        if (!$this->hasItemWithDefaultValue($doctrineAnnotationTagValueNode, $item, $defaultValue)) {
-            return \false;
+        if (!$this->hasItemWithDefaultValue($doctrineTagValueNode, $item, $defaultValue)) {
+            return;
         }
-        $parent = $doctrineAnnotationTagValueNode->getAttribute(PhpDocAttributeKey::PARENT);
-        if ($parent instanceof ArrayItemNode) {
-            return \false;
-        }
-        $doctrineAnnotationTagValueNode->removeValue($item);
+        $doctrineTagValueNode->removeValue($item);
         $phpDocInfo->markAsChanged();
-        return \true;
     }
     /**
-     * @param string|bool|int $defaultValue
+     * @param bool|int|string $defaultValue
      */
-    private function hasItemWithDefaultValue(DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, string $itemKey, $defaultValue) : bool
+    private function hasItemWithDefaultValue(\Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode $doctrineAnnotationTagValueNode, string $itemKey, $defaultValue) : bool
     {
-        $currentValueArrayItemNode = $doctrineAnnotationTagValueNode->getValue($itemKey);
-        if (!$currentValueArrayItemNode instanceof ArrayItemNode) {
+        $currentValue = $doctrineAnnotationTagValueNode->getValueWithoutQuotes($itemKey);
+        if ($currentValue === null) {
             return \false;
         }
-        $currentValue = $currentValueArrayItemNode->value;
         if ($defaultValue === \false) {
-            return $currentValue instanceof ConstExprFalseNode;
+            return $currentValue instanceof \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprFalseNode;
         }
         if ($defaultValue === \true) {
-            return $currentValue instanceof ConstExprTrueNode;
+            return $currentValue instanceof \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprTrueNode;
         }
-        if (\is_int($defaultValue) && $currentValue instanceof ConstExprIntegerNode) {
+        if (\is_int($defaultValue) && $currentValue instanceof \PHPStan\PhpDocParser\Ast\ConstExpr\ConstExprIntegerNode) {
             $currentValue = (int) $currentValue->value;
         }
         return $currentValue === $defaultValue;

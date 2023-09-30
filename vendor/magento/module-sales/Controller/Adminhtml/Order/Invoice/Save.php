@@ -30,7 +30,7 @@ class Save extends \Magento\Backend\App\Action implements HttpPostActionInterfac
      *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'Magento_Sales::sales_invoice';
+    const ADMIN_RESOURCE = 'Magento_Sales::sales_invoice';
 
     /**
      * @var InvoiceSender
@@ -128,7 +128,6 @@ class Save extends \Magento\Backend\App\Action implements HttpPostActionInterfac
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @codeCoverageIgnore
      */
     public function execute()
     {
@@ -156,19 +155,23 @@ class Save extends \Magento\Backend\App\Action implements HttpPostActionInterfac
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->_objectManager->create(\Magento\Sales\Model\Order::class)->load($orderId);
             if (!$order->getId()) {
-                throw new LocalizedException(__('The order no longer exists.'));
+                throw new \Magento\Framework\Exception\LocalizedException(__('The order no longer exists.'));
             }
 
             if (!$order->canInvoice()) {
-                throw new LocalizedException(
+                throw new \Magento\Framework\Exception\LocalizedException(
                     __('The order does not allow an invoice to be created.')
                 );
             }
 
             $invoice = $this->invoiceService->prepareInvoice($order, $invoiceItems);
 
+            if (!$invoice) {
+                throw new LocalizedException(__("The invoice can't be saved at this time. Please try again later."));
+            }
+
             if (!$invoice->getTotalQty()) {
-                throw new LocalizedException(
+                throw new \Magento\Framework\Exception\LocalizedException(
                     __("The invoice can't be created without products. Add products and try again.")
                 );
             }

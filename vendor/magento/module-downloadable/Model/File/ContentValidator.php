@@ -19,7 +19,6 @@ class ContentValidator
      */
     public function isValid(ContentInterface $fileContent)
     {
-        // phpcs:disable Generic.PHP.NoSilencedErrors,Magento2.Functions.DiscouragedFunction
         $decodedContent = @base64_decode($fileContent->getFileData(), true);
         if (empty($decodedContent)) {
             throw new InputException(__('Provided content must be valid base64 encoded data.'));
@@ -40,7 +39,7 @@ class ContentValidator
     protected function isFileNameValid($fileName)
     {
         // Cannot contain \ / : * ? " < > |
-        if (!$fileName || !preg_match('/^[^\\/?*:";<>()|{}\\\\]+$/', $fileName)) {
+        if (!preg_match('/^[^\\/?*:";<>()|{}\\\\]+$/', $fileName)) {
             return false;
         }
         return true;

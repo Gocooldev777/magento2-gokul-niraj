@@ -8,30 +8,45 @@ use function rtrim;
 
 class MethodTag implements TagInterface, PhpDocTypedTagInterface
 {
-    /** @var list<string> */
+    /**
+     * Return value type
+     *
+     * @var string[]
+     * @psalm-var list<string>
+     */
     protected $types = [];
 
-    /** @var string|null */
+    /** @var string */
     protected $methodName;
 
-    /** @var string|null */
+    /** @var string */
     protected $description;
 
-    /** @var bool */
+    /**
+     * Is static method
+     *
+     * @var bool
+     */
     protected $isStatic = false;
 
-    /** @return 'method' */
+    /**
+     * @return string
+     */
     public function getName()
     {
         return 'method';
     }
 
-    /** @inheritDoc */
-    public function initialize($content)
+    /**
+     * Initializer
+     *
+     * @param  string $tagDocblockLine
+     */
+    public function initialize($tagDocblockLine)
     {
         $match = [];
 
-        if (! preg_match('#^(static[\s]+)?(.+[\s]+)?(.+\(\))[\s]*(.*)$#m', $content, $match)) {
+        if (! preg_match('#^(static[\s]+)?(.+[\s]+)?(.+\(\))[\s]*(.*)$#m', $tagDocblockLine, $match)) {
             return;
         }
 
@@ -60,37 +75,46 @@ class MethodTag implements TagInterface, PhpDocTypedTagInterface
     public function getReturnType()
     {
         if (empty($this->types)) {
-            return null;
+            return;
         }
 
         return $this->types[0];
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public function getTypes()
     {
         return $this->types;
     }
 
-    /** @return string|null */
+    /**
+     * @return string
+     */
     public function getMethodName()
     {
         return $this->methodName;
     }
 
-    /** @return string|null */
+    /**
+     * @return null|string
+     */
     public function getDescription()
     {
         return $this->description;
     }
 
-    /** @return bool */
+    /**
+     * @return bool
+     */
     public function isStatic()
     {
         return $this->isStatic;
     }
 
-    /** @return non-empty-string */
+    /**
+     * @return string
+     * @psalm-return non-empty-string
+     */
     public function __toString()
     {
         return 'DocBlock Tag [ * @' . $this->getName() . ' ]' . "\n";

@@ -1223,7 +1223,7 @@ class File
 
 
     /**
-     * Returns the declaration name for classes, interfaces, traits, enums, and functions.
+     * Returns the declaration names for classes, interfaces, traits, and functions.
      *
      * @param int $stackPtr The position of the declaration token which
      *                      declared the class, interface, trait, or function.
@@ -1232,7 +1232,7 @@ class File
      *                     or NULL if the function or class is anonymous.
      * @throws \PHP_CodeSniffer\Exceptions\RuntimeException If the specified token is not of type
      *                                                      T_FUNCTION, T_CLASS, T_ANON_CLASS,
-     *                                                      T_CLOSURE, T_TRAIT, T_ENUM, or T_INTERFACE.
+     *                                                      T_CLOSURE, T_TRAIT, or T_INTERFACE.
      */
     public function getDeclarationName($stackPtr)
     {
@@ -1246,9 +1246,8 @@ class File
             && $tokenCode !== T_CLASS
             && $tokenCode !== T_INTERFACE
             && $tokenCode !== T_TRAIT
-            && $tokenCode !== T_ENUM
         ) {
-            throw new RuntimeException('Token type "'.$this->tokens[$stackPtr]['type'].'" is not T_FUNCTION, T_CLASS, T_INTERFACE, T_TRAIT or T_ENUM');
+            throw new RuntimeException('Token type "'.$this->tokens[$stackPtr]['type'].'" is not T_FUNCTION, T_CLASS, T_INTERFACE or T_TRAIT');
         }
 
         if ($tokenCode === T_FUNCTION
@@ -1311,8 +1310,6 @@ class File
      * Parameters declared using PHP 8 constructor property promotion, have these additional array indexes:
      *         'property_visibility' => string,  // The property visibility as declared.
      *         'visibility_token'    => integer, // The stack pointer to the visibility modifier token.
-     *         'property_readonly'   => bool,    // TRUE if the readonly keyword was found.
-     *         'readonly_token'      => integer, // The stack pointer to the readonly modifier token.
      *
      * @param int $stackPtr The position in the stack of the function token
      *                      to acquire the parameters for.
@@ -1369,7 +1366,6 @@ class File
         $typeHintEndToken = false;
         $nullableType     = false;
         $visibilityToken  = null;
-        $readonlyToken    = null;
 
         for ($i = $paramStart; $i <= $closer; $i++) {
             // Check to see if this token has a parenthesis or bracket opener. If it does
@@ -1469,7 +1465,6 @@ class File
             case T_NAMESPACE:
             case T_NS_SEPARATOR:
             case T_TYPE_UNION:
-            case T_TYPE_INTERSECTION:
             case T_FALSE:
             case T_NULL:
                 // Part of a type hint or default value.
@@ -1494,11 +1489,6 @@ class File
             case T_PRIVATE:
                 if ($defaultStart === null) {
                     $visibilityToken = $i;
-                }
-                break;
-            case T_READONLY:
-                if ($defaultStart === null) {
-                    $readonlyToken = $i;
                 }
                 break;
             case T_CLOSE_PARENTHESIS:
@@ -1533,12 +1523,6 @@ class File
                 if ($visibilityToken !== null) {
                     $vars[$paramCount]['property_visibility'] = $this->tokens[$visibilityToken]['content'];
                     $vars[$paramCount]['visibility_token']    = $visibilityToken;
-                    $vars[$paramCount]['property_readonly']   = false;
-                }
-
-                if ($readonlyToken !== null) {
-                    $vars[$paramCount]['property_readonly'] = true;
-                    $vars[$paramCount]['readonly_token']    = $readonlyToken;
                 }
 
                 if ($this->tokens[$i]['code'] === T_COMMA) {
@@ -1562,7 +1546,6 @@ class File
                 $typeHintEndToken = false;
                 $nullableType     = false;
                 $visibilityToken  = null;
-                $readonlyToken    = null;
 
                 $paramCount++;
                 break;
@@ -1686,17 +1669,16 @@ class File
             }
 
             $valid = [
-                T_STRING            => T_STRING,
-                T_CALLABLE          => T_CALLABLE,
-                T_SELF              => T_SELF,
-                T_PARENT            => T_PARENT,
-                T_STATIC            => T_STATIC,
-                T_FALSE             => T_FALSE,
-                T_NULL              => T_NULL,
-                T_NAMESPACE         => T_NAMESPACE,
-                T_NS_SEPARATOR      => T_NS_SEPARATOR,
-                T_TYPE_UNION        => T_TYPE_UNION,
-                T_TYPE_INTERSECTION => T_TYPE_INTERSECTION,
+                T_STRING       => T_STRING,
+                T_CALLABLE     => T_CALLABLE,
+                T_SELF         => T_SELF,
+                T_PARENT       => T_PARENT,
+                T_STATIC       => T_STATIC,
+                T_FALSE        => T_FALSE,
+                T_NULL         => T_NULL,
+                T_NAMESPACE    => T_NAMESPACE,
+                T_NS_SEPARATOR => T_NS_SEPARATOR,
+                T_TYPE_UNION   => T_TYPE_UNION,
             ];
 
             for ($i = $this->tokens[$stackPtr]['parenthesis_closer']; $i < $this->numTokens; $i++) {
@@ -1761,7 +1743,6 @@ class File
      *    'scope'           => string,  // Public, private, or protected.
      *    'scope_specified' => boolean, // TRUE if the scope was explicitly specified.
      *    'is_static'       => boolean, // TRUE if the static keyword was found.
-     *    'is_readonly'     => boolean, // TRUE if the readonly keyword was found.
      *    'type'            => string,  // The type of the var (empty if no type specified).
      *    'type_token'      => integer, // The stack pointer to the start of the type
      *                                  // or FALSE if there is no type.
@@ -1794,26 +1775,23 @@ class File
             && $this->tokens[$ptr]['code'] !== T_TRAIT)
         ) {
             if (isset($this->tokens[$ptr]) === true
-                && ($this->tokens[$ptr]['code'] === T_INTERFACE
-                || $this->tokens[$ptr]['code'] === T_ENUM)
+                && $this->tokens[$ptr]['code'] === T_INTERFACE
             ) {
-                // T_VARIABLEs in interfaces/enums can actually be method arguments
-                // but they won't be seen as being inside the method because there
+                // T_VARIABLEs in interfaces can actually be method arguments
+                // but they wont be seen as being inside the method because there
                 // are no scope openers and closers for abstract methods. If it is in
                 // parentheses, we can be pretty sure it is a method argument.
                 if (isset($this->tokens[$stackPtr]['nested_parenthesis']) === false
                     || empty($this->tokens[$stackPtr]['nested_parenthesis']) === true
                 ) {
-                    $error = 'Possible parse error: %ss may not include member vars';
-                    $code  = sprintf('Internal.ParseError.%sHasMemberVar', ucfirst($this->tokens[$ptr]['content']));
-                    $data  = [strtolower($this->tokens[$ptr]['content'])];
-                    $this->addWarning($error, $stackPtr, $code, $data);
+                    $error = 'Possible parse error: interfaces may not include member vars';
+                    $this->addWarning($error, $stackPtr, 'Internal.ParseError.InterfaceHasMemberVar');
                     return [];
                 }
             } else {
                 throw new RuntimeException('$stackPtr is not a class member var');
             }
-        }//end if
+        }
 
         // Make sure it's not a method parameter.
         if (empty($this->tokens[$stackPtr]['nested_parenthesis']) === false) {
@@ -1833,7 +1811,6 @@ class File
             T_PROTECTED => T_PROTECTED,
             T_STATIC    => T_STATIC,
             T_VAR       => T_VAR,
-            T_READONLY  => T_READONLY,
         ];
 
         $valid += Util\Tokens::$emptyTokens;
@@ -1841,7 +1818,6 @@ class File
         $scope          = 'public';
         $scopeSpecified = false;
         $isStatic       = false;
-        $isReadonly     = false;
 
         $startOfStatement = $this->findPrevious(
             [
@@ -1874,9 +1850,6 @@ class File
             case T_STATIC:
                 $isStatic = true;
                 break;
-            case T_READONLY:
-                $isReadonly = true;
-                break;
             }
         }//end for
 
@@ -1888,16 +1861,15 @@ class File
         if ($i < $stackPtr) {
             // We've found a type.
             $valid = [
-                T_STRING            => T_STRING,
-                T_CALLABLE          => T_CALLABLE,
-                T_SELF              => T_SELF,
-                T_PARENT            => T_PARENT,
-                T_FALSE             => T_FALSE,
-                T_NULL              => T_NULL,
-                T_NAMESPACE         => T_NAMESPACE,
-                T_NS_SEPARATOR      => T_NS_SEPARATOR,
-                T_TYPE_UNION        => T_TYPE_UNION,
-                T_TYPE_INTERSECTION => T_TYPE_INTERSECTION,
+                T_STRING       => T_STRING,
+                T_CALLABLE     => T_CALLABLE,
+                T_SELF         => T_SELF,
+                T_PARENT       => T_PARENT,
+                T_FALSE        => T_FALSE,
+                T_NULL         => T_NULL,
+                T_NAMESPACE    => T_NAMESPACE,
+                T_NS_SEPARATOR => T_NS_SEPARATOR,
+                T_TYPE_UNION   => T_TYPE_UNION,
             ];
 
             for ($i; $i < $stackPtr; $i++) {
@@ -1929,7 +1901,6 @@ class File
             'scope'           => $scope,
             'scope_specified' => $scopeSpecified,
             'is_static'       => $isStatic,
-            'is_readonly'     => $isReadonly,
             'type'            => $type,
             'type_token'      => $typeToken,
             'type_end_token'  => $typeEndToken,
@@ -2772,11 +2743,11 @@ class File
 
 
     /**
-     * Returns the names of the interfaces that the specified class or enum implements.
+     * Returns the names of the interfaces that the specified class implements.
      *
      * Returns FALSE on error or if there are no implemented interface names.
      *
-     * @param int $stackPtr The stack position of the class or enum token.
+     * @param int $stackPtr The stack position of the class.
      *
      * @return array|false
      */
@@ -2789,7 +2760,6 @@ class File
 
         if ($this->tokens[$stackPtr]['code'] !== T_CLASS
             && $this->tokens[$stackPtr]['code'] !== T_ANON_CLASS
-            && $this->tokens[$stackPtr]['code'] !== T_ENUM
         ) {
             return false;
         }

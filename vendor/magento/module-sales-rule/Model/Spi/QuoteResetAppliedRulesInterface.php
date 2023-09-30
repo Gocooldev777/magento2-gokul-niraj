@@ -9,7 +9,6 @@ namespace Magento\SalesRule\Model\Spi;
 
 /**
  * Reset applied rules to quote
- * @api
  */
 interface QuoteResetAppliedRulesInterface
 {

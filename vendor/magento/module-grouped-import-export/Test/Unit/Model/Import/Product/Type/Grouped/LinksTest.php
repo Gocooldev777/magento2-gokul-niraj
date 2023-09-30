@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace Magento\GroupedImportExport\Test\Unit\Model\Import\Product\Type\Grouped;
 
 use Magento\Catalog\Model\ResourceModel\Product\Link;
-use Magento\CatalogImportExport\Model\Import\Product as ProductImport;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\Pdo\Mysql;
 use Magento\Framework\DB\Select;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager as ObjectManagerHelper;
 use Magento\GroupedImportExport\Model\Import\Product\Type\Grouped\Links;
+use Magento\ImportExport\Model\Import;
 use Magento\ImportExport\Model\ImportFactory;
 use Magento\ImportExport\Model\ResourceModel\Import\Data;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -28,20 +28,20 @@ class LinksTest extends TestCase
     /** @var ObjectManagerHelper */
     protected $objectManagerHelper;
 
-    /** @var Link&MockObject */
+    /** @var Link|MockObject */
     protected $link;
 
-    /** @var ResourceConnection&MockObject */
+    /** @var ResourceConnection|MockObject */
     protected $resource;
 
     /** @var Mysql */
     protected $connection;
 
-    /** @var ImportFactory&MockObject */
+    /** @var ImportFactory|MockObject */
     protected $importFactory;
 
-    /** @var ProductImport&MockObject */
-    protected $productImport;
+    /** @var Import|MockObject */
+    protected $import;
 
     protected function setUp(): void
     {
@@ -52,7 +52,11 @@ class LinksTest extends TestCase
             ->expects($this->once())
             ->method('getConnection')
             ->willReturn($this->connection);
+
+        $this->import = $this->createMock(Import::class);
         $this->importFactory = $this->createPartialMock(ImportFactory::class, ['create']);
+        $this->importFactory->expects($this->any())->method('create')->willReturn($this->import);
+
         $this->objectManagerHelper = new ObjectManagerHelper($this);
         $this->links = $this->objectManagerHelper->getObject(
             Links::class,
@@ -62,8 +66,6 @@ class LinksTest extends TestCase
                 'importFactory' => $this->importFactory
             ]
         );
-        $this->productImport = $this->createMock(ProductImport::class);
-        $this->productImport->expects($this->any())->method('getIds')->willReturn([]);
     }
 
     /**
@@ -93,7 +95,7 @@ class LinksTest extends TestCase
         $attributes = $this->attributesDataProvider();
         $this->processAttributeGetter($attributes[2]['dbAttributes']);
         $this->connection->expects($this->exactly(2))->method('insertOnDuplicate');
-        $this->links->saveLinksData($linksData, $this->productImport);
+        $this->links->saveLinksData($linksData);
     }
 
     /**
@@ -123,7 +125,8 @@ class LinksTest extends TestCase
         $this->link->expects($this->exactly(2))->method('getAttributeTypeTable')->willReturn(
             'table_name'
         );
-        $this->links->saveLinksData($linksData, $this->productImport);
+
+        $this->links->saveLinksData($linksData);
     }
 
     /**
@@ -194,6 +197,6 @@ class LinksTest extends TestCase
     {
         $dataSource = $this->createMock(Data::class);
         $dataSource->expects($this->once())->method('getBehavior')->willReturn($behavior);
-        $this->productImport->expects($this->any())->method('getDataSourceModel')->willReturn($dataSource);
+        $this->import->expects($this->once())->method('getDataSourceModel')->willReturn($dataSource);
     }
 }

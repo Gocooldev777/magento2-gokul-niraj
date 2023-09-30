@@ -59,7 +59,7 @@ SAMPLE
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isAllTokenKindsFound([T_FUNCTION, T_RETURN]);
+        return \PHP_VERSION_ID >= 70400 && $tokens->isAllTokenKindsFound([T_FUNCTION, T_RETURN]);
     }
 
     /**

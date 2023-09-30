@@ -7,7 +7,6 @@
 namespace Magento\Newsletter\Controller\Subscriber;
 
 use Magento\Customer\Api\AccountManagementInterface as CustomerAccountManagement;
-use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Model\Session;
 use Magento\Customer\Model\Url as CustomerUrl;
 use Magento\Framework\App\Action\Context;
@@ -49,11 +48,6 @@ class NewAction extends SubscriberController implements HttpPostActionInterface
     private $subscriptionManager;
 
     /**
-     * @var CustomerRepositoryInterface
-     */
-    private $customerRepository;
-
-    /**
      * Initialize dependencies.
      *
      * @param Context $context
@@ -63,8 +57,7 @@ class NewAction extends SubscriberController implements HttpPostActionInterface
      * @param CustomerUrl $customerUrl
      * @param CustomerAccountManagement $customerAccountManagement
      * @param SubscriptionManagerInterface $subscriptionManager
-     * @param EmailValidator|null $emailValidator
-     * @param CustomerRepositoryInterface|null $customerRepository
+     * @param EmailValidator $emailValidator
      */
     public function __construct(
         Context $context,
@@ -74,14 +67,11 @@ class NewAction extends SubscriberController implements HttpPostActionInterface
         CustomerUrl $customerUrl,
         CustomerAccountManagement $customerAccountManagement,
         SubscriptionManagerInterface $subscriptionManager,
-        EmailValidator $emailValidator = null,
-        CustomerRepositoryInterface $customerRepository = null
+        EmailValidator $emailValidator = null
     ) {
         $this->customerAccountManagement = $customerAccountManagement;
         $this->subscriptionManager = $subscriptionManager;
         $this->emailValidator = $emailValidator ?: ObjectManager::getInstance()->get(EmailValidator::class);
-        $this->customerRepository = $customerRepository ?: ObjectManager::getInstance()
-            ->get(CustomerRepositoryInterface::class);
         parent::__construct(
             $context,
             $subscriberFactory,
@@ -175,8 +165,7 @@ class NewAction extends SubscriberController implements HttpPostActionInterface
                 }
 
                 $storeId = (int)$this->_storeManager->getStore()->getId();
-                $currentCustomerId = $this->getCustomerId($email, $websiteId);
-
+                $currentCustomerId = $this->getSessionCustomerId($email);
                 $subscriber = $currentCustomerId
                     ? $this->subscriptionManager->subscribeCustomer($currentCustomerId, $storeId)
                     : $this->subscriptionManager->subscribe($email, $storeId);
@@ -193,26 +182,28 @@ class NewAction extends SubscriberController implements HttpPostActionInterface
         }
         /** @var Redirect $redirect */
         $redirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-        // phpcs:ignore Magento2.Legacy.ObsoleteResponse
         $redirectUrl = $this->_redirect->getRedirectUrl();
         return $redirect->setUrl($redirectUrl);
     }
 
     /**
-     * Check if customer with provided email exists and return its id
+     * Get customer id from session if he is owner of the email
      *
      * @param string $email
-     * @param int $websiteId
      * @return int|null
      */
-    private function getCustomerId(string $email, int $websiteId): ?int
+    private function getSessionCustomerId(string $email): ?int
     {
-        try {
-            $customer = $this->customerRepository->get($email, $websiteId);
-            return (int)$customer->getId();
-        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+        if (!$this->_customerSession->isLoggedIn()) {
             return null;
         }
+
+        $customer = $this->_customerSession->getCustomerDataObject();
+        if ($customer->getEmail() !== $email) {
+            return null;
+        }
+
+        return (int)$this->_customerSession->getId();
     }
 
     /**

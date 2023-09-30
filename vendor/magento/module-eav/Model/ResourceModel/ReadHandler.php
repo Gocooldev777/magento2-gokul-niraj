@@ -9,7 +9,6 @@ namespace Magento\Eav\Model\ResourceModel;
 use Exception;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
-use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Framework\DataObject;
 use Magento\Framework\DB\Select;
 use Magento\Framework\DB\Sql\UnionExpression;
@@ -19,7 +18,6 @@ use Magento\Framework\Exception\ConfigurationMismatchException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\Entity\ScopeInterface;
 use Magento\Framework\Model\Entity\ScopeResolver;
-use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -124,8 +122,6 @@ class ReadHandler implements AttributeInterface
      * @throws ConfigurationMismatchException
      * @throws LocalizedException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function execute($entityType, $entityData, $arguments = [])
     {
@@ -139,15 +135,12 @@ class ReadHandler implements AttributeInterface
         $attributeTables = [];
         $attributesMap = [];
         $selects = [];
-        $attributeScopeGlobal = [];
 
         /** @var AbstractAttribute $attribute */
         foreach ($this->getEntityAttributes($entityType, new DataObject($entityData)) as $attribute) {
             if (!$attribute->isStatic()) {
                 $attributeTables[$attribute->getBackend()->getTable()][] = $attribute->getAttributeId();
                 $attributesMap[$attribute->getAttributeId()] = $attribute->getAttributeCode();
-                $attributeScopeGlobal[$attribute->getAttributeId()] =
-                    $attribute->getIsGlobal() === ScopedAttributeInterface::SCOPE_GLOBAL ? 1 : 0;
             }
         }
         if (count($attributeTables)) {
@@ -181,23 +174,7 @@ class ReadHandler implements AttributeInterface
             $attributes = $connection->fetchAll($orderedUnionSelect);
             foreach ($attributes as $attributeValue) {
                 if (isset($attributesMap[$attributeValue['attribute_id']])) {
-                    $isGlobalAttribute = $attributeScopeGlobal[$attributeValue['attribute_id']];
-                    $storeId = $attributeValue['store_id'] ?? null;
-
-                    // Set global value if attribute scope is set to Global
-                    if ($isGlobalAttribute && (int)$storeId === Store::DEFAULT_STORE_ID) {
-                        $entityData[$attributesMap[$attributeValue['attribute_id']]] = $attributeValue['value'];
-                        continue;
-                    }
-
-                    if (!$isGlobalAttribute && (int)$storeId === Store::DEFAULT_STORE_ID) {
-                        $entityData[$attributesMap[$attributeValue['attribute_id']]] = $attributeValue['value'];
-                        continue;
-                    }
-
-                    if (!$isGlobalAttribute && (int)$storeId !== Store::DEFAULT_STORE_ID) {
-                        $entityData[$attributesMap[$attributeValue['attribute_id']]] = $attributeValue['value'];
-                    }
+                    $entityData[$attributesMap[$attributeValue['attribute_id']]] = $attributeValue['value'];
                 } else {
                     $this->logger->warning(
                         "Attempt to load value of nonexistent EAV attribute",

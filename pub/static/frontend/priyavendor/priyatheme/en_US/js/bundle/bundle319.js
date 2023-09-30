@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Catalog/js/product/learn-more.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\ndefine([\n    'Magento_Ui/js/grid/columns/column',\n    'Magento_Catalog/js/product/list/column-status-validator'\n], function (Column, columnStatusValidator) {\n    'use strict';\n\n    return Column.extend({\n        /**\n         * Depends on this option, \"Learn More\" link can be shown or hide. Depends on  backend configuration\n         *\n         * @returns {Boolean}\n         */\n        isAllowed: function () {\n            return columnStatusValidator.isValid(this.source(), 'learn_more', 'show_attributes');\n        }\n    });\n});\n"}
+}});

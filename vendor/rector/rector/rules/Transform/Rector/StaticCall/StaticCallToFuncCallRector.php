@@ -12,14 +12,19 @@ use Rector\Core\Rector\AbstractRector;
 use Rector\Transform\ValueObject\StaticCallToFuncCall;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\StaticCall\StaticCallToFuncCallRector\StaticCallToFuncCallRectorTest
  */
-final class StaticCallToFuncCallRector extends AbstractRector implements ConfigurableRectorInterface
+final class StaticCallToFuncCallRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
     /**
-     * @var StaticCallToFuncCall[]
+     * @deprecated
+     * @var string
+     */
+    public const STATIC_CALLS_TO_FUNCTIONS = 'static_calls_to_functions';
+    /**
+     * @var \Rector\Transform\ValueObject\StaticCallToFuncCall[]
      */
     private $staticCallsToFunctions = [];
     /**
@@ -29,30 +34,30 @@ final class StaticCallToFuncCallRector extends AbstractRector implements Configu
     {
         $this->staticCallsToFunctions = $staticCallsToFunctions;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Turns static call to function call.', [new ConfiguredCodeSample('OldClass::oldMethod("args");', 'new_function("args");', [new StaticCallToFuncCall('OldClass', 'oldMethod', 'new_function')])]);
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns static call to function call.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample('OldClass::oldMethod("args");', 'new_function("args");', [new \Rector\Transform\ValueObject\StaticCallToFuncCall('OldClass', 'oldMethod', 'new_function')])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [StaticCall::class];
+        return [\PhpParser\Node\Expr\StaticCall::class];
     }
     /**
      * @param StaticCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         foreach ($this->staticCallsToFunctions as $staticCallToFunction) {
-            if (!$this->isName($node->name, $staticCallToFunction->getMethod())) {
-                continue;
-            }
             if (!$this->isObjectType($node->class, $staticCallToFunction->getObjectType())) {
                 continue;
             }
-            return new FuncCall(new FullyQualified($staticCallToFunction->getFunction()), $node->args);
+            if (!$this->isName($node->name, $staticCallToFunction->getMethod())) {
+                continue;
+            }
+            return new \PhpParser\Node\Expr\FuncCall(new \PhpParser\Node\Name\FullyQualified($staticCallToFunction->getFunction()), $node->args);
         }
         return null;
     }
@@ -61,7 +66,9 @@ final class StaticCallToFuncCallRector extends AbstractRector implements Configu
      */
     public function configure(array $configuration) : void
     {
-        Assert::allIsAOf($configuration, StaticCallToFuncCall::class);
-        $this->staticCallsToFunctions = $configuration;
+        $staticCallsToFunctions = $configuration[self::STATIC_CALLS_TO_FUNCTIONS] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($staticCallsToFunctions);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($staticCallsToFunctions, \Rector\Transform\ValueObject\StaticCallToFuncCall::class);
+        $this->staticCallsToFunctions = $staticCallsToFunctions;
     }
 }

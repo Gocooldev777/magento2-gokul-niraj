@@ -75,7 +75,7 @@ final class ConcatSpaceFixer extends AbstractFixer implements ConfigurableFixerI
     /**
      * {@inheritdoc}
      *
-     * Must run after NoUnneededControlParenthesesFixer, SingleLineThrowFixer.
+     * Must run after SingleLineThrowFixer.
      */
     public function getPriority(): int
     {

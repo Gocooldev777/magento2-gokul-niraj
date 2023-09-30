@@ -8,17 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Input;
+namespace RectorPrefix20211221\Symfony\Component\Console\Input;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException;
 /**
  * InputInterface is the interface implemented by all input classes.
  *
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @method string __toString() Returns a stringified representation of the args passed to the command.
- *                             InputArguments MUST be escaped as well as the InputOption values passed to the command.
  */
 interface InputInterface
 {
@@ -58,7 +55,7 @@ interface InputInterface
      *
      * @throws RuntimeException
      */
-    public function bind(InputDefinition $definition);
+    public function bind(\RectorPrefix20211221\Symfony\Component\Console\Input\InputDefinition $definition);
     /**
      * Validates the input.
      *

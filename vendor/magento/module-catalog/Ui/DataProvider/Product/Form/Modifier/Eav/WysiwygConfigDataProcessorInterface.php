@@ -10,8 +10,6 @@ namespace Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\Eav;
 
 /**
  * Interface WysiwygConfigDataProcessorInterface
- *
- * @api
  */
 interface WysiwygConfigDataProcessorInterface
 {

@@ -12,8 +12,6 @@ use Magento\Framework\App\ActionInterface;
 
 /**
  * Marker for actions processing DELETE requests.
- *
- * @api
  */
 interface HttpDeleteActionInterface extends ActionInterface
 {

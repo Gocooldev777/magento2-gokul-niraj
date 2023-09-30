@@ -6,7 +6,6 @@
 
 namespace Magento\Framework\Oauth;
 
-use Laminas\OAuth\Http\Utility;
 use Magento\Framework\Encryption\Helper\Security;
 use Magento\Framework\Phrase;
 use Magento\Framework\Oauth\Exception as AuthException;
@@ -22,7 +21,7 @@ class Oauth implements OauthInterface
     protected $_oauthHelper;
 
     /**
-     * @var  Utility
+     * @var  \Zend_Oauth_Http_Utility
      */
     protected $_httpUtility;
 
@@ -46,13 +45,13 @@ class Oauth implements OauthInterface
         Helper\Oauth $oauthHelper,
         NonceGeneratorInterface $nonceGenerator,
         TokenProviderInterface $tokenProvider,
-        Utility $httpUtility = null
+        \Zend_Oauth_Http_Utility $httpUtility = null
     ) {
         $this->_oauthHelper = $oauthHelper;
         $this->_nonceGenerator = $nonceGenerator;
         $this->_tokenProvider = $tokenProvider;
         // null default to prevent ObjectManagerFactory from injecting, see MAGETWO-30809
-        $this->_httpUtility = $httpUtility ?: new Utility();
+        $this->_httpUtility = $httpUtility ?: new \Zend_Oauth_Http_Utility();
     }
 
     /**
@@ -250,8 +249,12 @@ class Oauth implements OauthInterface
         }
         $this->_checkRequiredParams($protocolParams, $requiredParams);
 
-        if (isset($protocolParams['oauth_token'])
-            && !$this->_tokenProvider->validateOauthToken($protocolParams['oauth_token'])) {
+        if (isset(
+            $protocolParams['oauth_token']
+        ) && !$this->_tokenProvider->validateOauthToken(
+            $protocolParams['oauth_token']
+        )
+        ) {
             throw new OauthInputException(new Phrase('The token length is invalid. Check the length and try again.'));
         }
 

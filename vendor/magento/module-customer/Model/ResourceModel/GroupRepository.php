@@ -13,9 +13,6 @@ use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\State\InvalidTransitionException;
-use Magento\Framework\Validator\NotEmpty;
-use Magento\Framework\Validator\ValidateException;
-use Magento\Framework\Validator\ValidatorChain;
 use Magento\Tax\Api\Data\TaxClassInterface;
 use Magento\Tax\Api\TaxClassManagementInterface;
 use Magento\Framework\Api\ExtensibleDataInterface;
@@ -31,7 +28,7 @@ class GroupRepository implements \Magento\Customer\Api\GroupRepositoryInterface
     /**
      * The default tax class id if no tax class id is specified
      */
-    public const DEFAULT_TAX_CLASS_ID = 3;
+    const DEFAULT_TAX_CLASS_ID = 3;
 
     /**
      * @var \Magento\Customer\Model\GroupRegistry
@@ -233,7 +230,6 @@ class GroupRepository implements \Magento\Customer\Api\GroupRepositoryInterface
      * Helper function that adds a FilterGroup to the collection.
      *
      * @deprecated 101.0.0
-     * @see we don't recommend this approach anymore
      * @param FilterGroup $filterGroup
      * @param Collection $collection
      * @return void
@@ -257,7 +253,6 @@ class GroupRepository implements \Magento\Customer\Api\GroupRepositoryInterface
      * Translates a field name to a DB column name for use in collection queries.
      *
      * @deprecated 101.0.0
-     * @see we don't recommend this approach anymore
      * @param string $field a field name that should be translated to a DB column name.
      * @return string
      */
@@ -315,7 +310,7 @@ class GroupRepository implements \Magento\Customer\Api\GroupRepositoryInterface
      *
      * @param \Magento\Customer\Api\Data\GroupInterface $group
      * @throws InputException
-     * @throws ValidateException
+     * @throws \Zend_Validate_Exception
      * @return void
      *
      * @SuppressWarnings(PHPMD.NPathComplexity)
@@ -324,7 +319,7 @@ class GroupRepository implements \Magento\Customer\Api\GroupRepositoryInterface
     private function _validate($group)
     {
         $exception = new InputException();
-        if (!ValidatorChain::is($group->getCode(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($group->getCode(), 'NotEmpty')) {
             $exception->addError(__('"%fieldName" is required. Enter and try again.', ['fieldName' => 'code']));
         }
 
@@ -358,13 +353,11 @@ class GroupRepository implements \Magento\Customer\Api\GroupRepositoryInterface
      * Retrieve collection processor
      *
      * @deprecated 101.0.0
-     * @see we don't recommend this approach anymore
      * @return CollectionProcessorInterface
      */
     private function getCollectionProcessor()
     {
         if (!$this->collectionProcessor) {
-            //phpcs:disable Magento2.PHP.LiteralNamespaces
             $this->collectionProcessor = \Magento\Framework\App\ObjectManager::getInstance()->get(
                 'Magento\Customer\Model\Api\SearchCriteria\GroupCollectionProcessor'
             );

@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace PayPal\Braintree\Gateway\Response\Venmo;
 
 use Braintree\Transaction;
@@ -12,7 +8,6 @@ use DateTimeZone;
 use Exception;
 use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
-use PayPal\Braintree\Gateway\Response\Handler;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -28,8 +23,58 @@ use RuntimeException;
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class VaultDetailsHandler extends Handler implements HandlerInterface
+class VaultDetailsHandler implements HandlerInterface
 {
+    /**
+     * @var PaymentTokenInterfaceFactory
+     */
+    protected $paymentTokenFactory;
+
+    /**
+     * @var OrderPaymentExtensionInterfaceFactory
+     */
+    protected $paymentExtensionFactory;
+
+    /**
+     * @var SubjectReader
+     */
+    protected $subjectReader;
+
+    /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
+     * @var Json
+     */
+    private $serializer;
+
+    /**
+     * VaultDetailsHandler constructor.
+     *
+     * @param PaymentTokenInterfaceFactory $paymentTokenFactory
+     * @param OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory
+     * @param Config $config
+     * @param SubjectReader $subjectReader
+     * @param Json|null $serializer
+     * @throws RuntimeException
+     */
+    public function __construct(
+        PaymentTokenInterfaceFactory $paymentTokenFactory,
+        OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory,
+        Config $config,
+        SubjectReader $subjectReader,
+        Json $serializer = null
+    ) {
+        $this->paymentTokenFactory = $paymentTokenFactory;
+        $this->paymentExtensionFactory = $paymentExtensionFactory;
+        $this->config = $config;
+        $this->subjectReader = $subjectReader;
+        $this->serializer = $serializer ?: ObjectManager::getInstance()
+            ->get(Json::class);
+    }
+
     /**
      * @inheritdoc
      */
@@ -54,19 +99,18 @@ class VaultDetailsHandler extends Handler implements HandlerInterface
      * @return PaymentTokenInterface|null
      * @throws InputException
      * @throws NoSuchEntityException
-     * @throws Exception
      */
     protected function getVaultPaymentToken(Transaction $transaction)
     {
         // Check token existing in gateway response
-        if (!isset($transaction->venmoAccount->token)) {
+        if (!isset($transaction->venmoAccount->token) || empty($token)) {
             return null;
         }
 
         /** @var PaymentTokenInterface $paymentToken */
         $paymentToken = $this->paymentTokenFactory->create();
         $paymentToken->setGatewayToken($transaction->venmoAccount->token);
-        $paymentToken->setExpiresAt($this->getExpirationDate());
+        $paymentToken->setExpiresAt($this->getExpirationDate($transaction));
 
         $paymentToken->setTokenDetails($this->convertDetailsToJSON([
             'username' => $transaction->venmoAccount->username,
@@ -76,15 +120,42 @@ class VaultDetailsHandler extends Handler implements HandlerInterface
     }
 
     /**
-     * Get expiration date
-     *
+     * @param Transaction $transaction
      * @return string
      * @throws Exception
+     * @throws Exception
      */
-    private function getExpirationDate(): string
+    private function getExpirationDate(Transaction $transaction): string
     {
         $expDate = new DateTime('now', new DateTimeZone('UTC'));
         $expDate->add(new DateInterval('P30D'));
         return $expDate->format('Y-m-d 00:00:00');
+    }
+
+    /**
+     * Convert payment token details to JSON
+     * @param array $details
+     * @return string
+     */
+    private function convertDetailsToJSON($details): string
+    {
+        $json = $this->serializer->serialize($details);
+        return $json ?: '{}';
+    }
+
+    /**
+     * Get payment extension attributes
+     *
+     * @param InfoInterface $payment
+     * @return OrderPaymentExtensionInterface
+     */
+    private function getExtensionAttributes(InfoInterface $payment): OrderPaymentExtensionInterface
+    {
+        $extensionAttributes = $payment->getExtensionAttributes();
+        if (null === $extensionAttributes) {
+            $extensionAttributes = $this->paymentExtensionFactory->create();
+            $payment->setExtensionAttributes($extensionAttributes);
+        }
+        return $extensionAttributes;
     }
 }

@@ -5,18 +5,16 @@
  */
 namespace Magento\Framework\HTTP\Adapter;
 
-use Magento\Framework\File\Http;
-
 class FileTransferFactory
 {
     /**
      * Create HTTP adapter
      *
      * @param array $options
-     * @return Http
+     * @return \Zend_File_Transfer_Adapter_Http
      */
     public function create(array $options = [])
     {
-        return new Http($options);
+        return new \Zend_File_Transfer_Adapter_Http($options);
     }
 }

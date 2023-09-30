@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Checkout/js/action/create-billing-address.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n\n/**\n * @api\n */\ndefine([\n    'Magento_Checkout/js/model/address-converter'\n], function (addressConverter) {\n    'use strict';\n\n    return function (addressData) {\n        var address = addressConverter.formAddressDataToQuoteAddress(addressData);\n\n        /**\n         * Returns new customer billing address type.\n         *\n         * @returns {String}\n         */\n        address.getType = function () {\n            return 'new-customer-billing-address';\n        };\n\n        return address;\n    };\n});\n"}
+}});

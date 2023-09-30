@@ -44,10 +44,8 @@ namespace PDepend\Source\ASTVisitor;
 
 use ArrayIterator;
 use Iterator;
-use PDepend\Source\AST\AbstractASTClassOrInterface;
 use PDepend\Source\AST\ASTClass;
 use PDepend\Source\AST\ASTCompilationUnit;
-use PDepend\Source\AST\ASTEnum;
 use PDepend\Source\AST\ASTFunction;
 use PDepend\Source\AST\ASTInterface;
 use PDepend\Source\AST\ASTMethod;
@@ -114,27 +112,6 @@ abstract class AbstractASTVisitor implements ASTVisitor
         }
 
         $this->fireEndClass($class);
-    }
-
-    /**
-     * Visits a class node.
-     *
-     * @return void
-     */
-    public function visitEnum(ASTEnum $enum)
-    {
-        $this->fireStartEnum($enum);
-
-        $enum->getCompilationUnit()->accept($this);
-
-        foreach ($enum->getProperties() as $property) {
-            $property->accept($this);
-        }
-        foreach ($enum->getMethods() as $method) {
-            $method->accept($this);
-        }
-
-        $this->fireEndEnum($enum);
     }
 
     /**
@@ -238,9 +215,6 @@ abstract class AbstractASTVisitor implements ASTVisitor
         foreach ($namespace->getTraits() as $trait) {
             $trait->accept($this);
         }
-        foreach ($namespace->getEnums() as $enum) {
-            $enum->accept($this);
-        }
         foreach ($namespace->getFunctions() as $function) {
             $function->accept($this);
         }
@@ -299,12 +273,8 @@ abstract class AbstractASTVisitor implements ASTVisitor
             throw new RuntimeException("No node to visit provided for $method.");
         }
 
-        return $this->visit($args[0], $args[1]);
-    }
-
-    public function visit($node, $value)
-    {
-        foreach ($node->getChildren() as $child) {
+        $value = $args[1];
+        foreach ($args[0]->getChildren() as $child) {
             $value = $child->accept($this, $value);
         }
         return $value;
@@ -331,30 +301,6 @@ abstract class AbstractASTVisitor implements ASTVisitor
     {
         foreach ($this->listeners as $listener) {
             $listener->endVisitClass($class);
-        }
-    }
-
-    /**
-     * Sends a start enum event.
-     *
-     * @return void
-     */
-    protected function fireStartEnum(ASTEnum $enum)
-    {
-        foreach ($this->listeners as $listener) {
-            $listener->startVisitEnum($enum);
-        }
-    }
-
-    /**
-     * Sends an end enum event.
-     *
-     * @return void
-     */
-    protected function fireEndEnum(ASTEnum $enum)
-    {
-        foreach ($this->listeners as $listener) {
-            $listener->endVisitEnum($enum);
         }
     }
 

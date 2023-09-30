@@ -3,69 +3,56 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Checkout\Controller;
 
 use Magento\Catalog\Controller\Product\View\ViewInterface;
 use Magento\Checkout\Model\Cart as CustomerCart;
-use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Controller\Result\Redirect;
-use Magento\Framework\Data\Form\FormKey\Validator;
-use Magento\Framework\UrlInterface;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Store\Model\Store;
-use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Shopping cart controller
- *
- * @api
  */
 abstract class Cart extends \Magento\Framework\App\Action\Action implements ViewInterface
 {
     /**
-     * @var ScopeConfigInterface
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     protected $_scopeConfig;
 
     /**
-     * @var Session
+     * @var \Magento\Checkout\Model\Session
      */
     protected $_checkoutSession;
 
     /**
-     * @var StoreManagerInterface
+     * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
-     * @var Validator
+     * @var \Magento\Framework\Data\Form\FormKey\Validator
      */
     protected $_formKeyValidator;
 
     /**
-     * @var CustomerCart
+     * @var \Magento\Checkout\Model\Cart
      */
     protected $cart;
 
     /**
-     * @param Context $context
-     * @param ScopeConfigInterface $scopeConfig
-     * @param Session $checkoutSession
-     * @param StoreManagerInterface $storeManager
-     * @param Validator $formKeyValidator
+     * @param \Magento\Framework\App\Action\Context $context
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Magento\Checkout\Model\Session $checkoutSession
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     * @param \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator
      * @param CustomerCart $cart
      * @codeCoverageIgnore
      */
     public function __construct(
-        Context $context,
-        ScopeConfigInterface $scopeConfig,
-        Session $checkoutSession,
-        StoreManagerInterface $storeManager,
-        Validator $formKeyValidator,
+        \Magento\Framework\App\Action\Context $context,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Checkout\Model\Session $checkoutSession,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator,
         CustomerCart $cart
     ) {
         $this->_formKeyValidator = $formKeyValidator;
@@ -81,7 +68,7 @@ abstract class Cart extends \Magento\Framework\App\Action\Action implements View
      *
      * @param null|string $backUrl
      *
-     * @return Redirect
+     * @return \Magento\Framework\Controller\Result\Redirect
      */
     protected function _goBack($backUrl = null)
     {
@@ -109,10 +96,10 @@ abstract class Cart extends \Magento\Framework\App\Action\Action implements View
         /**
          * Url must start from base secure or base unsecure url
          */
-        /** @var $store Store */
+        /** @var $store \Magento\Store\Model\Store */
         $store = $this->_storeManager->getStore();
         $unsecure = strpos($url, (string) $store->getBaseUrl()) === 0;
-        $secure = strpos($url, (string) $store->getBaseUrl(UrlInterface::URL_TYPE_LINK, true)) === 0;
+        $secure = strpos($url, (string) $store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_LINK, true)) === 0;
         return $unsecure || $secure;
     }
 
@@ -149,7 +136,7 @@ abstract class Cart extends \Magento\Framework\App\Action\Action implements View
     {
         return $this->_scopeConfig->isSetFlag(
             'checkout/cart/redirect_to_cart',
-            ScopeInterface::SCOPE_STORE
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
 }

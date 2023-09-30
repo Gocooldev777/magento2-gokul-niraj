@@ -4,11 +4,8 @@ declare (strict_types=1);
 namespace Rector\Naming\Rector\ClassMethod;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\ArrowFunction;
-use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Function_;
 use Rector\Core\Rector\AbstractRector;
 use Rector\Core\ValueObject\MethodName;
 use Rector\Naming\ExpectedNameResolver\MatchParamTypeExpectedNameResolver;
@@ -22,7 +19,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector\RenameParamToMatchTypeRectorTest
  */
-final class RenameParamToMatchTypeRector extends AbstractRector
+final class RenameParamToMatchTypeRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var bool
@@ -53,7 +50,7 @@ final class RenameParamToMatchTypeRector extends AbstractRector
      * @var \Rector\Naming\ParamRenamer\ParamRenamer
      */
     private $paramRenamer;
-    public function __construct(BreakingVariableRenameGuard $breakingVariableRenameGuard, ExpectedNameResolver $expectedNameResolver, MatchParamTypeExpectedNameResolver $matchParamTypeExpectedNameResolver, ParamRenameFactory $paramRenameFactory, ParamRenamer $paramRenamer)
+    public function __construct(\Rector\Naming\Guard\BreakingVariableRenameGuard $breakingVariableRenameGuard, \Rector\Naming\Naming\ExpectedNameResolver $expectedNameResolver, \Rector\Naming\ExpectedNameResolver\MatchParamTypeExpectedNameResolver $matchParamTypeExpectedNameResolver, \Rector\Naming\ValueObjectFactory\ParamRenameFactory $paramRenameFactory, \Rector\Naming\ParamRenamer\ParamRenamer $paramRenamer)
     {
         $this->breakingVariableRenameGuard = $breakingVariableRenameGuard;
         $this->expectedNameResolver = $expectedNameResolver;
@@ -61,9 +58,9 @@ final class RenameParamToMatchTypeRector extends AbstractRector
         $this->paramRenameFactory = $paramRenameFactory;
         $this->paramRenamer = $paramRenamer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Rename param to match ClassType', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Rename param to match ClassType', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     public function run(Apple $pie)
@@ -88,12 +85,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class, Function_::class, Closure::class, ArrowFunction::class];
+        return [\PhpParser\Node\Stmt\ClassMethod::class];
     }
     /**
-     * @param ClassMethod|Function_|Closure|ArrowFunction $node
+     * @param ClassMethod $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         $this->hasChanged = \false;
         foreach ($node->params as $param) {
@@ -109,7 +106,7 @@ CODE_SAMPLE
                 continue;
             }
             $paramRename = $this->paramRenameFactory->createFromResolvedExpectedName($param, $expectedName);
-            if (!$paramRename instanceof ParamRename) {
+            if (!$paramRename instanceof \Rector\Naming\ValueObject\ParamRename) {
                 continue;
             }
             $this->paramRenamer->rename($paramRename);
@@ -120,21 +117,15 @@ CODE_SAMPLE
         }
         return $node;
     }
-    /**
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure|\PhpParser\Node\Expr\ArrowFunction $classMethod
-     */
-    private function shouldSkipParam(Param $param, string $expectedName, $classMethod) : bool
+    private function shouldSkipParam(\PhpParser\Node\Param $param, string $expectedName, \PhpParser\Node\Stmt\ClassMethod $classMethod) : bool
     {
         /** @var string $paramName */
         $paramName = $this->getName($param);
         if ($this->breakingVariableRenameGuard->shouldSkipParam($paramName, $expectedName, $classMethod, $param)) {
             return \true;
         }
-        if (!$classMethod instanceof ClassMethod) {
-            return \false;
-        }
         // promoted property
-        if (!$this->isName($classMethod, MethodName::CONSTRUCT)) {
+        if (!$this->isName($classMethod, \Rector\Core\ValueObject\MethodName::CONSTRUCT)) {
             return \false;
         }
         return $param->flags !== 0;

@@ -11,8 +11,6 @@ namespace Magento\Backend\Model\Image;
  * Interface UploadResizeConfigInterface
  *
  * Used to retrieve configuration for frontend image uploader
- *
- * @api
  */
 interface UploadResizeConfigInterface
 {

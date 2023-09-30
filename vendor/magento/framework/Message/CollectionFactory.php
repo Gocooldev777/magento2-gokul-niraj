@@ -9,8 +9,6 @@ use Magento\Framework\ObjectManagerInterface;
 
 /**
  * Message collection factory
- *
- * @api
  */
 class CollectionFactory
 {

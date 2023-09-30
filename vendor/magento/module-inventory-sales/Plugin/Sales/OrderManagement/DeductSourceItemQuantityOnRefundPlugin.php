@@ -17,7 +17,6 @@ use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\Data\CreditmemoItemInterface as CreditmemoItem;
 use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Catalog\Model\ResourceModel\Product as ProductResourceModel;
 
 class DeductSourceItemQuantityOnRefundPlugin
 {
@@ -52,18 +51,12 @@ class DeductSourceItemQuantityOnRefundPlugin
     private $orderRepository;
 
     /**
-     * @var ProductResourceModel
-     */
-    private $productResource;
-
-    /**
      * @param GetSkuFromOrderItemInterface $getSkuFromOrderItem
      * @param ItemsToRefundInterfaceFactory $itemsToRefundFactory
      * @param IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType
      * @param GetProductTypesBySkusInterface $getProductTypesBySkus
      * @param DeductSourceItemQuantityOnRefund $deductSourceItemQuantityOnRefund
      * @param OrderRepositoryInterface $orderRepository
-     * @param ProductResourceModel $productResource
      */
     public function __construct(
         GetSkuFromOrderItemInterface $getSkuFromOrderItem,
@@ -71,8 +64,7 @@ class DeductSourceItemQuantityOnRefundPlugin
         IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType,
         GetProductTypesBySkusInterface $getProductTypesBySkus,
         DeductSourceItemQuantityOnRefund $deductSourceItemQuantityOnRefund,
-        OrderRepositoryInterface $orderRepository,
-        ProductResourceModel $productResource
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->getSkuFromOrderItem = $getSkuFromOrderItem;
         $this->itemsToRefundFactory = $itemsToRefundFactory;
@@ -80,7 +72,6 @@ class DeductSourceItemQuantityOnRefundPlugin
         $this->getProductTypesBySkus = $getProductTypesBySkus;
         $this->deductSourceItemQuantityOnRefund = $deductSourceItemQuantityOnRefund;
         $this->orderRepository = $orderRepository;
-        $this->productResource = $productResource;
     }
 
     /**
@@ -99,7 +90,8 @@ class DeductSourceItemQuantityOnRefundPlugin
         CreditmemoRepositoryInterface $subject,
         callable $proceed,
         CreditmemoInterface $entity
-    ) {
+    )
+    {
         $isNewCreditMemo = !(bool)$entity->getEntityId();
         $result = $proceed($entity);
 
@@ -111,8 +103,6 @@ class DeductSourceItemQuantityOnRefundPlugin
     }
 
     /**
-     * Compensate reservation for creditmemo item
-     *
      * @param CreditmemoInterface $creditMemo
      * @return void
      */
@@ -120,13 +110,11 @@ class DeductSourceItemQuantityOnRefundPlugin
     {
         $order = $this->orderRepository->get($creditMemo->getOrderId());
         $itemsToRefund = $refundedOrderItemIds = [];
-        $productSkus = [];
         /** @var CreditmemoItem $item */
         foreach ($creditMemo->getItems() as $item) {
             /** @var OrderItemInterface $orderItem */
             $orderItem = $item->getOrderItem();
             $sku = $this->getSkuFromOrderItem->execute($orderItem);
-            $productSkus[] = $sku;
 
             if ($this->isValidItem($sku, $item)) {
                 $refundedOrderItemIds[] = $item->getOrderItemId();
@@ -139,17 +127,13 @@ class DeductSourceItemQuantityOnRefundPlugin
             }
         }
 
-        $existingProductIdsBySkus = $this->productResource->getProductsIdsBySkus($productSkus);
-
         $itemsToDeductFromSource = [];
         foreach ($itemsToRefund as $sku => $data) {
-            if (array_key_exists($sku, $existingProductIdsBySkus)) {
-                $itemsToDeductFromSource[] = $this->itemsToRefundFactory->create([
-                    'sku' => $sku,
-                    'qty' => $data['qty'],
-                    'processedQty' => $data['processedQty']
-                ]);
-            }
+            $itemsToDeductFromSource[] = $this->itemsToRefundFactory->create([
+                'sku' => $sku,
+                'qty' => $data['qty'],
+                'processedQty' => $data['processedQty']
+            ]);
         }
 
         if (!empty($itemsToDeductFromSource)) {
@@ -162,8 +146,6 @@ class DeductSourceItemQuantityOnRefundPlugin
     }
 
     /**
-     * Validate if the compensation should be processed
-     *
      * @param string $sku
      * @param CreditmemoItem $item
      * @return bool
@@ -183,7 +165,6 @@ class DeductSourceItemQuantityOnRefundPlugin
 
         return $this->isSourceItemManagementAllowedForProductType->execute($productType)
                 && $item->getQty() > 0
-                && !$item->getBackToStock()
-                && !$orderItem->getIsVirtual();
+                && !$item->getBackToStock();
     }
 }

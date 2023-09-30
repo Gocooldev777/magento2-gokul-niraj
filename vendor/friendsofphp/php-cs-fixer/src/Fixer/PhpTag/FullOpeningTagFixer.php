@@ -90,9 +90,8 @@ echo "Hello!";
         foreach ($newTokens as $index => $token) {
             if ($token->isGivenKind(T_OPEN_TAG)) {
                 $tokenContent = $token->getContent();
-                $possibleOpenContent = substr($content, $tokensOldContentLength, 5);
 
-                if (false === $possibleOpenContent || '<?php' !== strtolower($possibleOpenContent)) { /** @phpstan-ignore-line as pre PHP 8.0 `false` might be returned by substr @TODO clean up when PHP8+ is required */
+                if ('<?php' !== strtolower(substr($content, $tokensOldContentLength, 5))) {
                     $tokenContent = '<? ';
                 }
 

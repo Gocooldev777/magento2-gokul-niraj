@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Http\Client;
@@ -12,7 +12,6 @@ class TransactionVoid extends AbstractTransaction
 {
     /**
      * Process http request
-     *
      * @param array $data
      * @return Error|Successful
      */

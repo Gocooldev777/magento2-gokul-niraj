@@ -53,16 +53,6 @@ class ReindexRuleProductTest extends TestCase
     private $ruleMock;
 
     /**
-     * @var string
-     */
-    private $adminTimeZone;
-
-    /**
-     * @var string
-     */
-    private $websiteTz;
-
-    /**
      * @inheritDoc
      */
     protected function setUp(): void
@@ -81,9 +71,6 @@ class ReindexRuleProductTest extends TestCase
             $this->localeDateMock,
             true
         );
-
-        $this->adminTimeZone = 'America/Chicago';
-        $this->websiteTz = 'America/Los_Angeles';
     }
 
     /**
@@ -119,6 +106,8 @@ class ReindexRuleProductTest extends TestCase
     public function testExecute(): void
     {
         $websiteId = 3;
+        $adminTimeZone = 'America/Chicago';
+        $websiteTz = 'America/Los_Angeles';
         $productIds = [
             4 => [$websiteId => 1],
             5 => [$websiteId => 1],
@@ -130,8 +119,8 @@ class ReindexRuleProductTest extends TestCase
 
         $this->localeDateMock->method('getConfigTimezone')
             ->willReturnMap([
-                [ScopeInterface::SCOPE_WEBSITE, self::ADMIN_WEBSITE_ID, $this->adminTimeZone],
-                [ScopeInterface::SCOPE_WEBSITE, $websiteId, $this->websiteTz]
+                [ScopeInterface::SCOPE_WEBSITE, self::ADMIN_WEBSITE_ID, $adminTimeZone],
+                [ScopeInterface::SCOPE_WEBSITE, $websiteId, $websiteTz]
             ]);
 
         $batchRows = [
@@ -187,14 +176,19 @@ class ReindexRuleProductTest extends TestCase
     }
 
     /**
-     * @param array $websitesIds
-     * @param array $productIds
-     * @param array $batchRows
      * @return void
-     * @dataProvider executeDataProvider
      */
-    public function testExecuteWithExcludedWebsites(array $websitesIds, array $productIds, array $batchRows): void
+    public function testExecuteWithExcludedWebsites(): void
     {
+        $websitesIds = [1, 2, 3];
+        $adminTimeZone = 'America/Chicago';
+        $websiteTz = 'America/Los_Angeles';
+        $productIds = [
+            1 => [1 => 1],
+            2 => [2 => 1],
+            3 => [3 => 1]
+        ];
+
         $this->prepareResourceMock();
         $this->prepareRuleMock($websitesIds, $productIds, [10, 20]);
 
@@ -209,221 +203,68 @@ class ReindexRuleProductTest extends TestCase
 
         $this->localeDateMock->method('getConfigTimezone')
             ->willReturnMap([
-                [ScopeInterface::SCOPE_WEBSITE, self::ADMIN_WEBSITE_ID, $this->adminTimeZone],
-                [ScopeInterface::SCOPE_WEBSITE, 1, $this->websiteTz],
-                [ScopeInterface::SCOPE_WEBSITE, 2, $this->websiteTz],
-                [ScopeInterface::SCOPE_WEBSITE, 3, $this->websiteTz]
+                [ScopeInterface::SCOPE_WEBSITE, self::ADMIN_WEBSITE_ID, $adminTimeZone],
+                [ScopeInterface::SCOPE_WEBSITE, 1, $websiteTz],
+                [ScopeInterface::SCOPE_WEBSITE, 2, $websiteTz],
+                [ScopeInterface::SCOPE_WEBSITE, 3, $websiteTz]
             ]);
+
+        $batchRows = [
+            [
+                'rule_id' => 100,
+                'from_time' => 1498028400,
+                'to_time' => 1498892399,
+                'website_id' => 1,
+                'customer_group_id' => 20,
+                'product_id' => 1,
+                'action_operator' => 'simple_action',
+                'action_amount' => 43,
+                'action_stop' => true,
+                'sort_order' => 1
+            ],
+            [
+                'rule_id' => 100,
+                'from_time' => 1498028400,
+                'to_time' => 1498892399,
+                'website_id' => 2,
+                'customer_group_id' => 20,
+                'product_id' => 2,
+                'action_operator' => 'simple_action',
+                'action_amount' => 43,
+                'action_stop' => true,
+                'sort_order' => 1
+            ],
+            [
+                'rule_id' => 100,
+                'from_time' => 1498028400,
+                'to_time' => 1498892399,
+                'website_id' => 3,
+                'customer_group_id' => 10,
+                'product_id' => 3,
+                'action_operator' => 'simple_action',
+                'action_amount' => 43,
+                'action_stop' => true,
+                'sort_order' => 1
+            ],
+            [
+                'rule_id' => 100,
+                'from_time' => 1498028400,
+                'to_time' => 1498892399,
+                'website_id' => 3,
+                'customer_group_id' => 20,
+                'product_id' => 3,
+                'action_operator' => 'simple_action',
+                'action_amount' => 43,
+                'action_stop' => true,
+                'sort_order' => 1
+            ]
+        ];
 
         $this->connectionMock
             ->method('insertMultiple')
             ->with('catalogrule_product_replica', $batchRows);
 
         self::assertTrue($this->model->execute($this->ruleMock, 100, true));
-    }
-
-    /**
-     * @return array
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     */
-    public function executeDataProvider(): array
-    {
-        return [
-            [
-                [1, 2, 3],
-                [
-                    1 => [1 => 1],
-                    2 => [2 => 1],
-                    3 => [3 => 1]
-                ],
-                [
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 1,
-                        'customer_group_id' => 20,
-                        'product_id' => 1,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ],
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 2,
-                        'customer_group_id' => 20,
-                        'product_id' => 2,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ],
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 3,
-                        'customer_group_id' => 10,
-                        'product_id' => 3,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ],
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 3,
-                        'customer_group_id' => 20,
-                        'product_id' => 3,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ]
-                ]
-            ],
-            [
-                [1, 2, 3],
-                [
-                    1 => [1 => true],
-                    2 => [2 => 'true'],
-                    3 => [3 => 0]
-                ],
-                [
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 1,
-                        'customer_group_id' => 20,
-                        'product_id' => 1,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ],
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 2,
-                        'customer_group_id' => 20,
-                        'product_id' => 2,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ]
-                ]
-            ],
-            [
-                [1, 2, 3],
-                [
-                    1 => [1 => true],
-                    2 => [2 => true],
-                    3 => [3 => null]
-                ],
-                [
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 1,
-                        'customer_group_id' => 20,
-                        'product_id' => 1,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ],
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 2,
-                        'customer_group_id' => 20,
-                        'product_id' => 2,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ]
-                ]
-            ],
-            [
-                [1, 2, 3],
-                [
-                    1 => [1 => true],
-                    2 => [2 => true],
-                    3 => []
-                ],
-                [
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 1,
-                        'customer_group_id' => 20,
-                        'product_id' => 1,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ],
-                    [
-                        'rule_id' => 100,
-                        'from_time' => 1498028400,
-                        'to_time' => 1498892399,
-                        'website_id' => 2,
-                        'customer_group_id' => 20,
-                        'product_id' => 2,
-                        'action_operator' => 'simple_action',
-                        'action_amount' => 43,
-                        'action_stop' => true,
-                        'sort_order' => 1
-                    ]
-                ]
-                ],
-                [
-                    [1, 2, 3],
-                    [
-                        1 => [1 => true],
-                        2 => [2 => true],
-                        3 => [3 => false]
-                    ],
-                    [
-                        [
-                            'rule_id' => 100,
-                            'from_time' => 1498028400,
-                            'to_time' => 1498892399,
-                            'website_id' => 1,
-                            'customer_group_id' => 20,
-                            'product_id' => 1,
-                            'action_operator' => 'simple_action',
-                            'action_amount' => 43,
-                            'action_stop' => true,
-                            'sort_order' => 1
-                        ],
-                        [
-                            'rule_id' => 100,
-                            'from_time' => 1498028400,
-                            'to_time' => 1498892399,
-                            'website_id' => 2,
-                            'customer_group_id' => 20,
-                            'product_id' => 2,
-                            'action_operator' => 'simple_action',
-                            'action_amount' => 43,
-                            'action_stop' => true,
-                            'sort_order' => 1
-                        ]
-                    ]
-                ]
-        ];
     }
 
     /**

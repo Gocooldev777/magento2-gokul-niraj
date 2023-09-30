@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace Magento\Catalog\Controller\Adminhtml;
 
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Filter\FilterInput;
 use Magento\Store\Model\Store;
 use Magento\Framework\Controller\ResultFactory;
 
@@ -23,7 +22,7 @@ abstract class Category extends \Magento\Backend\App\Action
      *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'Magento_Catalog::categories';
+    const ADMIN_RESOURCE = 'Magento_Catalog::categories';
 
     /**
      * @var \Magento\Framework\Stdlib\DateTime\Filter\Date
@@ -155,7 +154,6 @@ abstract class Category extends \Magento\Backend\App\Action
      * @return \Magento\Framework\Controller\Result\Json
      *
      * @deprecated 101.0.0
-     * @see we don't recommend this approach anymore
      */
     protected function ajaxRequestResponse($category, $resultPage)
     {
@@ -215,7 +213,7 @@ abstract class Category extends \Magento\Backend\App\Action
                 }
             }
         }
-        $inputFilter = new FilterInput($dateFieldFilters, [], $postData);
+        $inputFilter = new \Zend_Filter_Input($dateFieldFilters, [], $postData);
         return $inputFilter->getUnescaped();
     }
 }

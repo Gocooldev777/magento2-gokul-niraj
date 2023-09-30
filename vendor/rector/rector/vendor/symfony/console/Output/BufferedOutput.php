@@ -8,12 +8,12 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Output;
+namespace RectorPrefix20211221\Symfony\Component\Console\Output;
 
 /**
  * @author Jean-François Simon <contact@jfsimon.fr>
  */
-class BufferedOutput extends Output
+class BufferedOutput extends \RectorPrefix20211221\Symfony\Component\Console\Output\Output
 {
     /**
      * @var string
@@ -28,6 +28,9 @@ class BufferedOutput extends Output
         $this->buffer = '';
         return $content;
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function doWrite(string $message, bool $newline)
     {
         $this->buffer .= $message;

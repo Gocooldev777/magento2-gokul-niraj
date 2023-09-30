@@ -9,8 +9,6 @@ use Magento\Framework\View\Element\UiComponentInterface;
 
 /**
  * Interface PoolInterface
- *
- * @api
  */
 interface PoolInterface
 {

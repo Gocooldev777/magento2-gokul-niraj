@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_PageBuilder/js/content-type/banner/appearance/default/widget.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\ndefine([\n    'Magento_PageBuilder/js/widget/show-on-hover',\n    'Magento_PageBuilder/js/widget/video-background'\n], function (showOnHover, videoBackground) {\n    'use strict';\n\n    return function (config, element) {\n        var videoElement = element[0].querySelector('[data-background-type=video]');\n\n        showOnHover(config);\n\n        if (videoElement) {\n            videoBackground(config, videoElement);\n        }\n    };\n});\n"}
+}});

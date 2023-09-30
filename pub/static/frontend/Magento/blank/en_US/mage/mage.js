@@ -85,7 +85,7 @@ define([
     /**
      * Init components inside of dynamically updated elements
      */
-    $(document).on('contentUpdated', 'body', function () {
+    $('body').on('contentUpdated', function () {
         if (mage) {
             mage.apply();
         }

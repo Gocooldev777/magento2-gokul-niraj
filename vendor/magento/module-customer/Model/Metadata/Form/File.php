@@ -131,7 +131,7 @@ class File extends AbstractData
             $value = $uploadedFile;
         } elseif ($this->_requestScope || !isset($_FILES[$attrCode])) {
             $value = [];
-            if ($this->_requestScope !== null && strpos($this->_requestScope, DIRECTORY_SEPARATOR) !== false) {
+            if (strpos($this->_requestScope, DIRECTORY_SEPARATOR) !== false) {
                 $scopes = explode(DIRECTORY_SEPARATOR, $this->_requestScope);
                 $mainScope = array_shift($scopes);
             } else {
@@ -299,7 +299,6 @@ class File extends AbstractData
     /**
      * @inheritdoc
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @return ImageContentInterface|array|string|null
      */
     public function compactValue($value)
@@ -368,7 +367,7 @@ class File extends AbstractData
 
         if ($toDelete) {
             $mediaDir->delete($this->_entityTypeCode . DIRECTORY_SEPARATOR .
-                ltrim($this->_value ?? '', DIRECTORY_SEPARATOR));
+                ltrim($this->_value, DIRECTORY_SEPARATOR));
             $result = '';
         }
 

@@ -54,7 +54,7 @@ class TypeResolver
         $interfaceNames = $reflectionClass->getInterfaceNames();
         $dataInterfaces = [];
         foreach ($interfaceNames as $interfaceName) {
-            if ($interfaceName && strpos($interfaceName, '\Api\Data\\') !== false) {
+            if (strpos($interfaceName, '\Api\Data\\') !== false) {
                 $dataInterfaces[] = $interfaceName;
             }
         }

@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"Magento_Ui/js/lib/knockout/bindings/after-render.js":"/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\ndefine([\n    'ko',\n    '../template/renderer'\n], function (ko, renderer) {\n    'use strict';\n\n    ko.bindingHandlers.afterRender = {\n\n        /**\n         * Binding init callback.\n         */\n        init: function (element, valueAccessor, allBindings, viewModel) {\n            var callback = valueAccessor();\n\n            if (typeof callback === 'function') {\n                callback.call(viewModel, element, viewModel);\n            }\n        }\n    };\n\n    renderer.addAttribute('afterRender');\n});\n"}
+}});

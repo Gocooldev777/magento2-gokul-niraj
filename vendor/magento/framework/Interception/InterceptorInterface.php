@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Framework\Interception;
 
 /**
@@ -12,8 +10,6 @@ namespace Magento\Framework\Interception;
  *
  * This interface exposes the parent method of the interception class, which allows the caller to bypass
  * the interception logic.
- *
- * @api
  */
 interface InterceptorInterface
 {

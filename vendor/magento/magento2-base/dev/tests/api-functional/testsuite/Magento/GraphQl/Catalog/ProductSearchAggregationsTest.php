@@ -16,7 +16,9 @@ class ProductSearchAggregationsTest extends GraphQlAbstract
      */
     public function testAggregationBooleanAttribute()
     {
-        $query = $this->getGraphQlQueryWithItems(
+        $this->markTestSkipped('MC-22184: Elasticsearch returns incorrect aggregation options for booleans');
+
+        $query = $this->getGraphQlQuery(
             '"search_product_1", "search_product_2", "search_product_3", "search_product_4" ,"search_product_5"'
         );
 
@@ -125,7 +127,7 @@ class ProductSearchAggregationsTest extends GraphQlAbstract
         $priceAggregation = array_filter(
             $result['products']['aggregations'],
             function ($a) {
-                return $a['attribute_code'] == 'product_price_attribute';
+                return $a['attribute_code'] == 'product_price_attribute_bucket';
             }
         );
         $this->assertNotEmpty($priceAggregation);
@@ -138,12 +140,6 @@ class ProductSearchAggregationsTest extends GraphQlAbstract
         $this->assertEquals($expectedOptions, $priceAggregation['options']);
     }
 
-    /**
-     * Get GraphQl products query with aggregations
-     *
-     * @param string $skus
-     * @return string
-     */
     private function getGraphQlQuery(string $skus)
     {
         return <<<QUERY
@@ -158,35 +154,6 @@ class ProductSearchAggregationsTest extends GraphQlAbstract
         value
         count
       }
-    }
-  }
-}
-QUERY;
-    }
-
-    /**
-     * Get GraphQl products query with aggregations and items
-     *
-     * @param string $skus
-     * @return string
-     */
-    private function getGraphQlQueryWithItems(string $skus): string
-    {
-        return <<<QUERY
-{
-    products(filter: {sku: {in: [{$skus}]}}){
-    aggregations{
-      label
-      attribute_code
-      count
-      options{
-        label
-        value
-        count
-      }
-    },
-    items{
-      id
     }
   }
 }

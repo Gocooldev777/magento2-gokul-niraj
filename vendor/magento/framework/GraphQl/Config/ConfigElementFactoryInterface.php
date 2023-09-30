@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl\Config;
 
 /**
  * Responsible for translating data produced by configuration readers to config objects
- *
- * @api
  */
 interface ConfigElementFactoryInterface
 {

@@ -85,7 +85,6 @@ class LockTest extends TestCase
 
     /**
      * @return array
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function createConfigDataProvider(): array
     {
@@ -94,7 +93,10 @@ class LockTest extends TestCase
                 'options' => [],
                 'expectedResult' => [
                     'lock' => [
-                        'provider' => LockBackendFactory::LOCK_DB
+                        'provider' => LockBackendFactory::LOCK_DB,
+                        'config' => [
+                            'prefix' => null,
+                        ],
                     ],
                 ],
             ],
@@ -162,31 +164,6 @@ class LockTest extends TestCase
                         'provider' => LockBackendFactory::LOCK_FILE,
                         'config' => [
                             'path' => '/my/path',
-                        ],
-                    ],
-                ],
-            ],
-            'Check specific db lock prefix null options' => [
-                'options' => [
-                    LockConfigOptionsList::INPUT_KEY_LOCK_PROVIDER => LockBackendFactory::LOCK_DB,
-                    LockConfigOptionsList::INPUT_KEY_LOCK_DB_PREFIX => null
-                ],
-                'expectedResult' => [
-                    'lock' => [
-                        'provider' => LockBackendFactory::LOCK_DB
-                    ],
-                ],
-            ],
-            'Check specific db lock prefix empty options' => [
-                'options' => [
-                    LockConfigOptionsList::INPUT_KEY_LOCK_PROVIDER => LockBackendFactory::LOCK_DB,
-                    LockConfigOptionsList::INPUT_KEY_LOCK_DB_PREFIX => ''
-                ],
-                'expectedResult' => [
-                    'lock' => [
-                        'provider' => LockBackendFactory::LOCK_DB,
-                        'config' => [
-                            'prefix' => '',
                         ],
                     ],
                 ],

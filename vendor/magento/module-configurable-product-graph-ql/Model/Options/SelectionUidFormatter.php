@@ -60,8 +60,7 @@ class SelectionUidFormatter
     {
         $attributeOption = [];
         foreach ($selectionUids as $uid) {
-            $decodedUid = $this->idEncoder->decode($uid);
-            $optionData = $decodedUid !== null ? explode(self::UID_SEPARATOR, $decodedUid) : [];
+            $optionData = explode(self::UID_SEPARATOR, $this->idEncoder->decode($uid));
             if (count($optionData) === 3) {
                 $attributeOption[(int)$optionData[1]]  = (int)$optionData[2];
             }

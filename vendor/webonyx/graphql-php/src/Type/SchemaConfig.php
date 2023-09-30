@@ -1,19 +1,22 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type;
 
 use GraphQL\Language\AST\SchemaDefinitionNode;
-use GraphQL\Language\AST\SchemaExtensionNode;
+use GraphQL\Language\AST\SchemaTypeExtensionNode;
 use GraphQL\Type\Definition\Directive;
-use GraphQL\Type\Definition\NamedType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use GraphQL\Utils\Utils;
+use function count;
+use function is_callable;
 
 /**
- * Configuration options for schema construction.
- *
- * The options accepted by the **create** method are described
- * in the [schema definition docs](schema-definition.md#configuration-options).
+ * Schema configuration class.
+ * Could be passed directly to schema constructor. List of options accepted by **create** method is
+ * [described in docs](type-system/schema.md#configuration-options).
  *
  * Usage example:
  *
@@ -22,68 +25,51 @@ use GraphQL\Type\Definition\Type;
  *         ->setTypeLoader($myTypeLoader);
  *
  *     $schema = new Schema($config);
- *
- * @see Type, NamedType
- *
- * @phpstan-type TypeLoader callable(string $typeName): ((Type&NamedType)|null)
- * @phpstan-type Types iterable<Type&NamedType>|(callable(): iterable<Type&NamedType>)
- * @phpstan-type SchemaConfigOptions array{
- *   query?: ObjectType|null,
- *   mutation?: ObjectType|null,
- *   subscription?: ObjectType|null,
- *   types?: Types|null,
- *   directives?: array<Directive>|null,
- *   typeLoader?: TypeLoader|null,
- *   assumeValid?: bool|null,
- *   astNode?: SchemaDefinitionNode|null,
- *   extensionASTNodes?: array<SchemaExtensionNode>|null,
- * }
  */
 class SchemaConfig
 {
-    public ?ObjectType $query = null;
+    /** @var ObjectType|null */
+    public $query;
 
-    public ?ObjectType $mutation = null;
+    /** @var ObjectType|null */
+    public $mutation;
 
-    public ?ObjectType $subscription = null;
+    /** @var ObjectType|null */
+    public $subscription;
 
-    /**
-     * @var iterable|callable
-     *
-     * @phpstan-var Types
-     */
+    /** @var Type[]|callable */
     public $types = [];
 
-    /** @var array<Directive>|null */
-    public ?array $directives = null;
+    /** @var Directive[]|null */
+    public $directives;
 
-    /**
-     * @var callable|null
-     *
-     * @phpstan-var TypeLoader|null
-     */
+    /** @var callable|null */
     public $typeLoader;
 
-    public bool $assumeValid = false;
+    /** @var SchemaDefinitionNode|null */
+    public $astNode;
 
-    public ?SchemaDefinitionNode $astNode = null;
+    /** @var bool */
+    public $assumeValid = false;
 
-    /** @var array<SchemaExtensionNode> */
-    public array $extensionASTNodes = [];
+    /** @var SchemaTypeExtensionNode[] */
+    public $extensionASTNodes = [];
 
     /**
      * Converts an array of options to instance of SchemaConfig
      * (or just returns empty config when array is not passed).
      *
-     * @phpstan-param SchemaConfigOptions $options
+     * @param mixed[] $options
+     *
+     * @return SchemaConfig
      *
      * @api
      */
-    public static function create(array $options = []): self
+    public static function create(array $options = [])
     {
         $config = new static();
 
-        if ($options !== []) {
+        if (count($options) > 0) {
             if (isset($options['query'])) {
                 $config->setQuery($options['query']);
             }
@@ -105,15 +91,20 @@ class SchemaConfig
             }
 
             if (isset($options['typeLoader'])) {
+                Utils::invariant(
+                    is_callable($options['typeLoader']),
+                    'Schema type loader must be callable if provided but got: %s',
+                    Utils::printSafe($options['typeLoader'])
+                );
                 $config->setTypeLoader($options['typeLoader']);
-            }
-
-            if (isset($options['assumeValid'])) {
-                $config->setAssumeValid($options['assumeValid']);
             }
 
             if (isset($options['astNode'])) {
                 $config->setAstNode($options['astNode']);
+            }
+
+            if (isset($options['assumeValid'])) {
+                $config->setAssumeValid((bool) $options['assumeValid']);
             }
 
             if (isset($options['extensionASTNodes'])) {
@@ -124,42 +115,90 @@ class SchemaConfig
         return $config;
     }
 
-    /** @api */
-    public function getQuery(): ?ObjectType
+    /**
+     * @return SchemaDefinitionNode|null
+     */
+    public function getAstNode()
+    {
+        return $this->astNode;
+    }
+
+    /**
+     * @return SchemaConfig
+     */
+    public function setAstNode(SchemaDefinitionNode $astNode)
+    {
+        $this->astNode = $astNode;
+
+        return $this;
+    }
+
+    /**
+     * @return ObjectType|null
+     *
+     * @api
+     */
+    public function getQuery()
     {
         return $this->query;
     }
 
-    /** @api */
-    public function setQuery(?ObjectType $query): self
+    /**
+     * @param ObjectType|null $query
+     *
+     * @return SchemaConfig
+     *
+     * @api
+     */
+    public function setQuery($query)
     {
         $this->query = $query;
 
         return $this;
     }
 
-    /** @api */
-    public function getMutation(): ?ObjectType
+    /**
+     * @return ObjectType|null
+     *
+     * @api
+     */
+    public function getMutation()
     {
         return $this->mutation;
     }
 
-    /** @api */
-    public function setMutation(?ObjectType $mutation): self
+    /**
+     * @param ObjectType|null $mutation
+     *
+     * @return SchemaConfig
+     *
+     * @api
+     */
+    public function setMutation($mutation)
     {
         $this->mutation = $mutation;
 
         return $this;
     }
 
-    /** @api */
-    public function getSubscription(): ?ObjectType
+    /**
+     * @return ObjectType|null
+     *
+     * @api
+     */
+    public function getSubscription()
     {
         return $this->subscription;
     }
 
-    /** @api */
-    public function setSubscription(?ObjectType $subscription): self
+    /**
+     * @param ObjectType|null $subscription
+     *
+     * @return SchemaConfig
+     *
+     * @api
+     */
+    public function setSubscription($subscription)
     {
         $this->subscription = $subscription;
 
@@ -167,9 +206,7 @@ class SchemaConfig
     }
 
     /**
-     * @return array|callable
-     *
-     * @phpstan-return Types
+     * @return Type[]|callable
      *
      * @api
      */
@@ -179,13 +216,13 @@ class SchemaConfig
     }
 
     /**
-     * @param array|callable $types
+     * @param Type[]|callable $types
      *
-     * @phpstan-param Types $types
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setTypes($types): self
+    public function setTypes($types)
     {
         $this->types = $types;
 
@@ -193,21 +230,23 @@ class SchemaConfig
     }
 
     /**
-     * @return array<Directive>|null
+     * @return Directive[]|null
      *
      * @api
      */
-    public function getDirectives(): ?array
+    public function getDirectives()
     {
         return $this->directives;
     }
 
     /**
-     * @param array<Directive>|null $directives
+     * @param Directive[] $directives
+     *
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setDirectives(?array $directives): self
+    public function setDirectives(array $directives)
     {
         $this->directives = $directives;
 
@@ -215,64 +254,60 @@ class SchemaConfig
     }
 
     /**
-     * @return callable|null $typeLoader
-     *
-     * @phpstan-return TypeLoader|null $typeLoader
+     * @return callable|null
      *
      * @api
      */
-    public function getTypeLoader(): ?callable
+    public function getTypeLoader()
     {
         return $this->typeLoader;
     }
 
     /**
-     * @phpstan-param TypeLoader|null $typeLoader
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setTypeLoader(?callable $typeLoader): self
+    public function setTypeLoader(callable $typeLoader)
     {
         $this->typeLoader = $typeLoader;
 
         return $this;
     }
 
-    public function getAssumeValid(): bool
+    /**
+     * @return bool
+     */
+    public function getAssumeValid()
     {
         return $this->assumeValid;
     }
 
-    public function setAssumeValid(bool $assumeValid): self
+    /**
+     * @param bool $assumeValid
+     *
+     * @return SchemaConfig
+     */
+    public function setAssumeValid($assumeValid)
     {
         $this->assumeValid = $assumeValid;
 
         return $this;
     }
 
-    public function getAstNode(): ?SchemaDefinitionNode
-    {
-        return $this->astNode;
-    }
-
-    public function setAstNode(?SchemaDefinitionNode $astNode): self
-    {
-        $this->astNode = $astNode;
-
-        return $this;
-    }
-
-    /** @return array<SchemaExtensionNode> */
-    public function getExtensionASTNodes(): array
+    /**
+     * @return SchemaTypeExtensionNode[]
+     */
+    public function getExtensionASTNodes()
     {
         return $this->extensionASTNodes;
     }
 
-    /** @param array<SchemaExtensionNode> $extensionASTNodes */
-    public function setExtensionASTNodes(array $extensionASTNodes): self
+    /**
+     * @param SchemaTypeExtensionNode[] $extensionASTNodes
+     */
+    public function setExtensionASTNodes(array $extensionASTNodes)
     {
         $this->extensionASTNodes = $extensionASTNodes;
-
-        return $this;
     }
 }

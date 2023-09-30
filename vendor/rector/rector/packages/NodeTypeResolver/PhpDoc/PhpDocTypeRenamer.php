@@ -5,29 +5,32 @@ namespace Rector\NodeTypeResolver\PhpDoc;
 
 use PhpParser\Node;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
+use Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\UnderscorePhpDocNodeTraverserFactory;
 use Rector\NodeTypeResolver\PhpDocNodeVisitor\UnderscoreRenamePhpDocNodeVisitor;
-use Rector\PhpDocParser\PhpDocParser\PhpDocNodeTraverser;
 use Rector\Renaming\ValueObject\PseudoNamespaceToNamespace;
-use Rector\StaticTypeMapper\StaticTypeMapper;
 final class PhpDocTypeRenamer
 {
     /**
      * @readonly
-     * @var \Rector\StaticTypeMapper\StaticTypeMapper
+     * @var \Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\UnderscorePhpDocNodeTraverserFactory
      */
-    private $staticTypeMapper;
-    public function __construct(StaticTypeMapper $staticTypeMapper)
+    private $underscorePhpDocNodeTraverserFactory;
+    /**
+     * @readonly
+     * @var \Rector\NodeTypeResolver\PhpDocNodeVisitor\UnderscoreRenamePhpDocNodeVisitor
+     */
+    private $underscoreRenamePhpDocNodeVisitor;
+    public function __construct(\Rector\NodeTypeResolver\PhpDoc\PhpDocNodeTraverser\UnderscorePhpDocNodeTraverserFactory $underscorePhpDocNodeTraverserFactory, \Rector\NodeTypeResolver\PhpDocNodeVisitor\UnderscoreRenamePhpDocNodeVisitor $underscoreRenamePhpDocNodeVisitor)
     {
-        $this->staticTypeMapper = $staticTypeMapper;
+        $this->underscorePhpDocNodeTraverserFactory = $underscorePhpDocNodeTraverserFactory;
+        $this->underscoreRenamePhpDocNodeVisitor = $underscoreRenamePhpDocNodeVisitor;
     }
-    public function changeUnderscoreType(PhpDocInfo $phpDocInfo, Node $node, PseudoNamespaceToNamespace $pseudoNamespaceToNamespace) : bool
+    public function changeUnderscoreType(\Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo $phpDocInfo, \PhpParser\Node $node, \Rector\Renaming\ValueObject\PseudoNamespaceToNamespace $pseudoNamespaceToNamespace) : void
     {
         $phpDocNode = $phpDocInfo->getPhpDocNode();
-        $underscoreRenamePhpDocNodeVisitor = new UnderscoreRenamePhpDocNodeVisitor($this->staticTypeMapper, $pseudoNamespaceToNamespace, $node);
-        $phpDocNodeTraverser = new PhpDocNodeTraverser();
-        $phpDocNodeTraverser->addPhpDocNodeVisitor($underscoreRenamePhpDocNodeVisitor);
+        $this->underscoreRenamePhpDocNodeVisitor->setPseudoNamespaceToNamespace($pseudoNamespaceToNamespace);
+        $this->underscoreRenamePhpDocNodeVisitor->setCurrentPhpParserNode($node);
+        $phpDocNodeTraverser = $this->underscorePhpDocNodeTraverserFactory->create();
         $phpDocNodeTraverser->traverse($phpDocNode);
-        // has changed?
-        return $underscoreRenamePhpDocNodeVisitor->hasChanged();
     }
 }

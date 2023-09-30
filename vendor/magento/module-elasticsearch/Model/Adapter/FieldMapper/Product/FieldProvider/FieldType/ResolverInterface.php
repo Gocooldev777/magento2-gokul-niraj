@@ -11,8 +11,6 @@ use Magento\Elasticsearch\Model\Adapter\FieldMapper\Product\AttributeAdapter;
 
 /**
  * Field type resolver interface.
- *
- * @api
  */
 interface ResolverInterface
 {

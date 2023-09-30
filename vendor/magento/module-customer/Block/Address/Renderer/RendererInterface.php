@@ -11,7 +11,6 @@ use Magento\Customer\Model\Address\AddressModelInterface;
 /**
  * Address renderer interface
  *
- * @api
  * @author      Magento Core Team <core@magentocommerce.com>
  */
 interface RendererInterface

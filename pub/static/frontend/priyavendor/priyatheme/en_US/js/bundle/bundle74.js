@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"jquery/ui-modules/form.js":"( function( factory ) {\n\t\"use strict\";\n\n\tif ( typeof define === \"function\" && define.amd ) {\n\n\t\t// AMD. Register as an anonymous module.\n\t\tdefine( [ \"jquery\", \"./version\" ], factory );\n\t} else {\n\n\t\t// Browser globals\n\t\tfactory( jQuery );\n\t}\n} )( function( $ ) {\n\"use strict\";\n\n// Support: IE8 Only\n// IE8 does not support the form attribute and when it is supplied. It overwrites the form prop\n// with a string, so we need to find the proper form.\nreturn $.fn._form = function() {\n\treturn typeof this[ 0 ].form === \"string\" ? this.closest( \"form\" ) : $( this[ 0 ].form );\n};\n\n} );\n"}
+}});

@@ -12,8 +12,6 @@ use Magento\User\Api\Data\UserInterface;
 
 /**
  * Use to send out notifications about user related events.
- *
- * @api
  */
 interface NotificatorInterface
 {

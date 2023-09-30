@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
 use Laminas\View\Renderer\RendererInterface as Renderer;
@@ -11,14 +9,15 @@ abstract class AbstractHelper implements HelperInterface
     /**
      * View object instance
      *
-     * @var Renderer|null
+     * @var Renderer
      */
-    protected $view;
+    protected $view = null;
 
     /**
      * Set the View object
      *
-     * @return self
+     * @param  Renderer $view
+     * @return AbstractHelper
      */
     public function setView(Renderer $view)
     {

@@ -8,25 +8,25 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ChildDefinition;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\LogicException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ChildDefinition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException;
 /**
  * @author Alexander M. Turek <me@derrabus.de>
  */
-final class AttributeAutoconfigurationPass extends AbstractRecursivePass
+final class AttributeAutoconfigurationPass extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AbstractRecursivePass
 {
     private $classAttributeConfigurators = [];
     private $methodAttributeConfigurators = [];
     private $propertyAttributeConfigurators = [];
     private $parameterAttributeConfigurators = [];
-    public function process(ContainerBuilder $container) : void
+    public function process(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container) : void
     {
-        if (!$container->getAutoconfiguredAttributes()) {
+        if (80000 > \PHP_VERSION_ID || !$container->getAutoconfiguredAttributes()) {
             return;
         }
         foreach ($container->getAutoconfiguredAttributes() as $attributeName => $callable) {
@@ -45,11 +45,11 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
             } elseif ($parameterType instanceof \ReflectionNamedType) {
                 $types[] = $parameterType->getName();
             } else {
-                throw new LogicException(\sprintf('Argument "$%s" of attribute autoconfigurator should have a type, use one or more of "\\ReflectionClass|\\ReflectionMethod|\\ReflectionProperty|\\ReflectionParameter|\\Reflector" in "%s" on line "%d".', $reflectorParameter->getName(), $callableReflector->getFileName(), $callableReflector->getStartLine()));
+                throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException(\sprintf('Argument "$%s" of attribute autoconfigurator should have a type, use one or more of "\\ReflectionClass|\\ReflectionMethod|\\ReflectionProperty|\\ReflectionParameter|\\Reflector" in "%s" on line "%d".', $reflectorParameter->getName(), $callableReflector->getFileName(), $callableReflector->getStartLine()));
             }
             try {
                 $attributeReflector = new \ReflectionClass($attributeName);
-            } catch (\ReflectionException $exception) {
+            } catch (\ReflectionException $e) {
                 continue;
             }
             $targets = (\method_exists($attributeReflector, 'getAttributes') ? $attributeReflector->getAttributes(\Attribute::class) : [])[0] ?? 0;
@@ -60,7 +60,7 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
                         continue;
                     }
                     if (!($targets & \constant('Attribute::TARGET_' . \strtoupper($symbol)))) {
-                        throw new LogicException(\sprintf('Invalid type "Reflection%s" on argument "$%s": attribute "%s" cannot target a ' . $symbol . ' in "%s" on line "%d".', \ucfirst($symbol), $reflectorParameter->getName(), $attributeName, $callableReflector->getFileName(), $callableReflector->getStartLine()));
+                        throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\LogicException(\sprintf('Invalid type "Reflection%s" on argument "$%s": attribute "%s" cannot target a ' . $symbol . ' in "%s" on line "%d".', \ucfirst($symbol), $reflectorParameter->getName(), $attributeName, $callableReflector->getFileName(), $callableReflector->getStartLine()));
                     }
                 }
                 $this->{$symbol . 'AttributeConfigurators'}[$attributeName] = $callable;
@@ -68,17 +68,13 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
         }
         parent::process($container);
     }
-    /**
-     * @param mixed $value
-     * @return mixed
-     */
     protected function processValue($value, bool $isRoot = \false)
     {
-        if (!$value instanceof Definition || !$value->isAutoconfigured() || $value->isAbstract() || $value->hasTag('container.ignore_attributes') || !($classReflector = $this->container->getReflectionClass($value->getClass(), \false))) {
+        if (!$value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || !$value->isAutoconfigured() || $value->isAbstract() || $value->hasTag('container.ignore_attributes') || !($classReflector = $this->container->getReflectionClass($value->getClass(), \false))) {
             return parent::processValue($value, $isRoot);
         }
         $instanceof = $value->getInstanceofConditionals();
-        $conditionals = $instanceof[$classReflector->getName()] ?? new ChildDefinition('');
+        $conditionals = $instanceof[$classReflector->getName()] ?? new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ChildDefinition('');
         if ($this->classAttributeConfigurators) {
             foreach (\method_exists($classReflector, 'getAttributes') ? $classReflector->getAttributes() : [] as $attribute) {
                 if ($configurator = $this->classAttributeConfigurators[$attribute->getName()] ?? null) {
@@ -89,7 +85,7 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
         if ($this->parameterAttributeConfigurators) {
             try {
                 $constructorReflector = $this->getConstructor($value, \false);
-            } catch (RuntimeException $exception) {
+            } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException $e) {
                 $constructorReflector = null;
             }
             if ($constructorReflector) {
@@ -137,7 +133,7 @@ final class AttributeAutoconfigurationPass extends AbstractRecursivePass
                 }
             }
         }
-        if (!isset($instanceof[$classReflector->getName()]) && new ChildDefinition('') != $conditionals) {
+        if (!isset($instanceof[$classReflector->getName()]) && new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ChildDefinition('') != $conditionals) {
             $instanceof[$classReflector->getName()] = $conditionals;
             $value->setInstanceofConditionals($instanceof);
         }

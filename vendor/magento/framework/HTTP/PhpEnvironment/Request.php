@@ -25,12 +25,12 @@ class Request extends \Laminas\Http\PhpEnvironment\Request
     /**#@+
      * Protocols
      */
-    public const SCHEME_HTTP  = 'http';
-    public const SCHEME_HTTPS = 'https';
+    const SCHEME_HTTP  = 'http';
+    const SCHEME_HTTPS = 'https';
     /**#@-*/
 
     // Configuration path for SSL Offload http header
-    public const XML_PATH_OFFLOADER_HEADER = 'web/secure/offloader_header';
+    const XML_PATH_OFFLOADER_HEADER = 'web/secure/offloader_header';
 
     /**
      * @var string
@@ -48,6 +48,8 @@ class Request extends \Laminas\Http\PhpEnvironment\Request
     protected $action;
 
     /**
+     * PATH_INFO
+     *
      * @var string
      */
     protected $pathInfo = '';
@@ -225,7 +227,7 @@ class Request extends \Laminas\Http\PhpEnvironment\Request
     public function setPathInfo($pathInfo = null)
     {
         if ($pathInfo === null) {
-            $requestUri = $this->getRequestUri() ?? '';
+            $requestUri = $this->getRequestUri();
             if ('/' == $requestUri) {
                 return $this;
             }

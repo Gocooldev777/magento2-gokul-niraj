@@ -6,28 +6,18 @@
 
 namespace Magento\AdminNotification\Model\System\Message;
 
-use Laminas\Http\Request;
-use Laminas\Http\Response;
-use Magento\Backend\App\ConfigInterface;
-use Magento\Framework\App\CacheInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\HTTP\Adapter\Curl;
-use Magento\Framework\HTTP\Adapter\CurlFactory;
-use Magento\Framework\Notification\MessageInterface;
-use Magento\Framework\Phrase;
 use Magento\Store\Model\Store;
-use Throwable;
 
 /**
  * @api
  * @since 100.0.2
  */
-class Security implements MessageInterface
+class Security implements \Magento\Framework\Notification\MessageInterface
 {
     /**
      * Cache key for saving verification result
      */
-    public const VERIFICATION_RESULT_CACHE_KEY = 'configuration_files_access_level_verification';
+    const VERIFICATION_RESULT_CACHE_KEY = 'configuration_files_access_level_verification';
 
     /**
      * File path for verification
@@ -44,36 +34,36 @@ class Security implements MessageInterface
     private $_verificationTimeOut = 2;
 
     /**
-     * @var CacheInterface
+     * @var \Magento\Framework\App\CacheInterface
      */
     protected $_cache;
 
     /**
-     * @var ConfigInterface
+     * @var \Magento\Backend\App\ConfigInterface
      */
     protected $_backendConfig;
 
     /**
-     * @var ScopeConfigInterface
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     protected $_config;
 
     /**
-     * @var CurlFactory
+     * @var \Magento\Framework\HTTP\Adapter\CurlFactory
      */
     protected $_curlFactory;
 
     /**
-     * @param CacheInterface $cache
-     * @param ConfigInterface $backendConfig
-     * @param ScopeConfigInterface $config
-     * @param CurlFactory $curlFactory
+     * @param \Magento\Framework\App\CacheInterface $cache
+     * @param \Magento\Backend\App\ConfigInterface $backendConfig
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
+     * @param \Magento\Framework\HTTP\Adapter\CurlFactory $curlFactory
      */
     public function __construct(
-        CacheInterface $cache,
-        ConfigInterface $backendConfig,
-        ScopeConfigInterface $config,
-        CurlFactory $curlFactory
+        \Magento\Framework\App\CacheInterface $cache,
+        \Magento\Backend\App\ConfigInterface $backendConfig,
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
+        \Magento\Framework\HTTP\Adapter\CurlFactory $curlFactory
     ) {
         $this->_cache = $cache;
         $this->_backendConfig = $backendConfig;
@@ -110,12 +100,12 @@ class Security implements MessageInterface
     {
         $unsecureBaseURL = $this->_config->getValue(Store::XML_PATH_UNSECURE_BASE_URL, 'default');
 
-        /** @var $http Curl */
+        /** @var $http \Magento\Framework\HTTP\Adapter\Curl */
         $http = $this->_curlFactory->create();
-        $http->setOptions(['timeout' => $this->_verificationTimeOut]);
-        $http->write(Request::METHOD_POST, $unsecureBaseURL . $this->_filePath);
+        $http->setConfig(['timeout' => $this->_verificationTimeOut]);
+        $http->write(\Zend_Http_Client::POST, $unsecureBaseURL . $this->_filePath);
         $responseBody = $http->read();
-        $responseCode = $this->extractCodeFromResponse($responseBody);
+        $responseCode = \Zend_Http_Response::extractCode($responseBody);
         $http->close();
 
         return $responseCode == 200;
@@ -144,7 +134,7 @@ class Security implements MessageInterface
     /**
      * Retrieve message text
      *
-     * @return Phrase
+     * @return \Magento\Framework\Phrase
      */
     public function getText()
     {
@@ -161,24 +151,6 @@ class Security implements MessageInterface
      */
     public function getSeverity()
     {
-        return MessageInterface::SEVERITY_CRITICAL;
-    }
-
-    /**
-     * Extract the response code from a response string
-     *
-     * @param string $responseString
-     *
-     * @return false|int
-     */
-    private function extractCodeFromResponse(string $responseString)
-    {
-        try {
-            $responseCode = Response::fromString($responseString)->getStatusCode();
-        } catch (Throwable $e) {
-            $responseCode = false;
-        }
-
-        return $responseCode;
+        return \Magento\Framework\Notification\MessageInterface::SEVERITY_CRITICAL;
     }
 }

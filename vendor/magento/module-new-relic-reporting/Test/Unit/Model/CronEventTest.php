@@ -7,11 +7,9 @@ declare(strict_types=1);
 
 namespace Magento\NewRelicReporting\Test\Unit\Model;
 
-use Laminas\Http\Request;
-use Laminas\Http\Response;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\HTTP\ZendClientFactory;
 use Magento\Framework\Json\EncoderInterface;
 use Magento\NewRelicReporting\Model\Config;
 use Magento\NewRelicReporting\Model\CronEvent;
@@ -31,14 +29,14 @@ class CronEventTest extends TestCase
     protected $configMock;
 
     /**
-     * @var LaminasClientFactory|MockObject
+     * @var ZendClientFactory|MockObject
      */
-    protected $httpClientFactoryMock;
+    protected $zendClientFactoryMock;
 
     /**
-     * @var LaminasClient|MockObject
+     * @var ZendClient|MockObject
      */
-    protected $httpClientMock;
+    protected $zendClientMock;
 
     /**
      * @var EncoderInterface|MockObject
@@ -47,13 +45,13 @@ class CronEventTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->httpClientFactoryMock = $this->getMockBuilder(LaminasClientFactory::class)
+        $this->zendClientFactoryMock = $this->getMockBuilder(ZendClientFactory::class)
             ->setMethods(['create'])
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->httpClientMock = $this->getMockBuilder(LaminasClient::class)
-            ->setMethods(['send', 'setUri', 'setMethod', 'setHeaders', 'setRawBody'])
+        $this->zendClientMock = $this->getMockBuilder(ZendClient::class)
+            ->setMethods(['request', 'setUri', 'setMethod', 'setHeaders', 'setRawData'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -75,7 +73,7 @@ class CronEventTest extends TestCase
         $this->model = new CronEvent(
             $this->configMock,
             $this->jsonEncoderMock,
-            $this->httpClientFactoryMock
+            $this->zendClientFactoryMock
         );
     }
 
@@ -89,7 +87,7 @@ class CronEventTest extends TestCase
         $json = '{"eventType":"Cron","appName":"app_name","appId":"app_id"}';
         $statusOk = '200';
         $uri = 'https://example.com/listener';
-        $method = Request::METHOD_POST;
+        $method = ZendClient::POST;
         $headers = ['X-Insert-Key' => 'insert_key_value', 'Content-Type' => 'application/json'];
         $accId = 'acc_id';
         $appId = 'app_id';
@@ -98,10 +96,10 @@ class CronEventTest extends TestCase
 
         $this->model->addData(['eventType'=>'Cron']);
 
-        $this->httpClientMock->expects($this->once())->method('setUri')->with($uri)->willReturnSelf();
-        $this->httpClientMock->expects($this->once())->method('setMethod')->with($method)->willReturnSelf();
-        $this->httpClientMock->expects($this->once())->method('setHeaders')->with($headers)->willReturnSelf();
-        $this->httpClientMock->expects($this->once())->method('setRawBody')->with($json)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setUri')->with($uri)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setMethod')->with($method)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setHeaders')->with($headers)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setRawData')->with($json)->willReturnSelf();
 
         $this->configMock->expects($this->once())
             ->method('getNewRelicAccountId')
@@ -125,17 +123,17 @@ class CronEventTest extends TestCase
 
         $this->jsonEncoderMock->expects($this->once())->method('encode')->willReturn($json);
 
-        $httpResponseMock = $this->getMockBuilder(
-            Response::class
+        $zendHttpResponseMock = $this->getMockBuilder(
+            \Zend_Http_Response::class
         )->disableOriginalConstructor()
             ->getMock();
-        $httpResponseMock->expects($this->any())->method('getStatusCode')->willReturn($statusOk);
+        $zendHttpResponseMock->expects($this->any())->method('getStatus')->willReturn($statusOk);
 
-        $this->httpClientMock->expects($this->once())->method('send')->willReturn($httpResponseMock);
+        $this->zendClientMock->expects($this->once())->method('request')->willReturn($zendHttpResponseMock);
 
-        $this->httpClientFactoryMock->expects($this->once())
+        $this->zendClientFactoryMock->expects($this->once())
             ->method('create')
-            ->willReturn($this->httpClientMock);
+            ->willReturn($this->zendClientMock);
 
         $this->assertIsBool($this->model->sendRequest());
     }
@@ -150,17 +148,17 @@ class CronEventTest extends TestCase
         $json = '{"eventType":"Cron","appName":"app_name","appId":"app_id"}';
         $statusBad = '401';
         $uri = 'https://example.com/listener';
-        $method = Request::METHOD_POST;
+        $method = ZendClient::POST;
         $headers = ['X-Insert-Key' => 'insert_key_value', 'Content-Type' => 'application/json'];
         $accId = 'acc_id';
         $appId = 'app_id';
         $appName = 'app_name';
         $insightApiKey = 'insert_key_value';
 
-        $this->httpClientMock->expects($this->once())->method('setUri')->with($uri)->willReturnSelf();
-        $this->httpClientMock->expects($this->once())->method('setMethod')->with($method)->willReturnSelf();
-        $this->httpClientMock->expects($this->once())->method('setHeaders')->with($headers)->willReturnSelf();
-        $this->httpClientMock->expects($this->once())->method('setRawBody')->with($json)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setUri')->with($uri)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setMethod')->with($method)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setHeaders')->with($headers)->willReturnSelf();
+        $this->zendClientMock->expects($this->once())->method('setRawData')->with($json)->willReturnSelf();
 
         $this->configMock->expects($this->once())
             ->method('getNewRelicAccountId')
@@ -184,17 +182,17 @@ class CronEventTest extends TestCase
 
         $this->jsonEncoderMock->expects($this->once())->method('encode')->willReturn($json);
 
-        $httpResponseMock = $this->getMockBuilder(
-            Response::class
+        $zendHttpResponseMock = $this->getMockBuilder(
+            \Zend_Http_Response::class
         )->disableOriginalConstructor()
             ->getMock();
-        $httpResponseMock->expects($this->any())->method('getStatusCode')->willReturn($statusBad);
+        $zendHttpResponseMock->expects($this->any())->method('getStatus')->willReturn($statusBad);
 
-        $this->httpClientMock->expects($this->once())->method('send')->willReturn($httpResponseMock);
+        $this->zendClientMock->expects($this->once())->method('request')->willReturn($zendHttpResponseMock);
 
-        $this->httpClientFactoryMock->expects($this->once())
+        $this->zendClientFactoryMock->expects($this->once())
             ->method('create')
-            ->willReturn($this->httpClientMock);
+            ->willReturn($this->zendClientMock);
 
         $this->assertIsBool($this->model->sendRequest());
     }
@@ -208,9 +206,9 @@ class CronEventTest extends TestCase
     {
         $accId = '';
 
-        $this->httpClientFactoryMock->expects($this->once())
+        $this->zendClientFactoryMock->expects($this->once())
             ->method('create')
-            ->willReturn($this->httpClientMock);
+            ->willReturn($this->zendClientMock);
         $this->configMock->expects($this->once())
             ->method('getNewRelicAccountId')
             ->willReturn($accId);

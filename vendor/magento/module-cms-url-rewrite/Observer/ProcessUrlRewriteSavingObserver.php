@@ -44,10 +44,7 @@ class ProcessUrlRewriteSavingObserver implements ObserverInterface
         /** @var $cmsPage \Magento\Cms\Model\Page */
         $cmsPage = $observer->getEvent()->getObject();
 
-        if ($cmsPage->dataHasChangedFor('identifier')
-            || $cmsPage->dataHasChangedFor('store_id')
-            || $cmsPage->getData('rewrites_update_force')
-        ) {
+        if ($cmsPage->dataHasChangedFor('identifier') || $cmsPage->dataHasChangedFor('store_id')) {
             $urls = $this->cmsPageUrlRewriteGenerator->generate($cmsPage);
 
             $this->urlPersist->deleteByData([

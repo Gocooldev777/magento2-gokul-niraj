@@ -9,8 +9,6 @@ namespace Magento\Indexer\Model;
 
 /**
  * Interface to switch indexer mode
- *
- * @api
  */
 interface ModeSwitcherInterface
 {

@@ -28,11 +28,8 @@ define([
          * For more info about options take a look at "mage/calendar" and jquery.ui.datepicker widget.
          * @param {HTMLElement} el - Element, that binding is applied to
          * @param {Function} valueAccessor - Function that returns value, passed to binding
-         * @param {object} allBindings
-         * @param {object} viewModel
-         * @param {object} bindingContext
          */
-        init: function (el, valueAccessor, allBindings, viewModel, bindingContext) {
+        init: function (el, valueAccessor) {
             var config = valueAccessor(),
                 observable,
                 options = {};
@@ -53,16 +50,6 @@ define([
                     observable(this.value);
                 });
             });
-
-            if (bindingContext.$data) {
-                bindingContext.$data.value.subscribe(function (newVal) {
-                    if (!newVal) {
-                        $(el).val('');
-                    }
-                }, this);
-            }
-
-
         },
 
         /**

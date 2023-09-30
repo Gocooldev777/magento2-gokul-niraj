@@ -34,7 +34,7 @@ class ConstantTest extends TestCase
     public function testEvaluateBadValue($value)
     {
         $this->expectException('InvalidArgumentException');
-        $this->expectExceptionMessage('Constant "'. $value['value'] .'" is not defined.');
+        $this->expectExceptionMessage('Constant name is expected.');
         $this->object->evaluate($value);
     }
 
@@ -46,6 +46,7 @@ class ConstantTest extends TestCase
         return [
             [['value' => 'KNOWINGLY_UNDEFINED_CONSTANT']],
             [['value' => '']],
+            [[]]
         ];
     }
 }

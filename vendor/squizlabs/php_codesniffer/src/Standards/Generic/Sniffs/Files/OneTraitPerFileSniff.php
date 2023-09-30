@@ -39,13 +39,7 @@ class OneTraitPerFileSniff implements Sniff
      */
     public function process(File $phpcsFile, $stackPtr)
     {
-        $tokens = $phpcsFile->getTokens();
-        $start  = ($stackPtr + 1);
-        if (isset($tokens[$stackPtr]['scope_closer']) === true) {
-            $start = ($tokens[$stackPtr]['scope_closer'] + 1);
-        }
-
-        $nextClass = $phpcsFile->findNext($this->register(), $start);
+        $nextClass = $phpcsFile->findNext($this->register(), ($stackPtr + 1));
         if ($nextClass !== false) {
             $error = 'Only one trait is allowed in a file';
             $phpcsFile->addError($error, $nextClass, 'MultipleFound');

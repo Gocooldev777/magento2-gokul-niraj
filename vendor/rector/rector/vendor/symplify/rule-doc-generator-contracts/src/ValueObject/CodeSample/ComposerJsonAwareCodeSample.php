@@ -4,10 +4,9 @@ declare (strict_types=1);
 namespace Symplify\RuleDocGenerator\ValueObject\CodeSample;
 
 use Symplify\RuleDocGenerator\ValueObject\AbstractCodeSample;
-final class ComposerJsonAwareCodeSample extends AbstractCodeSample
+final class ComposerJsonAwareCodeSample extends \Symplify\RuleDocGenerator\ValueObject\AbstractCodeSample
 {
     /**
-     * @readonly
      * @var string
      */
     private $composerJson;

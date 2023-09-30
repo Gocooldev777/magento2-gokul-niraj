@@ -12,8 +12,6 @@ use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\Stdlib\DateTime\Timezone\LocalizedDateToUtcConverterInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\Validator\AbstractValidator;
-use Magento\Framework\Validator\NotEmpty;
-use Magento\Framework\Validator\ValidatorChain;
 
 /**
  * Validates that the expires_at field is later than the current date/time.
@@ -63,7 +61,7 @@ class Validator extends AbstractValidator
         $this->_clearMessages();
         $messages = [];
         $label = 'Expiration date';
-        if (ValidatorChain::is($value, NotEmpty::class)) {
+        if (\Zend_Validate::is($value, 'NotEmpty')) {
             $utcExpiresAt = $this->localizedDateToUtcConverter->convertLocalizedDateToUtc($value);
             $currentTime = $this->dateTime->gmtTimestamp();
             $expiresAt = $this->timezone->date($utcExpiresAt)->getTimestamp();

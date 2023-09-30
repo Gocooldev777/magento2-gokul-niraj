@@ -25,8 +25,7 @@ define([
             var rowTotalExclTax = parseFloat(item['row_total']);
 
             if (!window.checkoutConfig.getIncludeWeeeFlag) {
-                rowTotalExclTax += parseFloat(item['qty']) *
-                    parseFloat(item['weee_tax_applied_amount']);
+                rowTotalExclTax += parseFloat(item['weee_tax_applied_amount']);
             }
 
             return rowTotalExclTax;

@@ -10,7 +10,6 @@ use Magento\Framework\App\RequestInterface;
 
 /**
  * Interface \Magento\Sales\Controller\AbstractController\OrderLoaderInterface
- * @api
  *
  */
 interface OrderLoaderInterface

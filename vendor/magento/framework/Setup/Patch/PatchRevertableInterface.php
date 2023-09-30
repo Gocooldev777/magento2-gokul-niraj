@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Framework\Setup\Patch;
 
 /**
@@ -15,8 +13,6 @@ namespace Magento\Framework\Setup\Patch;
  * - use only some DML operations: INSERT, UPDATE
  * - DELETE DML operation is prohibited, because it can cause triggering foreign keys constraints
  * - all schema patches are not revertable
- *
- * @api
  */
 interface PatchRevertableInterface
 {

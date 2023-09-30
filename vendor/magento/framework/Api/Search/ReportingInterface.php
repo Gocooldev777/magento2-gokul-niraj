@@ -7,8 +7,6 @@ namespace Magento\Framework\Api\Search;
 
 /**
  * Interface ReportingInterface
- *
- * @api
  */
 interface ReportingInterface
 {

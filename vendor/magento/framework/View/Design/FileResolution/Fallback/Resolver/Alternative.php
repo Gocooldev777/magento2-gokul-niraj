@@ -8,6 +8,7 @@ namespace Magento\Framework\View\Design\FileResolution\Fallback\Resolver;
 
 use Magento\Framework\Filesystem\Directory\ReadFactory;
 use Magento\Framework\View\Design\Fallback\Rule\RuleInterface;
+use Magento\Framework\View\Design\FileResolution\Fallback;
 
 /**
  * Resolver for view files with support of alternative extensions map
@@ -44,7 +45,7 @@ class Alternative extends Simple
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function resolveFile(RuleInterface $fallbackRule, $file, array $params = [])
     {
@@ -52,10 +53,8 @@ class Alternative extends Simple
         if (!$path) {
             $extension = pathinfo($file, PATHINFO_EXTENSION);
             if (isset($this->alternativeExtensions[$extension])) {
-                $file =  $file !== null ? substr($file, 0, strlen($file) - strlen($extension)) : '';
-
                 foreach ($this->alternativeExtensions[$extension] as $newExtension) {
-                    $newFile = $file . $newExtension;
+                    $newFile = substr($file, 0, strlen($file) - strlen($extension)) . $newExtension;
                     $result = parent::resolveFile($fallbackRule, $newFile, $params);
                     if ($result) {
                         $path = $result;

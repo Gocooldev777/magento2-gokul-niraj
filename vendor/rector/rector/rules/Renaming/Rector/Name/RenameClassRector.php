@@ -5,29 +5,32 @@ namespace Rector\Renaming\Rector\Name;
 
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\Use_;
+use Rector\Core\Configuration\Option;
 use Rector\Core\Configuration\RenamedClassesDataCollector;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
+use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
 use Rector\Core\Rector\AbstractRector;
-use Rector\NodeNameResolver\NodeNameResolver;
-use Rector\Renaming\Helper\RenameClassCallbackHandler;
 use Rector\Renaming\NodeManipulator\ClassRenamer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Renaming\Rector\Name\RenameClassRector\RenameClassRectorTest
  */
-final class RenameClassRector extends AbstractRector implements ConfigurableRectorInterface
+final class RenameClassRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
     /**
+     * @deprecated
      * @var string
      */
-    public const CALLBACKS = '#callbacks#';
+    public const OLD_TO_NEW_CLASSES = 'old_to_new_classes';
     /**
      * @readonly
      * @var \Rector\Core\Configuration\RenamedClassesDataCollector
@@ -38,20 +41,14 @@ final class RenameClassRector extends AbstractRector implements ConfigurableRect
      * @var \Rector\Renaming\NodeManipulator\ClassRenamer
      */
     private $classRenamer;
-    /**
-     * @readonly
-     * @var \Rector\Renaming\Helper\RenameClassCallbackHandler
-     */
-    private $renameClassCallbackHandler;
-    public function __construct(RenamedClassesDataCollector $renamedClassesDataCollector, ClassRenamer $classRenamer, RenameClassCallbackHandler $renameClassCallbackHandler)
+    public function __construct(\Rector\Core\Configuration\RenamedClassesDataCollector $renamedClassesDataCollector, \Rector\Renaming\NodeManipulator\ClassRenamer $classRenamer)
     {
         $this->renamedClassesDataCollector = $renamedClassesDataCollector;
         $this->classRenamer = $classRenamer;
-        $this->renameClassCallbackHandler = $renameClassCallbackHandler;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Replaces defined classes by new ones.', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Replaces defined classes by new ones.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 namespace App;
 
 use SomeOldClass;
@@ -82,46 +79,52 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Name::class, Property::class, FunctionLike::class, Expression::class, ClassLike::class, Namespace_::class];
+        return [\PhpParser\Node\Name::class, \PhpParser\Node\Stmt\Property::class, \PhpParser\Node\FunctionLike::class, \PhpParser\Node\Stmt\Expression::class, \PhpParser\Node\Stmt\ClassLike::class, \PhpParser\Node\Stmt\Namespace_::class, \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace::class, \PhpParser\Node\Stmt\Use_::class];
     }
     /**
-     * @param FunctionLike|Name|ClassLike|Expression|Namespace_|Property $node
+     * @param FunctionLike|Name|ClassLike|Expression|Namespace_|Property|FileWithoutNamespace|Use_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         $oldToNewClasses = $this->renamedClassesDataCollector->getOldToNewClasses();
-        if ($oldToNewClasses !== []) {
+        if (!$node instanceof \PhpParser\Node\Stmt\Use_) {
             return $this->classRenamer->renameNode($node, $oldToNewClasses);
         }
-        if ($this->renameClassCallbackHandler->hasOldToNewClassCallbacks()) {
-            return $this->classRenamer->renameNode($node, $oldToNewClasses);
+        if (!$this->parameterProvider->provideBoolParameter(\Rector\Core\Configuration\Option::AUTO_IMPORT_NAMES)) {
+            return null;
         }
-        return null;
+        return $this->processCleanUpUse($node, $oldToNewClasses);
     }
     /**
      * @param mixed[] $configuration
      */
     public function configure(array $configuration) : void
     {
-        $oldToNewClassCallbacks = $configuration[self::CALLBACKS] ?? [];
-        Assert::isArray($oldToNewClassCallbacks);
-        if ($oldToNewClassCallbacks !== []) {
-            Assert::allIsCallable($oldToNewClassCallbacks);
-            /** @var array<callable(ClassLike, NodeNameResolver): ?string> $oldToNewClassCallbacks */
-            $this->renameClassCallbackHandler->addOldToNewClassCallbacks($oldToNewClassCallbacks);
-            unset($configuration[self::CALLBACKS]);
+        $oldToNewClasses = $configuration[self::OLD_TO_NEW_CLASSES] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($oldToNewClasses);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($oldToNewClasses);
+        $this->addOldToNewClasses($oldToNewClasses);
+    }
+    /**
+     * @param array<string, string> $oldToNewClasses
+     */
+    private function processCleanUpUse(\PhpParser\Node\Stmt\Use_ $use, array $oldToNewClasses) : ?\PhpParser\Node\Stmt\Use_
+    {
+        foreach ($use->uses as $useUse) {
+            if (!$useUse->alias instanceof \PhpParser\Node\Identifier && isset($oldToNewClasses[$useUse->name->toString()])) {
+                $this->removeNode($use);
+                return $use;
+            }
         }
-        Assert::allString($configuration);
-        Assert::allString(\array_keys($configuration));
-        $this->addOldToNewClasses($configuration);
+        return null;
     }
     /**
      * @param mixed[] $oldToNewClasses
      */
     private function addOldToNewClasses(array $oldToNewClasses) : void
     {
-        Assert::allString(\array_keys($oldToNewClasses));
-        Assert::allString($oldToNewClasses);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString(\array_keys($oldToNewClasses));
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($oldToNewClasses);
         $this->renamedClassesDataCollector->addOldToNewClasses($oldToNewClasses);
     }
 }

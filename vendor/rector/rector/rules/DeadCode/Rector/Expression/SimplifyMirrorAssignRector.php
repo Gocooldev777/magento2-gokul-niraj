@@ -12,34 +12,28 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\DeadCode\Rector\Expression\SimplifyMirrorAssignRector\SimplifyMirrorAssignRectorTest
  */
-final class SimplifyMirrorAssignRector extends AbstractRector
+final class SimplifyMirrorAssignRector extends \Rector\Core\Rector\AbstractRector
 {
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Removes unneeded $value = $value assigns', [new CodeSample(<<<'CODE_SAMPLE'
-function run() {
-    $result = $result;
-}
-CODE_SAMPLE
-, <<<'CODE_SAMPLE'
-function run() {
-}
-CODE_SAMPLE
-)]);
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Removes unneeded $a = $a assigns', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('function run() {
+                $a = $a;
+            }', 'function run() {
+            }')]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [Expression::class];
+        return [\PhpParser\Node\Stmt\Expression::class];
     }
     /**
      * @param Expression $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        if (!$node->expr instanceof Assign) {
+        if (!$node->expr instanceof \PhpParser\Node\Expr\Assign) {
             return null;
         }
         /** @var Assign $assignNode */

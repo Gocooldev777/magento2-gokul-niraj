@@ -1,5 +1,7 @@
 <?php
 /**
+ * Test WebAPI authentication helper.
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -7,7 +9,6 @@ declare(strict_types=1);
 
 namespace Magento\Framework\Oauth\Test\Unit\Helper;
 
-use Laminas\Http\Client;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\HTTP\PhpEnvironment\Response;
 use Magento\Framework\Oauth\Helper\Request;
@@ -142,8 +143,8 @@ class RequestTest extends TestCase
                 switch ($header) {
                     case 'Authorization':
                         return $authHeaderValue;
-                    case 'Content-Type':
-                        return Client::ENC_URLENCODED;
+                    case \Zend_Http_Client::CONTENT_TYPE:
+                        return \Zend_Http_Client::ENC_URLENCODED;
                     default:
                         return null;
                 }

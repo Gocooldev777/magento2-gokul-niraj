@@ -26,11 +26,15 @@ use Magento\CatalogSearch\Helper\Data as CatalogSearchHelper;
 class Form extends Template
 {
     /**
+     * Currency factory
+     *
      * @var CurrencyFactory
      */
     protected $_currencyFactory;
 
     /**
+     * Catalog search advanced
+     *
      * @var Advanced
      */
     protected $_catalogSearchAdvanced;
@@ -121,12 +125,15 @@ class Form extends Template
     public function getAttributeValue($attribute, $part = null)
     {
         $value = $this->getRequest()->getQuery($attribute->getAttributeCode());
-
         if ($part && $value) {
-            $value = $value[$part] ?? '';
+            if (isset($value[$part])) {
+                $value = $value[$part];
+            } else {
+                $value = '';
+            }
         }
 
-        return is_array($value) ? '' : $value;
+        return $value;
     }
 
     /**

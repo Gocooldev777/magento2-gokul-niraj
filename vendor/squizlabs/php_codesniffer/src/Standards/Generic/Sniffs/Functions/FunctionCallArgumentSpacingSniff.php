@@ -30,7 +30,6 @@ class FunctionCallArgumentSpacingSniff implements Sniff
             T_UNSET,
             T_SELF,
             T_STATIC,
-            T_PARENT,
             T_VARIABLE,
             T_CLOSE_CURLY_BRACKET,
             T_CLOSE_PARENTHESIS,

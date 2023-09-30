@@ -5,58 +5,41 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Tracy\Dumper;
+namespace RectorPrefix20211221\Tracy\Dumper;
 
-use RectorPrefix202304\Tracy;
-use RectorPrefix202304\Tracy\Helpers;
+use RectorPrefix20211221\Tracy;
+use RectorPrefix20211221\Tracy\Helpers;
 /**
  * Converts PHP values to internal representation.
  * @internal
  */
 final class Describer
 {
-    public const HiddenValue = '*****';
+    public const HIDDEN_VALUE = '*****';
     // Number.MAX_SAFE_INTEGER
-    private const JsSafeInteger = 1 << 53 - 1;
-    /**
-     * @var int
-     */
+    private const JS_SAFE_INTEGER = 1 << 53 - 1;
+    /** @var int */
     public $maxDepth = 7;
-    /**
-     * @var int
-     */
+    /** @var int */
     public $maxLength = 150;
-    /**
-     * @var int
-     */
+    /** @var int */
     public $maxItems = 100;
     /** @var Value[] */
     public $snapshot = [];
-    /**
-     * @var bool
-     */
+    /** @var bool */
     public $debugInfo = \false;
-    /**
-     * @var mixed[]
-     */
+    /** @var array */
     public $keysToHide = [];
-    /** @var (callable(string, mixed): bool)|null */
+    /** @var callable|null  fn(string $key, mixed $val): bool */
     public $scrubber;
-    /**
-     * @var bool
-     */
+    /** @var bool */
     public $location = \false;
     /** @var callable[] */
-    public $resourceExposers = [];
+    public $resourceExposers;
     /** @var array<string,callable> */
-    public $objectExposers = [];
-    /** @var array<string, array{bool, string[]}> */
-    public $enumProperties = [];
+    public $objectExposers;
     /** @var (int|\stdClass)[] */
     public $references = [];
-    /**
-     * @param mixed $var
-     */
     public function describe($var) : \stdClass
     {
         \uksort($this->objectExposers, function ($a, $b) : int {
@@ -71,7 +54,6 @@ final class Describer
         }
     }
     /**
-     * @param mixed $var
      * @return mixed
      */
     private function describeVar($var, int $depth = 0, ?int $refId = null)
@@ -83,50 +65,50 @@ final class Describer
         return $this->{$m}($var, $depth, $refId);
     }
     /**
-     * @return \Tracy\Dumper\Value|int
+     * @return Value|int
      */
     private function describeInteger(int $num)
     {
-        return $num <= self::JsSafeInteger && $num >= -self::JsSafeInteger ? $num : new Value(Value::TypeNumber, "{$num}");
+        return $num <= self::JS_SAFE_INTEGER && $num >= -self::JS_SAFE_INTEGER ? $num : new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_NUMBER, "{$num}");
     }
     /**
-     * @return \Tracy\Dumper\Value|float
+     * @return Value|float
      */
     private function describeDouble(float $num)
     {
         if (!\is_finite($num)) {
-            return new Value(Value::TypeNumber, (string) $num);
+            return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_NUMBER, (string) $num);
         }
         $js = \json_encode($num);
-        return \strpos($js, '.') ? $num : new Value(Value::TypeNumber, "{$js}.0");
+        return \strpos($js, '.') ? $num : new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_NUMBER, "{$js}.0");
         // to distinct int and float in JS
     }
     /**
-     * @return \Tracy\Dumper\Value|string
+     * @return Value|string
      */
     private function describeString(string $s, int $depth = 0)
     {
-        $encoded = Helpers::encodeString($s, $depth ? $this->maxLength : null);
+        $encoded = \RectorPrefix20211221\Tracy\Helpers::encodeString($s, $depth ? $this->maxLength : null);
         if ($encoded === $s) {
             return $encoded;
-        } elseif (Helpers::isUtf8($s)) {
-            return new Value(Value::TypeStringHtml, $encoded, Helpers::utf8Length($s));
+        } elseif (\RectorPrefix20211221\Tracy\Helpers::isUtf8($s)) {
+            return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_STRING_HTML, $encoded, \RectorPrefix20211221\Tracy\Helpers::utf8Length($s));
         } else {
-            return new Value(Value::TypeBinaryHtml, $encoded, \strlen($s));
+            return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_BINARY_HTML, $encoded, \strlen($s));
         }
     }
     /**
-     * @return \Tracy\Dumper\Value|mixed[]
+     * @return Value|array
      */
     private function describeArray(array $arr, int $depth = 0, ?int $refId = null)
     {
         if ($refId) {
-            $res = new Value(Value::TypeRef, 'p' . $refId);
+            $res = new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_REF, 'p' . $refId);
             $value =& $this->snapshot[$res->value];
             if ($value && $value->depth <= $depth) {
                 return $res;
             }
-            $value = new Value(Value::TypeArray);
+            $value = new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_ARRAY);
             $value->id = $res->value;
             $value->depth = $depth;
             if ($this->maxDepth && $depth >= $this->maxDepth) {
@@ -138,9 +120,9 @@ final class Describer
             }
             $items =& $value->items;
         } elseif ($arr && $this->maxDepth && $depth >= $this->maxDepth) {
-            return new Value(Value::TypeArray, null, \count($arr));
+            return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_ARRAY, null, \count($arr));
         } elseif ($depth && $this->maxItems && \count($arr) > $this->maxItems) {
-            $res = new Value(Value::TypeArray, null, \count($arr));
+            $res = new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_ARRAY, null, \count($arr));
             $res->depth = $depth;
             $items =& $res->items;
             $arr = \array_slice($arr, 0, $this->maxItems, \true);
@@ -148,25 +130,28 @@ final class Describer
         $items = [];
         foreach ($arr as $k => $v) {
             $refId = $this->getReferenceId($arr, $k);
-            $items[] = [$this->describeVar($k, $depth + 1), $this->isSensitive((string) $k, $v) ? new Value(Value::TypeText, self::hideValue($v)) : $this->describeVar($v, $depth + 1, $refId)] + ($refId ? [2 => $refId] : []);
+            $items[] = [$this->describeVar($k, $depth + 1), $this->isSensitive((string) $k, $v) ? new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_TEXT, self::hideValue($v)) : $this->describeVar($v, $depth + 1, $refId)] + ($refId ? [2 => $refId] : []);
         }
         return $res ?? $items;
     }
-    private function describeObject(object $obj, int $depth = 0) : Value
+    /**
+     * @param object $obj
+     */
+    private function describeObject($obj, int $depth = 0) : \RectorPrefix20211221\Tracy\Dumper\Value
     {
         $id = \spl_object_id($obj);
         $value =& $this->snapshot[$id];
         if ($value && $value->depth <= $depth) {
-            return new Value(Value::TypeRef, $id);
+            return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_REF, $id);
         }
-        $value = new Value(Value::TypeObject, \get_debug_type($obj));
+        $value = new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_OBJECT, \RectorPrefix20211221\Tracy\Helpers::getClass($obj));
         $value->id = $id;
         $value->depth = $depth;
         $value->holder = $obj;
         // to be not released by garbage collector in collecting mode
         if ($this->location) {
             $rc = $obj instanceof \Closure ? new \ReflectionFunction($obj) : new \ReflectionClass($obj);
-            if ($rc->getFileName() && ($editor = Helpers::editorUri($rc->getFileName(), $rc->getStartLine()))) {
+            if ($rc->getFileName() && ($editor = \RectorPrefix20211221\Tracy\Helpers::editorUri($rc->getFileName(), $rc->getStartLine()))) {
                 $value->editor = (object) ['file' => $rc->getFileName(), 'line' => $rc->getStartLine(), 'url' => $editor];
             }
         }
@@ -174,21 +159,21 @@ final class Describer
             $value->items = [];
             $props = $this->exposeObject($obj, $value);
             foreach ($props ?? [] as $k => $v) {
-                $this->addPropertyTo($value, (string) $k, $v, Value::PropertyVirtual, $this->getReferenceId($props, $k));
+                $this->addPropertyTo($value, (string) $k, $v, \RectorPrefix20211221\Tracy\Dumper\Value::PROP_VIRTUAL, $this->getReferenceId($props, $k));
             }
         }
-        return new Value(Value::TypeRef, $id);
+        return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_REF, $id);
     }
     /**
      * @param  resource  $resource
      */
-    private function describeResource($resource, int $depth = 0) : Value
+    private function describeResource($resource, int $depth = 0) : \RectorPrefix20211221\Tracy\Dumper\Value
     {
         $id = 'r' . (int) $resource;
         $value =& $this->snapshot[$id];
         if (!$value) {
             $type = \is_resource($resource) ? \get_resource_type($resource) : 'closed';
-            $value = new Value(Value::TypeResource, $type . ' resource');
+            $value = new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_RESOURCE, $type . ' resource');
             $value->id = $id;
             $value->depth = $depth;
             $value->items = [];
@@ -198,10 +183,10 @@ final class Describer
                 }
             }
         }
-        return new Value(Value::TypeRef, $id);
+        return new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_REF, $id);
     }
     /**
-     * @return \Tracy\Dumper\Value|string
+     * @return Value|string
      */
     public function describeKey(string $key)
     {
@@ -209,21 +194,21 @@ final class Describer
             return $key;
         }
         $value = $this->describeString($key);
-        return \is_string($value) ? new Value(Value::TypeStringHtml, $key, Helpers::utf8Length($key)) : $value;
+        return \is_string($value) ? new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_STRING_HTML, $key, \RectorPrefix20211221\Tracy\Helpers::utf8Length($key)) : $value;
     }
-    /**
-     * @param mixed $v
-     */
-    public function addPropertyTo(Value $value, string $k, $v, int $type = Value::PropertyVirtual, ?int $refId = null, ?string $class = null, ?Value $described = null) : void
+    public function addPropertyTo(\RectorPrefix20211221\Tracy\Dumper\Value $value, string $k, $v, $type = \RectorPrefix20211221\Tracy\Dumper\Value::PROP_VIRTUAL, ?int $refId = null, ?string $class = null)
     {
         if ($value->depth && $this->maxItems && \count($value->items ?? []) >= $this->maxItems) {
             $value->length = ($value->length ?? \count($value->items)) + 1;
             return;
         }
         $class = $class ?? $value->value;
-        $value->items[] = [$this->describeKey($k), $type !== Value::PropertyVirtual && $this->isSensitive($k, $v, $class) ? new Value(Value::TypeText, self::hideValue($v)) : $described ?? $this->describeVar($v, $value->depth + 1, $refId), $type === Value::PropertyPrivate ? $class : $type] + ($refId ? [3 => $refId] : []);
+        $value->items[] = [$this->describeKey($k), $type !== \RectorPrefix20211221\Tracy\Dumper\Value::PROP_VIRTUAL && $this->isSensitive($k, $v, $class) ? new \RectorPrefix20211221\Tracy\Dumper\Value(\RectorPrefix20211221\Tracy\Dumper\Value::TYPE_TEXT, self::hideValue($v)) : $this->describeVar($v, $value->depth + 1, $refId), $type === \RectorPrefix20211221\Tracy\Dumper\Value::PROP_PRIVATE ? $class : $type] + ($refId ? [3 => $refId] : []);
     }
-    private function exposeObject(object $obj, Value $value) : ?array
+    /**
+     * @param object $obj
+     */
+    private function exposeObject($obj, \RectorPrefix20211221\Tracy\Dumper\Value $value) : ?array
     {
         foreach ($this->objectExposers as $type => $dumper) {
             if (!$type || $obj instanceof $type) {
@@ -233,46 +218,43 @@ final class Describer
         if ($this->debugInfo && \method_exists($obj, '__debugInfo')) {
             return $obj->__debugInfo();
         }
-        Exposer::exposeObject($obj, $value, $this);
+        \RectorPrefix20211221\Tracy\Dumper\Exposer::exposeObject($obj, $value, $this);
         return null;
     }
-    /**
-     * @param mixed $val
-     */
     private function isSensitive(string $key, $val, ?string $class = null) : bool
     {
-        return $val instanceof \SensitiveParameterValue || $this->scrubber !== null && ($this->scrubber)($key, $val, $class) || isset($this->keysToHide[\strtolower($key)]) || isset($this->keysToHide[\strtolower($class . '::$' . $key)]);
+        return $this->scrubber !== null && ($this->scrubber)($key, $val, $class) || isset($this->keysToHide[\strtolower($key)]) || isset($this->keysToHide[\strtolower($class . '::$' . $key)]);
     }
-    /**
-     * @param mixed $val
-     */
-    private static function hideValue($val) : string
+    private static function hideValue($var) : string
     {
-        if ($val instanceof \SensitiveParameterValue) {
-            $val = $val->getValue();
+        return self::HIDDEN_VALUE . ' (' . (\is_object($var) ? \RectorPrefix20211221\Tracy\Helpers::getClass($var) : \gettype($var)) . ')';
+    }
+    public function getReferenceId($arr, $key) : ?int
+    {
+        if (\PHP_VERSION_ID >= 70400) {
+            if (!($rr = \ReflectionReference::fromArrayElement($arr, $key))) {
+                return null;
+            }
+            $tmp =& $this->references[$rr->getId()];
+            if ($tmp === null) {
+                return $tmp = \count($this->references);
+            }
+            return $tmp;
         }
-        return self::HiddenValue . ' (' . \get_debug_type($val) . ')';
-    }
-    /**
-     * @param mixed $value
-     */
-    public function describeEnumProperty(string $class, string $property, $value) : ?Value
-    {
-        [$set, $constants] = $this->enumProperties["{$class}::{$property}"] ?? null;
-        if (!\is_int($value) || !$constants || !($constants = Helpers::decomposeFlags($value, $set, $constants))) {
+        $uniq = new \stdClass();
+        $copy = $arr;
+        $orig = $copy[$key];
+        $copy[$key] = $uniq;
+        if ($arr[$key] !== $uniq) {
             return null;
         }
-        $constants = \array_map(function (string $const) use($class) : string {
-            return \str_replace("{$class}::", 'self::', $const);
-        }, $constants);
-        return new Value(Value::TypeNumber, \implode(' | ', $constants) . " ({$value})");
-    }
-    /**
-     * @param string|int $key
-     */
-    public function getReferenceId(array $arr, $key) : ?int
-    {
-        return ($rr = \ReflectionReference::fromArrayElement($arr, $key)) ? $this->references[$rr->getId()] = $this->references[$rr->getId()] ?? \count($this->references) + 1 : null;
+        $res = \array_search($uniq, $this->references, \true);
+        $copy[$key] = $orig;
+        if ($res === \false) {
+            $this->references[] =& $arr[$key];
+            return \count($this->references);
+        }
+        return $res + 1;
     }
     /**
      * Finds the location where dump was called. Returns [file, line, code]
@@ -280,7 +262,7 @@ final class Describer
     private static function findLocation() : ?array
     {
         foreach (\debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS) as $item) {
-            if (isset($item['class']) && ($item['class'] === self::class || $item['class'] === Tracy\Dumper::class)) {
+            if (isset($item['class']) && ($item['class'] === self::class || $item['class'] === \RectorPrefix20211221\Tracy\Dumper::class)) {
                 $location = $item;
                 continue;
             } elseif (isset($item['function'])) {

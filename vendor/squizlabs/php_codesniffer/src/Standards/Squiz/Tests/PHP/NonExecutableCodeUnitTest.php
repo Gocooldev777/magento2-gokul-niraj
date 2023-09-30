@@ -83,7 +83,7 @@ class NonExecutableCodeUnitTest extends AbstractSniffUnitTest
                 9  => 1,
                 10 => 2,
                 14 => 1,
-                54 => 2,
+                48 => 2,
             ];
             break;
         default:

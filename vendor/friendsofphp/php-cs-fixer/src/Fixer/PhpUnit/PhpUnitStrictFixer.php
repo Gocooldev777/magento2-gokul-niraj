@@ -36,7 +36,7 @@ final class PhpUnitStrictFixer extends AbstractPhpUnitFixer implements Configura
     /**
      * @var array<string,string>
      */
-    private static array $assertionMap = [
+    private static $assertionMap = [
         'assertAttributeEquals' => 'assertAttributeSame',
         'assertAttributeNotEquals' => 'assertAttributeNotSame',
         'assertEquals' => 'assertSame',

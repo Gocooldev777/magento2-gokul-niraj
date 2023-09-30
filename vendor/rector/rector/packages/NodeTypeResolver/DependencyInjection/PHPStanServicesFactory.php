@@ -9,18 +9,18 @@ use PHPStan\Analyser\ScopeFactory;
 use PHPStan\Dependency\DependencyResolver;
 use PHPStan\DependencyInjection\Container;
 use PHPStan\DependencyInjection\ContainerFactory;
+use PHPStan\ExtensionInstaller\GeneratedConfig;
 use PHPStan\File\FileHelper;
 use PHPStan\Parser\Parser;
 use PHPStan\PhpDoc\TypeNodeResolver;
 use PHPStan\Reflection\ReflectionProvider;
 use Rector\Core\Configuration\Option;
-use Rector\Core\Configuration\Parameter\ParameterProvider;
+use Rector\Core\Exception\ShouldNotHappenException;
 use Rector\NodeTypeResolver\Reflection\BetterReflection\SourceLocatorProvider\DynamicSourceLocatorProvider;
-use RectorPrefix202304\Symfony\Component\Filesystem\Filesystem;
+use ReflectionClass;
+use RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider;
 /**
  * Factory so Symfony app can use services from PHPStan container
- *
- * @see \Rector\NodeTypeResolver\DependencyInjection\PHPStanServicesFactory
  */
 final class PHPStanServicesFactory
 {
@@ -29,118 +29,108 @@ final class PHPStanServicesFactory
      * @var \PHPStan\DependencyInjection\Container
      */
     private $container;
-    /**
-     * @readonly
-     * @var \Rector\Core\Configuration\Parameter\ParameterProvider
-     */
-    private $parameterProvider;
-    /**
-     * @readonly
-     * @var \Rector\NodeTypeResolver\DependencyInjection\PHPStanExtensionsConfigResolver
-     */
-    private $phpStanExtensionsConfigResolver;
-    public function __construct(ParameterProvider $parameterProvider, \Rector\NodeTypeResolver\DependencyInjection\PHPStanExtensionsConfigResolver $phpStanExtensionsConfigResolver, \Rector\NodeTypeResolver\DependencyInjection\BleedingEdgeIncludePurifier $bleedingEdgeIncludePurifier)
+    public function __construct(\RectorPrefix20211221\Symplify\PackageBuilder\Parameter\ParameterProvider $parameterProvider)
     {
-        $this->parameterProvider = $parameterProvider;
-        $this->phpStanExtensionsConfigResolver = $phpStanExtensionsConfigResolver;
-        $additionalConfigFiles = $this->resolveAdditionalConfigFiles();
-        $purifiedConfigFiles = [];
-        foreach ($additionalConfigFiles as $key => $additionalConfigFile) {
-            $purifiedConfigFile = $bleedingEdgeIncludePurifier->purifyConfigFile($additionalConfigFile);
-            // nothing was changed
-            if ($purifiedConfigFile === null) {
-                continue;
-            }
-            $additionalConfigFiles[$key] = $purifiedConfigFile;
-            $purifiedConfigFiles[] = $purifiedConfigFile;
-        }
-        $containerFactory = new ContainerFactory(\getcwd());
-        $this->container = $containerFactory->create($parameterProvider->provideStringParameter(Option::CONTAINER_CACHE_DIRECTORY), $additionalConfigFiles, []);
-        // clear temporary files, after container is created
-        $filesystem = new Filesystem();
-        $filesystem->remove($purifiedConfigFiles);
-    }
-    public function provideContainer() : Container
-    {
-        return $this->container;
+        $containerFactory = new \PHPStan\DependencyInjection\ContainerFactory(\getcwd());
+        $additionalConfigFiles = [];
+        $additionalConfigFiles[] = $parameterProvider->provideStringParameter(\Rector\Core\Configuration\Option::PHPSTAN_FOR_RECTOR_PATH);
+        $additionalConfigFiles[] = __DIR__ . '/../../../config/phpstan/static-reflection.neon';
+        $additionalConfigFiles[] = __DIR__ . '/../../../config/phpstan/better-infer.neon';
+        $additionalConfigFiles[] = __DIR__ . '/../../../config/phpstan/parser.neon';
+        $extensionConfigFiles = $this->resolveExtensionConfigs();
+        $additionalConfigFiles = \array_merge($additionalConfigFiles, $extensionConfigFiles);
+        $existingAdditionalConfigFiles = \array_filter($additionalConfigFiles, 'file_exists');
+        $this->container = $containerFactory->create(\sys_get_temp_dir(), $existingAdditionalConfigFiles, []);
     }
     /**
      * @api
      */
-    public function createReflectionProvider() : ReflectionProvider
+    public function createReflectionProvider() : \PHPStan\Reflection\ReflectionProvider
     {
-        return $this->container->getByType(ReflectionProvider::class);
+        return $this->container->getByType(\PHPStan\Reflection\ReflectionProvider::class);
     }
     /**
      * @api
      */
-    public function createEmulativeLexer() : Lexer
+    public function createEmulativeLexer() : \PhpParser\Lexer
     {
         return $this->container->getService('currentPhpVersionLexer');
     }
     /**
      * @api
      */
-    public function createPHPStanParser() : Parser
+    public function createPHPStanParser() : \PHPStan\Parser\Parser
     {
         return $this->container->getService('currentPhpVersionRichParser');
     }
     /**
      * @api
      */
-    public function createNodeScopeResolver() : NodeScopeResolver
+    public function createNodeScopeResolver() : \PHPStan\Analyser\NodeScopeResolver
     {
-        return $this->container->getByType(NodeScopeResolver::class);
+        return $this->container->getByType(\PHPStan\Analyser\NodeScopeResolver::class);
     }
     /**
      * @api
      */
-    public function createScopeFactory() : ScopeFactory
+    public function createScopeFactory() : \PHPStan\Analyser\ScopeFactory
     {
-        return $this->container->getByType(ScopeFactory::class);
+        return $this->container->getByType(\PHPStan\Analyser\ScopeFactory::class);
     }
     /**
      * @api
      */
-    public function createDependencyResolver() : DependencyResolver
+    public function createDependencyResolver() : \PHPStan\Dependency\DependencyResolver
     {
-        return $this->container->getByType(DependencyResolver::class);
+        return $this->container->getByType(\PHPStan\Dependency\DependencyResolver::class);
     }
     /**
      * @api
      */
-    public function createFileHelper() : FileHelper
+    public function createFileHelper() : \PHPStan\File\FileHelper
     {
-        return $this->container->getByType(FileHelper::class);
+        return $this->container->getByType(\PHPStan\File\FileHelper::class);
     }
     /**
      * @api
      */
-    public function createTypeNodeResolver() : TypeNodeResolver
+    public function createTypeNodeResolver() : \PHPStan\PhpDoc\TypeNodeResolver
     {
-        return $this->container->getByType(TypeNodeResolver::class);
+        return $this->container->getByType(\PHPStan\PhpDoc\TypeNodeResolver::class);
     }
     /**
      * @api
      */
-    public function createDynamicSourceLocatorProvider() : DynamicSourceLocatorProvider
+    public function createDynamicSourceLocatorProvider() : \Rector\NodeTypeResolver\Reflection\BetterReflection\SourceLocatorProvider\DynamicSourceLocatorProvider
     {
-        return $this->container->getByType(DynamicSourceLocatorProvider::class);
+        return $this->container->getByType(\Rector\NodeTypeResolver\Reflection\BetterReflection\SourceLocatorProvider\DynamicSourceLocatorProvider::class);
     }
     /**
      * @return string[]
      */
-    private function resolveAdditionalConfigFiles() : array
+    private function resolveExtensionConfigs() : array
     {
-        $additionalConfigFiles = [];
-        if ($this->parameterProvider->hasParameter(Option::PHPSTAN_FOR_RECTOR_PATH)) {
-            $additionalConfigFiles[] = $this->parameterProvider->provideStringParameter(Option::PHPSTAN_FOR_RECTOR_PATH);
+        // same logic as in PHPStan for extension installed - https://github.com/phpstan/phpstan-src/blob/5956ec4f6cd09c8d7db9466ed4e7f25706f37a43/src/Command/CommandHelper.php#L195-L222
+        if (!\class_exists(\PHPStan\ExtensionInstaller\GeneratedConfig::class)) {
+            return [];
         }
-        $additionalConfigFiles[] = __DIR__ . '/../../../config/phpstan/static-reflection.neon';
-        $additionalConfigFiles[] = __DIR__ . '/../../../config/phpstan/better-infer.neon';
-        $additionalConfigFiles[] = __DIR__ . '/../../../config/phpstan/parser.neon';
-        $extensionConfigFiles = $this->phpStanExtensionsConfigResolver->resolve();
-        $additionalConfigFiles = \array_merge($additionalConfigFiles, $extensionConfigFiles);
-        return \array_filter($additionalConfigFiles, 'file_exists');
+        $reflectionClass = new \ReflectionClass(\PHPStan\ExtensionInstaller\GeneratedConfig::class);
+        $generatedConfigClassFileName = $reflectionClass->getFileName();
+        if ($generatedConfigClassFileName === \false) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException();
+        }
+        $generatedConfigDirectory = \dirname($generatedConfigClassFileName);
+        $extensionConfigFiles = [];
+        foreach (\PHPStan\ExtensionInstaller\GeneratedConfig::EXTENSIONS as $extension) {
+            $fileNames = $extension['extra']['includes'] ?? [];
+            foreach ($fileNames as $fileName) {
+                $configFilePath = $generatedConfigDirectory . '/' . $extension['relative_install_path'] . '/' . $fileName;
+                if (!\file_exists($configFilePath)) {
+                    continue;
+                }
+                $extensionConfigFiles[] = $configFilePath;
+            }
+        }
+        return $extensionConfigFiles;
     }
 }

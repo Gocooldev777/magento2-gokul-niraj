@@ -2,7 +2,7 @@
     "name":"codeception/module-sequence",
     "description":"Sequence module for Codeception",
     "keywords":["codeception"],
-    "homepage":"https://codeception.com/",
+    "homepage":"http://codeception.com/",
     "type":"library",
     "license":"MIT",
     "authors":[
@@ -12,12 +12,11 @@
     ],
     "minimum-stability": "RC",
     "require": {
-        "php": "^8.0",
-        "codeception/codeception": "^5.0"
+        "php": ">=5.6.0 <9.0",
+        "codeception/codeception": "^4.0"
     },
     "autoload":{
-        "classmap": ["src/"],
-        "files": ["src/Codeception/Util/sq.php"]
+        "classmap": ["src/"]
     },
     "config": {
         "classmap-authoritative": true

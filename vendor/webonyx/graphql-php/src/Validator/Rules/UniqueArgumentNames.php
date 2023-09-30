@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Validator\Rules;
 
@@ -8,45 +10,42 @@ use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\Visitor;
 use GraphQL\Language\VisitorOperation;
-use GraphQL\Validator\QueryValidationContext;
+use GraphQL\Validator\ASTValidationContext;
 use GraphQL\Validator\SDLValidationContext;
 use GraphQL\Validator\ValidationContext;
+use function sprintf;
 
-/**
- * @phpstan-import-type VisitorArray from Visitor
- */
 class UniqueArgumentNames extends ValidationRule
 {
-    /** @var array<string, NameNode> */
-    protected array $knownArgNames;
+    /** @var NameNode[] */
+    public $knownArgNames;
 
-    public function getSDLVisitor(SDLValidationContext $context): array
+    public function getSDLVisitor(SDLValidationContext $context)
     {
         return $this->getASTVisitor($context);
     }
 
-    public function getVisitor(QueryValidationContext $context): array
+    public function getVisitor(ValidationContext $context)
     {
         return $this->getASTVisitor($context);
     }
 
-    /** @phpstan-return VisitorArray */
-    public function getASTVisitor(ValidationContext $context): array
+    public function getASTVisitor(ASTValidationContext $context)
     {
         $this->knownArgNames = [];
 
         return [
-            NodeKind::FIELD => function (): void {
+            NodeKind::FIELD     => function () : void {
                 $this->knownArgNames = [];
             },
-            NodeKind::DIRECTIVE => function (): void {
+            NodeKind::DIRECTIVE => function () : void {
                 $this->knownArgNames = [];
             },
-            NodeKind::ARGUMENT => function (ArgumentNode $node) use ($context): VisitorOperation {
+            NodeKind::ARGUMENT  => function (ArgumentNode $node) use ($context) : VisitorOperation {
                 $argName = $node->name->value;
-                if (isset($this->knownArgNames[$argName])) {
+                if ($this->knownArgNames[$argName] ?? false) {
                     $context->reportError(new Error(
-                        static::duplicateArgMessage($argName),
+                        self::duplicateArgMessage($argName),
                         [$this->knownArgNames[$argName], $node->name]
                     ));
                 } else {
@@ -58,8 +57,8 @@ class UniqueArgumentNames extends ValidationRule
         ];
     }
 
-    public static function duplicateArgMessage(string $argName): string
+    public static function duplicateArgMessage($argName)
     {
-        return "There can be only one argument named \"{$argName}\".";
+        return sprintf('There can be only one argument named "%s".', $argName);
     }
 }

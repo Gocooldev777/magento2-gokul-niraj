@@ -9,7 +9,6 @@ namespace Magento\Catalog\Block\Product;
 /**
  * Interface \Magento\Catalog\Block\Product\ReviewRendererInterface
  *
- * @api
  */
 interface ReviewRendererInterface
 {

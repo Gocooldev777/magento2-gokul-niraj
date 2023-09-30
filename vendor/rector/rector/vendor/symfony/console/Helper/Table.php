@@ -8,14 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Helper;
+namespace RectorPrefix20211221\Symfony\Component\Console\Helper;
 
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Exception\RuntimeException;
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatter;
-use RectorPrefix202304\Symfony\Component\Console\Formatter\WrappableOutputFormatterInterface;
-use RectorPrefix202304\Symfony\Component\Console\Output\ConsoleSectionOutput;
-use RectorPrefix202304\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\WrappableOutputFormatterInterface;
+use RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleSectionOutput;
+use RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface;
 /**
  * Provides helpers to display a table.
  *
@@ -33,9 +33,6 @@ class Table
     private const SEPARATOR_BOTTOM = 3;
     private const BORDER_OUTSIDE = 0;
     private const BORDER_INSIDE = 1;
-    private const DISPLAY_ORIENTATION_DEFAULT = 'default';
-    private const DISPLAY_ORIENTATION_HORIZONTAL = 'horizontal';
-    private const DISPLAY_ORIENTATION_VERTICAL = 'vertical';
     /**
      * @var string|null
      */
@@ -53,6 +50,10 @@ class Table
      */
     private $rows = [];
     /**
+     * @var bool
+     */
+    private $horizontal = \false;
+    /**
      * @var mixed[]
      */
     private $effectiveColumnWidths = [];
@@ -60,13 +61,7 @@ class Table
      * @var int
      */
     private $numberOfColumns;
-    /**
-     * @var \Symfony\Component\Console\Output\OutputInterface
-     */
     private $output;
-    /**
-     * @var \Symfony\Component\Console\Helper\TableStyle
-     */
     private $style;
     /**
      * @var mixed[]
@@ -85,14 +80,10 @@ class Table
      */
     private $rendered = \false;
     /**
-     * @var string
-     */
-    private $displayOrientation = self::DISPLAY_ORIENTATION_DEFAULT;
-    /**
      * @var mixed[]
      */
     private static $styles;
-    public function __construct(OutputInterface $output)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\Console\Output\OutputInterface $output)
     {
         $this->output = $output;
         self::$styles = self::$styles ?? self::initStyles();
@@ -101,7 +92,7 @@ class Table
     /**
      * Sets a style definition.
      */
-    public static function setStyleDefinition(string $name, TableStyle $style)
+    public static function setStyleDefinition(string $name, \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle $style)
     {
         self::$styles = self::$styles ?? self::initStyles();
         self::$styles[$name] = $style;
@@ -109,11 +100,11 @@ class Table
     /**
      * Gets a style definition by name.
      */
-    public static function getStyleDefinition(string $name) : TableStyle
+    public static function getStyleDefinition(string $name) : \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle
     {
         self::$styles = self::$styles ?? self::initStyles();
         if (!isset(self::$styles[$name])) {
-            throw new InvalidArgumentException(\sprintf('Style "%s" is not defined.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('Style "%s" is not defined.', $name));
         }
         return self::$styles[$name];
     }
@@ -121,7 +112,7 @@ class Table
      * Sets table style.
      *
      * @return $this
-     * @param \Symfony\Component\Console\Helper\TableStyle|string $name
+     * @param string|\Symfony\Component\Console\Helper\TableStyle $name
      */
     public function setStyle($name)
     {
@@ -131,7 +122,7 @@ class Table
     /**
      * Gets the current table style.
      */
-    public function getStyle() : TableStyle
+    public function getStyle() : \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle
     {
         return $this->style;
     }
@@ -152,7 +143,7 @@ class Table
      *
      * If style was not set, it returns the global table style.
      */
-    public function getColumnStyle(int $columnIndex) : TableStyle
+    public function getColumnStyle(int $columnIndex) : \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle
     {
         return $this->columnStyles[$columnIndex] ?? $this->getStyle();
     }
@@ -189,8 +180,8 @@ class Table
      */
     public function setColumnMaxWidth(int $columnIndex, int $width)
     {
-        if (!$this->output->getFormatter() instanceof WrappableOutputFormatterInterface) {
-            throw new \LogicException(\sprintf('Setting a maximum column width is only supported when using a "%s" formatter, got "%s".', WrappableOutputFormatterInterface::class, \get_debug_type($this->output->getFormatter())));
+        if (!$this->output->getFormatter() instanceof \RectorPrefix20211221\Symfony\Component\Console\Formatter\WrappableOutputFormatterInterface) {
+            throw new \LogicException(\sprintf('Setting a maximum column width is only supported when using a "%s" formatter, got "%s".', \RectorPrefix20211221\Symfony\Component\Console\Formatter\WrappableOutputFormatterInterface::class, \get_debug_type($this->output->getFormatter())));
         }
         $this->columnMaxWidths[$columnIndex] = $width;
         return $this;
@@ -201,15 +192,12 @@ class Table
     public function setHeaders(array $headers)
     {
         $headers = \array_values($headers);
-        if ($headers && !\is_array($headers[0])) {
+        if (!empty($headers) && !\is_array($headers[0])) {
             $headers = [$headers];
         }
         $this->headers = $headers;
         return $this;
     }
-    /**
-     * @return $this
-     */
     public function setRows(array $rows)
     {
         $this->rows = [];
@@ -227,11 +215,11 @@ class Table
     }
     /**
      * @return $this
-     * @param \Symfony\Component\Console\Helper\TableSeparator|mixed[] $row
+     * @param mixed[]|\Symfony\Component\Console\Helper\TableSeparator $row
      */
     public function addRow($row)
     {
-        if ($row instanceof TableSeparator) {
+        if ($row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator) {
             $this->rows[] = $row;
             return $this;
         }
@@ -242,12 +230,12 @@ class Table
      * Adds a row to the table, and re-renders the table.
      *
      * @return $this
-     * @param \Symfony\Component\Console\Helper\TableSeparator|mixed[] $row
+     * @param mixed[]|\Symfony\Component\Console\Helper\TableSeparator $row
      */
     public function appendRow($row)
     {
-        if (!$this->output instanceof ConsoleSectionOutput) {
-            throw new RuntimeException(\sprintf('Output should be an instance of "%s" when calling "%s".', ConsoleSectionOutput::class, __METHOD__));
+        if (!$this->output instanceof \RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleSectionOutput) {
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\RuntimeException(\sprintf('Output should be an instance of "%s" when calling "%s".', \RectorPrefix20211221\Symfony\Component\Console\Output\ConsoleSectionOutput::class, __METHOD__));
         }
         if ($this->rendered) {
             $this->output->clear($this->calculateRowCount());
@@ -286,15 +274,7 @@ class Table
      */
     public function setHorizontal(bool $horizontal = \true)
     {
-        $this->displayOrientation = $horizontal ? self::DISPLAY_ORIENTATION_HORIZONTAL : self::DISPLAY_ORIENTATION_DEFAULT;
-        return $this;
-    }
-    /**
-     * @return $this
-     */
-    public function setVertical(bool $vertical = \true)
-    {
-        $this->displayOrientation = $vertical ? self::DISPLAY_ORIENTATION_VERTICAL : self::DISPLAY_ORIENTATION_DEFAULT;
+        $this->horizontal = $horizontal;
         return $this;
     }
     /**
@@ -312,55 +292,21 @@ class Table
      */
     public function render()
     {
-        $divider = new TableSeparator();
-        $isCellWithColspan = static function ($cell) {
-            return $cell instanceof TableCell && $cell->getColspan() >= 2;
-        };
-        $horizontal = self::DISPLAY_ORIENTATION_HORIZONTAL === $this->displayOrientation;
-        $vertical = self::DISPLAY_ORIENTATION_VERTICAL === $this->displayOrientation;
-        $rows = [];
-        if ($horizontal) {
+        $divider = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator();
+        if ($this->horizontal) {
+            $rows = [];
             foreach ($this->headers[0] ?? [] as $i => $header) {
                 $rows[$i] = [$header];
                 foreach ($this->rows as $row) {
-                    if ($row instanceof TableSeparator) {
+                    if ($row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator) {
                         continue;
                     }
                     if (isset($row[$i])) {
                         $rows[$i][] = $row[$i];
-                    } elseif ($isCellWithColspan($rows[$i][0])) {
+                    } elseif ($rows[$i][0] instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && $rows[$i][0]->getColspan() >= 2) {
                         // Noop, there is a "title"
                     } else {
                         $rows[$i][] = null;
-                    }
-                }
-            }
-        } elseif ($vertical) {
-            $formatter = $this->output->getFormatter();
-            $maxHeaderLength = \array_reduce($this->headers[0] ?? [], static function ($max, $header) use($formatter) {
-                return \max($max, Helper::width(Helper::removeDecoration($formatter, $header)));
-            }, 0);
-            foreach ($this->rows as $row) {
-                if ($row instanceof TableSeparator) {
-                    continue;
-                }
-                if ($rows) {
-                    $rows[] = [$divider];
-                }
-                $containsColspan = \false;
-                foreach ($row as $cell) {
-                    if ($containsColspan = $isCellWithColspan($cell)) {
-                        break;
-                    }
-                }
-                $headers = $this->headers[0] ?? [];
-                $maxRows = \max(\count($headers), \count($row));
-                for ($i = 0; $i < $maxRows; ++$i) {
-                    $cell = (string) ($row[$i] ?? '');
-                    if ($headers && !$containsColspan) {
-                        $rows[] = [\sprintf('<comment>%s</>: %s', \str_pad($headers[$i] ?? '', $maxHeaderLength, ' ', \STR_PAD_LEFT), $cell)];
-                    } elseif ('' !== $cell) {
-                        $rows[] = [$cell];
                     }
                 }
             }
@@ -368,45 +314,33 @@ class Table
             $rows = \array_merge($this->headers, [$divider], $this->rows);
         }
         $this->calculateNumberOfColumns($rows);
-        $rowGroups = $this->buildTableRows($rows);
-        $this->calculateColumnsWidth($rowGroups);
-        $isHeader = !$horizontal;
-        $isFirstRow = $horizontal;
+        $rows = $this->buildTableRows($rows);
+        $this->calculateColumnsWidth($rows);
+        $isHeader = !$this->horizontal;
+        $isFirstRow = $this->horizontal;
         $hasTitle = (bool) $this->headerTitle;
-        foreach ($rowGroups as $rowGroup) {
-            $isHeaderSeparatorRendered = \false;
-            foreach ($rowGroup as $row) {
-                if ($divider === $row) {
-                    $isHeader = \false;
-                    $isFirstRow = \true;
-                    continue;
-                }
-                if ($row instanceof TableSeparator) {
-                    $this->renderRowSeparator();
-                    continue;
-                }
-                if (!$row) {
-                    continue;
-                }
-                if ($isHeader && !$isHeaderSeparatorRendered) {
-                    $this->renderRowSeparator($isHeader ? self::SEPARATOR_TOP : self::SEPARATOR_TOP_BOTTOM, $hasTitle ? $this->headerTitle : null, $hasTitle ? $this->style->getHeaderTitleFormat() : null);
-                    $hasTitle = \false;
-                    $isHeaderSeparatorRendered = \true;
-                }
-                if ($isFirstRow) {
-                    $this->renderRowSeparator($isHeader ? self::SEPARATOR_TOP : self::SEPARATOR_TOP_BOTTOM, $hasTitle ? $this->headerTitle : null, $hasTitle ? $this->style->getHeaderTitleFormat() : null);
-                    $isFirstRow = \false;
-                    $hasTitle = \false;
-                }
-                if ($vertical) {
-                    $isHeader = \false;
-                    $isFirstRow = \false;
-                }
-                if ($horizontal) {
-                    $this->renderRow($row, $this->style->getCellRowFormat(), $this->style->getCellHeaderFormat());
-                } else {
-                    $this->renderRow($row, $isHeader ? $this->style->getCellHeaderFormat() : $this->style->getCellRowFormat());
-                }
+        foreach ($rows as $row) {
+            if ($divider === $row) {
+                $isHeader = \false;
+                $isFirstRow = \true;
+                continue;
+            }
+            if ($row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator) {
+                $this->renderRowSeparator();
+                continue;
+            }
+            if (!$row) {
+                continue;
+            }
+            if ($isHeader || $isFirstRow) {
+                $this->renderRowSeparator($isHeader ? self::SEPARATOR_TOP : self::SEPARATOR_TOP_BOTTOM, $hasTitle ? $this->headerTitle : null, $hasTitle ? $this->style->getHeaderTitleFormat() : null);
+                $isFirstRow = \false;
+                $hasTitle = \false;
+            }
+            if ($this->horizontal) {
+                $this->renderRow($row, $this->style->getCellRowFormat(), $this->style->getCellHeaderFormat());
+            } else {
+                $this->renderRow($row, $isHeader ? $this->style->getCellHeaderFormat() : $this->style->getCellRowFormat());
             }
         }
         $this->renderRowSeparator(self::SEPARATOR_BOTTOM, $this->footerTitle, $this->style->getFooterTitleFormat());
@@ -422,7 +356,7 @@ class Table
      */
     private function renderRowSeparator(int $type = self::SEPARATOR_MID, string $title = null, string $titleFormat = null)
     {
-        if (!($count = $this->numberOfColumns)) {
+        if (0 === ($count = $this->numberOfColumns)) {
             return;
         }
         $borders = $this->style->getBorderChars();
@@ -445,12 +379,12 @@ class Table
             $markup .= $column === $count - 1 ? $rightChar : $midChar;
         }
         if (null !== $title) {
-            $titleLength = Helper::width(Helper::removeDecoration($formatter = $this->output->getFormatter(), $formattedTitle = \sprintf($titleFormat, $title)));
-            $markupLength = Helper::width($markup);
+            $titleLength = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($formatter = $this->output->getFormatter(), $formattedTitle = \sprintf($titleFormat, $title)));
+            $markupLength = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($markup);
             if ($titleLength > ($limit = $markupLength - 4)) {
                 $titleLength = $limit;
-                $formatLength = Helper::width(Helper::removeDecoration($formatter, \sprintf($titleFormat, '')));
-                $formattedTitle = \sprintf($titleFormat, Helper::substr($title, 0, $limit - $formatLength - 3) . '...');
+                $formatLength = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($formatter, \sprintf($titleFormat, '')));
+                $formattedTitle = \sprintf($titleFormat, \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::substr($title, 0, $limit - $formatLength - 3) . '...');
             }
             $titleStart = \intdiv($markupLength - $titleLength, 2);
             if (\false === \mb_detect_encoding($markup, null, \true)) {
@@ -498,7 +432,7 @@ class Table
     {
         $cell = $row[$column] ?? '';
         $width = $this->effectiveColumnWidths[$column];
-        if ($cell instanceof TableCell && $cell->getColspan() > 1) {
+        if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && $cell->getColspan() > 1) {
             // add the width of the following columns(numbers of colspan).
             foreach (\range($column + 1, $column + $cell->getColspan() - 1) as $nextColumn) {
                 $width += $this->getColumnSeparatorWidth() + $this->effectiveColumnWidths[$nextColumn];
@@ -509,13 +443,13 @@ class Table
             $width += \strlen($cell) - \mb_strwidth($cell, $encoding);
         }
         $style = $this->getColumnStyle($column);
-        if ($cell instanceof TableSeparator) {
+        if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator) {
             return \sprintf($style->getBorderFormat(), \str_repeat($style->getBorderChars()[2], $width));
         }
-        $width += Helper::length($cell) - Helper::length(Helper::removeDecoration($this->output->getFormatter(), $cell));
+        $width += \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::length($cell) - \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::length(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($this->output->getFormatter(), $cell));
         $content = \sprintf($style->getCellRowContentFormat(), $cell);
         $padType = $style->getPadType();
-        if ($cell instanceof TableCell && $cell->getStyle() instanceof TableCellStyle) {
+        if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && $cell->getStyle() instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCellStyle) {
             $isNotStyledByTag = !\preg_match('/^<(\\w+|(\\w+=[\\w,]+;?)*)>.+<\\/(\\w+|(\\w+=\\w+;?)*)?>$/', $cell);
             if ($isNotStyledByTag) {
                 $cellFormat = $cell->getStyle()->getCellFormat();
@@ -523,11 +457,11 @@ class Table
                     $tag = \http_build_query($cell->getStyle()->getTagOptions(), '', ';');
                     $cellFormat = '<' . $tag . '>%s</>';
                 }
-                if (\strpos($content, '</>') !== \false) {
+                if (\strstr($content, '</>')) {
                     $content = \str_replace('</>', '', $content);
                     $width -= 3;
                 }
-                if (\strpos($content, '<fg=default;bg=default>') !== \false) {
+                if (\strstr($content, '<fg=default;bg=default>')) {
                     $content = \str_replace('<fg=default;bg=default>', '', $content);
                     $width -= \strlen('<fg=default;bg=default>');
                 }
@@ -543,14 +477,14 @@ class Table
     {
         $columns = [0];
         foreach ($rows as $row) {
-            if ($row instanceof TableSeparator) {
+            if ($row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator) {
                 continue;
             }
             $columns[] = $this->getNumberOfColumns($row);
         }
         $this->numberOfColumns = \max($columns);
     }
-    private function buildTableRows(array $rows) : TableRows
+    private function buildTableRows(array $rows) : \RectorPrefix20211221\Symfony\Component\Console\Helper\TableRows
     {
         /** @var WrappableOutputFormatterInterface $formatter */
         $formatter = $this->output->getFormatter();
@@ -559,19 +493,19 @@ class Table
             $rows = $this->fillNextRows($rows, $rowKey);
             // Remove any new line breaks and replace it with a new line
             foreach ($rows[$rowKey] as $column => $cell) {
-                $colspan = $cell instanceof TableCell ? $cell->getColspan() : 1;
-                if (isset($this->columnMaxWidths[$column]) && Helper::width(Helper::removeDecoration($formatter, $cell)) > $this->columnMaxWidths[$column]) {
+                $colspan = $cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell ? $cell->getColspan() : 1;
+                if (isset($this->columnMaxWidths[$column]) && \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($formatter, $cell)) > $this->columnMaxWidths[$column]) {
                     $cell = $formatter->formatAndWrap($cell, $this->columnMaxWidths[$column] * $colspan);
                 }
-                if (\strpos($cell ?? '', "\n") === \false) {
+                if (!\strstr($cell ?? '', "\n")) {
                     continue;
                 }
-                $escaped = \implode("\n", \array_map(\Closure::fromCallable([OutputFormatter::class, 'escapeTrailingBackslash']), \explode("\n", $cell)));
-                $cell = $cell instanceof TableCell ? new TableCell($escaped, ['colspan' => $cell->getColspan()]) : $escaped;
-                $lines = \explode("\n", \str_replace("\n", "<fg=default;bg=default></>\n", $cell));
+                $escaped = \implode("\n", \array_map([\RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatter::class, 'escapeTrailingBackslash'], \explode("\n", $cell)));
+                $cell = $cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell ? new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell($escaped, ['colspan' => $cell->getColspan()]) : $escaped;
+                $lines = \explode("\n", \str_replace("\n", "<fg=default;bg=default>\n</>", $cell));
                 foreach ($lines as $lineKey => $line) {
                     if ($colspan > 1) {
-                        $line = new TableCell($line, ['colspan' => $colspan]);
+                        $line = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell($line, ['colspan' => $colspan]);
                     }
                     if (0 === $lineKey) {
                         $rows[$rowKey][$column] = $line;
@@ -584,26 +518,25 @@ class Table
                 }
             }
         }
-        return new TableRows(function () use($rows, $unmergedRows) : \Traversable {
+        return new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableRows(function () use($rows, $unmergedRows) : \Traversable {
             foreach ($rows as $rowKey => $row) {
-                $rowGroup = [$row instanceof TableSeparator ? $row : $this->fillCells($row)];
+                (yield $row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator ? $row : $this->fillCells($row));
                 if (isset($unmergedRows[$rowKey])) {
                     foreach ($unmergedRows[$rowKey] as $row) {
-                        $rowGroup[] = $row instanceof TableSeparator ? $row : $this->fillCells($row);
+                        (yield $row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator ? $row : $this->fillCells($row));
                     }
                 }
-                (yield $rowGroup);
             }
         });
     }
     private function calculateRowCount() : int
     {
-        $numberOfRows = \count(\iterator_to_array($this->buildTableRows(\array_merge($this->headers, [new TableSeparator()], $this->rows))));
+        $numberOfRows = \count(\iterator_to_array($this->buildTableRows(\array_merge($this->headers, [new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator()], $this->rows))));
         if ($this->headers) {
             ++$numberOfRows;
             // Add row for header separator
         }
-        if ($this->rows) {
+        if (\count($this->rows) > 0) {
             ++$numberOfRows;
             // Add row for footer separator
         }
@@ -618,23 +551,23 @@ class Table
     {
         $unmergedRows = [];
         foreach ($rows[$line] as $column => $cell) {
-            if (null !== $cell && !$cell instanceof TableCell && !\is_scalar($cell) && !$cell instanceof \Stringable) {
-                throw new InvalidArgumentException(\sprintf('A cell must be a TableCell, a scalar or an object implementing "__toString()", "%s" given.', \get_debug_type($cell)));
+            if (null !== $cell && !$cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && !\is_scalar($cell) && !$cell instanceof \Stringable) {
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('A cell must be a TableCell, a scalar or an object implementing "__toString()", "%s" given.', \get_debug_type($cell)));
             }
-            if ($cell instanceof TableCell && $cell->getRowspan() > 1) {
+            if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && $cell->getRowspan() > 1) {
                 $nbLines = $cell->getRowspan() - 1;
                 $lines = [$cell];
-                if (\strpos($cell, "\n") !== \false) {
+                if (\strstr($cell, "\n")) {
                     $lines = \explode("\n", \str_replace("\n", "<fg=default;bg=default>\n</>", $cell));
                     $nbLines = \count($lines) > $nbLines ? \substr_count($cell, "\n") : $nbLines;
-                    $rows[$line][$column] = new TableCell($lines[0], ['colspan' => $cell->getColspan(), 'style' => $cell->getStyle()]);
+                    $rows[$line][$column] = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell($lines[0], ['colspan' => $cell->getColspan(), 'style' => $cell->getStyle()]);
                     unset($lines[0]);
                 }
                 // create a two dimensional array (rowspan x colspan)
                 $unmergedRows = \array_replace_recursive(\array_fill($line + 1, $nbLines, []), $unmergedRows);
                 foreach ($unmergedRows as $unmergedRowKey => $unmergedRow) {
                     $value = $lines[$unmergedRowKey - $line] ?? '';
-                    $unmergedRows[$unmergedRowKey][$column] = new TableCell($value, ['colspan' => $cell->getColspan(), 'style' => $cell->getStyle()]);
+                    $unmergedRows[$unmergedRowKey][$column] = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell($value, ['colspan' => $cell->getColspan(), 'style' => $cell->getStyle()]);
                     if ($nbLines === $unmergedRowKey - $line) {
                         break;
                     }
@@ -668,7 +601,7 @@ class Table
         $newRow = [];
         foreach ($row as $column => $cell) {
             $newRow[] = $cell;
-            if ($cell instanceof TableCell && $cell->getColspan() > 1) {
+            if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && $cell->getColspan() > 1) {
                 foreach (\range($column + 1, $column + $cell->getColspan() - 1) as $position) {
                     // insert empty value at column position
                     $newRow[] = '';
@@ -682,8 +615,8 @@ class Table
         $row = $rows[$line];
         foreach ($row as $cellKey => $cellValue) {
             $row[$cellKey] = '';
-            if ($cellValue instanceof TableCell) {
-                $row[$cellKey] = new TableCell('', ['colspan' => $cellValue->getColspan()]);
+            if ($cellValue instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell) {
+                $row[$cellKey] = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell('', ['colspan' => $cellValue->getColspan()]);
             }
         }
         return $row;
@@ -695,7 +628,7 @@ class Table
     {
         $columns = \count($row);
         foreach ($row as $column) {
-            $columns += $column instanceof TableCell ? $column->getColspan() - 1 : 0;
+            $columns += $column instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell ? $column->getColspan() - 1 : 0;
         }
         return $columns;
     }
@@ -706,7 +639,7 @@ class Table
     {
         $columns = \range(0, $this->numberOfColumns - 1);
         foreach ($row as $cellKey => $cell) {
-            if ($cell instanceof TableCell && $cell->getColspan() > 1) {
+            if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell && $cell->getColspan() > 1) {
                 // exclude grouped columns.
                 $columns = \array_diff($columns, \range($cellKey + 1, $cellKey + $cell->getColspan() - 1));
             }
@@ -716,43 +649,41 @@ class Table
     /**
      * Calculates columns widths.
      */
-    private function calculateColumnsWidth(iterable $groups)
+    private function calculateColumnsWidth(iterable $rows)
     {
         for ($column = 0; $column < $this->numberOfColumns; ++$column) {
             $lengths = [];
-            foreach ($groups as $group) {
-                foreach ($group as $row) {
-                    if ($row instanceof TableSeparator) {
-                        continue;
-                    }
-                    foreach ($row as $i => $cell) {
-                        if ($cell instanceof TableCell) {
-                            $textContent = Helper::removeDecoration($this->output->getFormatter(), $cell);
-                            $textLength = Helper::width($textContent);
-                            if ($textLength > 0) {
-                                $contentColumns = \str_split($textContent, \ceil($textLength / $cell->getColspan()));
-                                foreach ($contentColumns as $position => $content) {
-                                    $row[$i + $position] = $content;
-                                }
+            foreach ($rows as $row) {
+                if ($row instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableSeparator) {
+                    continue;
+                }
+                foreach ($row as $i => $cell) {
+                    if ($cell instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableCell) {
+                        $textContent = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($this->output->getFormatter(), $cell);
+                        $textLength = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($textContent);
+                        if ($textLength > 0) {
+                            $contentColumns = \str_split($textContent, \ceil($textLength / $cell->getColspan()));
+                            foreach ($contentColumns as $position => $content) {
+                                $row[$i + $position] = $content;
                             }
                         }
                     }
-                    $lengths[] = $this->getCellWidth($row, $column);
                 }
+                $lengths[] = $this->getCellWidth($row, $column);
             }
-            $this->effectiveColumnWidths[$column] = \max($lengths) + Helper::width($this->style->getCellRowContentFormat()) - 2;
+            $this->effectiveColumnWidths[$column] = \max($lengths) + \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width($this->style->getCellRowContentFormat()) - 2;
         }
     }
     private function getColumnSeparatorWidth() : int
     {
-        return Helper::width(\sprintf($this->style->getBorderFormat(), $this->style->getBorderChars()[3]));
+        return \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\sprintf($this->style->getBorderFormat(), $this->style->getBorderChars()[3]));
     }
     private function getCellWidth(array $row, int $column) : int
     {
         $cellWidth = 0;
         if (isset($row[$column])) {
             $cell = $row[$column];
-            $cellWidth = Helper::width(Helper::removeDecoration($this->output->getFormatter(), $cell));
+            $cellWidth = \RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::width(\RectorPrefix20211221\Symfony\Component\Console\Helper\Helper::removeDecoration($this->output->getFormatter(), $cell));
         }
         $columnWidth = $this->columnWidths[$column] ?? 0;
         $cellWidth = \max($cellWidth, $columnWidth);
@@ -771,26 +702,26 @@ class Table
      */
     private static function initStyles() : array
     {
-        $borderless = new TableStyle();
+        $borderless = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle();
         $borderless->setHorizontalBorderChars('=')->setVerticalBorderChars(' ')->setDefaultCrossingChar(' ');
-        $compact = new TableStyle();
-        $compact->setHorizontalBorderChars('')->setVerticalBorderChars('')->setDefaultCrossingChar('')->setCellRowContentFormat('%s ');
-        $styleGuide = new TableStyle();
+        $compact = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle();
+        $compact->setHorizontalBorderChars('')->setVerticalBorderChars(' ')->setDefaultCrossingChar('')->setCellRowContentFormat('%s');
+        $styleGuide = new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle();
         $styleGuide->setHorizontalBorderChars('-')->setVerticalBorderChars(' ')->setDefaultCrossingChar(' ')->setCellHeaderFormat('%s');
-        $box = (new TableStyle())->setHorizontalBorderChars('─')->setVerticalBorderChars('│')->setCrossingChars('┼', '┌', '┬', '┐', '┤', '┘', '┴', '└', '├');
-        $boxDouble = (new TableStyle())->setHorizontalBorderChars('═', '─')->setVerticalBorderChars('║', '│')->setCrossingChars('┼', '╔', '╤', '╗', '╢', '╝', '╧', '╚', '╟', '╠', '╪', '╣');
-        return ['default' => new TableStyle(), 'borderless' => $borderless, 'compact' => $compact, 'symfony-style-guide' => $styleGuide, 'box' => $box, 'box-double' => $boxDouble];
+        $box = (new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle())->setHorizontalBorderChars('─')->setVerticalBorderChars('│')->setCrossingChars('┼', '┌', '┬', '┐', '┤', '┘', '┴', '└', '├');
+        $boxDouble = (new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle())->setHorizontalBorderChars('═', '─')->setVerticalBorderChars('║', '│')->setCrossingChars('┼', '╔', '╤', '╗', '╢', '╝', '╧', '╚', '╟', '╠', '╪', '╣');
+        return ['default' => new \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle(), 'borderless' => $borderless, 'compact' => $compact, 'symfony-style-guide' => $styleGuide, 'box' => $box, 'box-double' => $boxDouble];
     }
     /**
-     * @param \Symfony\Component\Console\Helper\TableStyle|string $name
+     * @param string|\Symfony\Component\Console\Helper\TableStyle $name
      */
-    private function resolveStyle($name) : TableStyle
+    private function resolveStyle($name) : \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle
     {
-        if ($name instanceof TableStyle) {
+        if ($name instanceof \RectorPrefix20211221\Symfony\Component\Console\Helper\TableStyle) {
             return $name;
         }
         if (!isset(self::$styles[$name])) {
-            throw new InvalidArgumentException(\sprintf('Style "%s" is not defined.', $name));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('Style "%s" is not defined.', $name));
         }
         return self::$styles[$name];
     }

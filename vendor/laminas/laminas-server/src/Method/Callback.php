@@ -2,37 +2,42 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
+ * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
+ * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server\Method;
 
 use Laminas\Server;
 
-use function in_array;
-use function is_array;
-use function is_object;
-use function method_exists;
-use function sprintf;
-use function ucfirst;
-
 /**
  * Method callback metadata
  */
 class Callback
 {
-    /** @var string Class name for class method callback */
+    /**
+     * @var string Class name for class method callback
+     */
     protected $class;
 
-    /** @var string|callable Function name or callable for function callback */
+    /**
+     * @var string|callable Function name or callable for function callback
+     */
     protected $function;
 
-    /** @var string Method name for class method callback */
+    /**
+     * @var string Method name for class method callback
+     */
     protected $method;
 
-    /** @var string Callback type */
+    /**
+     * @var string Callback type
+     */
     protected $type;
 
-    /** @var array Valid callback types */
+    /**
+     * @var array Valid callback types
+     */
     protected $types = ['function', 'static', 'instance'];
 
     /**
@@ -51,7 +56,7 @@ class Callback
      * Set object state from array of options
      *
      * @param  array $options
-     * @return Callback
+     * @return \Laminas\Server\Method\Callback
      */
     public function setOptions(array $options)
     {
@@ -68,12 +73,12 @@ class Callback
      * Set callback class
      *
      * @param  string $class
-     * @return Callback
+     * @return \Laminas\Server\Method\Callback
      */
     public function setClass($class)
     {
         if (is_object($class)) {
-            $class = $class::class;
+            $class = get_class($class);
         }
         $this->class = $class;
         return $this;
@@ -93,7 +98,7 @@ class Callback
      * Set callback function
      *
      * @param  string|callable $function
-     * @return Callback
+     * @return \Laminas\Server\Method\Callback
      */
     public function setFunction($function)
     {
@@ -116,7 +121,7 @@ class Callback
      * Set callback class method
      *
      * @param  string $method
-     * @return Callback
+     * @return \Laminas\Server\Method\Callback
      */
     public function setMethod($method)
     {
@@ -138,7 +143,7 @@ class Callback
      * Set callback type
      *
      * @param  string $type
-     * @return Callback
+     * @return \Laminas\Server\Method\Callback
      * @throws Server\Exception\InvalidArgumentException
      */
     public function setType($type)
@@ -171,11 +176,11 @@ class Callback
      */
     public function toArray()
     {
-        $type  = $this->getType();
+        $type = $this->getType();
         $array = [
             'type' => $type,
         ];
-        if ('function' === $type) {
+        if ('function' == $type) {
             $array['function'] = $this->getFunction();
         } else {
             $array['class']  = $this->getClass();

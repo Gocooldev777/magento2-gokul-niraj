@@ -5,9 +5,6 @@
  */
 namespace Magento\Framework\Filter\FilterManager;
 
-use Magento\Framework\Filter\Factory;
-use Magento\Framework\Filter\LaminasFactory;
-
 /**
  * Filter plugin manager config
  */
@@ -16,7 +13,7 @@ class Config implements ConfigInterface
     /**
      * @var string[]
      */
-    protected $factories = [Factory::class, LaminasFactory::class];
+    protected $factories = [\Magento\Framework\Filter\Factory::class, \Magento\Framework\Filter\ZendFactory::class];
 
     /**
      * @param string[] $factories

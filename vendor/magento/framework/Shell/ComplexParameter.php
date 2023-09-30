@@ -16,7 +16,7 @@ class ComplexParameter
     /**
      * Default regex pattern for searching the parameter
      */
-    public const DEFAULT_PATTERN = '/^\-\-%s=(.+)$/';
+    const DEFAULT_PATTERN = '/^\-\-%s=(.+)$/';
 
     /**
      * Argument name
@@ -69,7 +69,7 @@ class ComplexParameter
      */
     public function getFromString($string)
     {
-        if (preg_match((string)$this->pcre, (string)$string, $matches)) {
+        if (preg_match($this->pcre, $string, $matches)) {
             parse_str($matches[1], $result);
             return $result;
         }

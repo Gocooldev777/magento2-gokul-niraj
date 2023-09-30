@@ -100,8 +100,6 @@ HTML;
      */
     protected function _getSpecificCountryElementId()
     {
-        $id = $this->getId();
-        $element = $id !== null ? substr($id, 0, strrpos($id, 'allowspecific')) : '';
-        return $element . 'specificcountry';
+        return substr($this->getId(), 0, strrpos($this->getId(), 'allowspecific')) . 'specificcountry';
     }
 }

@@ -1,5 +1,7 @@
 <?php
 /**
+ * Magento session manager
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -27,41 +29,57 @@ class SessionManager implements SessionManagerInterface
     protected $defaultDestroyOptions = ['send_expire_cookie' => true, 'clear_storage' => true];
 
     /**
+     * URL host cache
+     *
      * @var array
      */
     protected static $urlHostCache = [];
 
     /**
+     * Validator
+     *
      * @var ValidatorInterface
      */
     protected $validator;
 
     /**
+     * Request
+     *
      * @var \Magento\Framework\App\Request\Http
      */
     protected $request;
 
     /**
+     * SID resolver
+     *
      * @var SidResolverInterface
      */
     protected $sidResolver;
 
     /**
+     * Session config
+     *
      * @var Config\ConfigInterface
      */
     protected $sessionConfig;
 
     /**
+     * Save handler
+     *
      * @var SaveHandlerInterface
      */
     protected $saveHandler;
 
     /**
+     * Storage
+     *
      * @var StorageInterface
      */
     protected $storage;
 
     /**
+     * Cookie Manager
+     *
      * @var \Magento\Framework\Stdlib\CookieManagerInterface
      */
     protected $cookieManager;
@@ -143,7 +161,7 @@ class SessionManager implements SessionManagerInterface
      */
     public function __call($method, $args)
     {
-        if (!$method || !in_array(substr($method, 0, 3), ['get', 'set', 'uns', 'has'])) {
+        if (!in_array(substr($method, 0, 3), ['get', 'set', 'uns', 'has'])) {
             throw new \InvalidArgumentException(
                 sprintf('Invalid method %s::%s(%s)', get_class($this), $method, print_r($args, 1))
             );
@@ -407,7 +425,6 @@ class SessionManager implements SessionManagerInterface
      *
      * @param string $urlHost can be host or url
      * @return string {session_id_key}={session_id_encrypted}
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function getSessionIdForHost($urlHost)
@@ -417,14 +434,14 @@ class SessionManager implements SessionManagerInterface
             return '';
         }
 
-        $urlHostArr = explode('/', $urlHost ?: '', 4);
+        $urlHostArr = explode('/', $urlHost, 4);
         if (!empty($urlHostArr[2])) {
             $urlHost = $urlHostArr[2];
         }
         $urlPath = empty($urlHostArr[3]) ? '' : $urlHostArr[3];
 
         if (!isset(self::$urlHostCache[$urlHost])) {
-            $urlHostArr = explode(':', $urlHost ?: '');
+            $urlHostArr = explode(':', $urlHost);
             $urlHost = $urlHostArr[0];
             $sessionId = $httpHost !== $urlHost && !$this->isValidForHost($urlHost) ? $this->getSessionId() : '';
             self::$urlHostCache[$urlHost] = $sessionId;
@@ -441,7 +458,7 @@ class SessionManager implements SessionManagerInterface
      */
     public function isValidForHost($host)
     {
-        $hostArr = explode(':', $host ?: '');
+        $hostArr = explode(':', $host);
         $hosts = $this->_getHosts();
         return !empty($hosts[$hostArr[0]]);
     }

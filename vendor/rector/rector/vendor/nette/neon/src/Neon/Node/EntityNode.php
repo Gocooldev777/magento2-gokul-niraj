@@ -5,40 +5,38 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Nette\Neon\Node;
+namespace RectorPrefix20211221\Nette\Neon\Node;
 
-use RectorPrefix202304\Nette\Neon\Entity;
-use RectorPrefix202304\Nette\Neon\Node;
+use RectorPrefix20211221\Nette\Neon\Entity;
+use RectorPrefix20211221\Nette\Neon\Node;
 /** @internal */
-final class EntityNode extends Node
+final class EntityNode extends \RectorPrefix20211221\Nette\Neon\Node
 {
-    /**
-     * @var \Nette\Neon\Node
-     */
+    /** @var Node */
     public $value;
-    /**
-     * @var mixed[]
-     */
+    /** @var ArrayItemNode[] */
     public $attributes = [];
-    public function __construct(Node $value, array $attributes = [])
+    public function __construct(\RectorPrefix20211221\Nette\Neon\Node $value, array $attributes, int $startPos = null, int $endPos = null)
     {
         $this->value = $value;
-        /** @var ArrayItemNode[] */
         $this->attributes = $attributes;
+        $this->startPos = $startPos;
+        $this->endPos = $endPos ?? $startPos;
     }
-    public function toValue() : Entity
+    public function toValue() : \RectorPrefix20211221\Nette\Neon\Entity
     {
-        return new Entity($this->value->toValue(), ArrayItemNode::itemsToArray($this->attributes));
+        return new \RectorPrefix20211221\Nette\Neon\Entity($this->value->toValue(), \RectorPrefix20211221\Nette\Neon\Node\ArrayItemNode::itemsToArray($this->attributes));
     }
     public function toString() : string
     {
-        return $this->value->toString() . '(' . ($this->attributes ? ArrayItemNode::itemsToInlineString($this->attributes) : '') . ')';
+        return $this->value->toString() . '(' . ($this->attributes ? \RectorPrefix20211221\Nette\Neon\Node\ArrayItemNode::itemsToInlineString($this->attributes) : '') . ')';
     }
-    public function &getIterator() : \Generator
+    public function getSubNodes() : array
     {
-        (yield $this->value);
+        $res = [&$this->value];
         foreach ($this->attributes as &$item) {
-            (yield $item);
+            $res[] =& $item;
         }
+        return $res;
     }
 }

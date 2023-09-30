@@ -7,7 +7,7 @@
 namespace Magento\Catalog\Model\Product\Option\Validator;
 
 use Magento\Catalog\Model\Product\Option;
-use Magento\Framework\Validator\ValidateException;
+use Zend_Validate_Exception;
 
 /**
  * Product option default validator
@@ -15,11 +15,15 @@ use Magento\Framework\Validator\ValidateException;
 class DefaultValidator extends \Magento\Framework\Validator\AbstractValidator
 {
     /**
+     * Product option types
+     *
      * @var string[]
      */
     protected $productOptionTypes;
 
     /**
+     * Price types
+     *
      * @var string[]
      */
     protected $priceTypes;
@@ -62,7 +66,7 @@ class DefaultValidator extends \Magento\Framework\Validator\AbstractValidator
      *
      * @param  \Magento\Catalog\Model\Product\Option $value
      * @return boolean
-     * @throws ValidateException If validation of $value is impossible
+     * @throws Zend_Validate_Exception If validation of $value is impossible
      */
     public function isValid($value)
     {

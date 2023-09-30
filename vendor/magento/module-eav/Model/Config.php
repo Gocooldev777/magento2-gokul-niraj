@@ -7,7 +7,6 @@ namespace Magento\Eav\Model;
 
 use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Eav\Model\Entity\Type;
-use Magento\Eav\Model\ResourceModel\Attribute\Collection;
 use Magento\Eav\Model\ResourceModel\Attribute\DefaultEntityAttributes\ProviderInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
@@ -29,9 +28,9 @@ class Config
     /**#@+
      * EAV cache ids
      */
-    public const ENTITIES_CACHE_ID = 'EAV_ENTITY_TYPES';
-    public const ATTRIBUTES_CACHE_ID = 'EAV_ENTITY_ATTRIBUTES';
-    public const ATTRIBUTES_CODES_CACHE_ID = 'EAV_ENTITY_ATTRIBUTES_CODES';
+    const ENTITIES_CACHE_ID = 'EAV_ENTITY_TYPES';
+    const ATTRIBUTES_CACHE_ID = 'EAV_ENTITY_ATTRIBUTES';
+    const ATTRIBUTES_CODES_CACHE_ID = 'EAV_ENTITY_ATTRIBUTES_CODES';
     /**#@-*/
 
     /**
@@ -39,9 +38,7 @@ class Config
      */
     private const XML_PATH_CACHE_USER_DEFINED_ATTRIBUTES = 'dev/caching/cache_user_defined_attributes';
 
-    /**
-     * @var array|null
-     */
+    /**#@-*/
     protected $_entityTypeData;
 
     /**
@@ -473,19 +470,17 @@ class Config
             return $this;
         }
 
-        $entityTypeCode = $entityType->getEntityTypeCode();
-        $attributes = $this->_universalFactory->create($entityType->getEntityAttributeCollection());
-        $websiteId = $attributes instanceof Collection ? $this->getWebsiteId($attributes) : 0;
-        $cacheKey = self::ATTRIBUTES_CACHE_ID . '-' . $entityTypeCode . '-' . $websiteId ;
-
-        if ($this->isCacheEnabled() && $this->initAttributesFromCache($entityType, $cacheKey)) {
+        if ($this->initAttributesFromCache($entityType)) {
             return $this;
         }
 
         \Magento\Framework\Profiler::start('EAV: ' . __METHOD__, ['group' => 'EAV', 'method' => __METHOD__]);
 
-        $attributes = $attributes->setEntityTypeFilter($entityType)
-            ->getData();
+        $attributes = $this->_universalFactory->create(
+            $entityType->getEntityAttributeCollection()
+        )->setEntityTypeFilter(
+            $entityType
+        )->getData();
 
         $this->_attributeData[$entityTypeCode] = [];
         foreach ($attributes as $attribute) {
@@ -499,7 +494,7 @@ class Config
         if ($this->isCacheEnabled()) {
             $this->_cache->save(
                 $this->serializer->serialize($this->_attributeData[$entityTypeCode]),
-                $cacheKey,
+                self::ATTRIBUTES_CACHE_ID . $entityTypeCode,
                 [
                     \Magento\Eav\Model\Cache\Type::CACHE_TAG,
                     \Magento\Eav\Model\Entity\Attribute::CACHE_TAG
@@ -579,7 +574,6 @@ class Config
      * @param array $systemAttributes
      * @return $this|bool|void
      * @throws LocalizedException
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function initSystemAttributes($entityType, $systemAttributes)
     {
@@ -588,9 +582,8 @@ class Config
         if (!empty($this->isSystemAttributesLoaded[$entityTypeCode])) {
             return;
         }
-        $attributeCollection = $this->_universalFactory->create($entityType->getEntityAttributeCollection());
-        $websiteId = $attributeCollection instanceof Collection ? $this->getWebsiteId($attributeCollection) : 0;
-        $cacheKey = self::ATTRIBUTES_CACHE_ID . '-' . $entityTypeCode . '-' . $websiteId . '-preload';
+
+        $cacheKey = self::ATTRIBUTES_CACHE_ID . '-' . $entityTypeCode . '-preload';
         if ($this->isCacheEnabled() && ($attributes = $this->_cache->load($cacheKey))) {
             $attributes = $this->serializer->unserialize($attributes);
             if ($attributes) {
@@ -605,7 +598,9 @@ class Config
         \Magento\Framework\Profiler::start('EAV: ' . __METHOD__, ['group' => 'EAV', 'method' => __METHOD__]);
 
         /** @var \Magento\Eav\Model\ResourceModel\Entity\Attribute\Collection $attributes */
-        $attributes = $attributeCollection->setEntityTypeFilter(
+        $attributes = $this->_universalFactory->create(
+            $entityType->getEntityAttributeCollection()
+        )->setEntityTypeFilter(
             $entityType
         )->addFieldToFilter(
             'attribute_code',
@@ -767,20 +762,16 @@ class Config
             return $this->attributesPerSet[$cacheKey];
         }
 
-        $attributeCollection = $this->_universalFactory->create($entityType->getEntityAttributeCollection());
-        // If entity contains website-dependent attributes, the result should not be cached here.
-        // Website in collection is resolved by StoreManager which causes incorrect entity attributes caching when
-        // the entity is loaded from the backend first time after the cache cleanup.
-        $isEntityWebsiteDependent = $attributeCollection instanceof Collection;
-        $attributesData = null;
-        if ($this->isCacheEnabled() && !$isEntityWebsiteDependent && ($attributes = $this->_cache->load($cacheKey))) {
-            $attributesData = $this->serializer->unserialize($attributes);
-        }
+        $attributesData = $this->isCacheEnabled() && ($attributes = $this->_cache->load($cacheKey))
+            ? $this->serializer->unserialize($attributes)
+            : null;
 
         $attributes = [];
         if ($attributesData === null) {
             if ($attributeSetId) {
-                $attributesData = $attributeCollection->setEntityTypeFilter(
+                $attributesData = $this->_universalFactory->create(
+                    $entityType->getEntityAttributeCollection()
+                )->setEntityTypeFilter(
                     $entityType
                 )->setAttributeSetFilter(
                     $attributeSetId
@@ -792,7 +783,7 @@ class Config
                 $attributesData = $this->_attributeData[$entityType->getEntityTypeCode()];
             }
 
-            if ($this->isCacheEnabled() && !$isEntityWebsiteDependent) {
+            if ($this->isCacheEnabled()) {
                 $this->_cache->save(
                     $this->serializer->serialize($attributesData),
                     $cacheKey,
@@ -951,14 +942,13 @@ class Config
      * Initialize attributes from cache for given entity type
      *
      * @param Type $entityType
-     * @param string $cacheKey
      * @return bool
      */
-    private function initAttributesFromCache(Type $entityType, string $cacheKey)
+    private function initAttributesFromCache(Type $entityType)
     {
         $entityTypeCode = $entityType->getEntityTypeCode();
-        $attributes = $this->_cache->load($cacheKey);
-        if ($attributes) {
+        $cacheKey = self::ATTRIBUTES_CACHE_ID . $entityTypeCode;
+        if ($this->isCacheEnabled() && ($attributes = $this->_cache->load($cacheKey))) {
             $attributes = $this->serializer->unserialize($attributes);
             if ($attributes) {
                 foreach ($attributes as $attribute) {
@@ -969,16 +959,5 @@ class Config
             }
         }
         return false;
-    }
-
-    /**
-     * Returns website id.
-     *
-     * @param Collection $attributeCollection
-     * @return int
-     */
-    private function getWebsiteId(Collection $attributeCollection): int
-    {
-        return $attributeCollection->getWebsite() ? (int)$attributeCollection->getWebsite()->getId() : 0;
     }
 }

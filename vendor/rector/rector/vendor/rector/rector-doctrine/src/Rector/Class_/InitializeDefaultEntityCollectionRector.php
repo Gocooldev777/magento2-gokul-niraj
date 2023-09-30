@@ -4,13 +4,14 @@ declare (strict_types=1);
 namespace Rector\Doctrine\Rector\Class_;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Expression;
 use Rector\Core\NodeManipulator\ClassDependencyManipulator;
 use Rector\Core\Rector\AbstractRector;
-use Rector\Doctrine\NodeAnalyzer\AttrinationFinder;
-use Rector\Doctrine\NodeFactory\ArrayCollectionAssignFactory;
-use Rector\TypeDeclaration\AlreadyAssignDetector\ConstructorAssignDetector;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -18,42 +19,19 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  *
  * @see \Rector\Doctrine\Tests\Rector\Class_\InitializeDefaultEntityCollectionRector\InitializeDefaultEntityCollectionRectorTest
  */
-final class InitializeDefaultEntityCollectionRector extends AbstractRector
+final class InitializeDefaultEntityCollectionRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @var class-string[]
-     */
-    private const TO_MANY_ANNOTATION_CLASSES = ['Doctrine\\ORM\\Mapping\\OneToMany', 'Doctrine\\ORM\\Mapping\\ManyToMany'];
-    /**
-     * @readonly
      * @var \Rector\Core\NodeManipulator\ClassDependencyManipulator
      */
     private $classDependencyManipulator;
-    /**
-     * @readonly
-     * @var \Rector\Doctrine\NodeFactory\ArrayCollectionAssignFactory
-     */
-    private $arrayCollectionAssignFactory;
-    /**
-     * @readonly
-     * @var \Rector\Doctrine\NodeAnalyzer\AttrinationFinder
-     */
-    private $attrinationFinder;
-    /**
-     * @readonly
-     * @var \Rector\TypeDeclaration\AlreadyAssignDetector\ConstructorAssignDetector
-     */
-    private $constructorAssignDetector;
-    public function __construct(ClassDependencyManipulator $classDependencyManipulator, ArrayCollectionAssignFactory $arrayCollectionAssignFactory, AttrinationFinder $attrinationFinder, ConstructorAssignDetector $constructorAssignDetector)
+    public function __construct(\Rector\Core\NodeManipulator\ClassDependencyManipulator $classDependencyManipulator)
     {
         $this->classDependencyManipulator = $classDependencyManipulator;
-        $this->arrayCollectionAssignFactory = $arrayCollectionAssignFactory;
-        $this->attrinationFinder = $attrinationFinder;
-        $this->constructorAssignDetector = $constructorAssignDetector;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Initialize collection property in Entity constructor', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Initialize collection property in Entity constructor', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -93,36 +71,47 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        if (!$this->attrinationFinder->hasByOne($node, 'Doctrine\\ORM\\Mapping\\Entity')) {
+        $kind = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND);
+        if ($kind === 'initialized') {
             return null;
         }
-        return $this->refactorClass($node);
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
+        if (!$phpDocInfo->hasByAnnotationClass('Doctrine\\ORM\\Mapping\\Entity')) {
+            return null;
+        }
+        $toManyPropertyNames = $this->resolveToManyPropertyNames($node);
+        if ($toManyPropertyNames === []) {
+            return null;
+        }
+        $assigns = $this->createAssignsOfArrayCollectionsForPropertyNames($toManyPropertyNames);
+        $this->classDependencyManipulator->addStmtsToConstructorIfNotThereYet($node, $assigns);
+        $node->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND, 'initialized');
+        return $node;
     }
     /**
      * @return string[]
      */
-    private function resolveToManyPropertyNames(Class_ $class) : array
+    private function resolveToManyPropertyNames(\PhpParser\Node\Stmt\Class_ $class) : array
     {
         $collectionPropertyNames = [];
         foreach ($class->getProperties() as $property) {
             if (\count($property->props) !== 1) {
                 continue;
             }
-            if (!$this->attrinationFinder->hasByMany($property, self::TO_MANY_ANNOTATION_CLASSES)) {
+            $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
+            $hasToManyNode = $phpDocInfo->hasByAnnotationClasses(['Doctrine\\ORM\\Mapping\\OneToMany', 'Doctrine\\ORM\\Mapping\\ManyToMany']);
+            if (!$hasToManyNode) {
                 continue;
             }
             /** @var string $propertyName */
             $propertyName = $this->getName($property);
-            if ($this->constructorAssignDetector->isPropertyAssigned($class, $propertyName)) {
-                continue;
-            }
             $collectionPropertyNames[] = $propertyName;
         }
         return $collectionPropertyNames;
@@ -135,18 +124,15 @@ CODE_SAMPLE
     {
         $assigns = [];
         foreach ($propertyNames as $propertyName) {
-            $assigns[] = $this->arrayCollectionAssignFactory->createFromPropertyName($propertyName);
+            $assigns[] = $this->createPropertyArrayCollectionAssign($propertyName);
         }
         return $assigns;
     }
-    private function refactorClass(Class_ $class) : ?\PhpParser\Node\Stmt\Class_
+    private function createPropertyArrayCollectionAssign(string $toManyPropertyName) : \PhpParser\Node\Stmt\Expression
     {
-        $toManyPropertyNames = $this->resolveToManyPropertyNames($class);
-        if ($toManyPropertyNames === []) {
-            return null;
-        }
-        $assigns = $this->createAssignsOfArrayCollectionsForPropertyNames($toManyPropertyNames);
-        $this->classDependencyManipulator->addStmtsToConstructorIfNotThereYet($class, $assigns);
-        return $class;
+        $propertyFetch = $this->nodeFactory->createPropertyFetch('this', $toManyPropertyName);
+        $new = new \PhpParser\Node\Expr\New_(new \PhpParser\Node\Name\FullyQualified('Doctrine\\Common\\Collections\\ArrayCollection'));
+        $assign = new \PhpParser\Node\Expr\Assign($propertyFetch, $new);
+        return new \PhpParser\Node\Stmt\Expression($assign);
     }
 }

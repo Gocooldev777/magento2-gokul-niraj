@@ -113,11 +113,11 @@ final class CombineConsecutiveIssetsFixer extends AbstractFixer
     }
 
     /**
-     * @param int[] $indices
+     * @param int[] $indexes
      */
-    private function clearTokens(Tokens $tokens, array $indices): void
+    private function clearTokens(Tokens $tokens, array $indexes): void
     {
-        foreach ($indices as $index) {
+        foreach ($indexes as $index) {
             $tokens->clearTokenAndMergeSurroundingWhitespace($index);
         }
     }
@@ -125,21 +125,21 @@ final class CombineConsecutiveIssetsFixer extends AbstractFixer
     /**
      * @param int $index of T_ISSET
      *
-     * @return int[] indices of meaningful tokens belonging to the isset statement
+     * @return int[] indexes of meaningful tokens belonging to the isset statement
      */
     private function getIssetInfo(Tokens $tokens, int $index): array
     {
         $openIndex = $tokens->getNextMeaningfulToken($index);
 
         $braceOpenCount = 1;
-        $meaningfulTokenIndices = [$openIndex];
+        $meaningfulTokenIndexes = [$openIndex];
 
         for ($i = $openIndex + 1;; ++$i) {
             if ($tokens[$i]->isWhitespace() || $tokens[$i]->isComment()) {
                 continue;
             }
 
-            $meaningfulTokenIndices[] = $i;
+            $meaningfulTokenIndexes[] = $i;
 
             if ($tokens[$i]->equals(')')) {
                 --$braceOpenCount;
@@ -151,19 +151,19 @@ final class CombineConsecutiveIssetsFixer extends AbstractFixer
             }
         }
 
-        return $meaningfulTokenIndices;
+        return $meaningfulTokenIndexes;
     }
 
     /**
-     * @param int[] $indices
+     * @param int[] $indexes
      *
      * @return Token[]
      */
-    private function getTokenClones(Tokens $tokens, array $indices): array
+    private function getTokenClones(Tokens $tokens, array $indexes): array
     {
         $clones = [];
 
-        foreach ($indices as $i) {
+        foreach ($indexes as $i) {
             $clones[] = clone $tokens[$i];
         }
 

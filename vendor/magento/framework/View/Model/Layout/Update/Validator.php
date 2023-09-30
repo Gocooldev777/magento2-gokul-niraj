@@ -5,7 +5,6 @@
  */
 namespace Magento\Framework\View\Model\Layout\Update;
 
-use Laminas\Validator\AbstractValidator;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Config\Dom\UrnResolver;
 use Magento\Framework\Config\Dom\ValidationSchemaException;
@@ -17,21 +16,21 @@ use Magento\Framework\Config\ValidationStateInterface;
  *
  * Validator checked XML validation and protected expressions
  */
-class Validator extends AbstractValidator
+class Validator extends \Zend_Validate_Abstract
 {
-    public const XML_INVALID = 'invalidXml';
+    const XML_INVALID = 'invalidXml';
 
-    public const XSD_INVALID = 'invalidXsd';
+    const XSD_INVALID = 'invalidXsd';
 
-    public const HELPER_ARGUMENT_TYPE = 'helperArgumentType';
+    const HELPER_ARGUMENT_TYPE = 'helperArgumentType';
 
-    public const UPDATER_MODEL = 'updaterModel';
+    const UPDATER_MODEL = 'updaterModel';
 
-    public const XML_NAMESPACE_XSI = 'http://www.w3.org/2001/XMLSchema-instance';
+    const XML_NAMESPACE_XSI = 'http://www.w3.org/2001/XMLSchema-instance';
 
-    public const LAYOUT_SCHEMA_PAGE_HANDLE = 'page_layout';
+    const LAYOUT_SCHEMA_PAGE_HANDLE = 'page_layout';
 
-    public const LAYOUT_SCHEMA_MERGED = 'layout_merged';
+    const LAYOUT_SCHEMA_MERGED = 'layout_merged';
 
     /**
      * The Magento SimpleXml object
@@ -41,6 +40,8 @@ class Validator extends AbstractValidator
     protected $_value;
 
     /**
+     * Protected expressions
+     *
      * @var array
      */
     protected $_protectedExpressions = [
@@ -63,12 +64,7 @@ class Validator extends AbstractValidator
     /**
      * @var ValidationStateInterface
      */
-    protected $validationState;
-
-    /**
-     * @var array
-     */
-    protected $messageTemplates;
+    private $validationState;
 
     /**
      * @param DomFactory $domConfigFactory
@@ -92,8 +88,6 @@ class Validator extends AbstractValidator
         ];
         $this->validationState = $validationState
             ?: ObjectManager::getInstance()->get(ValidationStateInterface::class);
-
-        parent::__construct();
     }
 
     /**
@@ -103,8 +97,8 @@ class Validator extends AbstractValidator
      */
     protected function _initMessageTemplates()
     {
-        if (!$this->messageTemplates) {
-            $this->messageTemplates = [
+        if (!$this->_messageTemplates) {
+            $this->_messageTemplates = [
                 self::HELPER_ARGUMENT_TYPE => (string)new \Magento\Framework\Phrase(
                     'Helper arguments should not be used in custom layout updates.'
                 ),
@@ -153,7 +147,7 @@ class Validator extends AbstractValidator
                 $value->registerXPathNamespace('xsi', self::XML_NAMESPACE_XSI);
                 foreach ($this->_protectedExpressions as $key => $xpr) {
                     if ($value->xpath($xpr)) {
-                        $this->error($key);
+                        $this->_error($key);
                     }
                 }
                 $errors = $this->getMessages();
@@ -162,13 +156,13 @@ class Validator extends AbstractValidator
                 }
             }
         } catch (\Magento\Framework\Config\Dom\ValidationException $e) {
-            $this->error(self::XML_INVALID, $e->getMessage());
+            $this->_error(self::XML_INVALID, $e->getMessage());
             throw $e;
         } catch (ValidationSchemaException $e) {
-            $this->error(self::XSD_INVALID, $e->getMessage());
+            $this->_error(self::XSD_INVALID, $e->getMessage());
             throw $e;
         } catch (\Exception $e) {
-            $this->error(self::XML_INVALID);
+            $this->_error(self::XML_INVALID);
             throw $e;
         }
         return true;

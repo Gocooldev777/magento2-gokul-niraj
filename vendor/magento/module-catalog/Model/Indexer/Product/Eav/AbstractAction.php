@@ -17,7 +17,7 @@ abstract class AbstractAction
     /**
      * Config path for enable EAV indexer
      */
-    public const ENABLE_EAV_INDEXER = 'catalog/search/enable_eav_indexer';
+    const ENABLE_EAV_INDEXER = 'catalog/search/enable_eav_indexer';
 
     /**
      * EAV Indexers by type
@@ -142,7 +142,7 @@ abstract class AbstractAction
         $connection->beginTransaction();
         try {
             // remove old index
-            $where = $connection->quoteInto('entity_id IN (?)', $ids, 'INT');
+            $where = $connection->quoteInto('entity_id IN(?)', $ids);
             $connection->delete($destinationTable, $where);
             // insert new index
             $indexer->insertFromTable($indexer->getIdxTable(), $destinationTable);

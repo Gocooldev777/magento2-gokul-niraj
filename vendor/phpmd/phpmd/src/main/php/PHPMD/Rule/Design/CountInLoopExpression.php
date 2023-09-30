@@ -22,11 +22,7 @@ use PHPMD\AbstractNode;
 use PHPMD\AbstractRule;
 use PHPMD\Node\ASTNode;
 use PHPMD\Node\ClassNode;
-use PHPMD\Node\EnumNode;
-use PHPMD\Node\TraitNode;
 use PHPMD\Rule\ClassAware;
-use PHPMD\Rule\EnumAware;
-use PHPMD\Rule\TraitAware;
 
 /**
  * Count In Loop Expression Rule
@@ -41,7 +37,7 @@ use PHPMD\Rule\TraitAware;
  *
  * @author Kamil Szymanski <kamilszymanski@gmail.com>
  */
-class CountInLoopExpression extends AbstractRule implements ClassAware, TraitAware, EnumAware
+class CountInLoopExpression extends AbstractRule implements ClassAware
 {
     /**
      * List of functions to search against
@@ -72,7 +68,7 @@ class CountInLoopExpression extends AbstractRule implements ClassAware, TraitAwa
      */
     public function apply(AbstractNode $node)
     {
-        if ($node instanceof ClassNode || $node instanceof TraitNode || $node instanceof EnumNode) {
+        if ($node instanceof ClassNode) {
             return $this->applyOnClassMethods($node);
         }
 

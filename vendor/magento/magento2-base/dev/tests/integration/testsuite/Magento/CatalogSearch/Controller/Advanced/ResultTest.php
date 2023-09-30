@@ -65,7 +65,6 @@ class ResultTest extends AbstractController
         $this->dispatch('catalogsearch/advanced/result');
         $responseBody = $this->getResponse()->getBody();
         $this->assertStringContainsString('Simple product name', $responseBody);
-        $this->assertStringNotContainsString('Not visible simple product', $responseBody);
     }
 
     /**
@@ -218,18 +217,6 @@ class ResultTest extends AbstractController
                     'price' => [
                         'from' => ['0' => ['0' => 1]],
                         'to' => 1,
-                    ]
-                ]
-            ],
-            'search_with_name_param_is_array' => [
-                [
-                    'name' => [],
-                    'sku' => '',
-                    'description' => '',
-                    'short_description' => '',
-                    'price' => [
-                        'from' => 0,
-                        'to' => 20,
                     ]
                 ]
             ]

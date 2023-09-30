@@ -9,8 +9,6 @@ namespace Magento\Framework\Interception;
 
 /**
  * Interception configuration loader interface.
- *
- * @api
  */
 interface ConfigLoaderInterface
 {

@@ -1,42 +1,41 @@
 <?php
 /**
+ * Backend area front name resolver. Reads front name from configuration
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
 namespace Magento\Backend\App\Area;
 
-use Laminas\Uri\Uri;
-use Magento\Backend\App\Config;
 use Magento\Backend\Setup\ConfigOptionsList;
-use Magento\Framework\App\Area\FrontNameResolverInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\RequestInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
+use Laminas\Uri\Uri;
 
 /**
- * Front name resolver for backend area.
+ * Class to get area front name.
  *
  * @api
  * @since 100.0.2
  */
-class FrontNameResolver implements FrontNameResolverInterface
+class FrontNameResolver implements \Magento\Framework\App\Area\FrontNameResolverInterface
 {
-    public const XML_PATH_USE_CUSTOM_ADMIN_PATH = 'admin/url/use_custom_path';
+    const XML_PATH_USE_CUSTOM_ADMIN_PATH = 'admin/url/use_custom_path';
 
-    public const XML_PATH_CUSTOM_ADMIN_PATH = 'admin/url/custom_path';
+    const XML_PATH_CUSTOM_ADMIN_PATH = 'admin/url/custom_path';
 
-    public const XML_PATH_USE_CUSTOM_ADMIN_URL = 'admin/url/use_custom';
+    const XML_PATH_USE_CUSTOM_ADMIN_URL = 'admin/url/use_custom';
 
-    public const XML_PATH_CUSTOM_ADMIN_URL = 'admin/url/custom';
+    const XML_PATH_CUSTOM_ADMIN_URL = 'admin/url/custom';
 
     /**
      * Backend area code
      */
-    public const AREA_CODE = 'adminhtml';
+    const AREA_CODE = 'adminhtml';
 
     /**
      * @var array
@@ -76,14 +75,14 @@ class FrontNameResolver implements FrontNameResolverInterface
     private $request;
 
     /**
-     * @param Config $config
+     * @param \Magento\Backend\App\Config $config
      * @param DeploymentConfig $deploymentConfig
      * @param ScopeConfigInterface $scopeConfig
      * @param Uri $uri
      * @param RequestInterface $request
      */
     public function __construct(
-        Config $config,
+        \Magento\Backend\App\Config $config,
         DeploymentConfig $deploymentConfig,
         ScopeConfigInterface $scopeConfig,
         Uri $uri = null,
@@ -132,10 +131,8 @@ class FrontNameResolver implements FrontNameResolverInterface
                 );
             }
         }
-        $host = (string) $this->request->getServer('HTTP_HOST', '');
-        $hostWithPort = $this->getHostWithPort($backendUrl);
-
-        return !($hostWithPort === null || $host === '') && stripos($hostWithPort, $host) !== false;
+        $host = $this->request->getServer('HTTP_HOST', '');
+        return stripos($this->getHostWithPort($backendUrl), (string) $host) !== false;
     }
 
     /**
@@ -152,8 +149,8 @@ class FrontNameResolver implements FrontNameResolverInterface
         $port = $this->uri->getPort();
 
         if (!$port) {
-            $port = $this->standardPorts[$scheme] ?? null;
+            $port = isset($this->standardPorts[$scheme]) ? $this->standardPorts[$scheme] : null;
         }
-        return $port !== null ? $host . ':' . $port : $host;
+        return isset($port) ? $host . ':' . $port : $host;
     }
 }

@@ -29,7 +29,7 @@ class UrnResolver
      */
     public function getRealPath($schema)
     {
-        if ($schema && strpos($schema, 'urn:') !== 0) {
+        if (strpos($schema, 'urn:') !== 0) {
             return $schema;
         }
 
@@ -75,7 +75,7 @@ class UrnResolver
      */
     public function registerEntityLoader($public, $system, $context)
     {
-        if ($system && strpos($system, 'urn:') === 0) {
+        if (strpos($system, 'urn:') === 0) {
             $filePath = $this->getRealPath($system);
         } else {
             if (file_exists($system)) {

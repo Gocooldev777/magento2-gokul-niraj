@@ -42,7 +42,7 @@ class ZipTest extends TestCase
      */
     public function testConstructorFileDestinationMatch($fileName, $expectedfileName): void
     {
-        $this->markTestSkipped('The implementation of constructor has changed. Rewrite test to cover changes.');
+        $this->markTestIncomplete('The implementation of constructor has changed. Rewrite test to cover changes.');
 
         $this->directory->method('getRelativePath')
             ->withConsecutive([$fileName], [$expectedfileName]);

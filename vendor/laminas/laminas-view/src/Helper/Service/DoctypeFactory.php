@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper\Service;
 
 use Laminas\View\Helper\Doctype;

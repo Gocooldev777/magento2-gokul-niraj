@@ -30,7 +30,6 @@ class WeeeTax extends Weee
         Total $total
     ) {
         AbstractTotal::collect($quote, $shippingAssignment, $total);
-        $address = $shippingAssignment->getShipping()->getAddress();
         $this->_store = $quote->getStore();
         if (!$this->weeeData->isEnabled($this->_store)) {
             return $this;
@@ -48,7 +47,7 @@ class WeeeTax extends Weee
             $weeeBaseTotal = $total->getWeeeBaseTotalExclTax();
 
             //Add to appropriate 'subtotal' or 'weee' accumulators
-            $this->processTotalAmount($total, $address, $weeeTotal, $weeeBaseTotal, $weeeTotal, $weeeBaseTotal);
+            $this->processTotalAmount($total, $weeeTotal, $weeeBaseTotal, $weeeTotal, $weeeBaseTotal);
             return $this;
         }
 
@@ -69,20 +68,13 @@ class WeeeTax extends Weee
                     $weeeCodeToWeeeTaxDetailsMap[$weeeCode] = $weeeTaxDetails;
                 }
             }
-
+            $productTaxes = [];
             //Process each item that has taxable weee
             foreach ($itemToWeeeCodeMap as $mapping) {
-                $itemWeeTaxDetails = array_intersect_key(
-                    $weeeCodeToWeeeTaxDetailsMap,
-                    array_fill_keys($mapping['weeeCodes'], null)
-                );
-                if (empty($itemWeeTaxDetails)) {
-                    continue;
-                }
                 $item = $mapping['item'];
 
                 $this->weeeData->setApplied($item, []);
-                $productTaxes = $this->weeeData->getApplied($item);
+
                 $totalValueInclTax = 0;
                 $baseTotalValueInclTax = 0;
                 $totalRowValueInclTax = 0;
@@ -94,7 +86,12 @@ class WeeeTax extends Weee
                 $baseTotalRowValueExclTax = 0;
 
                 //Process each taxed weee attribute of an item
-                foreach ($itemWeeTaxDetails as $weeeCode => $weeeTaxDetails) {
+                foreach ($mapping['weeeCodes'] as $weeeCode) {
+                    if (!array_key_exists($weeeCode, $weeeCodeToWeeeTaxDetailsMap)) {
+                        //Need to ensure that everyone is in sync for which weee code to process
+                        continue;
+                    }
+                    $weeeTaxDetails = $weeeCodeToWeeeTaxDetailsMap[$weeeCode];
                     $attributeCode = explode('-', $weeeCode)[1];
 
                     $valueExclTax = $weeeTaxDetails[CommonTaxCollector::KEY_TAX_DETAILS_PRICE_EXCL_TAX];
@@ -118,15 +115,17 @@ class WeeeTax extends Weee
                     $baseTotalRowValueExclTax += $baseRowValueExclTax;
 
                     $productTaxes[] = [
-                        'title' => $attributeCode, //TODO: fix this
-                        'base_amount' => $baseValueExclTax,
-                        'amount' => $valueExclTax,
-                        'row_amount' => $rowValueExclTax,
-                        'base_row_amount' => $baseRowValueExclTax,
-                        'base_amount_incl_tax' => $baseValueInclTax,
-                        'amount_incl_tax' => $valueInclTax,
-                        'row_amount_incl_tax' => $rowValueInclTax,
-                        'base_row_amount_incl_tax' => $baseRowValueInclTax,
+                        [
+                            'title' => $attributeCode, //TODO: fix this
+                            'base_amount' => $baseValueExclTax,
+                            'amount' => $valueExclTax,
+                            'row_amount' => $rowValueExclTax,
+                            'base_row_amount' => $baseRowValueExclTax,
+                            'base_amount_incl_tax' => $baseValueInclTax,
+                            'amount_incl_tax' => $valueInclTax,
+                            'row_amount_incl_tax' => $rowValueInclTax,
+                            'base_row_amount_incl_tax' => $baseRowValueInclTax,
+                        ],
                     ];
                 }
 
@@ -142,18 +141,17 @@ class WeeeTax extends Weee
 
                 $this->processTotalAmount(
                     $total,
-                    $address,
                     $totalRowValueExclTax,
                     $baseTotalRowValueExclTax,
                     $totalRowValueInclTax,
                     $baseTotalRowValueInclTax
                 );
 
-                $this->weeeData->setApplied(
-                    $item,
-                    $productTaxes
-                );
             }
+            $this->weeeData->setApplied(
+                $item,
+                array_merge($this->weeeData->getApplied($item), ...$productTaxes)
+            );
         }
         return $this;
     }
@@ -206,7 +204,6 @@ class WeeeTax extends Weee
      * Process row amount based on FPT total amount configuration setting
      *
      * @param Total $total
-     * @param Address $address
      * @param float $rowValueExclTax
      * @param float $baseRowValueExclTax
      * @param float $rowValueInclTax
@@ -215,7 +212,6 @@ class WeeeTax extends Weee
      */
     protected function processTotalAmount(
         $total,
-        $address,
         $rowValueExclTax,
         $baseRowValueExclTax,
         $rowValueInclTax,
@@ -231,8 +227,6 @@ class WeeeTax extends Weee
 
         $total->setSubtotalInclTax($total->getSubtotalInclTax() + $rowValueInclTax);
         $total->setBaseSubtotalInclTax($total->getBaseSubtotalInclTax() + $baseRowValueInclTax);
-        $address->setBaseSubtotalTotalInclTax($total->getBaseSubtotalInclTax());
-        $address->setSubtotalInclTax($total->getSubtotalInclTax());
         return $this;
     }
 
@@ -245,7 +239,7 @@ class WeeeTax extends Weee
      */
     public function fetch(Quote $quote, Total $total)
     {
-        $items = $total['address_quote_items'] ?? [];
+        $items = $total['quote_items'] ?? [];
 
         $weeeTotal = $this->weeeData->getTotalAmounts($items, $quote->getStore());
         if ($weeeTotal) {

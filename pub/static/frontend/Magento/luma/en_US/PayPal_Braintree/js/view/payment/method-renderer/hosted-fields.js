@@ -195,11 +195,11 @@ define([
          */
         validateCvvNumber: function () {
             var self = this;
-
+            
             if (self.hasVerification() === false) {
                 return true;
             }
-
+            
             return this.validateField(
                 'cc_cid',
                 (this.isValidCvvNumber === true)
@@ -219,7 +219,18 @@ define([
          */
         placeOrderClick: function () {
             if (this.validateFormFields() && additionalValidators.validate()) {
-                this.placeOrder();
+                var isReCaptchaEnabled = window.checkoutConfig.recaptcha_braintree;
+                if (isReCaptchaEnabled) {
+                    var recaptchaCheckBox = jQuery("#recaptcha-checkout-braintree-wrapper input[name='recaptcha-validate-']");
+
+                    if (recaptchaCheckBox.length && recaptchaCheckBox.prop('checked') === false) {
+                        alert($t('Please indicate google recaptcha'));
+                    } else {
+                        this.placeOrder();
+                    }
+                } else {
+                    this.placeOrder();
+                }
             }
         },
         /**

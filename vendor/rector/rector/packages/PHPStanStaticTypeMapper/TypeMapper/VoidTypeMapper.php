@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace Rector\PHPStanStaticTypeMapper\TypeMapper;
 
 use PhpParser\Node;
-use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\Type\Type;
@@ -16,7 +16,7 @@ use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
 /**
  * @implements TypeMapperInterface<VoidType>
  */
-final class VoidTypeMapper implements TypeMapperInterface
+final class VoidTypeMapper implements \Rector\PHPStanStaticTypeMapper\Contract\TypeMapperInterface
 {
     /**
      * @var string
@@ -27,7 +27,7 @@ final class VoidTypeMapper implements TypeMapperInterface
      * @var \Rector\Core\Php\PhpVersionProvider
      */
     private $phpVersionProvider;
-    public function __construct(PhpVersionProvider $phpVersionProvider)
+    public function __construct(\Rector\Core\Php\PhpVersionProvider $phpVersionProvider)
     {
         $this->phpVersionProvider = $phpVersionProvider;
     }
@@ -36,27 +36,26 @@ final class VoidTypeMapper implements TypeMapperInterface
      */
     public function getNodeClass() : string
     {
-        return VoidType::class;
+        return \PHPStan\Type\VoidType::class;
     }
     /**
      * @param VoidType $type
      */
-    public function mapToPHPStanPhpDocTypeNode(Type $type, string $typeKind) : TypeNode
+    public function mapToPHPStanPhpDocTypeNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : \PHPStan\PhpDocParser\Ast\Type\TypeNode
     {
-        return new IdentifierTypeNode(self::VOID);
+        return new \PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode(self::VOID);
     }
     /**
-     * @param TypeKind::* $typeKind
      * @param VoidType $type
      */
-    public function mapToPhpParserNode(Type $type, string $typeKind) : ?Node
+    public function mapToPhpParserNode(\PHPStan\Type\Type $type, \Rector\PHPStanStaticTypeMapper\Enum\TypeKind $typeKind) : ?\PhpParser\Node
     {
-        if (!$this->phpVersionProvider->isAtLeastPhpVersion(PhpVersionFeature::VOID_TYPE)) {
+        if (!$this->phpVersionProvider->isAtLeastPhpVersion(\Rector\Core\ValueObject\PhpVersionFeature::VOID_TYPE)) {
             return null;
         }
-        if (\in_array($typeKind, [TypeKind::PARAM, TypeKind::PROPERTY], \true)) {
+        if (\in_array($typeKind->getValue(), [\Rector\PHPStanStaticTypeMapper\Enum\TypeKind::PARAM(), \Rector\PHPStanStaticTypeMapper\Enum\TypeKind::PROPERTY()], \true)) {
             return null;
         }
-        return new Identifier(self::VOID);
+        return new \PhpParser\Node\Name(self::VOID);
     }
 }

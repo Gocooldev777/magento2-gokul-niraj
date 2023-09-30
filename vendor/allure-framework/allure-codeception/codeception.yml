@@ -1,4 +1,7 @@
-namespace: Qameta\Allure\Codeception\Test
+namespace: Yandex\Allure\Codeception
+suites:
+  unit:
+    path: .
 
 settings:
   lint: true
@@ -6,12 +9,13 @@ paths:
   tests: test/codeception
   output: build
   support: test/codeception/_support
-  data: test/codeception/_data
+  data: test/codeception
 extensions:
   enabled:
-    - Qameta\Allure\Codeception\AllureCodeception
+    - Yandex\Allure\Codeception\AllureCodeception
   config:
-    Qameta\Allure\Codeception\AllureCodeception:
+    Yandex\Allure\Codeception\AllureCodeception:
+      deletePreviousResults: true
       outputDirectory: allure-results
-      linkTemplates:
-        issue: https://example.org/issues/%s
+
+

@@ -47,9 +47,7 @@ class XsdTest extends TestCase
         $dom = new Dom($fixtureXml, $validationStateMock, [], null, null, $messageFormat);
         $actualResult = $dom->validate($this->schemaFile, $actualErrors);
         $this->assertEquals(empty($expectedErrors), $actualResult, "Validation result is invalid.");
-        foreach ($expectedErrors as $error) {
-            $this->assertContains($error, $actualErrors, "Validation errors does not match.");
-        }
+        $this->assertEquals($expectedErrors, $actualErrors, "Validation errors does not match.");
     }
 
     /**
@@ -232,7 +230,9 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'integration', attribute 'name': [facet 'minLength'] The value '' has a length of '0'; " .
-                    "this underruns the allowed minimum length of '2'."
+                    "this underruns the allowed minimum length of '2'.",
+                    "Element 'integration', attribute 'name': " .
+                    "'' is not a valid value of the atomic type 'integrationNameType'."
                 ],
             ],
             'resource without name' => [
@@ -257,7 +257,9 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'resource', attribute 'name': [facet 'pattern'] " .
-                    "The value '' is not accepted by the pattern '.+_.+::.+'."
+                    "The value '' is not accepted by the pattern '.+_.+::.+'.",
+                    "Element 'resource', attribute 'name': '' " .
+                    "is not a valid value of the atomic type 'resourceNameType'."
                 ],
             ],
             /** Invalid values */
@@ -272,7 +274,9 @@ class XsdTest extends TestCase
                 </integrations>',
                 [
                     "Element 'resource', attribute 'name': [facet 'pattern'] " .
-                    "The value 'customer_manage' is not accepted by the pattern '.+_.+::.+'."
+                    "The value 'customer_manage' is not accepted by the pattern '.+_.+::.+'.",
+                    "Element 'resource', attribute 'name': 'customer_manage' " .
+                    "is not a valid value of the atomic type 'resourceNameType'."
                 ],
             ]
         ];

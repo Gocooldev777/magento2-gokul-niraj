@@ -6,12 +6,14 @@
 
 namespace Magento\Framework\EntityManager\Db;
 
-use Exception;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\EntityManager\EntityMetadataInterface;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\App\ResourceConnection;
 
+/**
+ * Class CreateRow
+ */
 class CreateRow
 {
     /**
@@ -39,8 +41,6 @@ class CreateRow
     }
 
     /**
-     * Method to prepare data.
-     *
      * @param EntityMetadataInterface $metadata
      * @param AdapterInterface $connection
      * @param array $data
@@ -50,13 +50,13 @@ class CreateRow
     {
         $output = [];
         foreach ($connection->describeTable($metadata->getEntityTable()) as $column) {
-            $columnName = strtolower($column['COLUMN_NAME'] ?? '');
+            $columnName = strtolower($column['COLUMN_NAME']);
             if ($this->canNotSetTimeStamp($columnName, $column, $data)) {
                 continue;
             }
 
             if (isset($data[$columnName])) {
-                $output[strtolower($column['COLUMN_NAME'] ?? '')] = $data[strtolower($column['COLUMN_NAME'] ?? '')];
+                $output[strtolower($column['COLUMN_NAME'])] = $data[strtolower($column['COLUMN_NAME'])];
             } elseif ($column['DEFAULT'] === null) {
                 $output[strtolower($column['COLUMN_NAME'])] = null;
             }
@@ -68,8 +68,6 @@ class CreateRow
     }
 
     /**
-     * Method to can not set time stamp.
-     *
      * @param string $columnName
      * @param string $column
      * @param array $data
@@ -82,12 +80,9 @@ class CreateRow
     }
 
     /**
-     * Method to execute.
-     *
      * @param string $entityType
      * @param array $data
      * @return array
-     * @throws Exception
      */
     public function execute($entityType, $data)
     {

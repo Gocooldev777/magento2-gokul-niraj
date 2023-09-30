@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Model\Ui;
@@ -37,7 +37,6 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 
     /**
      * Get UI component for token
-     *
      * @param PaymentTokenInterface $paymentToken
      * @return TokenUiComponentInterface
      */
@@ -61,7 +60,6 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 
     /**
      * Get url to retrieve payment method nonce
-     *
      * @return string
      */
     private function getNonceRetrieveUrl(): string

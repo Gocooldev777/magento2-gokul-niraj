@@ -69,4 +69,15 @@ class ASTMatchArgument extends ASTArguments
     {
         return count($this->getChildren()) < 1;
     }
+
+    /**
+     * Accept method of the visitor design pattern. This method will be called
+     * by a visitor during tree traversal.
+     *
+     * @since 0.9.12
+     */
+    public function accept(ASTVisitor $visitor, $data = null)
+    {
+        return $visitor->visitMatchArgument($this, $data);
+    }
 }

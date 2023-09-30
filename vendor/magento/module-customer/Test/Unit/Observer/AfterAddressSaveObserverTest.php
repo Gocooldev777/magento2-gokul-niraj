@@ -129,15 +129,15 @@ class AfterAddressSaveObserverTest extends TestCase
      * @param bool $processedFlag
      * @param bool $forceProcess
      * @param int $addressId
-     * @param mixed $registeredAddressId
-     * @param mixed $configAddressType
+     * @param int $registeredAddressId
+     * @param string $configAddressType
      * @dataProvider dataProviderAfterAddressSaveRestricted
      */
     public function testAfterAddressSaveRestricted(
-        bool $isVatValidationEnabled,
-        bool $processedFlag,
-        bool $forceProcess,
-        int  $addressId,
+        $isVatValidationEnabled,
+        $processedFlag,
+        $forceProcess,
+        $addressId,
         $registeredAddressId,
         $configAddressType
     ) {
@@ -303,21 +303,17 @@ class AfterAddressSaveObserverTest extends TestCase
     }
 
     /**
-     * @param mixed $vatId
+     * @param string $vatId
      * @param int $countryId
      * @param bool $isCountryInEU
-     * @param int $customerGroupId
      * @param int $defaultGroupId
-     * @param bool $disableAutoGroupChange
      * @dataProvider dataProviderAfterAddressSaveDefaultGroup
      */
     public function testAfterAddressSaveDefaultGroup(
         $vatId,
-        int    $countryId,
-        bool   $isCountryInEU,
-        int $customerGroupId,
-        int $defaultGroupId,
-        bool $disableAutoGroupChange
+        $countryId,
+        $isCountryInEU,
+        $defaultGroupId
     ) {
         $store = $this->getMockBuilder(Store::class)
             ->disableOriginalConstructor()
@@ -344,15 +340,15 @@ class AfterAddressSaveObserverTest extends TestCase
             ->willReturn($store);
         $customer->expects($this->once())
             ->method('getDisableAutoGroupChange')
-            ->willReturn($disableAutoGroupChange);
-        $customer->expects($this->any())
+            ->willReturn(false);
+        $customer->expects($this->exactly(2))
             ->method('getGroupId')
-            ->willReturn($customerGroupId);
-        $customer->expects($this->any())
+            ->willReturn(null);
+        $customer->expects($this->once())
             ->method('setGroupId')
             ->with($defaultGroupId)
             ->willReturnSelf();
-        $customer->expects($this->any())
+        $customer->expects($this->once())
             ->method('save')
             ->willReturnSelf();
 
@@ -412,17 +408,14 @@ class AfterAddressSaveObserverTest extends TestCase
     public function dataProviderAfterAddressSaveDefaultGroup()
     {
         return [
-            'when vatId is empty, non EU country and disable auto group false' => ['', 1, false, 1, 1, false],
-            'when vatId is empty, non EU country and disable auto group true' => ['', 1, false, 1, 1, true],
-            'when vatId is empty, non EU country, disable auto group true
-            and different groupId' => ['', 1, false, 1, 2, true],
-            'when vatId is not empty, non EU country and disable auto group false' => [1, 1, false, 1, 1, false],
+            ['', 1, false, 1],
+            [1, 1, false, 1],
         ];
     }
 
     /**
-     * @param mixed $vatId
-     * @param mixed $vatClass
+     * @param string $vatId
+     * @param $vatClass
      * @param int $countryId
      * @param string $country
      * @param int $newGroupId
@@ -439,15 +432,15 @@ class AfterAddressSaveObserverTest extends TestCase
     public function testAfterAddressSaveNewGroup(
         $vatId,
         $vatClass,
-        int    $countryId,
-        string $country,
-        int    $newGroupId,
-        string $areaCode,
-        bool   $resultVatIsValid,
-        bool   $resultRequestSuccess,
-        string $resultValidMessage,
-        string $resultInvalidMessage,
-        string $resultErrorMessage
+        $countryId,
+        $country,
+        $newGroupId,
+        $areaCode,
+        $resultVatIsValid,
+        $resultRequestSuccess,
+        $resultValidMessage,
+        $resultInvalidMessage,
+        $resultErrorMessage
     ) {
         $store = $this->getMockBuilder(Store::class)
             ->disableOriginalConstructor()

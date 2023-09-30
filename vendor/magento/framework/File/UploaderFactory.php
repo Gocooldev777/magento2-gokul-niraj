@@ -5,9 +5,6 @@
  */
 namespace Magento\Framework\File;
 
-/**
- * @api
- */
 class UploaderFactory
 {
     /**

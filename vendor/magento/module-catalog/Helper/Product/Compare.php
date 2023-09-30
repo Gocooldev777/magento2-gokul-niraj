@@ -41,35 +41,35 @@ class Compare extends \Magento\Framework\Url\Helper\Data
     protected $_allowUsedFlat = true;
 
     /**
-     * Customer id for Compare Helper
+     * Customer id
      *
      * @var null|int
      */
     protected $_customerId = null;
 
     /**
-     * Catalog session for Compare Helper
+     * Catalog session
      *
      * @var \Magento\Catalog\Model\Session
      */
     protected $_catalogSession;
 
     /**
-     * Customer session for Compare Helper
+     * Customer session
      *
      * @var \Magento\Customer\Model\Session
      */
     protected $_customerSession;
 
     /**
-     * Customer visitor for Compare Helper
+     * Customer visitor
      *
      * @var \Magento\Customer\Model\Visitor
      */
     protected $_customerVisitor;
 
     /**
-     * Catalog product visibility for Compare Helper
+     * Catalog product visibility
      *
      * @var \Magento\Catalog\Model\Product\Visibility
      */
@@ -297,11 +297,7 @@ class Compare extends \Magento\Framework\Url\Helper\Data
             $this->_itemCollection->addAttributeToSelect('name')->addUrlRewrite()->load();
 
             /* update compare items count */
-            $count = count($this->_itemCollection);
-            $counts = $this->_catalogSession->getCatalogCompareItemsCountPerWebsite() ?: [];
-            $counts[$this->_storeManager->getWebsite()->getId()] = $count;
-            $this->_catalogSession->setCatalogCompareItemsCountPerWebsite($counts);
-            $this->_catalogSession->setCatalogCompareItemsCount($count); //deprecated
+            $this->_catalogSession->setCatalogCompareItemsCount(count($this->_itemCollection));
         }
 
         return $this->_itemCollection;
@@ -331,10 +327,7 @@ class Compare extends \Magento\Framework\Url\Helper\Data
             ->setVisibility($this->_catalogProductVisibility->getVisibleInSiteIds());
 
         $count = $collection->getSize();
-        $counts = $this->_catalogSession->getCatalogCompareItemsCountPerWebsite() ?: [];
-        $counts[$this->_storeManager->getWebsite()->getId()] = $count;
-        $this->_catalogSession->setCatalogCompareItemsCountPerWebsite($counts);
-        $this->_catalogSession->setCatalogCompareItemsCount($count); //deprecated
+        $this->_catalogSession->setCatalogCompareItemsCount($count);
 
         return $this;
     }
@@ -346,12 +339,11 @@ class Compare extends \Magento\Framework\Url\Helper\Data
      */
     public function getItemCount()
     {
-        $counts = $this->_catalogSession->getCatalogCompareItemsCountPerWebsite() ?: [];
-        if (!isset($counts[$this->_storeManager->getWebsite()->getId()])) {
+        if (!$this->_catalogSession->hasCatalogCompareItemsCount()) {
             $this->calculate();
         }
 
-        return $counts[$this->_storeManager->getWebsite()->getId()] ?? 0;
+        return $this->_catalogSession->getCatalogCompareItemsCount();
     }
 
     /**

@@ -9,8 +9,6 @@ use Magento\Framework\Exception\FileSystemException;
 
 /**
  * Interface for parsing comments in the configuration file.
- *
- * @api
  */
 interface CommentParserInterface
 {

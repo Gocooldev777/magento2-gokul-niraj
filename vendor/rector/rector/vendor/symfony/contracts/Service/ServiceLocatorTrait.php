@@ -8,13 +8,13 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Contracts\Service;
+namespace RectorPrefix20211221\Symfony\Contracts\Service;
 
-use RectorPrefix202304\Psr\Container\ContainerExceptionInterface;
-use RectorPrefix202304\Psr\Container\NotFoundExceptionInterface;
+use RectorPrefix20211221\Psr\Container\ContainerExceptionInterface;
+use RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface;
 // Help opcache.preload discover always-needed symbols
-\class_exists(ContainerExceptionInterface::class);
-\class_exists(NotFoundExceptionInterface::class);
+\class_exists(\RectorPrefix20211221\Psr\Container\ContainerExceptionInterface::class);
+\class_exists(\RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface::class);
 /**
  * A trait to help implement ServiceProviderInterface.
  *
@@ -23,17 +23,8 @@ use RectorPrefix202304\Psr\Container\NotFoundExceptionInterface;
  */
 trait ServiceLocatorTrait
 {
-    /**
-     * @var mixed[]
-     */
     private $factories;
-    /**
-     * @var mixed[]
-     */
     private $loading = [];
-    /**
-     * @var mixed[]
-     */
     private $providedTypes;
     /**
      * @param callable[] $factories
@@ -42,11 +33,18 @@ trait ServiceLocatorTrait
     {
         $this->factories = $factories;
     }
-    public function has(string $id) : bool
+    /**
+     * {@inheritdoc}
+     *
+     * @return bool
+     */
+    public function has(string $id)
     {
         return isset($this->factories[$id]);
     }
     /**
+     * {@inheritdoc}
+     *
      * @return mixed
      */
     public function get(string $id)
@@ -67,9 +65,12 @@ trait ServiceLocatorTrait
             unset($this->loading[$id]);
         }
     }
+    /**
+     * {@inheritdoc}
+     */
     public function getProvidedServices() : array
     {
-        if (!isset($this->providedTypes)) {
+        if (null === $this->providedTypes) {
             $this->providedTypes = [];
             foreach ($this->factories as $name => $factory) {
                 if (!\is_callable($factory)) {
@@ -82,7 +83,7 @@ trait ServiceLocatorTrait
         }
         return $this->providedTypes;
     }
-    private function createNotFoundException(string $id) : NotFoundExceptionInterface
+    private function createNotFoundException(string $id) : \RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface
     {
         if (!($alternatives = \array_keys($this->factories))) {
             $message = 'is empty...';
@@ -99,13 +100,13 @@ trait ServiceLocatorTrait
         } else {
             $message = \sprintf('Service "%s" not found: the current service locator %s', $id, $message);
         }
-        return new class($message) extends \InvalidArgumentException implements NotFoundExceptionInterface
+        return new class($message) extends \InvalidArgumentException implements \RectorPrefix20211221\Psr\Container\NotFoundExceptionInterface
         {
         };
     }
-    private function createCircularReferenceException(string $id, array $path) : ContainerExceptionInterface
+    private function createCircularReferenceException(string $id, array $path) : \RectorPrefix20211221\Psr\Container\ContainerExceptionInterface
     {
-        return new class(\sprintf('Circular reference detected for service "%s", path: "%s".', $id, \implode(' -> ', $path))) extends \RuntimeException implements ContainerExceptionInterface
+        return new class(\sprintf('Circular reference detected for service "%s", path: "%s".', $id, \implode(' -> ', $path))) extends \RuntimeException implements \RectorPrefix20211221\Psr\Container\ContainerExceptionInterface
         {
         };
     }

@@ -2,18 +2,13 @@
 
 /**
  * @see       https://github.com/laminas/laminas-server for the canonical source repository
+ * @copyright https://github.com/laminas/laminas-server/blob/master/COPYRIGHT.md
+ * @license   https://github.com/laminas/laminas-server/blob/master/LICENSE.md New BSD License
  */
 
 namespace Laminas\Server\Reflection;
 
 use ReflectionClass as PhpReflectionClass;
-
-use function call_user_func_array;
-use function is_array;
-use function is_string;
-use function method_exists;
-use function preg_match;
-use function str_starts_with;
 
 /**
  * Class/Object reflection
@@ -26,35 +21,30 @@ class ReflectionClass
     /**
      * Optional configuration parameters; accessible via {@link __get} and
      * {@link __set()}
-     *
      * @var array
      */
     protected $config = [];
 
     /**
      * Array of {@link \Laminas\Server\Reflection\Method}s
-     *
      * @var array
      */
     protected $methods = [];
 
     /**
      * Namespace
-     *
      * @var string
      */
-    protected $namespace;
+    protected $namespace = null;
 
     /**
      * ReflectionClass object
-     *
      * @var PhpReflectionClass
      */
     protected $reflection;
 
     /**
      * Reflection class name (needed for serialization)
-     *
      * @var string
      */
     protected $name;
@@ -65,20 +55,21 @@ class ReflectionClass
      * Create array of dispatchable methods, each a
      * {@link Laminas\Server\Reflection\ReflectionMethod}. Sets reflection object property.
      *
+     * @param PhpReflectionClass $reflection
      * @param string $namespace
      * @param mixed $argv
      */
     public function __construct(PhpReflectionClass $reflection, $namespace = null, $argv = false)
     {
         $this->reflection = $reflection;
-        $this->name       = $reflection->getName();
+        $this->name = $reflection->getName();
         $this->setNamespace($namespace);
 
         $argv = is_array($argv) ? $argv : [];
 
         foreach ($reflection->getMethods() as $method) {
             // Don't aggregate magic methods
-            if (str_starts_with($method->getName(), '__')) {
+            if ('__' == substr($method->getName(), 0, 2)) {
                 continue;
             }
 
@@ -121,7 +112,7 @@ class ReflectionClass
             return $this->config[$key];
         }
 
-        return null;
+        return;
     }
 
     /**

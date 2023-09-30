@@ -38,13 +38,14 @@ $optionValuesByType = [
         'day_part' => 'am',
         'date_internal' => '',
     ],
+    'drop_down' => '3-1-select',
+    'radio' => '4-1-radio',
 ];
 
 $requestInfo = ['options' => []];
 $productOptions = $product->getOptions();
 foreach ($productOptions as $option) {
-    $requestInfo['options'][$option->getOptionId()] = $optionValuesByType[$option->getType()]
-        ?? current($option->getValues())->getOptionTypeId();
+    $requestInfo['options'][$option->getOptionId()] = $optionValuesByType[$option->getType()];
 }
 
 /** @var \Magento\Sales\Model\Order\Item $orderItem */

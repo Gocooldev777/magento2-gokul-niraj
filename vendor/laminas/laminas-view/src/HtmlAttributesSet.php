@@ -8,15 +8,10 @@ use ArrayObject;
 use Laminas\Escaper\Escaper;
 use Traversable;
 
-use function array_merge;
-use function implode;
 use function in_array;
 use function is_array;
 use function is_scalar;
 use function iterator_to_array;
-use function json_encode;
-use function sprintf;
-use function strpos;
 
 use const JSON_HEX_AMP;
 use const JSON_HEX_APOS;
@@ -26,19 +21,19 @@ use const JSON_THROW_ON_ERROR;
 
 /**
  * Class for storing and processing HTML tag attributes.
- *
- * @psalm-type AttributeSet = array<string, scalar|array|null>
  */
 final class HtmlAttributesSet extends ArrayObject
 {
     /**
      * HTML escaper
+     *
+     * @var Escaper
      */
-    private Escaper $escaper;
+    private $escaper;
 
     public function __construct(Escaper $escaper, iterable $attributes = [])
     {
-        $attributes    = $attributes instanceof Traversable ? iterator_to_array($attributes, true) : $attributes;
+        $attributes = $attributes instanceof Traversable ? iterator_to_array($attributes, true) : $attributes;
         $this->escaper = $escaper;
         parent::__construct($attributes);
     }
@@ -46,7 +41,7 @@ final class HtmlAttributesSet extends ArrayObject
     /**
      * Set several attributes at once.
      *
-     * @param AttributeSet $attributes
+     * @param iterable<string, scalar|array|null> $attributes
      */
     public function set(iterable $attributes): self
     {
@@ -79,7 +74,7 @@ final class HtmlAttributesSet extends ArrayObject
     /**
      * Merge attributes with existing attributes.
      *
-     * @param AttributeSet $attributes
+     * @param iterable<string, scalar|array|null> $attributes
      */
     public function merge(iterable $attributes): self
     {

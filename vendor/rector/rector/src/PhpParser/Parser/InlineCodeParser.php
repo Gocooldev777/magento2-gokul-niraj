@@ -3,18 +3,21 @@
 declare (strict_types=1);
 namespace Rector\Core\PhpParser\Parser;
 
-use RectorPrefix202304\Nette\Utils\FileSystem;
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Concat;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\Encapsed;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
-use Rector\Core\Contract\PhpParser\NodePrinterInterface;
-use Rector\Core\PhpParser\Node\Value\ValueResolver;
+use PhpParser\Parser;
+use Rector\Core\Exception\ShouldNotHappenException;
+use Rector\Core\PhpParser\Printer\BetterStandardPrinter;
 use Rector\Core\Util\StringUtils;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator;
+use RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem;
 final class InlineCodeParser
 {
     /**
@@ -38,25 +41,15 @@ final class InlineCodeParser
      */
     private const ENDING_SEMI_COLON_REGEX = '#;(\\s+)?$#';
     /**
-     * @var string
-     * @see https://regex101.com/r/8fDjnR/1
+     * @readonly
+     * @var \Rector\Core\PhpParser\Printer\BetterStandardPrinter
      */
-    private const VARIABLE_IN_SINGLE_QUOTED_REGEX = '#\'(?<variable>\\$.*)\'#U';
-    /**
-     * @var string
-     * @see https://regex101.com/r/1lzQZv/1
-     */
-    private const BACKREFERENCE_NO_QUOTE_REGEX = '#(?<!")(?<backreference>\\\\\\d+)(?!")#';
-    /**
-     * @var string
-     * @see https://regex101.com/r/nSO3Eq/1
-     */
-    private const BACKREFERENCE_NO_DOUBLE_QUOTE_START_REGEX = '#(?<!")(?<backreference>\\$\\d+)#';
+    private $betterStandardPrinter;
     /**
      * @readonly
-     * @var \Rector\Core\Contract\PhpParser\NodePrinterInterface
+     * @var \Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator
      */
-    private $nodePrinter;
+    private $nodeScopeAndMetadataDecorator;
     /**
      * @readonly
      * @var \Rector\Core\PhpParser\Parser\SimplePhpParser
@@ -64,14 +57,15 @@ final class InlineCodeParser
     private $simplePhpParser;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\Node\Value\ValueResolver
+     * @var \Symplify\SmartFileSystem\SmartFileSystem
      */
-    private $valueResolver;
-    public function __construct(NodePrinterInterface $nodePrinter, \Rector\Core\PhpParser\Parser\SimplePhpParser $simplePhpParser, ValueResolver $valueResolver)
+    private $smartFileSystem;
+    public function __construct(\Rector\Core\PhpParser\Printer\BetterStandardPrinter $betterStandardPrinter, \Rector\NodeTypeResolver\NodeScopeAndMetadataDecorator $nodeScopeAndMetadataDecorator, \Rector\Core\PhpParser\Parser\SimplePhpParser $simplePhpParser, \RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem $smartFileSystem)
     {
-        $this->nodePrinter = $nodePrinter;
+        $this->betterStandardPrinter = $betterStandardPrinter;
+        $this->nodeScopeAndMetadataDecorator = $nodeScopeAndMetadataDecorator;
         $this->simplePhpParser = $simplePhpParser;
-        $this->valueResolver = $valueResolver;
+        $this->smartFileSystem = $smartFileSystem;
     }
     /**
      * @return Stmt[]
@@ -80,67 +74,33 @@ final class InlineCodeParser
     {
         // to cover files too
         if (\is_file($content)) {
-            $content = FileSystem::read($content);
+            $content = $this->smartFileSystem->readFile($content);
         }
         // wrap code so php-parser can interpret it
-        $content = StringUtils::isMatch($content, self::OPEN_PHP_TAG_REGEX) ? $content : '<?php ' . $content;
-        $content = StringUtils::isMatch($content, self::ENDING_SEMI_COLON_REGEX) ? $content : $content . ';';
-        return $this->simplePhpParser->parseString($content);
+        $content = \Rector\Core\Util\StringUtils::isMatch($content, self::OPEN_PHP_TAG_REGEX) ? $content : '<?php ' . $content;
+        $content = \Rector\Core\Util\StringUtils::isMatch($content, self::ENDING_SEMI_COLON_REGEX) ? $content : $content . ';';
+        $stmts = $this->simplePhpParser->parseString($content);
+        return $this->nodeScopeAndMetadataDecorator->decorateStmtsFromString($stmts);
     }
-    public function stringify(Expr $expr) : string
+    public function stringify(\PhpParser\Node\Expr $expr) : string
     {
-        if ($expr instanceof String_) {
-            if (!StringUtils::isMatch($expr->value, self::BACKREFERENCE_NO_QUOTE_REGEX)) {
-                return Strings::replace($expr->value, self::BACKREFERENCE_NO_DOUBLE_QUOTE_START_REGEX, static function (array $match) : string {
-                    return '"' . $match['backreference'] . '"';
-                });
-            }
-            return Strings::replace($expr->value, self::BACKREFERENCE_NO_QUOTE_REGEX, static function (array $match) : string {
-                return '"\\' . $match['backreference'] . '"';
-            });
+        if ($expr instanceof \PhpParser\Node\Scalar\String_) {
+            return $expr->value;
         }
-        if ($expr instanceof Encapsed) {
-            return $this->resolveEncapsedValue($expr);
+        if ($expr instanceof \PhpParser\Node\Scalar\Encapsed) {
+            // remove "
+            $expr = \trim($this->betterStandardPrinter->print($expr), '""');
+            // use \$ → $
+            $expr = \RectorPrefix20211221\Nette\Utils\Strings::replace($expr, self::PRESLASHED_DOLLAR_REGEX, '$');
+            // use \'{$...}\' → $...
+            return \RectorPrefix20211221\Nette\Utils\Strings::replace($expr, self::CURLY_BRACKET_WRAPPER_REGEX, '$1');
         }
-        if ($expr instanceof Concat) {
-            return $this->resolveConcatValue($expr);
+        if ($expr instanceof \PhpParser\Node\Expr\BinaryOp\Concat) {
+            return $this->stringify($expr->left) . $this->stringify($expr->right);
         }
-        return $this->nodePrinter->print($expr);
-    }
-    private function resolveEncapsedValue(Encapsed $encapsed) : string
-    {
-        $value = '';
-        $isRequirePrint = \false;
-        foreach ($encapsed->parts as $part) {
-            $partValue = (string) $this->valueResolver->getValue($part);
-            if (\substr_compare($partValue, "'", -\strlen("'")) === 0) {
-                $isRequirePrint = \true;
-                break;
-            }
-            $value .= $partValue;
+        if ($expr instanceof \PhpParser\Node\Expr\Variable || $expr instanceof \PhpParser\Node\Expr\PropertyFetch || $expr instanceof \PhpParser\Node\Expr\StaticPropertyFetch) {
+            return $this->betterStandardPrinter->print($expr);
         }
-        $printedExpr = $isRequirePrint ? $this->nodePrinter->print($encapsed) : $value;
-        // remove "
-        $printedExpr = \trim($printedExpr, '""');
-        // use \$ → $
-        $printedExpr = Strings::replace($printedExpr, self::PRESLASHED_DOLLAR_REGEX, '$');
-        // use \'{$...}\' → $...
-        return Strings::replace($printedExpr, self::CURLY_BRACKET_WRAPPER_REGEX, '$1');
-    }
-    private function resolveConcatValue(Concat $concat) : string
-    {
-        if ($concat->left instanceof Concat && $concat->right instanceof String_ && \strncmp($concat->right->value, '$', \strlen('$')) === 0) {
-            $concat->right->value = '.' . $concat->right->value;
-        }
-        if ($concat->right instanceof String_ && \strncmp($concat->right->value, '($', \strlen('($')) === 0) {
-            $node = $concat->getAttribute(AttributeKey::NEXT_NODE);
-            if ($node instanceof Variable) {
-                $concat->right->value .= '.';
-            }
-        }
-        $string = $this->stringify($concat->left) . $this->stringify($concat->right);
-        return Strings::replace($string, self::VARIABLE_IN_SINGLE_QUOTED_REGEX, static function (array $match) {
-            return $match['variable'];
-        });
+        throw new \Rector\Core\Exception\ShouldNotHappenException(\get_class($expr) . ' ' . __METHOD__);
     }
 }

@@ -68,10 +68,7 @@ define([
             // Hide message block if needed
             if (isHidden) {
                 setTimeout(function () {
-                    $(this.selector).hide('slow');
-
-                    //commented because effect-blind.js(1.13.1) is having show & hide issue
-                    // $(this.selector).hide('blind', {}, this.hideSpeed);
+                    $(this.selector).hide('blind', {}, this.hideSpeed);
                 }.bind(this), this.hideTimeout);
             }
         }

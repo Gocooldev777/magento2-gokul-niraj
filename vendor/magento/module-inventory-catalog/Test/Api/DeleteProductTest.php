@@ -7,8 +7,8 @@ declare(strict_types=1);
 
 namespace Magento\InventoryCatalog\Test\Api;
 
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Framework\MessageQueue\ConsumerFactory;
-use Magento\Framework\MessageQueue\DefaultValueProvider;
 use Magento\Framework\MessageQueue\QueueFactoryInterface;
 use Magento\Framework\Webapi\Rest\Request;
 use Magento\InventoryApi\Api\GetSourceItemsBySkuInterface;
@@ -30,9 +30,9 @@ class DeleteProductTest extends WebapiAbstract
     private $getSourceItemsBySku;
 
     /**
-     * @var DefaultValueProvider
+     * @var ProductRepositoryInterface
      */
-    private $defaultValueProvider;
+    private $productRepository;
 
     /**
      * @inheritDoc
@@ -40,7 +40,7 @@ class DeleteProductTest extends WebapiAbstract
     protected function setUp(): void
     {
         $this->getSourceItemsBySku = Bootstrap::getObjectManager()->get(GetSourceItemsBySkuInterface::class);
-        $this->defaultValueProvider = Bootstrap::getObjectManager()->get(DefaultValueProvider::class);
+        $this->productRepository = Bootstrap::getObjectManager()->get(ProductRepositoryInterface::class);
         $this->rejectMessages();
     }
 
@@ -98,10 +98,7 @@ class DeleteProductTest extends WebapiAbstract
     private function rejectMessages()
     {
         $queueFactory = Bootstrap::getObjectManager()->get(QueueFactoryInterface::class);
-        $queue = $queueFactory->create(
-            'inventory.source.items.cleanup',
-            $this->defaultValueProvider->getConnection()
-        );
+        $queue = $queueFactory->create('inventory.source.items.cleanup', 'db');
         while ($envelope = $queue->dequeue()) {
             $queue->reject($envelope, false);
         }

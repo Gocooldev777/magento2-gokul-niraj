@@ -8,18 +8,18 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Definition;
+namespace RectorPrefix20211221\Symfony\Component\Config\Definition;
 
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\DuplicateKeyException;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\Exception;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\UnsetKeyException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\DuplicateKeyException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\Exception;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException;
 /**
  * Represents a prototyped Array node in the config tree.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class PrototypedArrayNode extends ArrayNode
+class PrototypedArrayNode extends \RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode
 {
     protected $prototype;
     protected $keyAttribute;
@@ -70,8 +70,10 @@ class PrototypedArrayNode extends ArrayNode
     }
     /**
      * Retrieves the name of the attribute which value should be used as key.
+     *
+     * @return string|null
      */
-    public function getKeyAttribute() : ?string
+    public function getKeyAttribute()
     {
         return $this->keyAttribute;
     }
@@ -82,7 +84,10 @@ class PrototypedArrayNode extends ArrayNode
     {
         $this->defaultValue = $value;
     }
-    public function hasDefaultValue() : bool
+    /**
+     * {@inheritdoc}
+     */
+    public function hasDefaultValue()
     {
         return \true;
     }
@@ -100,9 +105,10 @@ class PrototypedArrayNode extends ArrayNode
         }
     }
     /**
+     * {@inheritdoc}
+     *
      * The default value could be either explicited or derived from the prototype
      * default value.
-     * @return mixed
      */
     public function getDefaultValue()
     {
@@ -119,14 +125,16 @@ class PrototypedArrayNode extends ArrayNode
     /**
      * Sets the node prototype.
      */
-    public function setPrototype(PrototypeNodeInterface $node)
+    public function setPrototype(\RectorPrefix20211221\Symfony\Component\Config\Definition\PrototypeNodeInterface $node)
     {
         $this->prototype = $node;
     }
     /**
      * Retrieves the prototype.
+     *
+     * @return PrototypeNodeInterface
      */
-    public function getPrototype() : PrototypeNodeInterface
+    public function getPrototype()
     {
         return $this->prototype;
     }
@@ -135,38 +143,37 @@ class PrototypedArrayNode extends ArrayNode
      *
      * @throws Exception
      */
-    public function addChild(NodeInterface $node)
+    public function addChild(\RectorPrefix20211221\Symfony\Component\Config\Definition\NodeInterface $node)
     {
-        throw new Exception('A prototyped array node cannot have concrete children.');
+        throw new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\Exception('A prototyped array node cannot have concrete children.');
     }
     /**
-     * @param mixed $value
-     * @return mixed
+     * {@inheritdoc}
      */
     protected function finalizeValue($value)
     {
         if (\false === $value) {
-            throw new UnsetKeyException(\sprintf('Unsetting key for path "%s", value: %s.', $this->getPath(), \json_encode($value)));
+            throw new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException(\sprintf('Unsetting key for path "%s", value: %s.', $this->getPath(), \json_encode($value)));
         }
         foreach ($value as $k => $v) {
             $prototype = $this->getPrototypeForChild($k);
             try {
                 $value[$k] = $prototype->finalize($v);
-            } catch (UnsetKeyException $exception) {
+            } catch (\RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\UnsetKeyException $e) {
                 unset($value[$k]);
             }
         }
         if (\count($value) < $this->minNumberOfElements) {
-            $ex = new InvalidConfigurationException(\sprintf('The path "%s" should have at least %d element(s) defined.', $this->getPath(), $this->minNumberOfElements));
+            $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException(\sprintf('The path "%s" should have at least %d element(s) defined.', $this->getPath(), $this->minNumberOfElements));
             $ex->setPath($this->getPath());
             throw $ex;
         }
         return $value;
     }
     /**
+     * {@inheritdoc}
+     *
      * @throws DuplicateKeyException
-     * @param mixed $value
-     * @return mixed
      */
     protected function normalizeValue($value)
     {
@@ -174,28 +181,12 @@ class PrototypedArrayNode extends ArrayNode
             return $value;
         }
         $value = $this->remapXml($value);
-        $arrayIsList = function (array $array) : bool {
-            if (\function_exists('array_is_list')) {
-                return \array_is_list($array);
-            }
-            if ($array === []) {
-                return \true;
-            }
-            $current_key = 0;
-            foreach ($array as $key => $noop) {
-                if ($key !== $current_key) {
-                    return \false;
-                }
-                ++$current_key;
-            }
-            return \true;
-        };
-        $isList = $arrayIsList($value);
+        $isList = array_is_list($value);
         $normalized = [];
         foreach ($value as $k => $v) {
             if (null !== $this->keyAttribute && \is_array($v)) {
                 if (!isset($v[$this->keyAttribute]) && \is_int($k) && $isList) {
-                    $ex = new InvalidConfigurationException(\sprintf('The attribute "%s" must be set for path "%s".', $this->keyAttribute, $this->getPath()));
+                    $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException(\sprintf('The attribute "%s" must be set for path "%s".', $this->keyAttribute, $this->getPath()));
                     $ex->setPath($this->getPath());
                     throw $ex;
                 } elseif (isset($v[$this->keyAttribute])) {
@@ -210,7 +201,7 @@ class PrototypedArrayNode extends ArrayNode
                     // if only "value" is left
                     if (\array_keys($v) === ['value']) {
                         $v = $v['value'];
-                        if ($this->prototype instanceof ArrayNode && ($children = $this->prototype->getChildren()) && \array_key_exists('value', $children)) {
+                        if ($this->prototype instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\ArrayNode && ($children = $this->prototype->getChildren()) && \array_key_exists('value', $children)) {
                             $valuePrototype = \current($this->valuePrototypes) ?: clone $children['value'];
                             $valuePrototype->parent = $this;
                             $originalClosures = $this->prototype->normalizationClosures;
@@ -223,7 +214,7 @@ class PrototypedArrayNode extends ArrayNode
                     }
                 }
                 if (\array_key_exists($k, $normalized)) {
-                    $ex = new DuplicateKeyException(\sprintf('Duplicate key "%s" for path "%s".', $k, $this->getPath()));
+                    $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\DuplicateKeyException(\sprintf('Duplicate key "%s" for path "%s".', $k, $this->getPath()));
                     $ex->setPath($this->getPath());
                     throw $ex;
                 }
@@ -238,9 +229,7 @@ class PrototypedArrayNode extends ArrayNode
         return $normalized;
     }
     /**
-     * @param mixed $leftSide
-     * @param mixed $rightSide
-     * @return mixed
+     * {@inheritdoc}
      */
     protected function mergeValues($leftSide, $rightSide)
     {
@@ -252,23 +241,7 @@ class PrototypedArrayNode extends ArrayNode
         if (\false === $leftSide || !$this->performDeepMerging) {
             return $rightSide;
         }
-        $arrayIsList = function (array $array) : bool {
-            if (\function_exists('array_is_list')) {
-                return \array_is_list($array);
-            }
-            if ($array === []) {
-                return \true;
-            }
-            $current_key = 0;
-            foreach ($array as $key => $noop) {
-                if ($key !== $current_key) {
-                    return \false;
-                }
-                ++$current_key;
-            }
-            return \true;
-        };
-        $isList = $arrayIsList($rightSide);
+        $isList = array_is_list($rightSide);
         foreach ($rightSide as $k => $v) {
             // prototype, and key is irrelevant there are no named keys, append the element
             if (null === $this->keyAttribute && $isList) {
@@ -278,7 +251,7 @@ class PrototypedArrayNode extends ArrayNode
             // no conflict
             if (!\array_key_exists($k, $leftSide)) {
                 if (!$this->allowNewKeys) {
-                    $ex = new InvalidConfigurationException(\sprintf('You are not allowed to define new elements for path "%s". Please define all elements for this path in one config file.', $this->getPath()));
+                    $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException(\sprintf('You are not allowed to define new elements for path "%s". Please define all elements for this path in one config file.', $this->getPath()));
                     $ex->setPath($this->getPath());
                     throw $ex;
                 }
@@ -325,6 +298,7 @@ class PrototypedArrayNode extends ArrayNode
      *
      * Now, the key becomes 'name001' and the child node becomes 'value001' and
      * the prototype of child node 'name001' should be a ScalarNode instead of an ArrayNode instance.
+     *
      * @return mixed
      */
     private function getPrototypeForChild(string $key)

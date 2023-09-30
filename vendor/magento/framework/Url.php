@@ -1011,10 +1011,6 @@ class Url extends \Magento\Framework\DataObject implements \Magento\Framework\Ur
      */
     public function escape($value)
     {
-        if ($value === null) {
-            return '';
-        }
-
         $value = str_replace('"', '%22', $value);
         $value = str_replace("'", '%27', $value);
         $value = str_replace('>', '%3E', $value);
@@ -1111,7 +1107,7 @@ class Url extends \Magento\Framework\DataObject implements \Magento\Framework\Ur
         $this->_prepareSessionUrl($url);
         $query = $this->_getQuery(false);
         if ($query) {
-            $url .= (strpos((string)$url, '?') === false ? '?' : '&') . $query;
+            $url .= (strpos($url, '?') === false ? '?' : '&') . $query;
         }
 
         return $url;

@@ -1,33 +1,31 @@
 <?php
-
-declare(strict_types=1);
-
 namespace Codeception\Test\Feature;
 
-use Codeception\Coverage\PhpCodeCoverageFactory;
-use Codeception\Event\FailEvent;
-use Codeception\ResultAggregator;
 use Codeception\Test\Descriptor;
 use Codeception\Test\Interfaces\StrictCoverage;
-use Codeception\Test\Test;
-use Codeception\Test\Test as CodeceptTest;
-use PHPUnit\Runner\Version as PHPUnitVersion;
-use SebastianBergmann\CodeCoverage\Exception as CodeCoverageException;
-use SebastianBergmann\CodeCoverage\Test\TestStatus\TestStatus;
 
 trait CodeCoverage
 {
-    abstract public function getResultAggregator(): ResultAggregator;
+    /**
+     * @return \PHPUnit\Framework\TestResult
+     */
+    abstract public function getTestResultObject();
 
-    public function codeCoverageStart(): void
+    public function codeCoverageStart()
     {
-        $codeCoverage = PhpCodeCoverageFactory::build();
+        $codeCoverage = $this->getTestResultObject()->getCodeCoverage();
+        if (!$codeCoverage) {
+            return;
+        }
         $codeCoverage->start(Descriptor::getTestSignature($this));
     }
 
-    public function codeCoverageEnd(string $status, float $time): void
+    public function codeCoverageEnd($status, $time)
     {
-        $codeCoverage = PhpCodeCoverageFactory::build();
+        $codeCoverage = $this->getTestResultObject()->getCodeCoverage();
+        if (!$codeCoverage) {
+            return;
+        }
 
         if ($this instanceof StrictCoverage) {
             $linesToBeCovered = $this->getLinesToBeCovered();
@@ -38,19 +36,10 @@ trait CodeCoverage
         }
 
         try {
-            if (PHPUnitVersion::series() < 10) {
-                $codeCoverage->stop(true, $linesToBeCovered, $linesToBeUsed);
-            } else {
-                $status = match ($status) {
-                    Test::STATUS_OK => TestStatus::success(),
-                    Test::STATUS_FAIL, Test::STATUS_ERROR => TestStatus::failure(),
-                    default => TestStatus::unknown(),
-                };
-                $codeCoverage->stop(true, $status, $linesToBeCovered, $linesToBeUsed);
-            }
-        } catch (CodeCoverageException $exception) {
-            if ($status === CodeceptTest::STATUS_OK) {
-                $this->getResultAggregator()->addError(new FailEvent($this, $exception, $time));
+            $codeCoverage->stop(true, $linesToBeCovered, $linesToBeUsed);
+        } catch (\PHP_CodeCoverage_Exception $cce) {
+            if ($status === \Codeception\Test\Test::STATUS_OK) {
+                $this->getTestResultObject()->addError($this, $cce, $time);
             }
         }
     }

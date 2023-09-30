@@ -16,16 +16,15 @@ use Magento\TestFramework\Helper\Bootstrap;
 class TaxCalculationTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var float
-     */
-    private const EPSILON = 0.0000000001;
-
-    /**
+     * Object Manager
+     *
      * @var \Magento\Framework\ObjectManagerInterface
      */
     private $objectManager;
 
     /**
+     * Tax calculation service
+     *
      * @var \Magento\Tax\Api\TaxCalculationInterface
      */
     private $taxCalculationService;
@@ -109,7 +108,7 @@ class TaxCalculationTest extends \PHPUnit\Framework\TestCase
         );
 
         $taxDetails = $this->taxCalculationService->calculateTax($quoteDetails, 1);
-        $this->assertEqualsWithDelta($expected, $this->convertObjectToArray($taxDetails), self::EPSILON);
+        $this->assertEquals($expected, $this->convertObjectToArray($taxDetails));
     }
 
     /**
@@ -1287,7 +1286,7 @@ class TaxCalculationTest extends \PHPUnit\Framework\TestCase
 
         $taxDetails = $this->taxCalculationService->calculateTax($quoteDetails);
 
-        $this->assertEqualsWithDelta($expectedTaxDetails, $this->convertObjectToArray($taxDetails), self::EPSILON);
+        $this->assertEquals($expectedTaxDetails, $this->convertObjectToArray($taxDetails));
     }
 
     /**
@@ -2388,7 +2387,7 @@ class TaxCalculationTest extends \PHPUnit\Framework\TestCase
 
         $taxDetails = $this->taxCalculationService->calculateTax($quoteDetails);
 
-        $this->assertEqualsWithDelta($expectedTaxDetails, $this->convertObjectToArray($taxDetails), self::EPSILON);
+        $this->assertEquals($expectedTaxDetails, $this->convertObjectToArray($taxDetails));
     }
 
     /**
@@ -2425,7 +2424,7 @@ class TaxCalculationTest extends \PHPUnit\Framework\TestCase
 
         $taxDetails = $this->taxCalculationService->calculateTax($quoteDetails);
 
-        $this->assertEqualsWithDelta($expectedTaxDetails, $this->convertObjectToArray($taxDetails), self::EPSILON);
+        $this->assertEquals($expectedTaxDetails, $this->convertObjectToArray($taxDetails));
     }
 
     /**
@@ -2472,7 +2471,7 @@ class TaxCalculationTest extends \PHPUnit\Framework\TestCase
 
         $taxDetails = $this->taxCalculationService->calculateTax($quoteDetails);
 
-        $this->assertEqualsWithDelta($expectedTaxDetails, $this->convertObjectToArray($taxDetails), self::EPSILON);
+        $this->assertEquals($expectedTaxDetails, $this->convertObjectToArray($taxDetails));
     }
 
     /**

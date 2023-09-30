@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Config\Element\Field;
 
 /**
  * Resolve multiple requests of the same field gathered by GraphQL.
- *
- * @api
  */
 interface BatchResolverInterface
 {

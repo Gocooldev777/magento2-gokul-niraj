@@ -1,39 +1,19 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Renderer;
 
 use ArrayAccess;
 use Laminas\Filter\FilterChain;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\View\Exception;
-use Laminas\View\Helper\HelperInterface;
-use Laminas\View\Helper\ViewModel;
+use Laminas\View\Helper\AbstractHelper;
 use Laminas\View\HelperPluginManager;
 use Laminas\View\Model\ModelInterface as Model;
 use Laminas\View\Renderer\RendererInterface as Renderer;
 use Laminas\View\Resolver\ResolverInterface as Resolver;
 use Laminas\View\Resolver\TemplatePathStack;
 use Laminas\View\Variables;
-use Throwable;
 use Traversable;
-
-use function array_key_exists;
-use function array_pop;
-use function call_user_func_array;
-use function class_exists;
-use function extract;
-use function gettype;
-use function is_array;
-use function is_callable;
-use function is_object;
-use function is_string;
-use function method_exists;
-use function ob_end_clean;
-use function ob_get_clean;
-use function ob_start;
-use function sprintf;
 
 // @codingStandardsIgnoreStart
 /**
@@ -86,7 +66,6 @@ use function sprintf;
  * @method \Laminas\View\Helper\Navigation\Links links($container = null)
  * @method \Laminas\View\Helper\Navigation\Menu menu($container = null)
  * @method \Laminas\View\Helper\Navigation\Sitemap sitemap($container = null)
- * @method string gravatarImage(string $emailAddress, int $imageSize = 80, array $imageAttributes = [], string $defaultImage = 'mm', string $rating = 'g')
  */
 class PhpRenderer implements Renderer, TreeRendererInterface
 {
@@ -96,7 +75,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
     private $__content = '';
 
     /**
-     * @var bool Whether to render trees of view models
+     * @var bool Whether or not to render trees of view models
      */
     private $__renderTrees = false;
 
@@ -105,7 +84,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
      *
      * @var null|string
      */
-    private $__template;
+    private $__template = null;
 
     /**
      * Queue of templates to render
@@ -116,31 +95,31 @@ class PhpRenderer implements Renderer, TreeRendererInterface
     /**
      * Template resolver
      *
-     * @var Resolver|null
+     * @var Resolver
      */
     private $__templateResolver;
 
     /**
      * Script file name to execute
      *
-     * @var string|null
+     * @var string
      */
-    private $__file;
+    private $__file = null;
 
     /**
      * Helper plugin manager
      *
-     * @var HelperPluginManager|null
+     * @var HelperPluginManager
      */
     private $__helpers;
 
     /**
-     * @var FilterChain|null
+     * @var FilterChain
      */
     private $__filterChain;
 
     /**
-     * @var ArrayAccess|array|null ArrayAccess or associative array representing available variables
+     * @var ArrayAccess|array ArrayAccess or associative array representing available variables
      */
     private $__vars;
 
@@ -151,6 +130,9 @@ class PhpRenderer implements Renderer, TreeRendererInterface
     // @codingStandardsIgnoreEnd
 
     /**
+     * Constructor.
+     *
+     *
      * @todo handle passing helper plugin manager, options
      * @todo handle passing filter chain, options
      * @todo handle passing variables object, options
@@ -188,6 +170,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
     /**
      * Set script resolver
      *
+     * @param  Resolver $resolver
      * @return PhpRenderer
      * @throws Exception\InvalidArgumentException
      */
@@ -230,7 +213,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
         if (! is_array($variables) && ! $variables instanceof ArrayAccess) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Expected array or ArrayAccess object; received "%s"',
-                is_object($variables) ? $variables::class : gettype($variables)
+                (is_object($variables) ? get_class($variables) : gettype($variables))
             ));
         }
 
@@ -301,7 +284,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
      */
     public function __set($name, $value)
     {
-        $vars        = $this->vars();
+        $vars = $this->vars();
         $vars[$name] = $value;
     }
 
@@ -353,7 +336,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
         if (! $helpers instanceof HelperPluginManager) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Helper helpers must extend Laminas\View\HelperPluginManager; got type "%s" instead',
-                is_object($helpers) ? $helpers::class : gettype($helpers)
+                (is_object($helpers) ? get_class($helpers) : gettype($helpers))
             ));
         }
         $helpers->setRenderer($this);
@@ -369,25 +352,20 @@ class PhpRenderer implements Renderer, TreeRendererInterface
      */
     public function getHelperPluginManager()
     {
-        $pluginManager = $this->__helpers;
-
-        if (! $pluginManager instanceof HelperPluginManager) {
-            $pluginManager = new HelperPluginManager(new ServiceManager());
-            $this->setHelperPluginManager($pluginManager);
+        if (null === $this->__helpers) {
+            $this->setHelperPluginManager(new HelperPluginManager(new ServiceManager()));
         }
-
-        return $pluginManager;
+        return $this->__helpers;
     }
 
     /**
      * Get plugin instance
      *
-     * @template T
-     * @param  string|class-string<T> $name Name of plugin to return
+     * @param  string     $name Name of plugin to return
      * @param  null|array $options Options to pass to plugin constructor (if not already instantiated)
-     * @return ($name is class-string ? T : HelperInterface|callable)
+     * @return AbstractHelper
      */
-    public function plugin($name, ?array $options = null)
+    public function plugin($name, array $options = null)
     {
         return $this->getHelperPluginManager()->get($name, $options);
     }
@@ -403,11 +381,10 @@ class PhpRenderer implements Renderer, TreeRendererInterface
      *
      * @param  string $method
      * @param  array $argv
-     * @return HelperInterface|callable|mixed
+     * @return mixed
      */
     public function __call($method, $argv)
     {
-        /** @psalm-suppress MixedAssignment $plugin */
         $plugin = $this->plugin($method);
 
         if (is_callable($plugin)) {
@@ -420,6 +397,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
     /**
      * Set filter chain
      *
+     * @param  FilterChain $filters
      * @return PhpRenderer
      */
     public function setFilterChain(FilterChain $filters)
@@ -436,7 +414,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
     public function getFilterChain()
     {
         if (null === $this->__filterChain) {
-            $this->__filterChain = new FilterChain();
+            $this->setFilterChain(new FilterChain());
         }
         return $this->__filterChain;
     }
@@ -452,11 +430,11 @@ class PhpRenderer implements Renderer, TreeRendererInterface
      *                                provided, uses those in the composed
      *                                variables container.
      * @return string The script output.
-     * @throws Exception\DomainException If a ViewModel is passed, but does not
+     * @throws Exception\DomainException if a ViewModel is passed, but does not
      *                                   contain a template option.
-     * @throws Exception\InvalidArgumentException If the values passed are not
-     *                                            an array or ArrayAccess object.
-     * @throws Exception\RuntimeException If the template cannot be rendered.
+     * @throws Exception\InvalidArgumentException if the values passed are not
+     *                                            an array or ArrayAccess object
+     * @throws Exception\RuntimeException if the template cannot be rendered
      */
     public function render($nameOrModel, $values = null)
     {
@@ -480,7 +458,7 @@ class PhpRenderer implements Renderer, TreeRendererInterface
             unset($options);
 
             // Give view model awareness via ViewModel helper
-            $helper = $this->plugin(ViewModel::class);
+            $helper = $this->plugin('view_model');
             $helper->setCurrent($model);
 
             $values = $model->getVariables();
@@ -498,18 +476,14 @@ class PhpRenderer implements Renderer, TreeRendererInterface
         }
         unset($values);
 
-        // @codingStandardsIgnoreStart
-        /**
-         * extract all assigned vars (pre-escaped), but not 'this'.
-         * assigns to a double-underscored variable, to prevent naming collisions
-         */
+        // extract all assigned vars (pre-escaped), but not 'this'.
+        // assigns to a double-underscored variable, to prevent naming collisions
         $__vars = $this->vars()->getArrayCopy();
         if (array_key_exists('this', $__vars)) {
             unset($__vars['this']);
         }
         extract($__vars);
         unset($__vars); // remove $__vars from local scope
-        // @codingStandardsIgnoreEnd
 
         $this->__content = '';
         while ($this->__template = array_pop($this->__templates)) {
@@ -523,13 +497,15 @@ class PhpRenderer implements Renderer, TreeRendererInterface
             }
             try {
                 ob_start();
-                $includeReturn   = include $this->__file;
+                $includeReturn = include $this->__file;
                 $this->__content = ob_get_clean();
-            } catch (Throwable $ex) {
+            } catch (\Throwable $ex) {
+                ob_end_clean();
+                throw $ex;
+            } catch (\Exception $ex) { // @TODO clean up once PHP 7 requirement is enforced
                 ob_end_clean();
                 throw $ex;
             }
-
             if ($includeReturn === false && empty($this->__content)) {
                 throw new Exception\UnexpectedValueException(sprintf(
                     '%s: Unable to render template "%s"; file include failed',

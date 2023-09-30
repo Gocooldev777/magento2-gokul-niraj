@@ -17,7 +17,6 @@ namespace PhpCsFixer\DocBlock;
 use PhpCsFixer\Preg;
 use PhpCsFixer\Tokenizer\Analyzer\Analysis\NamespaceAnalysis;
 use PhpCsFixer\Tokenizer\Analyzer\Analysis\NamespaceUseAnalysis;
-use PhpCsFixer\Utils;
 
 /**
  * @internal
@@ -30,49 +29,41 @@ final class TypeExpression
      * @internal
      */
     public const REGEX_TYPES = '
-    (?<types> # several types separated by `|` or `&`
+    (?<types> # alternation of several types separated by `|`
         (?<type> # single type
-            (?<nullable>\??)
+            \?? # optionally nullable
             (?:
                 (?<object_like_array>
-                    (?<object_like_array_start>array\h*\{)
-                        (?<object_like_array_keys>
-                            (?<object_like_array_key>
-                                \h*[^?:\h]+\h*\??\h*:\h*(?&types)
-                            )
-                            (?:\h*,(?&object_like_array_key))*
+                    array\h*\{
+                        (?<object_like_array_key>
+                            \h*[^?:\h]+\h*\??\h*:\h*(?&types)
                         )
+                        (?:\h*,(?&object_like_array_key))*
                     \h*\}
                 )
                 |
                 (?<callable> # callable syntax, e.g. `callable(string): bool`
-                    (?<callable_start>(?:callable|\\\\?Closure)\h*\(\h*)
-                        (?<callable_arguments>
+                    (?:callable|Closure)\h*\(\h*
+                        (?&types)
+                        (?:
+                            \h*,\h*
                             (?&types)
-                            (?:
-                                \h*,\h*
-                                (?&types)
-                            )*
-                        )?
+                        )*
                     \h*\)
                     (?:
                         \h*\:\h*
-                        (?<callable_return>(?&types))
+                        (?&types)
                     )?
                 )
                 |
                 (?<generic> # generic syntax, e.g.: `array<int, \Foo\Bar>`
-                    (?<generic_start>
-                        (?&name)+
-                        \h*<\h*
-                    )
-                        (?<generic_types>
+                    (?&name)+
+                    \h*<\h*
+                        (?&types)
+                        (?:
+                            \h*,\h*
                             (?&types)
-                            (?:
-                                \h*,\h*
-                                (?&types)
-                            )*
-                        )
+                        )*
                     \h*>
                 )
                 |
@@ -87,7 +78,7 @@ final class TypeExpression
                 (?<constant> # single constant value (case insensitive), e.g.: 1, `\'a\'`
                     (?i)
                     null | true | false
-                    | -?(?:\d+(?:\.\d*)?|\.\d+) # all sorts of numbers with or without minus, e.g.: 1, 1.1, 1., .1, -1
+                    | [\d.]+
                     | \'[^\']+?\' | "[^"]+?"
                     | [@$]?(?:this | self | static)
                     (?-i)
@@ -97,47 +88,55 @@ final class TypeExpression
                     [\\\\\w-]++
                 )
             )
+            (?: # intersection
+                \h*&\h*
+                (?&type)
+            )*
         )
         (?:
-            \h*(?<glue>[|&])\h*
+            \h*\|\h*
             (?&type)
         )*
     )
     ';
 
-    private string $value;
-
-    private bool $isUnionType = false;
+    /**
+     * @var string[]
+     */
+    private $types = [];
 
     /**
-     * @var list<array{start_index: int, expression: self}>
+     * @var null|NamespaceAnalysis
      */
-    private array $innerTypeExpressions = [];
-
-    private string $typesGlue = '|';
-
-    private ?NamespaceAnalysis $namespace;
+    private $namespace;
 
     /**
      * @var NamespaceUseAnalysis[]
      */
-    private array $namespaceUses;
+    private $namespaceUses;
 
     /**
      * @param NamespaceUseAnalysis[] $namespaceUses
      */
     public function __construct(string $value, ?NamespaceAnalysis $namespace, array $namespaceUses)
     {
-        $this->value = $value;
+        while ('' !== $value) {
+            Preg::match(
+                '{^'.self::REGEX_TYPES.'$}x',
+                $value,
+                $matches
+            );
+
+            $this->types[] = $matches['type'];
+            $value = Preg::replace(
+                '/^'.preg_quote($matches['type'], '/').'(\h*\|\h*)?/',
+                '',
+                $value
+            );
+        }
+
         $this->namespace = $namespace;
         $this->namespaceUses = $namespaceUses;
-
-        $this->parse();
-    }
-
-    public function toString(): string
-    {
-        return $this->value;
     }
 
     /**
@@ -145,51 +144,7 @@ final class TypeExpression
      */
     public function getTypes(): array
     {
-        if ($this->isUnionType) {
-            return array_map(
-                static fn (array $type) => $type['expression']->toString(),
-                $this->innerTypeExpressions,
-            );
-        }
-
-        return [$this->value];
-    }
-
-    /**
-     * @param callable(self $a, self $b): int $compareCallback
-     */
-    public function sortTypes(callable $compareCallback): void
-    {
-        foreach (array_reverse($this->innerTypeExpressions) as [
-            'start_index' => $startIndex,
-            'expression' => $inner,
-        ]) {
-            $initialValueLength = \strlen($inner->toString());
-
-            $inner->sortTypes($compareCallback);
-
-            $this->value = substr_replace(
-                $this->value,
-                $inner->toString(),
-                $startIndex,
-                $initialValueLength
-            );
-        }
-
-        if ($this->isUnionType) {
-            $this->innerTypeExpressions = Utils::stableSort(
-                $this->innerTypeExpressions,
-                static fn (array $type): self => $type['expression'],
-                $compareCallback,
-            );
-
-            $this->value = implode($this->getTypesGlue(), $this->getTypes());
-        }
-    }
-
-    public function getTypesGlue(): string
-    {
-        return $this->typesGlue;
+        return $this->types;
     }
 
     public function getCommonType(): ?string
@@ -198,7 +153,7 @@ final class TypeExpression
 
         $mainType = null;
 
-        foreach ($this->getTypes() as $type) {
+        foreach ($this->types as $type) {
             if ('null' === $type) {
                 continue;
             }
@@ -229,152 +184,13 @@ final class TypeExpression
 
     public function allowsNull(): bool
     {
-        foreach ($this->getTypes() as $type) {
+        foreach ($this->types as $type) {
             if (\in_array($type, ['null', 'mixed'], true)) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private function parse(): void
-    {
-        $value = $this->value;
-
-        Preg::match(
-            '{^'.self::REGEX_TYPES.'$}x',
-            $value,
-            $matches
-        );
-
-        if ([] === $matches) {
-            return;
-        }
-
-        $this->typesGlue = $matches['glue'] ?? $this->typesGlue;
-
-        $index = '' !== $matches['nullable'] ? 1 : 0;
-
-        if ($matches['type'] !== $matches['types']) {
-            $this->isUnionType = true;
-
-            while (true) {
-                $innerType = $matches['type'];
-
-                $newValue = Preg::replace(
-                    '/^'.preg_quote($innerType, '/').'(\h*[|&]\h*)?/',
-                    '',
-                    $value
-                );
-
-                $this->innerTypeExpressions[] = [
-                    'start_index' => $index,
-                    'expression' => $this->inner($innerType),
-                ];
-
-                if ('' === $newValue) {
-                    return;
-                }
-
-                $index += \strlen($value) - \strlen($newValue);
-                $value = $newValue;
-
-                Preg::match(
-                    '{^'.self::REGEX_TYPES.'$}x',
-                    $value,
-                    $matches
-                );
-            }
-        }
-
-        if ('' !== ($matches['generic'] ?? '')) {
-            $this->parseCommaSeparatedInnerTypes(
-                $index + \strlen($matches['generic_start']),
-                $matches['generic_types']
-            );
-
-            return;
-        }
-
-        if ('' !== ($matches['callable'] ?? '')) {
-            $this->parseCommaSeparatedInnerTypes(
-                $index + \strlen($matches['callable_start']),
-                $matches['callable_arguments'] ?? ''
-            );
-
-            $return = $matches['callable_return'] ?? null;
-            if (null !== $return) {
-                $this->innerTypeExpressions[] = [
-                    'start_index' => \strlen($this->value) - \strlen($matches['callable_return']),
-                    'expression' => $this->inner($matches['callable_return']),
-                ];
-            }
-
-            return;
-        }
-
-        if ('' !== ($matches['object_like_array'] ?? '')) {
-            $this->parseObjectLikeArrayKeys(
-                $index + \strlen($matches['object_like_array_start']),
-                $matches['object_like_array_keys']
-            );
-        }
-    }
-
-    private function parseCommaSeparatedInnerTypes(int $startIndex, string $value): void
-    {
-        while ('' !== $value) {
-            Preg::match(
-                '{^'.self::REGEX_TYPES.'\h*(?:,|$)}x',
-                $value,
-                $matches
-            );
-
-            $this->innerTypeExpressions[] = [
-                'start_index' => $startIndex,
-                'expression' => $this->inner($matches['types']),
-            ];
-
-            $newValue = Preg::replace(
-                '/^'.preg_quote($matches['types'], '/').'(\h*\,\h*)?/',
-                '',
-                $value
-            );
-
-            $startIndex += \strlen($value) - \strlen($newValue);
-            $value = $newValue;
-        }
-    }
-
-    private function parseObjectLikeArrayKeys(int $startIndex, string $value): void
-    {
-        while ('' !== $value) {
-            Preg::match(
-                '{(?<_start>^.+?:\h*)'.self::REGEX_TYPES.'\h*(?:,|$)}x',
-                $value,
-                $matches
-            );
-
-            $this->innerTypeExpressions[] = [
-                'start_index' => $startIndex + \strlen($matches['_start']),
-                'expression' => $this->inner($matches['types']),
-            ];
-
-            $newValue = Preg::replace(
-                '/^.+?:\h*'.preg_quote($matches['types'], '/').'(\h*\,\h*)?/',
-                '',
-                $value
-            );
-
-            $startIndex += \strlen($value) - \strlen($newValue);
-            $value = $newValue;
-        }
-    }
-
-    private function inner(string $value): self
-    {
-        return new self($value, $this->namespace, $this->namespaceUses);
     }
 
     private function getParentType(string $type1, string $type2): ?string
@@ -440,7 +256,7 @@ final class TypeExpression
             }
         }
 
-        if (null === $this->namespace || $this->namespace->isGlobalNamespace()) {
+        if (null === $this->namespace || '' === $this->namespace->getShortName()) {
             return $type;
         }
 

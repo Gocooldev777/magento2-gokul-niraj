@@ -29,9 +29,15 @@ use Symfony\Component\Process\Process;
  */
 final class ProcessLinter implements LinterInterface
 {
-    private FileRemoval $fileRemoval;
+    /**
+     * @var FileRemoval
+     */
+    private $fileRemoval;
 
-    private ProcessLinterProcessBuilder $processBuilder;
+    /**
+     * @var ProcessLinterProcessBuilder
+     */
+    private $processBuilder;
 
     /**
      * Temporary file for code linting.
@@ -68,6 +74,7 @@ final class ProcessLinter implements LinterInterface
         }
 
         $this->processBuilder = new ProcessLinterProcessBuilder($executable);
+
         $this->fileRemoval = new FileRemoval();
     }
 

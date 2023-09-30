@@ -3,22 +3,29 @@
 declare (strict_types=1);
 namespace Rector\Php80\Enum;
 
-final class MatchKind
+use RectorPrefix20211221\MyCLabs\Enum\Enum;
+/**
+ * @method static MatchKind NORMAL()
+ * @method static MatchKind ASSIGN()
+ * @method static MatchKind RETURN()
+ * @method static MatchKind THROW()
+ */
+final class MatchKind extends \RectorPrefix20211221\MyCLabs\Enum\Enum
 {
     /**
      * @var string
      */
-    public const NORMAL = 'normal';
+    private const NORMAL = 'normal';
     /**
      * @var string
      */
-    public const ASSIGN = 'assign';
+    private const ASSIGN = 'assign';
     /**
      * @var string
      */
-    public const RETURN = 'return';
+    private const RETURN = 'return';
     /**
      * @var string
      */
-    public const THROW = 'throw';
+    private const THROW = 'throw';
 }

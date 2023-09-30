@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/MyIntervals/emogrifier/workflows/CI/badge.svg?branch=main)](https://github.com/MyIntervals/emogrifier/actions/)
 [![Latest Stable Version](https://poser.pugx.org/pelago/emogrifier/v/stable.svg)](https://packagist.org/packages/pelago/emogrifier)
 [![Total Downloads](https://poser.pugx.org/pelago/emogrifier/downloads.svg)](https://packagist.org/packages/pelago/emogrifier)
+[![Latest Unstable Version](https://poser.pugx.org/pelago/emogrifier/v/unstable.svg)](https://packagist.org/packages/pelago/emogrifier)
 [![License](https://poser.pugx.org/pelago/emogrifier/license.svg)](https://packagist.org/packages/pelago/emogrifier)
 
 _n. e•mog•ri•fi•er [\ē-'mä-grƏ-,fī-Ər\] - a utility for changing completely the
@@ -407,16 +408,16 @@ They will, however, be preserved and copied to a `<style>` element in the HTML:
 
 1. In the [composer.json](composer.json), update the `branch-alias` entry to
    point to the release _after_ the upcoming release.
-2. In the [CHANGELOG.md](CHANGELOG.md), create a new section with subheadings
+1. In the [CHANGELOG.md](CHANGELOG.md), create a new section with subheadings
    for changes _after_ the upcoming release, set the version number for the
    upcoming release, and remove any empty sections.
-3. Create a pull request "Prepare release of version x.y.z" with those
+1. Create a pull request "Prepare release of version x.y.z" with those
    changes.
-4. Have the pull request reviewed and merged.
-5. Tag the new release.
-6. In the [Releases tab](https://github.com/MyIntervals/emogrifier/releases),
+1. Have the pull request reviewed and merged.
+1. Tag the new release.
+1. In the [Releases tab](https://github.com/MyIntervals/emogrifier/releases),
    create a new release and copy the change log entries to the new release.
-7. Post about the new release on social media.
+1. Post about the new release on social media.
 
 ## Maintainers
 

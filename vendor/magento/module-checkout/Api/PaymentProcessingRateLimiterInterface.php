@@ -12,8 +12,6 @@ use Magento\Checkout\Api\Exception\PaymentProcessingRateLimitExceededException;
 
 /**
  * Limits number of times a user can initiate payment processing.
- *
- * @api
  */
 interface PaymentProcessingRateLimiterInterface
 {

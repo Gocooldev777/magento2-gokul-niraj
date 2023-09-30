@@ -42,18 +42,16 @@ final class NativeFunctionTypeDeclarationCasingFixer extends AbstractFixer
      * object   PHP 7.2
      * static   PHP 8.0 (return type only)
      * mixed    PHP 8.0
-     * false    PHP 8.0 (union return type only)
-     * null     PHP 8.0 (union return type only)
-     * never    PHP 8.1 (return type only)
-     * true     PHP 8.2 (standalone type: https://wiki.php.net/rfc/true-type)
-     * false    PHP 8.2 (standalone type: https://wiki.php.net/rfc/null-false-standalone-types)
-     * null     PHP 8.2 (standalone type: https://wiki.php.net/rfc/null-false-standalone-types)
+     * never    PHP 8.1
      *
      * @var array<string, true>
      */
-    private array $hints;
+    private $hints;
 
-    private FunctionsAnalyzer $functionsAnalyzer;
+    /**
+     * @var FunctionsAnalyzer
+     */
+    private $functionsAnalyzer;
 
     public function __construct()
     {
@@ -61,30 +59,39 @@ final class NativeFunctionTypeDeclarationCasingFixer extends AbstractFixer
 
         $this->hints = [
             'array' => true,
-            'bool' => true,
             'callable' => true,
-            'float' => true,
-            'int' => true,
-            'iterable' => true,
-            'object' => true,
             'self' => true,
-            'string' => true,
-            'void' => true,
         ];
 
+        $this->hints = array_merge(
+            $this->hints,
+            [
+                'bool' => true,
+                'float' => true,
+                'int' => true,
+                'string' => true,
+            ]
+        );
+
+        $this->hints = array_merge(
+            $this->hints,
+            [
+                'iterable' => true,
+                'void' => true,
+            ]
+        );
+
+        if (\PHP_VERSION_ID >= 70200) {
+            $this->hints = array_merge($this->hints, ['object' => true]);
+        }
+
         if (\PHP_VERSION_ID >= 80000) {
-            $this->hints['false'] = true;
-            $this->hints['mixed'] = true;
-            $this->hints['null'] = true;
-            $this->hints['static'] = true;
+            $this->hints = array_merge($this->hints, ['static' => true]);
+            $this->hints = array_merge($this->hints, ['mixed' => true]);
         }
 
         if (\PHP_VERSION_ID >= 80100) {
-            $this->hints['never'] = true;
-        }
-
-        if (\PHP_VERSION_ID >= 80200) {
-            $this->hints['true'] = true;
+            $this->hints = array_merge($this->hints, ['never' => true]);
         }
 
         $this->functionsAnalyzer = new FunctionsAnalyzer();

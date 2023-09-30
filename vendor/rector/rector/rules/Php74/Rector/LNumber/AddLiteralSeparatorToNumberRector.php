@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Php74\Rector\LNumber;
 
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
@@ -15,7 +15,7 @@ use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @changelog https://wiki.php.net/rfc/numeric_literal_separator
  * @changelog https://github.com/nikic/PHP-Parser/pull/615
@@ -25,7 +25,7 @@ use RectorPrefix202304\Webmozart\Assert\Assert;
  * Taking the most generic use case to the account: https://wiki.php.net/rfc/numeric_literal_separator#should_it_be_the_role_of_an_ide_to_group_digits
  * The final check should be done manually
  */
-final class AddLiteralSeparatorToNumberRector extends AbstractRector implements AllowEmptyConfigurableRectorInterface, MinPhpVersionInterface
+final class AddLiteralSeparatorToNumberRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\AllowEmptyConfigurableRectorInterface, \Rector\VersionBonding\Contract\MinPhpVersionInterface
 {
     /**
      * @api
@@ -50,12 +50,12 @@ final class AddLiteralSeparatorToNumberRector extends AbstractRector implements 
     public function configure(array $configuration) : void
     {
         $limitValue = $configuration[self::LIMIT_VALUE] ?? self::DEFAULT_LIMIT_VALUE;
-        Assert::integer($limitValue);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::integer($limitValue);
         $this->limitValue = $limitValue;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Add "_" as thousands separator in numbers for higher or equals to limitValue config', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Add "_" as thousands separator in numbers for higher or equals to limitValue config', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
     public function run()
@@ -82,66 +82,69 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [LNumber::class, DNumber::class];
+        return [\PhpParser\Node\Scalar\LNumber::class, \PhpParser\Node\Scalar\DNumber::class];
     }
     /**
      * @param LNumber|DNumber $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        $rawValue = $node->getAttribute(AttributeKey::RAW_VALUE);
-        if ($this->shouldSkip($node, $rawValue)) {
+        $numericValueAsString = (string) $node->value;
+        if ($this->shouldSkip($node, $numericValueAsString)) {
             return null;
         }
-        if (\strpos((string) $rawValue, '.') !== \false) {
-            [$mainPart, $decimalPart] = \explode('.', (string) $rawValue);
+        if (\strpos($numericValueAsString, '.') !== \false) {
+            [$mainPart, $decimalPart] = \explode('.', $numericValueAsString);
             $chunks = $this->strSplitNegative($mainPart, self::GROUP_SIZE);
             $literalSeparatedNumber = \implode('_', $chunks) . '.' . $decimalPart;
         } else {
-            $chunks = $this->strSplitNegative($rawValue, self::GROUP_SIZE);
+            $chunks = $this->strSplitNegative($numericValueAsString, self::GROUP_SIZE);
             $literalSeparatedNumber = \implode('_', $chunks);
             // PHP converts: (string) 1000.0 -> "1000"!
             if (\is_float($node->value)) {
                 $literalSeparatedNumber .= '.0';
             }
         }
-        // this cannot be integer directly to $node->value, as PHPStan sees it as error type
-        // @see https://github.com/rectorphp/rector/issues/7454
-        $node->setAttribute(AttributeKey::RAW_VALUE, $literalSeparatedNumber);
-        $node->setAttribute(AttributeKey::REPRINT_RAW_VALUE, \true);
-        $node->setAttribute(AttributeKey::ORIGINAL_NODE, null);
+        $node->value = $literalSeparatedNumber;
         return $node;
     }
     public function provideMinPhpVersion() : int
     {
-        return PhpVersionFeature::LITERAL_SEPARATOR;
+        return \Rector\Core\ValueObject\PhpVersionFeature::LITERAL_SEPARATOR;
     }
     /**
-     * @param \PhpParser\Node\Scalar\LNumber|\PhpParser\Node\Scalar\DNumber $node
-     * @param mixed $rawValue
+     * @param \PhpParser\Node\Scalar\DNumber|\PhpParser\Node\Scalar\LNumber $node
      */
-    private function shouldSkip($node, $rawValue) : bool
+    private function shouldSkip($node, string $numericValueAsString) : bool
     {
-        if (!\is_string($rawValue)) {
+        /** @var int $startToken */
+        $startToken = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::START_TOKEN_POSITION);
+        $oldTokens = $this->file->getOldTokens();
+        $tokenValue = $oldTokens[$startToken][1] ?? null;
+        if (!\is_string($tokenValue)) {
             return \true;
         }
         // already contains separator
-        if (\strpos($rawValue, '_') !== \false) {
+        if (\strpos($tokenValue, '_') !== \false) {
             return \true;
         }
-        if ($node->value < $this->limitValue) {
+        if ($numericValueAsString < $this->limitValue) {
             return \true;
         }
-        $kind = $node->getAttribute(AttributeKey::KIND);
-        if (\in_array($kind, [LNumber::KIND_BIN, LNumber::KIND_OCT, LNumber::KIND_HEX], \true)) {
+        // already separated
+        if (\strpos($numericValueAsString, '_') !== \false) {
+            return \true;
+        }
+        $kind = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND);
+        if (\in_array($kind, [\PhpParser\Node\Scalar\LNumber::KIND_BIN, \PhpParser\Node\Scalar\LNumber::KIND_OCT, \PhpParser\Node\Scalar\LNumber::KIND_HEX], \true)) {
             return \true;
         }
         // e+/e-
-        if (StringUtils::isMatch($rawValue, '#e#i')) {
+        if (\Rector\Core\Util\StringUtils::isMatch($numericValueAsString, '#e#i')) {
             return \true;
         }
         // too short
-        return Strings::length($rawValue) <= self::GROUP_SIZE;
+        return \RectorPrefix20211221\Nette\Utils\Strings::length($numericValueAsString) <= self::GROUP_SIZE;
     }
     /**
      * @return string[]

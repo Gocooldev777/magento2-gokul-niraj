@@ -324,14 +324,12 @@ define([
                     data = {
                         items: ids,
                         totalRecords: 3,
-                        showTotalRecords: true,
                         errorMessage: ''
                     },
                     request = {
                         ids: ids,
                         params: params,
                         totalRecords: 3,
-                        showTotalRecords: true,
                         errorMessage: ''
                     };
 
@@ -353,27 +351,23 @@ define([
                     firstData = {
                         items: ids,
                         totalRecords: 3,
-                        showTotalRecords: true,
                         errorMessage: ''
                     },
                     secondData = {
                         items: ids,
                         totalRecords: 3,
-                        showTotalRecords: true,
                         errorMessage: 'Error message'
                     },
                     firstRequest = {
                         ids: ids,
                         params: params,
                         totalRecords: 3,
-                        showTotalRecords: true,
                         errorMessage: ''
                     },
                     secondRequest = {
                         ids: ids,
                         params: params,
                         totalRecords: 3,
-                        showTotalRecords: true,
                         errorMessage: 'Error message'
                     };
 

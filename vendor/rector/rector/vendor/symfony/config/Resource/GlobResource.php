@@ -8,10 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Resource;
+namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
 
-use RectorPrefix202304\Symfony\Component\Finder\Finder;
-use RectorPrefix202304\Symfony\Component\Finder\Glob;
+use RectorPrefix20211221\Symfony\Component\Finder\Finder;
+use RectorPrefix20211221\Symfony\Component\Finder\Glob;
 /**
  * GlobResource represents a set of resources stored on the filesystem.
  *
@@ -23,35 +23,14 @@ use RectorPrefix202304\Symfony\Component\Finder\Glob;
  *
  * @implements \IteratorAggregate<string, \SplFileInfo>
  */
-class GlobResource implements \IteratorAggregate, SelfCheckingResourceInterface
+class GlobResource implements \IteratorAggregate, \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceInterface
 {
-    /**
-     * @var string
-     */
     private $prefix;
-    /**
-     * @var string
-     */
     private $pattern;
-    /**
-     * @var bool
-     */
     private $recursive;
-    /**
-     * @var string
-     */
     private $hash;
-    /**
-     * @var bool
-     */
     private $forExclusion;
-    /**
-     * @var mixed[]
-     */
     private $excludedPrefixes;
-    /**
-     * @var int
-     */
     private $globBrace;
     /**
      * @param string $prefix    A directory prefix
@@ -63,16 +42,15 @@ class GlobResource implements \IteratorAggregate, SelfCheckingResourceInterface
     public function __construct(string $prefix, string $pattern, bool $recursive, bool $forExclusion = \false, array $excludedPrefixes = [])
     {
         \ksort($excludedPrefixes);
-        $resolvedPrefix = \realpath($prefix) ?: (\file_exists($prefix) ? $prefix : \false);
+        $this->prefix = \realpath($prefix) ?: (\file_exists($prefix) ? $prefix : \false);
         $this->pattern = $pattern;
         $this->recursive = $recursive;
         $this->forExclusion = $forExclusion;
         $this->excludedPrefixes = $excludedPrefixes;
         $this->globBrace = \defined('GLOB_BRACE') ? \GLOB_BRACE : 0;
-        if (\false === $resolvedPrefix) {
+        if (\false === $this->prefix) {
             throw new \InvalidArgumentException(\sprintf('The path "%s" does not exist.', $prefix));
         }
-        $this->prefix = $resolvedPrefix;
     }
     public function getPrefix() : string
     {
@@ -80,12 +58,17 @@ class GlobResource implements \IteratorAggregate, SelfCheckingResourceInterface
     }
     public function __toString() : string
     {
-        return 'glob.' . $this->prefix . (int) $this->recursive . $this->pattern . (int) $this->forExclusion . \implode("\x00", $this->excludedPrefixes);
+        return 'glob.' . $this->prefix . (int) $this->recursive . $this->pattern . (int) $this->forExclusion . \implode("\0", $this->excludedPrefixes);
     }
+    /**
+     * {@inheritdoc}
+     */
     public function isFresh(int $timestamp) : bool
     {
         $hash = $this->computeHash();
-        $this->hash = $this->hash ?? $hash;
+        if (null === $this->hash) {
+            $this->hash = $hash;
+        }
         return $this->hash === $hash;
     }
     /**
@@ -93,7 +76,9 @@ class GlobResource implements \IteratorAggregate, SelfCheckingResourceInterface
      */
     public function __sleep() : array
     {
-        $this->hash = $this->hash ?? $this->computeHash();
+        if (null === $this->hash) {
+            $this->hash = $this->computeHash();
+        }
         return ['prefix', 'pattern', 'recursive', 'hash', 'forExclusion', 'excludedPrefixes'];
     }
     /**
@@ -110,9 +95,7 @@ class GlobResource implements \IteratorAggregate, SelfCheckingResourceInterface
         }
         $prefix = \str_replace('\\', '/', $this->prefix);
         $paths = null;
-        if ('' === $this->pattern && \is_file($prefix)) {
-            $paths = [$this->prefix];
-        } elseif (\strncmp($this->prefix, 'phar://', \strlen('phar://')) !== 0 && \strpos($this->pattern, '/**/') === \false) {
+        if (\strncmp($this->prefix, 'phar://', \strlen('phar://')) !== 0 && \strpos($this->pattern, '/**/') === \false) {
             if ($this->globBrace || \strpos($this->pattern, '{') === \false) {
                 $paths = \glob($this->prefix . $this->pattern, \GLOB_NOSORT | $this->globBrace);
             } elseif (\strpos($this->pattern, '\\') === \false || !\preg_match('/\\\\[,{}]/', $this->pattern)) {
@@ -158,33 +141,29 @@ class GlobResource implements \IteratorAggregate, SelfCheckingResourceInterface
             }
             return;
         }
-        if (!\class_exists(Finder::class)) {
+        if (!\class_exists(\RectorPrefix20211221\Symfony\Component\Finder\Finder::class)) {
             throw new \LogicException(\sprintf('Extended glob pattern "%s" cannot be used as the Finder component is not installed.', $this->pattern));
         }
-        if (\is_file($prefix = $this->prefix)) {
-            $prefix = \dirname($prefix);
-            $pattern = \basename($prefix) . $this->pattern;
-        } else {
-            $pattern = $this->pattern;
-        }
-        $regex = Glob::toRegex($pattern);
+        $finder = new \RectorPrefix20211221\Symfony\Component\Finder\Finder();
+        $regex = \RectorPrefix20211221\Symfony\Component\Finder\Glob::toRegex($this->pattern);
         if ($this->recursive) {
             $regex = \substr_replace($regex, '(/|$)', -2, 1);
         }
-        $prefixLen = \strlen($prefix);
-        yield from (new Finder())->followLinks()->filter(function (\SplFileInfo $info) use($regex, $prefixLen, $prefix) {
-            $normalizedPath = \str_replace('\\', '/', $info->getPathname());
+        $prefixLen = \strlen($this->prefix);
+        foreach ($finder->followLinks()->sortByName()->in($this->prefix) as $path => $info) {
+            $normalizedPath = \str_replace('\\', '/', $path);
             if (!\preg_match($regex, \substr($normalizedPath, $prefixLen)) || !$info->isFile()) {
-                return \false;
+                continue;
             }
             if ($this->excludedPrefixes) {
                 do {
                     if (isset($this->excludedPrefixes[$dirPath = $normalizedPath])) {
-                        return \false;
+                        continue 2;
                     }
                 } while ($prefix !== $dirPath && $dirPath !== ($normalizedPath = \dirname($dirPath)));
             }
-        })->sortByName()->in($prefix);
+            (yield $path => $info);
+        }
     }
     private function computeHash() : string
     {

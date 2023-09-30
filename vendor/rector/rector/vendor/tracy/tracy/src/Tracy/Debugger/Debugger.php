@@ -5,7 +5,7 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202304\Tracy;
+namespace RectorPrefix20211221\Tracy;
 
 use ErrorException;
 /**
@@ -13,90 +13,65 @@ use ErrorException;
  */
 class Debugger
 {
-    public const VERSION = '2.10.2';
+    public const VERSION = '2.9.0';
     /** server modes for Debugger::enable() */
-    public const Development = \false, Production = \true, Detect = null;
-    public const DEVELOPMENT = self::Development, PRODUCTION = self::Production, DETECT = self::Detect;
-    public const CookieSecret = 'tracy-debug';
-    public const COOKIE_SECRET = self::CookieSecret;
-    /** in production mode is suppressed any debugging output
-     * @var bool|null */
+    public const DEVELOPMENT = \false, PRODUCTION = \true, DETECT = null;
+    public const COOKIE_SECRET = 'tracy-debug';
+    /** @var bool in production mode is suppressed any debugging output */
     public static $productionMode = self::DETECT;
-    /** whether to display debug bar in development mode
-     * @var bool */
+    /** @var bool whether to display debug bar in development mode */
     public static $showBar = \true;
-    /** size of reserved memory
-     * @var int */
+    /** @var bool whether to send data to FireLogger in development mode */
+    public static $showFireLogger = \true;
+    /** @var int size of reserved memory */
     public static $reservedMemorySize = 500000;
-    /**
-     * @var bool
-     */
+    /** @var bool */
     private static $enabled = \false;
-    /** reserved memory; also prevents double rendering
-     * @var string|null */
+    /** @var string|null reserved memory; also prevents double rendering */
     private static $reserved;
-    /** initial output buffer level
-     * @var int */
+    /** @var int initial output buffer level */
     private static $obLevel;
-    /** output buffer status @internal
-     * @var mixed[]|null */
+    /** @var ?array output buffer status @internal */
     public static $obStatus;
     /********************* errors and exceptions reporting ****************d*g**/
-    /** determines whether any error will cause immediate death in development mode; if integer that it's matched against error severity
-     * @var bool|int */
+    /** @var bool|int determines whether any error will cause immediate death in development mode; if integer that it's matched against error severity */
     public static $strictMode = \false;
-    /** disables the @ (shut-up) operator so that notices and warnings are no longer hidden; if integer than it's matched against error severity
-     * @var bool|int */
+    /** @var bool|int disables the @ (shut-up) operator so that notices and warnings are no longer hidden; if integer than it's matched against error severity */
     public static $scream = \false;
     /** @var callable[] functions that are automatically called after fatal error */
     public static $onFatalError = [];
     /********************* Debugger::dump() ****************d*g**/
-    /** how many nested levels of array/object properties display by dump()
-     * @var int */
-    public static $maxDepth = 15;
-    /** how long strings display by dump()
-     * @var int */
+    /** @var int  how many nested levels of array/object properties display by dump() */
+    public static $maxDepth = 7;
+    /** @var int  how long strings display by dump() */
     public static $maxLength = 150;
-    /** how many items in array/object display by dump()
-     * @var int */
-    public static $maxItems = 100;
-    /** display location by dump()?
-     * @var bool|null */
+    /** @var bool display location by dump()? */
     public static $showLocation;
     /** @var string[] sensitive keys not displayed by dump() */
     public static $keysToHide = [];
-    /** theme for dump()
-     * @var string */
+    /** @var string theme for dump() */
     public static $dumpTheme = 'light';
     /** @deprecated */
     public static $maxLen;
     /********************* logging ****************d*g**/
-    /** name of the directory where errors should be logged
-     * @var string|null */
+    /** @var string|null name of the directory where errors should be logged */
     public static $logDirectory;
-    /** log bluescreen in production mode for this error severity
-     * @var int */
+    /** @var int  log bluescreen in production mode for this error severity */
     public static $logSeverity = 0;
-    /** email(s) to which send error notifications
-     * @var string|mixed[]|null */
-    public static $email = null;
-    /** for Debugger::log() */
-    public const DEBUG = ILogger::DEBUG, INFO = ILogger::INFO, WARNING = ILogger::WARNING, ERROR = ILogger::ERROR, EXCEPTION = ILogger::EXCEPTION, CRITICAL = ILogger::CRITICAL;
+    /** @var string|array email(s) to which send error notifications */
+    public static $email;
+    /** for Debugger::log() and Debugger::fireLog() */
+    public const DEBUG = \RectorPrefix20211221\Tracy\ILogger::DEBUG, INFO = \RectorPrefix20211221\Tracy\ILogger::INFO, WARNING = \RectorPrefix20211221\Tracy\ILogger::WARNING, ERROR = \RectorPrefix20211221\Tracy\ILogger::ERROR, EXCEPTION = \RectorPrefix20211221\Tracy\ILogger::EXCEPTION, CRITICAL = \RectorPrefix20211221\Tracy\ILogger::CRITICAL;
     /********************* misc ****************d*g**/
-    /** timestamp with microseconds of the start of the request
-     * @var float */
+    /** @var float timestamp with microseconds of the start of the request */
     public static $time;
-    /** URI pattern mask to open editor
-     * @var string|null */
+    /** @var string URI pattern mask to open editor */
     public static $editor = 'editor://%action/?file=%file&line=%line&search=%search&replace=%replace';
-    /** replacements in path
-     * @var mixed[] */
+    /** @var array replacements in path */
     public static $editorMapping = [];
-    /** command to open browser (use 'start ""' in Windows)
-     * @var string|null */
+    /** @var string command to open browser (use 'start ""' in Windows) */
     public static $browser;
-    /** custom static error template
-     * @var string|null */
+    /** @var string custom static error template */
     public static $errorTemplate;
     /** @var string[] */
     public static $customCssFiles = [];
@@ -104,28 +79,20 @@ class Debugger
     public static $customJsFiles = [];
     /** @var callable[] */
     private static $sourceMappers = [];
-    /**
-     * @var mixed[]|null
-     */
+    /** @var array|null */
     private static $cpuUsage;
     /********************* services ****************d*g**/
-    /**
-     * @var \Tracy\BlueScreen
-     */
+    /** @var BlueScreen */
     private static $blueScreen;
-    /**
-     * @var \Tracy\Bar
-     */
+    /** @var Bar */
     private static $bar;
-    /**
-     * @var \Tracy\ILogger
-     */
+    /** @var ILogger */
     private static $logger;
+    /** @var ILogger */
+    private static $fireLogger;
     /** @var array{DevelopmentStrategy, ProductionStrategy} */
     private static $strategy;
-    /**
-     * @var \Tracy\SessionStorage
-     */
+    /** @var SessionStorage */
     private static $sessionStorage;
     /**
      * Static class - cannot be instantiated.
@@ -136,7 +103,7 @@ class Debugger
     }
     /**
      * Enables displaying or logging errors and exceptions.
-     * @param  bool|string|string[]  $mode  use constant Debugger::Production, Development, Detect (autodetection) or IP address(es) whitelist.
+     * @param  bool|string|string[]  $mode  use constant Debugger::PRODUCTION, DEVELOPMENT, DETECT (autodetection) or IP address(es) whitelist.
      * @param  string  $logDirectory  error log directory
      * @param  string|array  $email  administrator email; enables email sending in production mode
      */
@@ -176,7 +143,6 @@ class Debugger
         \error_reporting(\E_ALL);
         $strategy = self::getStrategy();
         $strategy->initialize();
-        self::dispatch();
         if (self::$enabled) {
             return;
         }
@@ -186,14 +152,15 @@ class Debugger
             exit(255);
         });
         \set_error_handler([self::class, 'errorHandler']);
-        foreach (['Bar/Bar', 'Bar/DefaultBarPanel', 'BlueScreen/BlueScreen', 'Dumper/Describer', 'Dumper/Dumper', 'Dumper/Exposer', 'Dumper/Renderer', 'Dumper/Value', 'Logger/Logger', 'Session/SessionStorage', 'Session/FileSession', 'Session/NativeSession', 'Helpers'] as $path) {
+        foreach (['Bar/Bar', 'Bar/DefaultBarPanel', 'BlueScreen/BlueScreen', 'Dumper/Describer', 'Dumper/Dumper', 'Dumper/Exposer', 'Dumper/Renderer', 'Dumper/Value', 'Logger/FireLogger', 'Logger/Logger', 'Session/SessionStorage', 'Session/FileSession', 'Session/NativeSession', 'Helpers'] as $path) {
             require_once \dirname(__DIR__) . "/{$path}.php";
         }
+        self::dispatch();
         self::$enabled = \true;
     }
     public static function dispatch() : void
     {
-        if (!Helpers::isCli() && self::getStrategy()->sendAssets()) {
+        if (!\RectorPrefix20211221\Tracy\Helpers::isCli() && self::getStrategy()->sendAssets()) {
             self::$showBar = \false;
             exit;
         }
@@ -217,13 +184,13 @@ class Debugger
     {
         $error = \error_get_last();
         if (\in_array($error['type'] ?? null, [\E_ERROR, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_PARSE, \E_RECOVERABLE_ERROR, \E_USER_ERROR], \true)) {
-            self::exceptionHandler(Helpers::fixStack(new ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])));
+            self::exceptionHandler(\RectorPrefix20211221\Tracy\Helpers::fixStack(new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])));
         } elseif (($error['type'] ?? null) === \E_COMPILE_WARNING) {
             \error_clear_last();
             self::errorHandler($error['type'], $error['message'], $error['file'], $error['line']);
         }
         self::$reserved = null;
-        if (self::$showBar && !Helpers::isCli()) {
+        if (self::$showBar && !\RectorPrefix20211221\Tracy\Helpers::isCli()) {
             try {
                 self::getStrategy()->renderBar();
             } catch (\Throwable $e) {
@@ -243,7 +210,7 @@ class Debugger
         if (!\headers_sent()) {
             \http_response_code(isset($_SERVER['HTTP_USER_AGENT']) && \strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE ') !== \false ? 503 : 500);
         }
-        Helpers::improveException($exception);
+        \RectorPrefix20211221\Tracy\Helpers::improveException($exception);
         self::removeOutputBuffers(\true);
         self::getStrategy()->handleException($exception, $firstTime);
         try {
@@ -263,17 +230,31 @@ class Debugger
      * @throws ErrorException
      * @internal
      */
-    public static function errorHandler(int $severity, string $message, string $file, int $line) : bool
+    public static function errorHandler(int $severity, string $message, string $file, int $line, ?array $context = null) : bool
     {
         $error = \error_get_last();
         if (($error['type'] ?? null) === \E_COMPILE_WARNING) {
             \error_clear_last();
             self::errorHandler($error['type'], $error['message'], $error['file'], $error['line']);
         }
+        if ($context) {
+            $context = (array) (object) $context;
+            // workaround for PHP bug #80234
+        }
         if ($severity === \E_RECOVERABLE_ERROR || $severity === \E_USER_ERROR) {
-            throw new ErrorException($message, 0, $severity, $file, $line);
+            if (\RectorPrefix20211221\Tracy\Helpers::findTrace(\debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS), '*::__toString')) {
+                // workaround for PHP < 7.4
+                $previous = isset($context['e']) && $context['e'] instanceof \Throwable ? $context['e'] : null;
+                $e = new \ErrorException($message, 0, $severity, $file, $line, $previous);
+                $e->context = $context;
+                self::exceptionHandler($e);
+                exit(255);
+            }
+            $e = new \ErrorException($message, 0, $severity, $file, $line);
+            $e->context = $context;
+            throw $e;
         } elseif ($severity & \error_reporting() || (\is_int(self::$scream) ? $severity & self::$scream : self::$scream)) {
-            self::getStrategy()->handleError($severity, $message, $file, $line);
+            self::getStrategy()->handleError($severity, $message, $file, $line, $context);
         }
         return \false;
         // calls normal error handler to fill-in error_get_last()
@@ -294,60 +275,66 @@ class Debugger
         }
     }
     /********************* services ****************d*g**/
-    public static function getBlueScreen() : BlueScreen
+    public static function getBlueScreen() : \RectorPrefix20211221\Tracy\BlueScreen
     {
-        if (empty(self::$blueScreen)) {
-            self::$blueScreen = new BlueScreen();
+        if (!self::$blueScreen) {
+            self::$blueScreen = new \RectorPrefix20211221\Tracy\BlueScreen();
             self::$blueScreen->info = ['PHP ' . \PHP_VERSION, $_SERVER['SERVER_SOFTWARE'] ?? null, 'Tracy ' . self::VERSION];
         }
         return self::$blueScreen;
     }
-    public static function getBar() : Bar
+    public static function getBar() : \RectorPrefix20211221\Tracy\Bar
     {
-        if (empty(self::$bar)) {
-            self::$bar = new Bar();
-            self::$bar->addPanel($info = new DefaultBarPanel('info'), 'Tracy:info');
+        if (!self::$bar) {
+            self::$bar = new \RectorPrefix20211221\Tracy\Bar();
+            self::$bar->addPanel($info = new \RectorPrefix20211221\Tracy\DefaultBarPanel('info'), 'Tracy:info');
             $info->cpuUsage = self::$cpuUsage;
-            self::$bar->addPanel(new DefaultBarPanel('errors'), 'Tracy:errors');
+            self::$bar->addPanel(new \RectorPrefix20211221\Tracy\DefaultBarPanel('errors'), 'Tracy:errors');
             // filled by errorHandler()
         }
         return self::$bar;
     }
-    public static function setLogger(ILogger $logger) : void
+    public static function setLogger(\RectorPrefix20211221\Tracy\ILogger $logger) : void
     {
         self::$logger = $logger;
     }
-    public static function getLogger() : ILogger
+    public static function getLogger() : \RectorPrefix20211221\Tracy\ILogger
     {
-        if (empty(self::$logger)) {
-            self::$logger = new Logger(self::$logDirectory, self::$email, self::getBlueScreen());
+        if (!self::$logger) {
+            self::$logger = new \RectorPrefix20211221\Tracy\Logger(self::$logDirectory, self::$email, self::getBlueScreen());
             self::$logger->directory =& self::$logDirectory;
             // back compatiblity
             self::$logger->email =& self::$email;
         }
         return self::$logger;
     }
-    /** @internal
-     * @return \Tracy\ProductionStrategy|\Tracy\DevelopmentStrategy */
+    public static function getFireLogger() : \RectorPrefix20211221\Tracy\ILogger
+    {
+        if (!self::$fireLogger) {
+            self::$fireLogger = new \RectorPrefix20211221\Tracy\FireLogger();
+        }
+        return self::$fireLogger;
+    }
+    /** @return ProductionStrategy|DevelopmentStrategy @internal */
     public static function getStrategy()
     {
         if (empty(self::$strategy[self::$productionMode])) {
-            self::$strategy[self::$productionMode] = self::$productionMode ? new ProductionStrategy() : new DevelopmentStrategy(self::getBar(), self::getBlueScreen(), new DeferredContent(self::getSessionStorage()));
+            self::$strategy[self::$productionMode] = self::$productionMode ? new \RectorPrefix20211221\Tracy\ProductionStrategy() : new \RectorPrefix20211221\Tracy\DevelopmentStrategy(self::getBar(), self::getBlueScreen(), new \RectorPrefix20211221\Tracy\DeferredContent(self::getSessionStorage()));
         }
         return self::$strategy[self::$productionMode];
     }
-    public static function setSessionStorage(SessionStorage $storage) : void
+    public static function setSessionStorage(\RectorPrefix20211221\Tracy\SessionStorage $storage) : void
     {
-        if (isset(self::$sessionStorage)) {
+        if (self::$sessionStorage) {
             throw new \Exception('Storage is already set.');
         }
         self::$sessionStorage = $storage;
     }
     /** @internal */
-    public static function getSessionStorage() : SessionStorage
+    public static function getSessionStorage() : \RectorPrefix20211221\Tracy\SessionStorage
     {
-        if (empty(self::$sessionStorage)) {
-            self::$sessionStorage = @\is_dir($dir = \session_save_path()) || @\is_dir($dir = \ini_get('upload_tmp_dir')) || @\is_dir($dir = \sys_get_temp_dir()) || ($dir = self::$logDirectory) ? new FileSession($dir) : new NativeSession();
+        if (!self::$sessionStorage) {
+            self::$sessionStorage = \is_dir($dir = \session_save_path()) || \is_dir($dir = \ini_get('upload_tmp_dir')) || \is_dir($dir = \sys_get_temp_dir()) || ($dir = self::$logDirectory) ? new \RectorPrefix20211221\Tracy\FileSession($dir) : new \RectorPrefix20211221\Tracy\NativeSession();
         }
         return self::$sessionStorage;
     }
@@ -362,15 +349,12 @@ class Debugger
     public static function dump($var, bool $return = \false)
     {
         if ($return) {
-            $options = [Dumper::DEPTH => self::$maxDepth, Dumper::TRUNCATE => self::$maxLength, Dumper::ITEMS => self::$maxItems];
-            return Helpers::isCli() ? Dumper::toText($var) : Helpers::capture(function () use($var, $options) {
-                return Dumper::dump($var, $options);
+            $options = [\RectorPrefix20211221\Tracy\Dumper::DEPTH => self::$maxDepth, \RectorPrefix20211221\Tracy\Dumper::TRUNCATE => self::$maxLength];
+            return \RectorPrefix20211221\Tracy\Helpers::isCli() ? \RectorPrefix20211221\Tracy\Dumper::toText($var) : \RectorPrefix20211221\Tracy\Helpers::capture(function () use($var, $options) {
+                \RectorPrefix20211221\Tracy\Dumper::dump($var, $options);
             });
         } elseif (!self::$productionMode) {
-            $html = Helpers::isHtmlMode();
-            echo $html ? '<tracy-div>' : '';
-            Dumper::dump($var, [Dumper::DEPTH => self::$maxDepth, Dumper::TRUNCATE => self::$maxLength, Dumper::ITEMS => self::$maxItems, Dumper::LOCATION => self::$showLocation, Dumper::THEME => self::$dumpTheme, Dumper::KEYS_TO_HIDE => self::$keysToHide]);
-            echo $html ? '</tracy-div>' : '';
+            \RectorPrefix20211221\Tracy\Dumper::dump($var, [\RectorPrefix20211221\Tracy\Dumper::DEPTH => self::$maxDepth, \RectorPrefix20211221\Tracy\Dumper::TRUNCATE => self::$maxLength, \RectorPrefix20211221\Tracy\Dumper::LOCATION => self::$showLocation, \RectorPrefix20211221\Tracy\Dumper::THEME => self::$dumpTheme, \RectorPrefix20211221\Tracy\Dumper::KEYS_TO_HIDE => self::$keysToHide]);
         }
         return $var;
     }
@@ -381,36 +365,44 @@ class Debugger
     public static function timer(?string $name = null) : float
     {
         static $time = [];
-        $now = \hrtime(\true);
+        $now = \microtime(\true);
         $delta = isset($time[$name]) ? $now - $time[$name] : 0;
         $time[$name] = $now;
-        return $delta / 1000000000.0;
+        return $delta;
     }
     /**
      * Dumps information about a variable in Tracy Debug Bar.
      * @tracySkipLocation
+     * @param  mixed  $var
      * @return mixed  variable itself
-     * @param mixed $var
      */
     public static function barDump($var, ?string $title = null, array $options = [])
     {
         if (!self::$productionMode) {
             static $panel;
             if (!$panel) {
-                self::getBar()->addPanel($panel = new DefaultBarPanel('dumps'), 'Tracy:dumps');
+                self::getBar()->addPanel($panel = new \RectorPrefix20211221\Tracy\DefaultBarPanel('dumps'), 'Tracy:dumps');
             }
-            $panel->data[] = ['title' => $title, 'dump' => Dumper::toHtml($var, $options + [Dumper::DEPTH => self::$maxDepth, Dumper::TRUNCATE => self::$maxLength, Dumper::LOCATION => self::$showLocation ?: Dumper::LOCATION_CLASS | Dumper::LOCATION_SOURCE, Dumper::LAZY => \true])];
+            $panel->data[] = ['title' => $title, 'dump' => \RectorPrefix20211221\Tracy\Dumper::toHtml($var, $options + [\RectorPrefix20211221\Tracy\Dumper::DEPTH => self::$maxDepth, \RectorPrefix20211221\Tracy\Dumper::TRUNCATE => self::$maxLength, \RectorPrefix20211221\Tracy\Dumper::LOCATION => self::$showLocation ?: \RectorPrefix20211221\Tracy\Dumper::LOCATION_CLASS | \RectorPrefix20211221\Tracy\Dumper::LOCATION_SOURCE, \RectorPrefix20211221\Tracy\Dumper::LAZY => \true])];
         }
         return $var;
     }
     /**
      * Logs message or exception.
-     * @param mixed $message
+     * @param  mixed  $message
      * @return mixed
      */
-    public static function log($message, string $level = ILogger::INFO)
+    public static function log($message, string $level = \RectorPrefix20211221\Tracy\ILogger::INFO)
     {
         return self::getLogger()->log($message, $level);
+    }
+    /**
+     * Sends message to FireLogger console.
+     * @param  mixed  $message
+     */
+    public static function fireLog($message) : bool
+    {
+        return !self::$productionMode && self::$showFireLogger ? self::getFireLogger()->log($message) : \false;
     }
     /** @internal */
     public static function addSourceMapper(callable $mapper) : void
@@ -434,7 +426,7 @@ class Debugger
     public static function detectDebugMode($list = null) : bool
     {
         $addr = $_SERVER['REMOTE_ADDR'] ?? \php_uname('n');
-        $secret = isset($_COOKIE[self::CookieSecret]) && \is_string($_COOKIE[self::CookieSecret]) ? $_COOKIE[self::CookieSecret] : null;
+        $secret = isset($_COOKIE[self::COOKIE_SECRET]) && \is_string($_COOKIE[self::COOKIE_SECRET]) ? $_COOKIE[self::COOKIE_SECRET] : null;
         $list = \is_string($list) ? \preg_split('#[,\\s]+#', $list) : (array) $list;
         if (!isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !isset($_SERVER['HTTP_FORWARDED'])) {
             $list[] = '127.0.0.1';

@@ -8,7 +8,7 @@ require([
             formSelector: '#product_addtocart_form',
             swatchSelector: '.swatch-opt'
         },
-        swatchWidgetName = 'mage-SwatchRenderer',
+        swatchWidgetName = 'mageSwatchRenderer',
         widgetInitEvent = 'swatch.initialized',
 
     /**

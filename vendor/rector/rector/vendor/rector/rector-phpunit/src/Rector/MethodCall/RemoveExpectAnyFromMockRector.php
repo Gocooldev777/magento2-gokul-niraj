@@ -4,30 +4,28 @@ declare (strict_types=1);
 namespace Rector\PHPUnit\Rector\MethodCall;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\MethodCall;
 use Rector\Core\Rector\AbstractRector;
 use Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @changelog https://github.com/symfony/symfony/pull/30813/files#r270879504
+ * @see https://github.com/symfony/symfony/pull/30813/files#r270879504
  * @see \Rector\PHPUnit\Tests\Rector\MethodCall\RemoveExpectAnyFromMockRector\RemoveExpectAnyFromMockRectorTest
  */
-final class RemoveExpectAnyFromMockRector extends AbstractRector
+final class RemoveExpectAnyFromMockRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @readonly
      * @var \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer
      */
     private $testsNodeAnalyzer;
-    public function __construct(TestsNodeAnalyzer $testsNodeAnalyzer)
+    public function __construct(\Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer $testsNodeAnalyzer)
     {
         $this->testsNodeAnalyzer = $testsNodeAnalyzer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Remove `expect($this->any())` from mocks as it has no added value', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Remove `expect($this->any())` from mocks as it has no added value', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use PHPUnit\Framework\TestCase;
 
 class SomeClass extends TestCase
@@ -61,12 +59,12 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [MethodCall::class];
+        return [\PhpParser\Node\Expr\MethodCall::class];
     }
     /**
      * @param MethodCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if (!$this->testsNodeAnalyzer->isInTestClass($node)) {
             return null;
@@ -78,19 +76,15 @@ CODE_SAMPLE
             return null;
         }
         $onlyArgument = $node->args[0]->value;
-        if (!$this->isMethodCallOnVariableNamed($onlyArgument, 'this', 'any')) {
+        if (!$onlyArgument instanceof \PhpParser\Node\Expr\MethodCall) {
+            return null;
+        }
+        if (!$this->isName($onlyArgument->var, 'this')) {
+            return null;
+        }
+        if (!$this->isName($onlyArgument->name, 'any')) {
             return null;
         }
         return $node->var;
-    }
-    private function isMethodCallOnVariableNamed(Expr $expr, string $variableName, string $methodName) : bool
-    {
-        if (!$expr instanceof MethodCall) {
-            return \false;
-        }
-        if (!$this->isName($expr->var, $variableName)) {
-            return \false;
-        }
-        return $this->isName($expr->name, $methodName);
     }
 }

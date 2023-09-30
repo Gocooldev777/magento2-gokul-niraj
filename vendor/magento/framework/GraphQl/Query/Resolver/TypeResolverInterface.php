@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 
 /**
  * Determines a concrete GraphQL type for data returned that implements an interface type.
- *
- * @api
  */
 interface TypeResolverInterface
 {

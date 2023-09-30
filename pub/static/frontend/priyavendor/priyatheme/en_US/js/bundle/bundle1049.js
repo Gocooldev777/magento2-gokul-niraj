@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_InventoryInStorePickupFrontend/template/delivery-method-selector.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div id=\"delivery-method-selector\" class=\"step-content\">\n    <button\n        class=\"action action-select-shipping\"\n        css=\"'selected': !isStorePickupSelected()\"\n        click=\"selectShipping\"\n        translate=\"'Shipping'\"\n    ></button>\n    <button\n        class=\"action action-select-store-pickup\"\n        css=\"'selected': isStorePickupSelected()\"\n        click=\"selectStorePickup\"\n        translate=\"'Pick in Store'\"\n    ></button>\n</div>\n"}
+}});

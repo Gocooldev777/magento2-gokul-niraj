@@ -2,49 +2,55 @@
 
 declare(strict_types=1);
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014-2020 Spomky-Labs
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the LICENSE file for details.
+ */
+
 namespace Jose\Component\Checker;
 
 use function is_float;
 use function is_int;
-use Psr\Clock\ClockInterface;
 
 /**
- * This class is a claim checker. When the "nbf" is present, it will compare the value with the current timestamp.
+ * This class is a claim checker.
+ * When the "nbf" is present, it will compare the value with the current timestamp.
  */
 final class NotBeforeChecker implements ClaimChecker, HeaderChecker
 {
     private const NAME = 'nbf';
 
-    private readonly ClockInterface $clock;
+    /**
+     * @var int
+     */
+    private $allowedTimeDrift;
+    /**
+     * @var bool
+     */
+    private $protectedHeaderOnly;
 
-    public function __construct(
-        private readonly int $allowedTimeDrift = 0,
-        private readonly bool $protectedHeaderOnly = false,
-        ?ClockInterface $clock = null,
-    ) {
-        if ($clock === null) {
-            trigger_deprecation(
-                'web-token/jwt-checker',
-                '3.2.0',
-                'The parameter "$clock" will become mandatory in 4.0.0. Please set a valid PSR Clock implementation instead of "null".'
-            );
-            $clock = new InternalClock();
-        }
-        $this->clock = $clock;
+    public function __construct(int $allowedTimeDrift = 0, bool $protectedHeaderOnly = false)
+    {
+        $this->allowedTimeDrift = $allowedTimeDrift;
+        $this->protectedHeaderOnly = $protectedHeaderOnly;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @throws InvalidClaimException if the claim "nbf" is not an integer
+     * @throws InvalidClaimException if the claim "nbf" restrict the use of the token
      */
-    public function checkClaim(mixed $value): void
+    public function checkClaim($value): void
     {
-        if (! is_float($value) && ! is_int($value)) {
+        if (!is_float($value) && !is_int($value)) {
             throw new InvalidClaimException('"nbf" must be an integer.', self::NAME, $value);
         }
-
-        $now = $this->clock->now()
-            ->getTimestamp();
-        if ($now < $value - $this->allowedTimeDrift) {
+        if (time() < $value - $this->allowedTimeDrift) {
             throw new InvalidClaimException('The JWT can not be used yet.', self::NAME, $value);
         }
     }
@@ -54,15 +60,18 @@ final class NotBeforeChecker implements ClaimChecker, HeaderChecker
         return self::NAME;
     }
 
-    public function checkHeader(mixed $value): void
+    /**
+     * @param mixed $value
+     *
+     * @throws InvalidHeaderException if the claim "nbf" is not an integer
+     * @throws InvalidHeaderException if the claim "nbf" restrict the use of the token
+     */
+    public function checkHeader($value): void
     {
-        if (! is_float($value) && ! is_int($value)) {
+        if (!is_float($value) && !is_int($value)) {
             throw new InvalidHeaderException('"nbf" must be an integer.', self::NAME, $value);
         }
-
-        $now = $this->clock->now()
-            ->getTimestamp();
-        if ($now < $value - $this->allowedTimeDrift) {
+        if (time() < $value - $this->allowedTimeDrift) {
             throw new InvalidHeaderException('The JWT can not be used yet.', self::NAME, $value);
         }
     }

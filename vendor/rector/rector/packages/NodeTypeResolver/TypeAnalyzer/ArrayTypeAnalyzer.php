@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\NodeTypeResolver\TypeAnalyzer;
 
-use PhpParser\Node\Expr;
+use PhpParser\Node;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
@@ -57,7 +57,7 @@ final class ArrayTypeAnalyzer
      * @var \Rector\Core\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
-    public function __construct(NodeNameResolver $nodeNameResolver, NodeTypeResolver $nodeTypeResolver, PregMatchTypeCorrector $pregMatchTypeCorrector, BetterNodeFinder $betterNodeFinder, PhpDocInfoFactory $phpDocInfoFactory, ReflectionResolver $reflectionResolver)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver, \Rector\NodeTypeResolver\NodeTypeCorrector\PregMatchTypeCorrector $pregMatchTypeCorrector, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder, \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory $phpDocInfoFactory, \Rector\Core\Reflection\ReflectionResolver $reflectionResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->nodeTypeResolver = $nodeTypeResolver;
@@ -66,112 +66,106 @@ final class ArrayTypeAnalyzer
         $this->phpDocInfoFactory = $phpDocInfoFactory;
         $this->reflectionResolver = $reflectionResolver;
     }
-    public function isArrayType(Expr $expr) : bool
+    public function isArrayType(\PhpParser\Node $node) : bool
     {
-        $nodeType = $this->nodeTypeResolver->getType($expr);
-        $nodeType = $this->pregMatchTypeCorrector->correct($expr, $nodeType);
+        $nodeType = $this->nodeTypeResolver->getType($node);
+        $nodeType = $this->pregMatchTypeCorrector->correct($node, $nodeType);
         if ($this->isIntersectionArrayType($nodeType)) {
             return \true;
         }
         // PHPStan false positive, when variable has type[] docblock, but default array is missing
-        if ($expr instanceof PropertyFetch || $expr instanceof StaticPropertyFetch) {
-            if ($this->isPropertyFetchWithArrayDefault($expr)) {
+        if ($node instanceof \PhpParser\Node\Expr\PropertyFetch || $node instanceof \PhpParser\Node\Expr\StaticPropertyFetch) {
+            if ($this->isPropertyFetchWithArrayDefault($node)) {
                 return \true;
             }
-            if ($this->isPropertyFetchWithArrayDocblockWithoutDefault($expr)) {
+            if ($this->isPropertyFetchWithArrayDocblockWithoutDefault($node)) {
                 return \false;
             }
         }
-        if ($nodeType instanceof MixedType) {
+        if ($nodeType instanceof \PHPStan\Type\MixedType) {
             if ($nodeType->isExplicitMixed()) {
                 return \false;
             }
-            if ($this->isPropertyFetchWithArrayDefault($expr)) {
+            if ($this->isPropertyFetchWithArrayDefault($node)) {
                 return \true;
             }
         }
-        return $nodeType instanceof ArrayType;
+        return $nodeType instanceof \PHPStan\Type\ArrayType;
     }
-    private function isIntersectionArrayType(Type $nodeType) : bool
+    private function isIntersectionArrayType(\PHPStan\Type\Type $nodeType) : bool
     {
-        if (!$nodeType instanceof IntersectionType) {
+        if (!$nodeType instanceof \PHPStan\Type\IntersectionType) {
             return \false;
         }
         foreach ($nodeType->getTypes() as $intersectionNodeType) {
-            if ($intersectionNodeType instanceof ArrayType) {
+            if ($intersectionNodeType instanceof \PHPStan\Type\ArrayType) {
                 continue;
             }
-            if ($intersectionNodeType instanceof HasOffsetType) {
+            if ($intersectionNodeType instanceof \PHPStan\Type\Accessory\HasOffsetType) {
                 continue;
             }
-            if ($intersectionNodeType instanceof NonEmptyArrayType) {
+            if ($intersectionNodeType instanceof \PHPStan\Type\Accessory\NonEmptyArrayType) {
                 continue;
             }
             return \false;
         }
         return \true;
     }
-    private function isPropertyFetchWithArrayDocblockWithoutDefault(Expr $expr) : bool
+    private function isPropertyFetchWithArrayDocblockWithoutDefault(\PhpParser\Node $node) : bool
     {
-        if (!$expr instanceof PropertyFetch && !$expr instanceof StaticPropertyFetch) {
+        if (!$node instanceof \PhpParser\Node\Expr\PropertyFetch && !$node instanceof \PhpParser\Node\Expr\StaticPropertyFetch) {
             return \false;
         }
-        $classLike = $this->betterNodeFinder->findParentType($expr, ClassLike::class);
-        if (!$classLike instanceof ClassLike) {
+        $classLike = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassLike::class);
+        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
             return \false;
         }
-        $propertyName = $this->nodeNameResolver->getName($expr->name);
+        $propertyName = $this->nodeNameResolver->getName($node->name);
         if ($propertyName === null) {
             return \false;
         }
         $property = $classLike->getProperty($propertyName);
-        if (!$property instanceof Property) {
+        if (!$property instanceof \PhpParser\Node\Stmt\Property) {
             return \false;
         }
         $propertyProperty = $property->props[0];
-        if ($propertyProperty->default instanceof Array_) {
+        if ($propertyProperty->default instanceof \PhpParser\Node\Expr\Array_) {
             return \false;
         }
         $propertyPhpDocInfo = $this->phpDocInfoFactory->createFromNode($property);
-        if (!$propertyPhpDocInfo instanceof PhpDocInfo) {
+        if (!$propertyPhpDocInfo instanceof \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo) {
             return \false;
         }
         $varType = $propertyPhpDocInfo->getVarType();
-        return $varType instanceof ArrayType || $varType instanceof ArrayShapeNode || $varType instanceof IterableType;
+        return $varType instanceof \PHPStan\Type\ArrayType || $varType instanceof \PHPStan\PhpDocParser\Ast\Type\ArrayShapeNode || $varType instanceof \PHPStan\Type\IterableType;
     }
     /**
      * phpstan bug workaround - https://phpstan.org/r/0443f283-244c-42b8-8373-85e7deb3504c
      */
-    private function isPropertyFetchWithArrayDefault(Expr $expr) : bool
+    private function isPropertyFetchWithArrayDefault(\PhpParser\Node $node) : bool
     {
-        if (!$expr instanceof PropertyFetch && !$expr instanceof StaticPropertyFetch) {
+        if (!$node instanceof \PhpParser\Node\Expr\PropertyFetch && !$node instanceof \PhpParser\Node\Expr\StaticPropertyFetch) {
             return \false;
         }
-        $classLike = $this->betterNodeFinder->findParentType($expr, ClassLike::class);
-        if (!$classLike instanceof ClassLike) {
+        $classLike = $this->betterNodeFinder->findParentType($node, \PhpParser\Node\Stmt\ClassLike::class);
+        if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
             return \false;
         }
-        $propertyName = $this->nodeNameResolver->getName($expr->name);
+        $propertyName = $this->nodeNameResolver->getName($node->name);
         if ($propertyName === null) {
             return \false;
         }
         // A. local property
         $property = $classLike->getProperty($propertyName);
-        if ($property instanceof Property) {
+        if ($property !== null) {
             $propertyProperty = $property->props[0];
-            return $propertyProperty->default instanceof Array_;
+            return $propertyProperty->default instanceof \PhpParser\Node\Expr\Array_;
         }
         // B. another object property
-        $phpPropertyReflection = $this->reflectionResolver->resolvePropertyReflectionFromPropertyFetch($expr);
-        if ($phpPropertyReflection instanceof PhpPropertyReflection) {
+        $phpPropertyReflection = $this->reflectionResolver->resolvePropertyReflectionFromPropertyFetch($node);
+        if ($phpPropertyReflection instanceof \PHPStan\Reflection\Php\PhpPropertyReflection) {
             $reflectionProperty = $phpPropertyReflection->getNativeReflection();
-            $betterReflection = $reflectionProperty->getBetterReflection();
-            $defaultValueExpr = $betterReflection->getDefaultValueExpression();
-            if (!$defaultValueExpr instanceof Expr) {
-                return \false;
-            }
-            $defaultValueType = $this->nodeTypeResolver->getType($defaultValueExpr);
-            return $defaultValueType->isArray()->yes();
+            return \is_array($reflectionProperty->getDeclaringClass()->getDefaultProperties()[$reflectionProperty->getName()] ?? null);
         }
         return \false;
     }

@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\String\Inflector;
+namespace RectorPrefix20211221\Symfony\Component\String\Inflector;
 
-final class EnglishInflector implements InflectorInterface
+final class EnglishInflector implements \RectorPrefix20211221\Symfony\Component\String\Inflector\InflectorInterface
 {
     /**
      * Map English plural to singular suffixes.
@@ -43,16 +43,12 @@ final class EnglishInflector implements InflectorInterface
         ['nexo', 4, \false, \false, 'ox'],
         // indices (index), appendices (appendix), prices (price)
         ['seci', 4, \false, \true, ['ex', 'ix', 'ice']],
-        // codes (code)
-        ['sedoc', 5, \false, \true, 'code'],
         // selfies (selfie)
         ['seifles', 7, \true, \true, 'selfie'],
         // zombies (zombie)
         ['seibmoz', 7, \true, \true, 'zombie'],
         // movies (movie)
         ['seivom', 6, \true, \true, 'movie'],
-        // names (name)
-        ['seman', 5, \true, \false, 'name'],
         // conspectuses (conspectus), prospectuses (prospectus)
         ['sesutcep', 8, \true, \true, 'pectus'],
         // feet (foot)
@@ -251,6 +247,9 @@ final class EnglishInflector implements InflectorInterface
         // species
         'seiceps',
     ];
+    /**
+     * {@inheritdoc}
+     */
     public function singularize(string $plural) : array
     {
         $pluralRev = \strrev($plural);
@@ -278,7 +277,7 @@ final class EnglishInflector implements InflectorInterface
                 if ($j === $suffixLength) {
                     // Is there any character preceding the suffix in the plural string?
                     if ($j < $pluralLength) {
-                        $nextIsVocal = \strpos('aeiou', $lowerPluralRev[$j]) !== \false;
+                        $nextIsVocal = \false !== \strpos('aeiou', $lowerPluralRev[$j]);
                         if (!$map[2] && $nextIsVocal) {
                             // suffix may not succeed a vocal but next char is one
                             break;
@@ -312,6 +311,9 @@ final class EnglishInflector implements InflectorInterface
         // Assume that plural and singular is identical
         return [$plural];
     }
+    /**
+     * {@inheritdoc}
+     */
     public function pluralize(string $singular) : array
     {
         $singularRev = \strrev($singular);
@@ -339,7 +341,7 @@ final class EnglishInflector implements InflectorInterface
                 if ($j === $suffixLength) {
                     // Is there any character preceding the suffix in the plural string?
                     if ($j < $singularLength) {
-                        $nextIsVocal = \strpos('aeiou', $lowerSingularRev[$j]) !== \false;
+                        $nextIsVocal = \false !== \strpos('aeiou', $lowerSingularRev[$j]);
                         if (!$map[2] && $nextIsVocal) {
                             // suffix may not succeed a vocal but next char is one
                             break;

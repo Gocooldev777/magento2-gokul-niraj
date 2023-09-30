@@ -9,19 +9,24 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Removing\Rector\Class_\RemoveInterfacesRector\RemoveInterfacesRectorTest
  */
-final class RemoveInterfacesRector extends AbstractRector implements ConfigurableRectorInterface
+final class RemoveInterfacesRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const INTERFACES_TO_REMOVE = 'interfaces_to_remove';
     /**
      * @var string[]
      */
     private $interfacesToRemove = [];
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Removes interfaces usage from class.', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Removes interfaces usage from class.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass implements SomeInterface
 {
 }
@@ -38,25 +43,20 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($node->implements === []) {
             return null;
         }
-        $isInterfacesRemoved = \false;
         foreach ($node->implements as $key => $implement) {
             if ($this->isNames($implement, $this->interfacesToRemove)) {
                 unset($node->implements[$key]);
-                $isInterfacesRemoved = \true;
             }
-        }
-        if (!$isInterfacesRemoved) {
-            return null;
         }
         return $node;
     }
@@ -65,8 +65,9 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        Assert::allString($configuration);
-        /** @var string[] $configuration */
-        $this->interfacesToRemove = $configuration;
+        $interfacesToRemove = $configuration[self::INTERFACES_TO_REMOVE] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($interfacesToRemove);
+        /** @var string[] $interfacesToRemove */
+        $this->interfacesToRemove = $interfacesToRemove;
     }
 }

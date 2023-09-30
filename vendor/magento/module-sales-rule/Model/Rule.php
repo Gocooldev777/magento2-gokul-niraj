@@ -423,8 +423,7 @@ class Rule extends \Magento\Rule\Model\AbstractModel
     public function getStoreLabels()
     {
         if (!$this->hasStoreLabels()) {
-            $linkedField = $this->_getResource()->getLinkField();
-            $labels = $this->_getResource()->getStoreLabels($this->getData($linkedField));
+            $labels = $this->_getResource()->getStoreLabels($this->getId());
             $this->setStoreLabels($labels);
         }
 

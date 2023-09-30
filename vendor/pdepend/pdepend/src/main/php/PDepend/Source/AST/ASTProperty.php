@@ -321,8 +321,6 @@ class ASTProperty extends AbstractASTArtifact
      * This method will return the default value for this property instance or
      * <b>null</b> when this property was only declared and not initialized.
      *
-     * @return mixed
-     *
      * @since  0.9.6
      */
     public function getDefaultValue()
@@ -332,6 +330,16 @@ class ASTProperty extends AbstractASTArtifact
             return null;
         }
         return $value->getValue();
+    }
+
+    /**
+     * ASTVisitor method for node tree traversal.
+     *
+     * @return void
+     */
+    public function accept(ASTVisitor $visitor)
+    {
+        $visitor->visitProperty($this);
     }
 
     /**

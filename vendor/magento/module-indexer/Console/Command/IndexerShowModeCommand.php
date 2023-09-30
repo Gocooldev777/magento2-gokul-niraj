@@ -5,7 +5,6 @@
  */
 namespace Magento\Indexer\Console\Command;
 
-use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -15,7 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class IndexerShowModeCommand extends AbstractIndexerManageCommand
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function configure()
     {
@@ -27,7 +26,7 @@ class IndexerShowModeCommand extends AbstractIndexerManageCommand
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -36,7 +35,5 @@ class IndexerShowModeCommand extends AbstractIndexerManageCommand
             $status = $indexer->isScheduled() ? 'Update by Schedule' : 'Update on Save';
             $output->writeln(sprintf('%-50s ', $indexer->getTitle() . ':') . $status);
         }
-
-        return Cli::RETURN_SUCCESS;
     }
 }

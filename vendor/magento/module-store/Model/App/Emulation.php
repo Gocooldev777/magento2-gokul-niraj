@@ -109,7 +109,9 @@ class Emulation extends \Magento\Framework\DataObject
     }
 
     /**
-     * Start environment emulation of a specified store
+     * Start environment emulation of the specified store
+     *
+     * Function returns information about initial store environment and emulates environment of another store
      *
      * @param integer $storeId
      * @param string $area
@@ -158,6 +160,8 @@ class Emulation extends \Magento\Framework\DataObject
         $this->_localeResolver->setLocale($newLocaleCode);
         $this->_translate->setLocale($newLocaleCode);
         $this->_translate->loadData($area);
+
+        return;
     }
 
     /**

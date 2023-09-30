@@ -28,7 +28,7 @@ class ValidatorChain implements Countable, IteratorAggregate, ValidatorInterface
      */
     public const DEFAULT_PRIORITY = 1;
 
-    /** @var ValidatorPluginManager|null */
+    /** @var ValidatorPluginManager<ValidatorInterface>|null */
     protected $plugins;
 
     /**
@@ -50,6 +50,7 @@ class ValidatorChain implements Countable, IteratorAggregate, ValidatorInterface
      */
     public function __construct()
     {
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
         $this->validators = new PriorityQueue();
     }
 
@@ -67,7 +68,7 @@ class ValidatorChain implements Countable, IteratorAggregate, ValidatorInterface
     /**
      * Get plugin manager instance
      *
-     * @return ValidatorPluginManager
+     * @return ValidatorPluginManager<ValidatorInterface>
      */
     public function getPluginManager()
     {

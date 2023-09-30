@@ -58,7 +58,7 @@ abstract class AbstractFunctionReferenceFixer extends AbstractFixer
         }
 
         // make interface consistent with findSequence
-        $end ??= $tokens->count();
+        $end = $end ?? $tokens->count();
 
         // find raw sequence which we can analyse for context
         $candidateSequence = [[T_STRING, $functionNameToSearch], '('];

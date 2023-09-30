@@ -14,8 +14,6 @@ use Magento\Framework\App\Config;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\Response\RedirectInterface;
-use Magento\Framework\Data\Form\FormKey;
-use Magento\Framework\Data\Form\FormKey\Validator;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Store\App\Response\Redirect;
 use Magento\Store\Model\ScopeInterface;
@@ -23,7 +21,6 @@ use Magento\Wishlist\Controller\Index\Index;
 use Magento\Wishlist\Controller\Index\Plugin;
 use Magento\Wishlist\Model\AuthenticationState;
 use Magento\Wishlist\Model\AuthenticationStateInterface;
-use Magento\Wishlist\Model\DataSerializer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -65,21 +62,6 @@ class PluginTest extends TestCase
     protected $request;
 
     /**
-     * @var DataSerializer|MockObject
-     */
-    private $dataSerializer;
-
-    /**
-     * @var FormKey|MockObject
-     */
-    private $formKey;
-
-    /**
-     * @var Validator|MockObject
-     */
-    private $formKeyValidator;
-
-    /**
      * @inheritdoc
      */
     protected function setUp(): void
@@ -105,9 +87,21 @@ class PluginTest extends TestCase
         $this->redirector = $this->createMock(Redirect::class);
         $this->messageManager = $this->getMockForAbstractClass(ManagerInterface::class);
         $this->request = $this->createMock(Http::class);
-        $this->dataSerializer = $this->createMock(DataSerializer::class);
-        $this->formKey = $this->createMock(FormKey::class);
-        $this->formKeyValidator = $this->createMock(Validator::class);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function tearDown(): void
+    {
+        unset(
+            $this->customerSession,
+            $this->authenticationState,
+            $this->config,
+            $this->redirector,
+            $this->messageManager,
+            $this->request
+        );
     }
 
     /**
@@ -120,10 +114,7 @@ class PluginTest extends TestCase
             $this->authenticationState,
             $this->config,
             $this->redirector,
-            $this->messageManager,
-            $this->dataSerializer,
-            $this->formKey,
-            $this->formKeyValidator
+            $this->messageManager
         );
     }
 
@@ -164,11 +155,6 @@ class PluginTest extends TestCase
             ->expects($this->once())
             ->method('getParams')
             ->willReturn($params);
-
-        $this->request
-            ->expects($this->exactly(2))
-            ->method('getActionName')
-            ->willReturn('add');
 
         $this->customerSession->expects($this->once())
             ->method('authenticate')

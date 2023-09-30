@@ -7,7 +7,6 @@ namespace Magento\Sales\Model\Spi;
 
 /**
  * Interface ResourceInterface
- * @api
  */
 interface CreditmemoCommentResourceInterface
 {

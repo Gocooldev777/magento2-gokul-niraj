@@ -1,28 +1,28 @@
 <?php
 
-namespace RectorPrefix202304\React\Socket;
+namespace RectorPrefix20211221\React\Socket;
 
-use RectorPrefix202304\React\EventLoop\Loop;
-use RectorPrefix202304\React\EventLoop\LoopInterface;
-use RectorPrefix202304\React\Promise;
+use RectorPrefix20211221\React\EventLoop\Loop;
+use RectorPrefix20211221\React\EventLoop\LoopInterface;
+use RectorPrefix20211221\React\Promise;
 use BadMethodCallException;
 use InvalidArgumentException;
 use UnexpectedValueException;
-final class SecureConnector implements ConnectorInterface
+final class SecureConnector implements \RectorPrefix20211221\React\Socket\ConnectorInterface
 {
     private $connector;
     private $streamEncryption;
     private $context;
-    public function __construct(ConnectorInterface $connector, LoopInterface $loop = null, array $context = array())
+    public function __construct(\RectorPrefix20211221\React\Socket\ConnectorInterface $connector, \RectorPrefix20211221\React\EventLoop\LoopInterface $loop = null, array $context = array())
     {
         $this->connector = $connector;
-        $this->streamEncryption = new StreamEncryption($loop ?: Loop::get(), \false);
+        $this->streamEncryption = new \RectorPrefix20211221\React\Socket\StreamEncryption($loop ?: \RectorPrefix20211221\React\EventLoop\Loop::get(), \false);
         $this->context = $context;
     }
     public function connect($uri)
     {
         if (!\function_exists('stream_socket_enable_crypto')) {
-            return Promise\reject(new \BadMethodCallException('Encryption not supported on your platform (HHVM < 3.8?)'));
+            return \RectorPrefix20211221\React\Promise\reject(new \BadMethodCallException('Encryption not supported on your platform (HHVM < 3.8?)'));
             // @codeCoverageIgnore
         }
         if (\strpos($uri, '://') === \false) {
@@ -30,16 +30,15 @@ final class SecureConnector implements ConnectorInterface
         }
         $parts = \parse_url($uri);
         if (!$parts || !isset($parts['scheme']) || $parts['scheme'] !== 'tls') {
-            return Promise\reject(new \InvalidArgumentException('Given URI "' . $uri . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
+            return \RectorPrefix20211221\React\Promise\reject(new \InvalidArgumentException('Given URI "' . $uri . '" is invalid (EINVAL)', \defined('SOCKET_EINVAL') ? \SOCKET_EINVAL : 22));
         }
         $context = $this->context;
         $encryption = $this->streamEncryption;
         $connected = \false;
-        /** @var \React\Promise\PromiseInterface $promise */
-        $promise = $this->connector->connect(\str_replace('tls://', '', $uri))->then(function (ConnectionInterface $connection) use($context, $encryption, $uri, &$promise, &$connected) {
+        $promise = $this->connector->connect(\str_replace('tls://', '', $uri))->then(function (\RectorPrefix20211221\React\Socket\ConnectionInterface $connection) use($context, $encryption, $uri, &$promise, &$connected) {
             // (unencrypted) TCP/IP connection succeeded
             $connected = \true;
-            if (!$connection instanceof Connection) {
+            if (!$connection instanceof \RectorPrefix20211221\React\Socket\Connection) {
                 $connection->close();
                 throw new \UnexpectedValueException('Base connector does not use internal Connection class exposing stream resource');
             }
@@ -64,11 +63,11 @@ final class SecureConnector implements ConnectorInterface
                 $trace = $r->getValue($e);
                 // Exception trace arguments are not available on some PHP 7.4 installs
                 // @codeCoverageIgnoreStart
-                foreach ($trace as $ti => $one) {
+                foreach ($trace as &$one) {
                     if (isset($one['args'])) {
-                        foreach ($one['args'] as $ai => $arg) {
+                        foreach ($one['args'] as &$arg) {
                             if ($arg instanceof \Closure) {
-                                $trace[$ti]['args'][$ai] = 'Object(' . \get_class($arg) . ')';
+                                $arg = 'Object(' . \get_class($arg) . ')';
                             }
                         }
                     }
@@ -78,7 +77,7 @@ final class SecureConnector implements ConnectorInterface
             }
             throw $e;
         });
-        return new \RectorPrefix202304\React\Promise\Promise(function ($resolve, $reject) use($promise) {
+        return new \RectorPrefix20211221\React\Promise\Promise(function ($resolve, $reject) use($promise) {
             $promise->then($resolve, $reject);
         }, function ($_, $reject) use(&$promise, $uri, &$connected) {
             if ($connected) {

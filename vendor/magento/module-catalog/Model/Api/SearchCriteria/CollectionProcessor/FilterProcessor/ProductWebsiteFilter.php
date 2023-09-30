@@ -22,7 +22,7 @@ class ProductWebsiteFilter implements CustomFilterInterface
     public function apply(Filter $filter, AbstractDb $collection)
     {
         $value = $filter->getValue();
-        if ($value !== null && strpos($value, ',') !== false) {
+        if (strpos($value, ',') !== false) {
             $value = explode(',', $value);
         }
         /** @var Collection $collection */

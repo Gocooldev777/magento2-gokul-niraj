@@ -82,16 +82,6 @@ class ASTClass extends AbstractASTClassOrInterface
     }
 
     /**
-     * This method will return <b>true</b> when this class is declared as readonly.
-     *
-     * @return bool
-     */
-    public function isReadonly()
-    {
-        return (($this->modifiers & State::IS_READONLY) === State::IS_READONLY);
-    }
-
-    /**
      * Will return <b>true</b> if this class was declared anonymous in an
      * allocation expression.
      *
@@ -191,8 +181,7 @@ class ASTClass extends AbstractASTClassOrInterface
 
         $expected = ~State::IS_EXPLICIT_ABSTRACT
                   & ~State::IS_IMPLICIT_ABSTRACT
-                  & ~State::IS_FINAL
-                  & ~State::IS_READONLY;
+                  & ~State::IS_FINAL;
 
         if (($expected & $modifiers) !== 0) {
             throw new InvalidArgumentException('Invalid class modifier given.');
@@ -201,6 +190,15 @@ class ASTClass extends AbstractASTClassOrInterface
         $this->modifiers = $modifiers;
     }
 
+    /**
+     * ASTVisitor method for node tree traversal.
+     *
+     * @return void
+     */
+    public function accept(ASTVisitor $visitor)
+    {
+        $visitor->visitClass($this);
+    }
 
     /**
      * The magic wakeup method will be called by PHP's runtime environment when

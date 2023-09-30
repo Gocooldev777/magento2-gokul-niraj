@@ -9,9 +9,9 @@ use Magento\TestFramework\TestCase\WebapiAbstract;
 
 class CartRepositoryTest extends WebapiAbstract
 {
-    public const SERVICE_VERSION = 'V1';
-    public const SERVICE_NAME = 'giftMessageCartRepositoryV1';
-    public const RESOURCE_PATH = '/V1/carts/';
+    const SERVICE_VERSION = 'V1';
+    const SERVICE_NAME = 'giftMessageCartRepositoryV1';
+    const RESOURCE_PATH = '/V1/carts/';
 
     /**
      * @var \Magento\TestFramework\ObjectManager
@@ -102,10 +102,9 @@ class CartRepositoryTest extends WebapiAbstract
      */
     public function testSave()
     {
-        $this->markTestSkipped('This test relies on system configuration state.');
         // sales/gift_options/allow_order must be set to 1 in system configuration
-        // @todo remove above statement when \Magento\TestFramework\TestCase\WebapiAbstract::_updateAppConfig is fixed
-        
+        // @todo remove next statement when \Magento\TestFramework\TestCase\WebapiAbstract::_updateAppConfig is fixed
+        $this->markTestIncomplete('This test relies on system configuration state.');
         /** @var \Magento\Quote\Model\Quote $quote */
         $quote = $this->objectManager->create(\Magento\Quote\Model\Quote::class);
         $quote->load('test_order_item_with_message', 'reserved_order_id');
@@ -156,9 +155,9 @@ class CartRepositoryTest extends WebapiAbstract
         );
         $token = $customerTokenService->createCustomerAccessToken('customer@example.com', 'password');
 
-        $this->markTestSkipped('This test relies on system configuration state.');
         // sales/gift_options/allow_order must be set to 1 in system configuration
-        // @todo remove above statement when \Magento\TestFramework\TestCase\WebapiAbstract::_updateAppConfig is fixed
+        // @todo remove next statement when \Magento\TestFramework\TestCase\WebapiAbstract::_updateAppConfig is fixed
+        $this->markTestIncomplete('This test relies on system configuration state.');
 
         $serviceInfo = [
             'rest' => [

@@ -30,7 +30,6 @@ class OneObjectStructurePerFileUnitTest extends AbstractSniffUnitTest
             10 => 1,
             14 => 1,
             18 => 1,
-            22 => 1,
         ];
 
     }//end getErrorList()

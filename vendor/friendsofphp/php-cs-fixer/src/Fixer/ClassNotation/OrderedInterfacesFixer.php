@@ -95,6 +95,8 @@ final class OrderedInterfacesFixer extends AbstractFixer implements Configurable
                     ]
                 ),
             ],
+            null,
+            "Risky for `implements` when specifying both an interface and its parent interface, because PHP doesn't break on `parent, child` but does on `child, parent`."
         );
     }
 
@@ -105,6 +107,14 @@ final class OrderedInterfacesFixer extends AbstractFixer implements Configurable
     {
         return $tokens->isTokenKindFound(T_IMPLEMENTS)
             || $tokens->isAllTokenKindsFound([T_INTERFACE, T_EXTENDS]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isRisky(): bool
+    {
+        return true;
     }
 
     /**
@@ -144,7 +154,7 @@ final class OrderedInterfacesFixer extends AbstractFixer implements Configurable
                 while ($interfaceTokens->offsetExists($actualInterfaceIndex)) {
                     $token = $interfaceTokens[$actualInterfaceIndex];
 
-                    if ($token->isComment() || $token->isWhitespace()) {
+                    if (null === $token || $token->isComment() || $token->isWhitespace()) {
                         break;
                     }
 
@@ -212,9 +222,6 @@ final class OrderedInterfacesFixer extends AbstractFixer implements Configurable
         ]);
     }
 
-    /**
-     * @return array<int, list<Token>>
-     */
     private function getInterfaces(Tokens $tokens, int $implementsStart, int $implementsEnd): array
     {
         $interfaces = [];

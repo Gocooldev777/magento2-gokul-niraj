@@ -1,45 +1,27 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
-use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
+use Rector\Core\Configuration\Option;
+use Rector\DeadCode\Rector\If_\RemoveDeadInstanceOfRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-use Rector\Symfony\Set\SymfonySetList;
-use Rector\TypeDeclaration\Rector\ClassMethod\ReturnNeverTypeRector;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->importNames();
-    $rectorConfig->paths([__DIR__ . '/src', __DIR__ . '/tests']);
-    $rectorConfig->skip([
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $parameters = $containerConfigurator->parameters();
+    $parameters->set(\Rector\Core\Configuration\Option::AUTO_IMPORT_NAMES, \true);
+    $parameters->set(\Rector\Core\Configuration\Option::PATHS, [__DIR__ . '/src', __DIR__ . '/tests']);
+    $parameters->set(\Rector\Core\Configuration\Option::SKIP, [
+        // waits for phpstan to use php-parser 4.13
+        \Rector\DeadCode\Rector\If_\RemoveDeadInstanceOfRector::class,
         '*/Fixture/*',
         '*/Source/*',
-        '*/Source*/*',
-        '*/tests/*/Fixture*/Expected/*',
-        StringClassNameToClassConstantRector::class => [__DIR__ . '/config'],
-        RenameForeachValueVariableToMatchMethodCallReturnTypeRector::class => [
-            // "data" => "datum" false positive
-            __DIR__ . '/src/Rector/ClassMethod/AddRouteAnnotationRector.php',
-        ],
-        // marked as skipped
-        ReturnNeverTypeRector::class => ['*/tests/*'],
     ]);
-    $rectorConfig->ruleWithConfiguration(StringClassNameToClassConstantRector::class, [
-        'Error',
-        'Exception',
-        'Symfony\\*',
-        'Twig_*',
-        'Twig*',
-        'Swift_*',
-        'Doctrine\\*',
-        // loaded from project itself
-        'Psr\\Container\\ContainerInterface',
-        'Symfony\\Component\\Routing\\RouterInterface',
-        'Symfony\\Component\\DependencyInjection\\Container',
-    ]);
-    // for testing
-    $rectorConfig->import(__DIR__ . '/config/config.php');
-    $rectorConfig->sets([LevelSetList::UP_TO_PHP_81, \Rector\PHPUnit\Set\PHPUnitSetList::PHPUNIT_100, SetList::CODE_QUALITY, SetList::DEAD_CODE, SetList::NAMING, SymfonySetList::SYMFONY_60]);
+    $services = $containerConfigurator->services();
+    $services->set(\Rector\Php55\Rector\String_\StringClassNameToClassConstantRector::class)->configure(['Symfony\\*', 'Twig_*', 'Swift_*']);
+    $containerConfigurator->import(\Rector\Set\ValueObject\LevelSetList::UP_TO_PHP_80);
+    $containerConfigurator->import(\Rector\Set\ValueObject\SetList::CODE_QUALITY);
+    $containerConfigurator->import(\Rector\Set\ValueObject\SetList::DEAD_CODE);
 };

@@ -19,13 +19,13 @@ class Form
     /**#@+
      * Values for ignoreInvisible parameter in constructor
      */
-    public const IGNORE_INVISIBLE = true;
+    const IGNORE_INVISIBLE = true;
 
-    public const DONT_IGNORE_INVISIBLE = false;
+    const DONT_IGNORE_INVISIBLE = false;
 
-    /**
-     * @var CustomerMetadataInterface
-     */
+    /**#@-*/
+
+    /**#@-*/
     protected $_customerMetadataService;
 
     /**
@@ -64,6 +64,8 @@ class Form
     protected $_isAjax = false;
 
     /**
+     * Attribute values
+     *
      * @var array
      */
     protected $_attributeValues = [];
@@ -363,7 +365,7 @@ class Form
         if (!$validator->isValid(false)) {
             $messages = [];
             foreach ($validator->getMessages() as $errorMessages) {
-                $messages[] = array_values((array)$errorMessages);
+                $messages[] = (array)$errorMessages;
             }
             return array_merge([], ...$messages);
         }

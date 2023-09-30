@@ -8,18 +8,18 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config;
+namespace RectorPrefix20211221\Symfony\Component\Config;
 
-use RectorPrefix202304\Symfony\Component\Config\Resource\ResourceInterface;
-use RectorPrefix202304\Symfony\Component\Filesystem\Exception\IOException;
-use RectorPrefix202304\Symfony\Component\Filesystem\Filesystem;
+use RectorPrefix20211221\Symfony\Component\Config\Resource\ResourceInterface;
+use RectorPrefix20211221\Symfony\Component\Filesystem\Exception\IOException;
+use RectorPrefix20211221\Symfony\Component\Filesystem\Filesystem;
 /**
  * ResourceCheckerConfigCache uses instances of ResourceCheckerInterface
  * to check whether cached data is still fresh.
  *
  * @author Matthias Pigulla <mp@webfactory.de>
  */
-class ResourceCheckerConfigCache implements ConfigCacheInterface
+class ResourceCheckerConfigCache implements \RectorPrefix20211221\Symfony\Component\Config\ConfigCacheInterface
 {
     /**
      * @var string
@@ -38,7 +38,10 @@ class ResourceCheckerConfigCache implements ConfigCacheInterface
         $this->file = $file;
         $this->resourceCheckers = $resourceCheckers;
     }
-    public function getPath() : string
+    /**
+     * {@inheritdoc}
+     */
+    public function getPath()
     {
         return $this->file;
     }
@@ -50,8 +53,10 @@ class ResourceCheckerConfigCache implements ConfigCacheInterface
      *
      * The first ResourceChecker that supports a given resource is considered authoritative.
      * Resources with no matching ResourceChecker will silently be ignored and considered fresh.
+     *
+     * @return bool
      */
-    public function isFresh() : bool
+    public function isFresh()
     {
         if (!\is_file($this->file)) {
             return \false;
@@ -101,22 +106,22 @@ class ResourceCheckerConfigCache implements ConfigCacheInterface
     {
         $mode = 0666;
         $umask = \umask();
-        $filesystem = new Filesystem();
+        $filesystem = new \RectorPrefix20211221\Symfony\Component\Filesystem\Filesystem();
         $filesystem->dumpFile($this->file, $content);
         try {
             $filesystem->chmod($this->file, $mode, $umask);
-        } catch (IOException $exception) {
+        } catch (\RectorPrefix20211221\Symfony\Component\Filesystem\Exception\IOException $e) {
             // discard chmod failure (some filesystem may not support it)
         }
         if (null !== $metadata) {
             $filesystem->dumpFile($this->getMetaFile(), \serialize($metadata));
             try {
                 $filesystem->chmod($this->getMetaFile(), $mode, $umask);
-            } catch (IOException $exception) {
+            } catch (\RectorPrefix20211221\Symfony\Component\Filesystem\Exception\IOException $e) {
                 // discard chmod failure (some filesystem may not support it)
             }
         }
-        if (\function_exists('opcache_invalidate') && \filter_var(\ini_get('opcache.enable'), \FILTER_VALIDATE_BOOL)) {
+        if (\function_exists('opcache_invalidate') && \filter_var(\ini_get('opcache.enable'), \FILTER_VALIDATE_BOOLEAN)) {
             @\opcache_invalidate($this->file, \true);
         }
     }

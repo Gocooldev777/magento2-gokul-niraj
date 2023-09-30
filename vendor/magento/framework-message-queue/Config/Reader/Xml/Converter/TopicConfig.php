@@ -5,10 +5,8 @@
  */
 namespace Magento\Framework\MessageQueue\Config\Reader\Xml\Converter;
 
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\MessageQueue\ConfigInterface;
 use Magento\Framework\MessageQueue\Config\Validator;
-use Magento\Framework\MessageQueue\DefaultValueProvider;
 use Magento\Framework\Reflection\MethodsMap;
 use Magento\Framework\Communication\ConfigInterface as CommunicationConfig;
 use Magento\Framework\MessageQueue\ConfigInterface as QueueConfig;
@@ -21,9 +19,9 @@ use Magento\Framework\MessageQueue\ConsumerInterface;
  */
 class TopicConfig implements \Magento\Framework\Config\ConverterInterface
 {
-    public const DEFAULT_TYPE = 'db';
-    public const DEFAULT_EXCHANGE = 'magento';
-    public const DEFAULT_INSTANCE = ConsumerInterface::class;
+    const DEFAULT_TYPE = 'amqp';
+    const DEFAULT_EXCHANGE = 'magento';
+    const DEFAULT_INSTANCE = ConsumerInterface::class;
 
     /**
      * @var Validator
@@ -41,34 +39,24 @@ class TopicConfig implements \Magento\Framework\Config\ConverterInterface
     private $communicationConfig;
 
     /**
-     *
-     * @var DefaultValueProvider
-     */
-    private $defaultValueProvider;
-
-    /**
      * Initialize dependencies.
      *
      * @param MethodsMap $methodsMap
      * @param Validator $xmlValidator
      * @param CommunicationConfig $communicationConfig
-     * @param DefaultValueProvider|null $defaultValueProvider
      */
     public function __construct(
         MethodsMap $methodsMap,
         Validator $xmlValidator,
-        CommunicationConfig $communicationConfig,
-        DefaultValueProvider $defaultValueProvider = null
+        CommunicationConfig $communicationConfig
     ) {
         $this->methodsMap = $methodsMap;
         $this->xmlValidator = $xmlValidator;
         $this->communicationConfig = $communicationConfig;
-        $this->defaultValueProvider = $defaultValueProvider
-            ?? ObjectManager::getInstance()->get(DefaultValueProvider::class);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function convert($source)
     {
@@ -180,9 +168,7 @@ class TopicConfig implements \Magento\Framework\Config\ConverterInterface
             foreach (array_keys($topicDefinitions) as $topicName) {
                 if (preg_match($pattern, $topicName)) {
                     if (isset($topics[$topicName])) {
-                        // @codingStandardsIgnoreStart
                         $topics[$topicName] = array_merge($topics[$topicName], $topics[$wildcardKey]);
-                        // @codingStandardsIgnoreEnd
                     } else {
                         $topics[$topicName] = $topics[$wildcardKey];
                     }
@@ -270,11 +256,7 @@ class TopicConfig implements \Magento\Framework\Config\ConverterInterface
             $topicName = $this->getAttributeValue($brokerNode, 'topic');
             $output[$topicName] = [
                 ConfigInterface::TOPIC_NAME => $topicName,
-                'type' => $this->getAttributeValue(
-                    $brokerNode,
-                    'type',
-                    $this->defaultValueProvider->getConnection()
-                ),
+                'type' => $this->getAttributeValue($brokerNode, 'type', self::DEFAULT_TYPE),
                 'exchange' => $this->getAttributeValue($brokerNode, 'exchange', self::DEFAULT_EXCHANGE),
                 'consumerInstance' => $this->getAttributeValue($brokerNode, 'consumerInstance'),
                 'maxMessages' => $this->getAttributeValue($brokerNode, 'maxMessages'),

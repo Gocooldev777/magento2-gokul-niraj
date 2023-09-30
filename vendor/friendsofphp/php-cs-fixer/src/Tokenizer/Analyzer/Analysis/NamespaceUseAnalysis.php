@@ -25,33 +25,45 @@ final class NamespaceUseAnalysis implements StartEndTokenAwareAnalysis
 
     /**
      * The fully qualified use namespace.
+     *
+     * @var string
      */
-    private string $fullName;
+    private $fullName;
 
     /**
      * The short version of use namespace or the alias name in case of aliased use statements.
+     *
+     * @var string
      */
-    private string $shortName;
+    private $shortName;
 
     /**
      * Is the use statement being aliased?
+     *
+     * @var bool
      */
-    private bool $isAliased;
+    private $isAliased;
 
     /**
      * The start index of the namespace declaration in the analyzed Tokens.
+     *
+     * @var int
      */
-    private int $startIndex;
+    private $startIndex;
 
     /**
      * The end index of the namespace declaration in the analyzed Tokens.
+     *
+     * @var int
      */
-    private int $endIndex;
+    private $endIndex;
 
     /**
      * The type of import: class, function or constant.
+     *
+     * @var int
      */
-    private int $type;
+    private $type;
 
     public function __construct(string $fullName, string $shortName, bool $isAliased, int $startIndex, int $endIndex, int $type)
     {

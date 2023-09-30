@@ -62,7 +62,6 @@ call_user_func(static function ($a, $b) { var_dump($a, $b); }, 1, 2);
      * {@inheritdoc}
      *
      * Must run before NativeFunctionInvocationFixer.
-     * Must run after NoBinaryStringFixer, NoUselessConcatOperatorFixer.
      */
     public function getPriority(): int
     {
@@ -111,9 +110,6 @@ call_user_func(static function ($a, $b) { var_dump($a, $b); }, 1, 2);
         }
     }
 
-    /**
-     * @param array<int, int> $arguments
-     */
     private function processCall(Tokens $tokens, int $index, array $arguments): void
     {
         $firstArgIndex = $tokens->getNextMeaningfulToken(
@@ -125,15 +121,8 @@ call_user_func(static function ($a, $b) { var_dump($a, $b); }, 1, 2);
 
         if ($firstArgToken->isGivenKind(T_CONSTANT_ENCAPSED_STRING)) {
             $afterFirstArgIndex = $tokens->getNextMeaningfulToken($firstArgIndex);
-
             if (!$tokens[$afterFirstArgIndex]->equalsAny([',', ')'])) {
                 return; // first argument is an expression like `call_user_func("foo"."bar", ...)`, not supported!
-            }
-
-            $firstArgTokenContent = $firstArgToken->getContent();
-
-            if (!$this->isValidFunctionInvoke($firstArgTokenContent)) {
-                return;
             }
 
             $newCallTokens = Tokens::fromCode('<?php '.substr(str_replace('\\\\', '\\', $firstArgToken->getContent()), 1, -1).'();');
@@ -143,13 +132,7 @@ call_user_func(static function ($a, $b) { var_dump($a, $b); }, 1, 2);
             $newCallTokens->clearEmptyTokens();
 
             $this->replaceCallUserFuncWithCallback($tokens, $index, $newCallTokens, $firstArgIndex, $firstArgIndex);
-        } elseif (
-            $firstArgToken->isGivenKind(T_FUNCTION)
-            || (
-                $firstArgToken->isGivenKind(T_STATIC)
-                && $tokens[$tokens->getNextMeaningfulToken($firstArgIndex)]->isGivenKind(T_FUNCTION)
-            )
-        ) {
+        } elseif ($firstArgToken->isGivenKind([T_FUNCTION, T_STATIC])) {
             $firstArgEndIndex = $tokens->findBlockEnd(
                 Tokens::BLOCK_TYPE_CURLY_BRACE,
                 $tokens->getNextTokenOfKind($firstArgIndex, ['{'])
@@ -246,20 +229,5 @@ call_user_func(static function ($a, $b) { var_dump($a, $b); }, 1, 2);
         }
 
         return $subCollection;
-    }
-
-    private function isValidFunctionInvoke(string $name): bool
-    {
-        if (\strlen($name) < 3 || 'b' === $name[0] || 'B' === $name[0]) {
-            return false;
-        }
-
-        $name = substr($name, 1, -1);
-
-        if ($name !== trim($name)) {
-            return false;
-        }
-
-        return true;
     }
 }

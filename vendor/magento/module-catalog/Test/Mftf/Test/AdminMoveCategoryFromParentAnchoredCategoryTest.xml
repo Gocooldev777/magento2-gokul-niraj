@@ -74,9 +74,7 @@
         <!--Verify Product displayed in category store front page-->
         <click selector="{{StorefrontCategoryMainSection.productLink}}" stepKey="openSearchedProduct"/>
         <waitForPageLoad  stepKey="waitForProductToLoad1"/>
-        <actionGroup ref="AssertStorefrontProductInfoMainProductNameActionGroup" stepKey="assertProductName">
-            <argument name="value" value="{{defaultSimpleProduct.name}}"/>
-        </actionGroup>
+        <see selector="{{StorefrontProductInfoMainSection.productName}}" userInput="{{defaultSimpleProduct.name}}" stepKey="assertProductName"/>
 
         <!--Open Category Page-->
         <actionGroup ref="AdminOpenCategoryPageActionGroup" stepKey="openAdminCategoryIndexPage1"/>
@@ -111,8 +109,6 @@
         <waitForPageLoad  stepKey="waitForProductToLoad2"/>
 
         <!--Verify product name on Store Front-->
-        <actionGroup ref="AssertStorefrontProductInfoMainProductNameActionGroup" stepKey="assertProductNameAfterMove">
-            <argument name="value" value="{{defaultSimpleProduct.name}}"/>
-        </actionGroup>
+        <see selector="{{StorefrontProductInfoMainSection.productName}}" userInput="{{defaultSimpleProduct.name}}" stepKey="assertProductNameAfterMove"/>
     </test>
 </tests>

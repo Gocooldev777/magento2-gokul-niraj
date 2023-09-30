@@ -15,52 +15,50 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\PHPUnit\Tests\Rector\MethodCall\AssertFalseStrposToContainsRector\AssertFalseStrposToContainsRectorTest
  */
-final class AssertFalseStrposToContainsRector extends AbstractRector
+final class AssertFalseStrposToContainsRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @var array<string, string>
      */
     private const RENAME_METHODS_MAP = ['assertFalse' => 'assertNotContains', 'assertNotFalse' => 'assertContains'];
     /**
-     * @readonly
      * @var \Rector\PHPUnit\NodeAnalyzer\IdentifierManipulator
      */
     private $identifierManipulator;
     /**
-     * @readonly
      * @var \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer
      */
     private $testsNodeAnalyzer;
-    public function __construct(IdentifierManipulator $identifierManipulator, TestsNodeAnalyzer $testsNodeAnalyzer)
+    public function __construct(\Rector\PHPUnit\NodeAnalyzer\IdentifierManipulator $identifierManipulator, \Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer $testsNodeAnalyzer)
     {
         $this->identifierManipulator = $identifierManipulator;
         $this->testsNodeAnalyzer = $testsNodeAnalyzer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Turns `strpos`/`stripos` comparisons to their method name alternatives in PHPUnit TestCase', [new CodeSample('$this->assertFalse(strpos($anything, "foo"), "message");', '$this->assertNotContains("foo", $anything, "message");')]);
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns `strpos`/`stripos` comparisons to their method name alternatives in PHPUnit TestCase', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('$this->assertFalse(strpos($anything, "foo"), "message");', '$this->assertNotContains("foo", $anything, "message");'), new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample('$this->assertNotFalse(stripos($anything, "foo"), "message");', '$this->assertContains("foo", $anything, "message");')]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [MethodCall::class, StaticCall::class];
+        return [\PhpParser\Node\Expr\MethodCall::class, \PhpParser\Node\Expr\StaticCall::class];
     }
     /**
      * @param MethodCall|StaticCall $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         $oldMethodName = \array_keys(self::RENAME_METHODS_MAP);
         if (!$this->testsNodeAnalyzer->isPHPUnitMethodCallNames($node, $oldMethodName)) {
             return null;
         }
         $firstArgumentValue = $node->args[0]->value;
-        if ($firstArgumentValue instanceof StaticCall) {
+        if ($firstArgumentValue instanceof \PhpParser\Node\Expr\StaticCall) {
             return null;
         }
-        if ($firstArgumentValue instanceof MethodCall) {
+        if ($firstArgumentValue instanceof \PhpParser\Node\Expr\MethodCall) {
             return null;
         }
         if (!$this->isNames($firstArgumentValue, ['strpos', 'stripos'])) {
@@ -70,14 +68,14 @@ final class AssertFalseStrposToContainsRector extends AbstractRector
         return $this->changeArgumentsOrder($node);
     }
     /**
+     * @return MethodCall|StaticCall|null
      * @param \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $node
-     * @return \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall|null
      */
-    private function changeArgumentsOrder($node)
+    private function changeArgumentsOrder($node) : ?\PhpParser\Node
     {
-        $oldArguments = $node->getArgs();
+        $oldArguments = $node->args;
         $strposFuncCallNode = $oldArguments[0]->value;
-        if (!$strposFuncCallNode instanceof FuncCall) {
+        if (!$strposFuncCallNode instanceof \PhpParser\Node\Expr\FuncCall) {
             return null;
         }
         $firstArgument = $strposFuncCallNode->args[1];

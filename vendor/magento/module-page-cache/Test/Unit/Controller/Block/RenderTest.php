@@ -18,8 +18,6 @@ use Magento\Framework\Translate\InlineInterface;
 use Magento\Framework\View\Layout;
 use Magento\Framework\View\Layout\LayoutCacheKeyInterface;
 use Magento\Framework\View\Layout\ProcessorInterface;
-use Magento\Framework\Validator\Regex;
-use Magento\Framework\Validator\RegexFactory;
 use Magento\PageCache\Controller\Block;
 use Magento\PageCache\Controller\Block\Render;
 use Magento\PageCache\Test\Unit\Block\Controller\StubBlock;
@@ -72,11 +70,6 @@ class RenderTest extends TestCase
     protected $layoutCacheKeyMock;
 
     /**
-     * Validation pattern for handles array
-     */
-    private const VALIDATION_RULE_PATTERN = '/^[a-z0-9]+[a-z0-9_]*$/i';
-
-    /**
      * @inheritDoc
      */
     protected function setUp(): void
@@ -118,16 +111,6 @@ class RenderTest extends TestCase
 
         $this->translateInline = $this->getMockForAbstractClass(InlineInterface::class);
 
-        $regexFactoryMock = $this->getMockBuilder(RegexFactory::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['create'])
-            ->getMock();
-
-        $regexObject = new Regex(self::VALIDATION_RULE_PATTERN);
-
-        $regexFactoryMock->expects($this->any())->method('create')
-            ->willReturn($regexObject);
-
         $helperObjectManager = new ObjectManager($this);
         $this->action = $helperObjectManager->getObject(
             Render::class,
@@ -136,8 +119,7 @@ class RenderTest extends TestCase
                 'translateInline' => $this->translateInline,
                 'jsonSerializer' => new Json(),
                 'base64jsonSerializer' => new Base64Json(),
-                'layoutCacheKey' => $this->layoutCacheKeyMock,
-                'regexValidatorFactory' => $regexFactoryMock
+                'layoutCacheKey' => $this->layoutCacheKeyMock
             ]
         );
     }

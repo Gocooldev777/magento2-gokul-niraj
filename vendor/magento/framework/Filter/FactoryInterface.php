@@ -3,16 +3,10 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Framework\Filter;
-
-use Laminas\Filter\FilterInterface;
 
 /**
  * Magento filter factory interface
- *
- * @api
  */
 interface FactoryInterface
 {
@@ -37,7 +31,7 @@ interface FactoryInterface
      *
      * @param string $alias
      * @param array $arguments
-     * @return FilterInterface
+     * @return \Zend_Filter_Interface
      */
     public function createFilter($alias, array $arguments = []);
 }

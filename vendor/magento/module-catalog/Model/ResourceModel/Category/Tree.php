@@ -16,13 +16,13 @@ use Magento\Framework\EntityManager\MetadataPool;
  */
 class Tree extends Dbp
 {
-    public const ID_FIELD = 'id';
+    const ID_FIELD = 'id';
 
-    public const PATH_FIELD = 'path';
+    const PATH_FIELD = 'path';
 
-    public const ORDER_FIELD = 'order';
+    const ORDER_FIELD = 'order';
 
-    public const LEVEL_FIELD = 'level';
+    const LEVEL_FIELD = 'level';
 
     /**
      * @var array
@@ -52,16 +52,22 @@ class Tree extends Dbp
     protected $_collection;
 
     /**
+     * Join URL rewrites data to collection flag
+     *
      * @var boolean
      */
     protected $_joinUrlRewriteIntoCollection = false;
 
     /**
+     * Inactive categories ids
+     *
      * @var array
      */
     protected $_inactiveCategoryIds = null;
 
     /**
+     * Store id
+     *
      * @var integer
      */
     protected $_storeId = null;
@@ -72,16 +78,22 @@ class Tree extends Dbp
     protected $_coreResource;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
 
     /**
+     * Cache
+     *
      * @var \Magento\Framework\App\CacheInterface
      */
     protected $_cache;
 
     /**
+     * Catalog category
+     *
      * @var \Magento\Catalog\Model\ResourceModel\Category
      */
     protected $_catalogCategory;
@@ -475,7 +487,7 @@ class Tree extends Dbp
         $where = [$levelField . '=0' => true];
 
         foreach ($this->_conn->fetchAll($select) as $item) {
-            $pathIds = explode('/', $item['path'] ?? '');
+            $pathIds = explode('/', $item['path']);
             $level = (int)$item['level'];
             while ($level > 0) {
                 $pathIds[count($pathIds) - 1] = '%';
@@ -506,7 +518,7 @@ class Tree extends Dbp
         }
         $childrenItems = [];
         foreach ($arrNodes as $key => $nodeInfo) {
-            $pathToParent = explode('/', $nodeInfo[$this->_pathField] ?? '');
+            $pathToParent = explode('/', $nodeInfo[$this->_pathField]);
             array_pop($pathToParent);
             $pathToParent = implode('/', $pathToParent);
             $childrenItems[$pathToParent][] = $nodeInfo;
@@ -525,7 +537,7 @@ class Tree extends Dbp
      */
     public function loadBreadcrumbsArray($path, $addCollectionData = true, $withRootNode = false)
     {
-        $pathIds = explode('/', $path ?: '');
+        $pathIds = explode('/', $path);
         if (!$withRootNode) {
             array_shift($pathIds);
         }

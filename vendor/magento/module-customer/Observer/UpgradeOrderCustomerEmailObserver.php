@@ -66,7 +66,6 @@ class UpgradeOrderCustomerEmailObserver implements ObserverInterface
         }
         $searchCriteria = $this->searchCriteriaBuilder
             ->addFilter(OrderInterface::CUSTOMER_ID, $customer->getId())
-            ->addFilter(OrderInterface::CUSTOMER_EMAIL, $originalCustomer->getEmail())
             ->create();
 
         /**

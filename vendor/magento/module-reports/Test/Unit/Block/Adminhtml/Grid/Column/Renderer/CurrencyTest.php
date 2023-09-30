@@ -12,8 +12,6 @@ use Magento\Directory\Model\Currency as CurrencyModel;
 use Magento\Directory\Model\Currency\DefaultLocator;
 use Magento\Directory\Model\CurrencyFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Currency\Data\Currency as CurrencyData;
-use Magento\Framework\Currency\Exception\CurrencyException;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -25,6 +23,8 @@ use Magento\Store\Api\Data\WebsiteInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Zend_Currency;
+use Zend_Currency_Exception;
 
 /**
  * Test for class Currency.
@@ -179,11 +179,11 @@ class CurrencyTest extends TestCase
      * @param int $adminWebsiteId
      * @param string $adminCurrencyCode
      * @param string $storeCurrencyCode
-     * @param string $adminOrderAmount
-     * @param string $convertedAmount
+     * @param float $adminOrderAmount
+     * @param float $convertedAmount
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws CurrencyException
+     * @throws Zend_Currency_Exception
      * @dataProvider getCurrencyDataProvider
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
@@ -194,8 +194,8 @@ class CurrencyTest extends TestCase
         int $adminWebsiteId,
         string $adminCurrencyCode,
         string $storeCurrencyCode,
-        string $adminOrderAmount,
-        string $convertedAmount
+        float $adminOrderAmount,
+        float $convertedAmount
     ): void {
         $this->row = new DataObject(
             [
@@ -240,7 +240,7 @@ class CurrencyTest extends TestCase
             ->expects($this->any())
             ->method('getDefaultCurrency')
             ->willReturn($storeCurrencyCode);
-        $currLocaleMock = $this->createMock(CurrencyData::class);
+        $currLocaleMock = $this->createMock(Zend_Currency::class);
         $currLocaleMock
             ->expects($this->any())
             ->method('toCurrency')
@@ -271,8 +271,8 @@ class CurrencyTest extends TestCase
                 'adminWebsiteId' => 1,
                 'adminCurrencyCode' => 'EUR',
                 'storeCurrencyCode' => 'EUR',
-                'adminOrderAmount' => '105.00',
-                'convertedAmount' => '105.00'
+                'adminOrderAmount' => 105.00,
+                'convertedAmount' => 105.00
             ],
             'rate conversion with different admin and storefront rate' => [
                 'rate' => 1.4150,
@@ -281,8 +281,8 @@ class CurrencyTest extends TestCase
                 'adminWebsiteId' => 1,
                 'adminCurrencyCode' => 'USD',
                 'storeCurrencyCode' => 'EUR',
-                'adminOrderAmount' => '105.00',
-                'convertedAmount' => '148.575'
+                'adminOrderAmount' => 105.00,
+                'convertedAmount' => 148.575
             ]
         ];
     }

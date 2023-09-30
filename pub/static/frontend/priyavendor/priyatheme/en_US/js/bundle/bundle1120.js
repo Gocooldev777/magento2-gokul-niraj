@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/components/single/checkbox.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<div class=\"admin__field admin__field-option\">\n    <input type=\"checkbox\"\n           class=\"admin__control-checkbox\"\n           simple-checked=\"checked\"\n           ko-disabled=\"disabled\"\n           ko-focused=\"focused\"\n           ko-value=\"value\"\n           attr=\"id: uid, name: inputName\"/>\n\n    <label class=\"admin__field-label\" text=\"description\" attr=\"for: uid\"></label>\n</div>\n"}
+}});

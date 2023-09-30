@@ -19,7 +19,10 @@ namespace PhpCsFixer\Tokenizer\Analyzer\Analysis;
  */
 final class MatchAnalysis extends AbstractControlCaseStructuresAnalysis
 {
-    private ?DefaultAnalysis $defaultAnalysis;
+    /**
+     * @var null|DefaultAnalysis
+     */
+    private $defaultAnalysis;
 
     public function __construct(int $index, int $open, int $close, ?DefaultAnalysis $defaultAnalysis)
     {

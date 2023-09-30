@@ -11,8 +11,6 @@ use Magento\Framework\DataObject\KeyValueObjectInterface;
 
 /**
  * Payment additional info interface.
- *
- * @api
  */
 interface PaymentAdditionalInfoInterface extends KeyValueObjectInterface
 {

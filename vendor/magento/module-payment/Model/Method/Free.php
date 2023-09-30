@@ -20,16 +20,16 @@ use Magento\Framework\Pricing\PriceCurrencyInterface;
  */
 class Free extends \Magento\Payment\Model\Method\AbstractMethod
 {
-    public const PAYMENT_METHOD_FREE_CODE = 'free';
+    const PAYMENT_METHOD_FREE_CODE = 'free';
 
     /**
      * XML Paths for configuration constants
      */
-    public const XML_PATH_PAYMENT_FREE_ACTIVE = 'payment/free/active';
+    const XML_PATH_PAYMENT_FREE_ACTIVE = 'payment/free/active';
 
-    public const XML_PATH_PAYMENT_FREE_ORDER_STATUS = 'payment/free/order_status';
+    const XML_PATH_PAYMENT_FREE_ORDER_STATUS = 'payment/free/order_status';
 
-    public const XML_PATH_PAYMENT_FREE_PAYMENT_ACTION = 'payment/free/payment_action';
+    const XML_PATH_PAYMENT_FREE_PAYMENT_ACTION = 'payment/free/payment_action';
 
     /**
      * Payment Method features
@@ -49,11 +49,6 @@ class Free extends \Magento\Payment\Model\Method\AbstractMethod
      * @var PriceCurrencyInterface
      */
     protected $priceCurrency;
-
-    /**
-     * @var bool
-     */
-    protected $_isOffline = true;
 
     /**
      * @param \Magento\Framework\Model\Context $context

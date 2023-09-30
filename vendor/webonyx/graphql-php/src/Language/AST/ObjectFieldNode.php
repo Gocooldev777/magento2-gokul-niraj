@@ -1,13 +1,17 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class ObjectFieldNode extends Node
 {
-    public string $kind = NodeKind::OBJECT_FIELD;
+    /** @var string */
+    public $kind = NodeKind::OBJECT_FIELD;
 
-    public NameNode $name;
+    /** @var NameNode */
+    public $name;
 
     /** @var VariableNode|NullValueNode|IntValueNode|FloatValueNode|StringValueNode|BooleanValueNode|EnumValueNode|ListValueNode|ObjectValueNode */
-    public ValueNode $value;
+    public $value;
 }

@@ -66,13 +66,13 @@ use Psr\Log\LoggerInterface;
  */
 class ProductTest extends AbstractImportTestCase
 {
-    private const MEDIA_DIRECTORY = 'media/import';
+    const MEDIA_DIRECTORY = 'media/import';
 
-    private const ENTITY_TYPE_ID = 1;
+    const ENTITY_TYPE_ID = 1;
 
-    private const ENTITY_TYPE_CODE = 'catalog_product';
+    const ENTITY_TYPE_CODE = 'catalog_product';
 
-    private const ENTITY_ID = 13;
+    const ENTITY_ID = 13;
 
     /**
      * @var AdapterInterface|MockObject

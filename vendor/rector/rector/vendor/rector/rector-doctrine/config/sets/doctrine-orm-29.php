@@ -1,9 +1,9 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->import(__DIR__ . '/doctrine-annotations-to-attributes.php');
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $containerConfigurator->import(__DIR__ . '/doctrine-annotations-to-attributes.php');
 };

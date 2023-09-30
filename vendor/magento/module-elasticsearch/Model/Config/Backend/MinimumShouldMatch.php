@@ -32,10 +32,7 @@ class MinimumShouldMatch extends Value
      */
     public function validateValue(): void
     {
-        if ($this->getValue() !== null
-            && strlen($this->getValue())
-            && !preg_match('/^((\d+<)?-?\d+%?\s?)+$/', $this->getValue())
-        ) {
+        if (strlen($this->getValue()) && !preg_match('/^((\d+<)?-?\d+%?\s?)+$/', $this->getValue())) {
             throw new LocalizedException(
                 __(
                     'Value for the field "%1" was not saved because of the incorrect format.',

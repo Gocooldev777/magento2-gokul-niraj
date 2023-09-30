@@ -6,14 +6,14 @@
 
 namespace Magento\Directory\Model;
 
-use Magento\Directory\Model\Currency\Filter;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\InputException;
-use Magento\Framework\Exception\LocalizedException;
+use Magento\Directory\Model\Currency\Filter;
 use Magento\Framework\Locale\Currency as LocaleCurrency;
 use Magento\Framework\Locale\ResolverInterface as LocalResolverInterface;
 use Magento\Framework\NumberFormatterFactory;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Currency model
@@ -432,9 +432,20 @@ class Currency extends \Magento\Framework\Model\AbstractModel
             $this->getCode() ?? $this->numberFormatter->getTextAttribute(\NumberFormatter::CURRENCY_CODE)
         );
 
+        if (array_key_exists(LocaleCurrency::CURRENCY_OPTION_SYMBOL, $options)) {
+            // remove only one non-breaking space from custom currency symbol to allow custom NBSP in currency symbol
+            $formattedCurrency = preg_replace('/ /u', '', $formattedCurrency, 1);
+        }
+
         if ((array_key_exists(LocaleCurrency::CURRENCY_OPTION_DISPLAY, $options)
-            && $options[LocaleCurrency::CURRENCY_OPTION_DISPLAY] === \Magento\Framework\Currency::NO_SYMBOL)) {
-            $formattedCurrency = str_replace(' ', '', $formattedCurrency);
+                && $options[LocaleCurrency::CURRENCY_OPTION_DISPLAY] === \Magento\Framework\Currency::NO_SYMBOL)) {
+            if ($this->isArabicSymbols($formattedCurrency)) {
+                /* Workaround. We need to provide Arabic symbols range and Unicode modifier into expression
+                   to bypass issue when preg_replace with Arabic symbol return corrupted result */
+                $formattedCurrency = preg_replace(['/[^0-9\x{0600}-\x{06FF}.,۰٫]+/u', '/ /'], '', $formattedCurrency);
+            } else {
+                $formattedCurrency = preg_replace(['/[^0-9.,۰٫]+/', '/ /'], '', $formattedCurrency);
+            }
         }
 
         return preg_replace('/^\s+|\s+$/u', '', $formattedCurrency);
@@ -448,11 +459,13 @@ class Currency extends \Magento\Framework\Model\AbstractModel
      */
     private function getNumberFormatter(array $options): \Magento\Framework\NumberFormatter
     {
-        $locale = $this->localeResolver->getLocale() . ($this->getCode() ? '@currency=' . $this->getCode() : '');
-        $key = 'currency_' . hash('sha256', $locale . $this->serializer->serialize($options));
+        $key = 'currency_' . hash(
+            'sha256',
+            ($this->localeResolver->getLocale() . $this->serializer->serialize($options))
+        );
         if (!isset($this->numberFormatterCache[$key])) {
             $this->numberFormatter = $this->numberFormatterFactory->create(
-                ['locale' => $locale, 'style' => \NumberFormatter::CURRENCY]
+                ['locale' => $this->localeResolver->getLocale(), 'style' => \NumberFormatter::CURRENCY]
             );
 
             $this->setOptions($options);
@@ -504,7 +517,7 @@ class Currency extends \Magento\Framework\Model\AbstractModel
     {
         $formatted = $this->formatTxt(0);
         $number = $this->formatTxt(0, ['display' => \Magento\Framework\Currency::NO_SYMBOL]);
-        return $formatted !== null ? str_replace($this->trimUnicodeDirectionMark($number), '%s', $formatted) : '';
+        return str_replace($this->trimUnicodeDirectionMark($number), '%s', $formatted);
     }
 
     /**
@@ -586,8 +599,19 @@ class Currency extends \Magento\Framework\Model\AbstractModel
     private function trimUnicodeDirectionMark($string)
     {
         if (preg_match('/^(\x{200E}|\x{200F})/u', $string, $match)) {
-            $string = preg_replace('/^' . $match[1] . '/u', '', $string);
+            $string = preg_replace('/^'.$match[1].'/u', '', $string);
         }
         return $string;
+    }
+
+    /**
+     * Checks if given string is of Arabic symbols
+     *
+     * @param string $string
+     * @return bool
+     */
+    private function isArabicSymbols(string $string): bool
+    {
+        return preg_match('/[\p{Arabic}]/u', $string) > 0;
     }
 }

@@ -6,9 +6,7 @@ namespace Rector\Php80\MatchAndRefactor\StrStartsWithMatchAndRefactor;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\BinaryOp;
-use PhpParser\Node\Expr\BinaryOp\Equal;
 use PhpParser\Node\Expr\BinaryOp\Identical;
-use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\FuncCall;
@@ -19,7 +17,7 @@ use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\Php80\Contract\StrStartWithMatchAndRefactorInterface;
 use Rector\Php80\NodeFactory\StrStartsWithFuncCallFactory;
 use Rector\Php80\ValueObject\StrStartsWith;
-final class StrposMatchAndRefactor implements StrStartWithMatchAndRefactorInterface
+final class StrposMatchAndRefactor implements \Rector\Php80\Contract\StrStartWithMatchAndRefactorInterface
 {
     /**
      * @readonly
@@ -41,7 +39,7 @@ final class StrposMatchAndRefactor implements StrStartWithMatchAndRefactorInterf
      * @var \Rector\Core\NodeAnalyzer\ArgsAnalyzer
      */
     private $argsAnalyzer;
-    public function __construct(NodeNameResolver $nodeNameResolver, ValueResolver $valueResolver, StrStartsWithFuncCallFactory $strStartsWithFuncCallFactory, ArgsAnalyzer $argsAnalyzer)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\Core\PhpParser\Node\Value\ValueResolver $valueResolver, \Rector\Php80\NodeFactory\StrStartsWithFuncCallFactory $strStartsWithFuncCallFactory, \Rector\Core\NodeAnalyzer\ArgsAnalyzer $argsAnalyzer)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->valueResolver = $valueResolver;
@@ -49,15 +47,15 @@ final class StrposMatchAndRefactor implements StrStartWithMatchAndRefactorInterf
         $this->argsAnalyzer = $argsAnalyzer;
     }
     /**
-     * @param \PhpParser\Node\Expr\BinaryOp\Identical|\PhpParser\Node\Expr\BinaryOp\NotIdentical|\PhpParser\Node\Expr\BinaryOp\Equal|\PhpParser\Node\Expr\BinaryOp\NotEqual $binaryOp
+     * @param \PhpParser\Node\Expr\BinaryOp\Identical|\PhpParser\Node\Expr\BinaryOp\NotIdentical $binaryOp
      */
-    public function match($binaryOp) : ?StrStartsWith
+    public function match($binaryOp) : ?\Rector\Php80\ValueObject\StrStartsWith
     {
-        $isPositive = $binaryOp instanceof Identical || $binaryOp instanceof Equal;
-        if ($binaryOp->left instanceof FuncCall && $this->nodeNameResolver->isName($binaryOp->left, 'strpos')) {
+        $isPositive = $binaryOp instanceof \PhpParser\Node\Expr\BinaryOp\Identical;
+        if ($binaryOp->left instanceof \PhpParser\Node\Expr\FuncCall && $this->nodeNameResolver->isName($binaryOp->left, 'strpos')) {
             return $this->processBinaryOpLeft($binaryOp, $isPositive);
         }
-        if (!$binaryOp->right instanceof FuncCall) {
+        if (!$binaryOp->right instanceof \PhpParser\Node\Expr\FuncCall) {
             return null;
         }
         if (!$this->nodeNameResolver->isName($binaryOp->right, 'strpos')) {
@@ -68,13 +66,13 @@ final class StrposMatchAndRefactor implements StrStartWithMatchAndRefactorInterf
     /**
      * @return FuncCall|BooleanNot
      */
-    public function refactorStrStartsWith(StrStartsWith $strStartsWith) : Node
+    public function refactorStrStartsWith(\Rector\Php80\ValueObject\StrStartsWith $strStartsWith) : \PhpParser\Node
     {
         $strposFuncCall = $strStartsWith->getFuncCall();
-        $strposFuncCall->name = new Name('str_starts_with');
+        $strposFuncCall->name = new \PhpParser\Node\Name('str_starts_with');
         return $this->strStartsWithFuncCallFactory->createStrStartsWith($strStartsWith);
     }
-    private function processBinaryOpLeft(BinaryOp $binaryOp, bool $isPositive) : ?StrStartsWith
+    private function processBinaryOpLeft(\PhpParser\Node\Expr\BinaryOp $binaryOp, bool $isPositive) : ?\Rector\Php80\ValueObject\StrStartsWith
     {
         if (!$this->valueResolver->isValue($binaryOp->right, 0)) {
             return null;
@@ -90,9 +88,9 @@ final class StrposMatchAndRefactor implements StrStartWithMatchAndRefactorInterf
         /** @var Arg $secondArg */
         $secondArg = $funcCall->args[1];
         $needle = $secondArg->value;
-        return new StrStartsWith($funcCall, $haystack, $needle, $isPositive);
+        return new \Rector\Php80\ValueObject\StrStartsWith($funcCall, $haystack, $needle, $isPositive);
     }
-    private function processBinaryOpRight(BinaryOp $binaryOp, bool $isPositive) : ?StrStartsWith
+    private function processBinaryOpRight(\PhpParser\Node\Expr\BinaryOp $binaryOp, bool $isPositive) : ?\Rector\Php80\ValueObject\StrStartsWith
     {
         if (!$this->valueResolver->isValue($binaryOp->left, 0)) {
             return null;
@@ -108,6 +106,6 @@ final class StrposMatchAndRefactor implements StrStartWithMatchAndRefactorInterf
         /** @var Arg $secondArg */
         $secondArg = $funcCall->args[1];
         $needle = $secondArg->value;
-        return new StrStartsWith($funcCall, $haystack, $needle, $isPositive);
+        return new \Rector\Php80\ValueObject\StrStartsWith($funcCall, $haystack, $needle, $isPositive);
     }
 }

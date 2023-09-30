@@ -36,7 +36,6 @@
             <actionGroup ref="DeleteProductUsingProductGridActionGroup" stepKey="deleteProduct">
                 <argument name="product" value="SimpleProduct3"/>
             </actionGroup>
-            <actionGroup ref="ResetAdminDataGridToDefaultViewActionGroup" stepKey="clearFilters"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="amOnLogoutPage"/>
         </after>
 
@@ -59,15 +58,13 @@
         </actionGroup>
 
         <!-- Save the product -->
-        <actionGroup ref="AdminProductFormSaveActionGroup" stepKey="saveProduct"/>
-        <comment userInput="BIC workaround" stepKey="waitForProductSaved"/>
+        <click stepKey="saveProduct" selector="{{AdminProductFormActionSection.saveButton}}"/>
+        <waitForPageLoad stepKey="waitForProductSaved"/>
         <seeElement selector="{{AdminCategoryMessagesSection.SuccessMessage}}" stepKey="assertSuccess"/>
 
         <!-- navigate to the created product page -->
-        <actionGroup ref="StorefrontOpenProductPageActionGroup" stepKey="goToCreatedProduct">
-            <argument name="productUrl" value="{{SimpleProduct3.urlKey}}"/>
-        </actionGroup>
-        <comment userInput="BIC workaround" stepKey="waitForProductPageLoad"/>
+        <amOnPage url="/{{SimpleProduct3.urlKey}}.html" stepKey="goToCreatedProduct"/>
+        <waitForPageLoad stepKey="waitForProductPageLoad"/>
 
         <!-- Check to make sure all of the created names are there -->
         <see stepKey="assertNameInFirstOption" selector="{{StorefrontProductInfoMainSection.nthCustomOption('1')}}" userInput="{{ProductOptionField.title}}"/>

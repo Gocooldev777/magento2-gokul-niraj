@@ -7,7 +7,6 @@
 namespace Magento\Elasticsearch\Model\Adapter;
 
 use Elasticsearch\Common\Exceptions\Missing404Exception;
-use Exception;
 use Magento\AdvancedSearch\Model\Client\ClientInterface;
 use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
 use Magento\Elasticsearch\Model\Adapter\FieldMapper\Product\FieldProvider\StaticField;
@@ -19,11 +18,9 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Stdlib\ArrayManager;
 use Psr\Log\LoggerInterface;
-use Magento\AdvancedSearch\Helper\Data;
 
 /**
  * Elasticsearch adapter
- * @SuppressWarnings(PHPMD.TooManyFields)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Elasticsearch
@@ -31,10 +28,10 @@ class Elasticsearch
     /**#@+
      * Text flags for Elasticsearch bulk actions
      */
-    public const BULK_ACTION_INDEX = 'index';
-    public const BULK_ACTION_CREATE = 'create';
-    public const BULK_ACTION_DELETE = 'delete';
-    public const BULK_ACTION_UPDATE = 'update';
+    const BULK_ACTION_INDEX = 'index';
+    const BULK_ACTION_CREATE = 'create';
+    const BULK_ACTION_DELETE = 'delete';
+    const BULK_ACTION_UPDATE = 'update';
     /**#@-*/
 
     /**
@@ -113,18 +110,6 @@ class Elasticsearch
     private $arrayManager;
 
     /**
-     * @var Data
-     */
-    protected $helper;
-
-    /**
-     * @var array
-     */
-    private $responseErrorExceptionList = [
-        'elasticsearchMissing404' => Missing404Exception::class
-    ];
-
-    /**
      * @param ConnectionManager $connectionManager
      * @param FieldMapperInterface $fieldMapper
      * @param Config $clientConfig
@@ -132,12 +117,10 @@ class Elasticsearch
      * @param LoggerInterface $logger
      * @param Index\IndexNameResolver $indexNameResolver
      * @param BatchDataMapperInterface $batchDocumentDataMapper
-     * @param Data $helper
      * @param array $options
      * @param ProductAttributeRepositoryInterface|null $productAttributeRepository
      * @param StaticField|null $staticFieldProvider
      * @param ArrayManager|null $arrayManager
-     * @param array $responseErrorExceptionList
      * @throws LocalizedException
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -149,12 +132,10 @@ class Elasticsearch
         LoggerInterface $logger,
         IndexNameResolver $indexNameResolver,
         BatchDataMapperInterface $batchDocumentDataMapper,
-        Data $helper,
         $options = [],
         ProductAttributeRepositoryInterface $productAttributeRepository = null,
         StaticField $staticFieldProvider = null,
-        ArrayManager $arrayManager = null,
-        array $responseErrorExceptionList = []
+        ArrayManager $arrayManager = null
     ) {
         $this->connectionManager = $connectionManager;
         $this->fieldMapper = $fieldMapper;
@@ -163,18 +144,16 @@ class Elasticsearch
         $this->logger = $logger;
         $this->indexNameResolver = $indexNameResolver;
         $this->batchDocumentDataMapper = $batchDocumentDataMapper;
-        $this->helper = $helper;
         $this->productAttributeRepository = $productAttributeRepository ?:
             ObjectManager::getInstance()->get(ProductAttributeRepositoryInterface::class);
         $this->staticFieldProvider = $staticFieldProvider ?:
             ObjectManager::getInstance()->get(StaticField::class);
         $this->arrayManager = $arrayManager ?:
             ObjectManager::getInstance()->get(ArrayManager::class);
-        $this->responseErrorExceptionList = array_merge($this->responseErrorExceptionList, $responseErrorExceptionList);
 
         try {
             $this->client = $this->connectionManager->getConnection($options);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e);
             throw new LocalizedException(
                 __('The search failed because of a search engine misconfiguration.')
@@ -192,7 +171,7 @@ class Elasticsearch
     {
         try {
             $response = $this->client->ping();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new LocalizedException(
                 __('Could not ping search engine: %1', $e->getMessage())
             );
@@ -226,7 +205,7 @@ class Elasticsearch
      * @param int $storeId
      * @param string $mappedIndexerId
      * @return $this
-     * @throws Exception
+     * @throws \Exception
      */
     public function addDocs(array $documents, $storeId, $mappedIndexerId)
     {
@@ -235,7 +214,7 @@ class Elasticsearch
                 $indexName = $this->indexNameResolver->getIndexName($storeId, $mappedIndexerId, $this->preparedIndex);
                 $bulkIndexDocuments = $this->getDocsArrayInBulkIndexFormat($documents, $indexName);
                 $this->client->bulkQuery($bulkIndexDocuments);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->logger->critical($e);
                 throw $e;
             }
@@ -279,7 +258,7 @@ class Elasticsearch
             // remove index if already exists, wildcard deletion may cause collisions
             try {
                 $this->client->deleteIndex($indexToDelete);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->logger->critical($e);
             }
         }
@@ -297,7 +276,7 @@ class Elasticsearch
      * @param int $storeId
      * @param string $mappedIndexerId
      * @return $this
-     * @throws Exception
+     * @throws \Exception
      */
     public function deleteDocs(array $documentIds, $storeId, $mappedIndexerId)
     {
@@ -310,7 +289,7 @@ class Elasticsearch
                 self::BULK_ACTION_DELETE
             );
             $this->client->bulkQuery($bulkDeleteDocuments);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e);
             throw $e;
         }
@@ -339,30 +318,18 @@ class Elasticsearch
         ];
 
         foreach ($documents as $id => $document) {
-            if ($this->helper->isClientOpenSearchV2()) {
-                $bulkArray['body'][] = [
-                    $action => [
-                        '_id' => $id,
-                        '_index' => $indexName
-                    ]
-                ];
-            } else {
-                $bulkArray['body'][] = [
-                    $action => [
-                        '_id' => $id,
-                        '_type' => $this->clientConfig->getEntityType(),
-                        '_index' => $indexName
-                    ]
-                ];
-            }
+            $bulkArray['body'][] = [
+                $action => [
+                    '_id' => $id,
+                    '_type' => $this->clientConfig->getEntityType(),
+                    '_index' => $indexName
+                ]
+            ];
             if ($action == self::BULK_ACTION_INDEX) {
                 $bulkArray['body'][] = $document;
             }
         }
 
-        if ($this->helper->isClientOpenSearchV2()) {
-            unset($bulkArray['type']);
-        }
         return $bulkArray;
     }
 
@@ -424,7 +391,7 @@ class Elasticsearch
         if ($oldIndex) {
             try {
                 $this->client->deleteIndex($oldIndex);
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->logger->critical($e);
             }
             unset($this->indexByCode[$mappedIndexerId . '_' . $storeId]);
@@ -450,28 +417,13 @@ class Elasticsearch
 
         try {
             $this->updateMapping($attributeCode, $indexName);
-        } catch (Exception $e) {
-            if ($this->validateException($e)) {
-                unset($this->indexByCode[$mappedIndexerId . '_' . $storeId]);
-                $indexName = $this->getIndexFromAlias($storeId, $mappedIndexerId);
-                $this->updateMapping($attributeCode, $indexName);
-            } else {
-                throw $e;
-            }
+        } catch (Missing404Exception $e) {
+            unset($this->indexByCode[$mappedIndexerId . '_' . $storeId]);
+            $indexName = $this->getIndexFromAlias($storeId, $mappedIndexerId);
+            $this->updateMapping($attributeCode, $indexName);
         }
 
         return $this;
-    }
-
-    /**
-     * Check if the given class name is in the exception list
-     *
-     * @param Exception $exception
-     * @return bool
-     */
-    private function validateException(Exception $exception): bool
-    {
-        return in_array(get_class($exception), $this->responseErrorExceptionList, true);
     }
 
     /**

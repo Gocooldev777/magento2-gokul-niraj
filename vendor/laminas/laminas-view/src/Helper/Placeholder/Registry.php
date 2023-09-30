@@ -1,26 +1,11 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper\Placeholder;
 
 use Laminas\View\Exception;
-use Laminas\View\Helper\Placeholder\Container\AbstractContainer;
-
-use function array_key_exists;
-use function class_exists;
-use function class_parents;
-use function in_array;
-use function sprintf;
-use function trigger_error;
-
-use const E_USER_DEPRECATED;
 
 /**
  * Registry for placeholder containers
- *
- * @deprecated since >= 2.20.0. This class is currently unused and will be removed in version 3.0 of this component.
- *             There is no replacement.
  */
 class Registry
 {
@@ -36,7 +21,7 @@ class Registry
      *
      * @var string
      */
-    protected $containerClass = Container::class;
+    protected $containerClass = 'Laminas\View\Helper\Placeholder\Container';
 
     /**
      * Placeholder containers
@@ -77,11 +62,12 @@ class Registry
      * Set the container for an item in the registry
      *
      * @param  string                      $key
+     * @param  Container\AbstractContainer $container
      * @return Registry
      */
-    public function setContainer($key, AbstractContainer $container)
+    public function setContainer($key, Container\AbstractContainer $container)
     {
-        $key               = (string) $key;
+        $key = (string) $key;
         $this->items[$key] = $container;
 
         return $this;
@@ -91,7 +77,7 @@ class Registry
      * Retrieve a placeholder container
      *
      * @param  string $key
-     * @return AbstractContainer
+     * @return Container\AbstractContainer
      */
     public function getContainer($key)
     {
@@ -100,7 +86,9 @@ class Registry
             return $this->items[$key];
         }
 
-        return $this->createContainer($key);
+        $container = $this->createContainer($key);
+
+        return $container;
     }
 
     /**
@@ -121,7 +109,7 @@ class Registry
      *
      * @param  string $key
      * @param  array  $value
-     * @return AbstractContainer
+     * @return Container\AbstractContainer
      */
     public function createContainer($key, array $value = [])
     {
@@ -169,7 +157,7 @@ class Registry
             );
         }
 
-        if (! in_array(AbstractContainer::class, class_parents($name), true)) {
+        if (! in_array('Laminas\View\Helper\Placeholder\Container\AbstractContainer', class_parents($name))) {
             throw new Exception\InvalidArgumentException('Invalid Container class specified');
         }
 

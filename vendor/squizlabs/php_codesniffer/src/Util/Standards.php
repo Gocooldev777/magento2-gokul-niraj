@@ -180,8 +180,7 @@ class Standards
             // Check if the installed dir is actually a standard itself.
             $csFile = $standardsDir.'/ruleset.xml';
             if (is_file($csFile) === true) {
-                $basename = basename($standardsDir);
-                $installedStandards[$basename] = $basename;
+                $installedStandards[] = basename($standardsDir);
                 continue;
             }
 
@@ -191,7 +190,6 @@ class Standards
             }
 
             $di = new \DirectoryIterator($standardsDir);
-            $standardsInDir = [];
             foreach ($di as $file) {
                 if ($file->isDir() === true && $file->isDot() === false) {
                     $filename = $file->getFilename();
@@ -204,13 +202,10 @@ class Standards
                     // Valid coding standard dirs include a ruleset.
                     $csFile = $file->getPathname().'/ruleset.xml';
                     if (is_file($csFile) === true) {
-                        $standardsInDir[$filename] = $filename;
+                        $installedStandards[] = $filename;
                     }
                 }
             }
-
-            natsort($standardsInDir);
-            $installedStandards += $standardsInDir;
         }//end foreach
 
         return $installedStandards;

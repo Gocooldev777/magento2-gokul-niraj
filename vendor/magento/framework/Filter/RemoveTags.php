@@ -5,12 +5,10 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-
 /**
  * Remove tags from string
  */
-class RemoveTags implements FilterInterface
+class RemoveTags implements \Zend_Filter_Interface
 {
     /**
      * Convert html entities
@@ -37,7 +35,7 @@ class RemoveTags implements FilterInterface
             $value
         );
         $value = htmlspecialchars_decode($value);
-
+        
         return strip_tags($value);
     }
 }

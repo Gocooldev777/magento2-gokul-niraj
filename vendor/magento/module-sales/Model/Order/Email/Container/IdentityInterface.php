@@ -10,7 +10,6 @@ use Magento\Store\Model\Store;
 
 /**
  * Interface \Magento\Sales\Model\Order\Email\Container\IdentityInterface
- * @api
  *
  */
 interface IdentityInterface

@@ -6,7 +6,6 @@
 
 namespace Magento\SampleData\Console\Command;
 
-use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -24,7 +23,7 @@ use Composer\Console\ApplicationFactory;
  */
 class SampleDataRemoveCommand extends Command
 {
-    public const OPTION_NO_UPDATE = 'no-update';
+    const OPTION_NO_UPDATE = 'no-update';
 
     /**
      * @var Filesystem
@@ -40,7 +39,7 @@ class SampleDataRemoveCommand extends Command
      * @var ArrayInputFactory
      * @deprecated 100.1.0
      */
-    private $arrayInputFactory; // phpcs:ignore Magento2.Commenting.ClassPropertyPHPDocFormatting
+    private $arrayInputFactory;
 
     /**
      * @var ApplicationFactory
@@ -67,7 +66,7 @@ class SampleDataRemoveCommand extends Command
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function configure()
     {
@@ -83,7 +82,7 @@ class SampleDataRemoveCommand extends Command
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -108,7 +107,5 @@ class SampleDataRemoveCommand extends Command
         } else {
             $output->writeln('<info>' . 'There is no sample data for current set of modules.' . '</info>');
         }
-
-        return Cli::RETURN_SUCCESS;
     }
 }

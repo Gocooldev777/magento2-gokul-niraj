@@ -20,7 +20,6 @@ namespace PHPMD\Rule\Controversial;
 use PHPMD\AbstractNode;
 use PHPMD\AbstractRule;
 use PHPMD\Rule\ClassAware;
-use PHPMD\Rule\TraitAware;
 
 /**
  * This rule class detects properties not named in camelCase.
@@ -28,7 +27,7 @@ use PHPMD\Rule\TraitAware;
  * @author Francis Besset <francis.besset@gmail.com>
  * @since 1.1.0
  */
-class CamelCasePropertyName extends AbstractRule implements ClassAware, TraitAware
+class CamelCasePropertyName extends AbstractRule implements ClassAware
 {
     /**
      * This method checks if a property is not named in camelCase

@@ -6,13 +6,12 @@
  */
 namespace Magento\CatalogRule\Controller\Adminhtml\Promo\Catalog;
 
-use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface as HttpPostActionInterface;
-use Magento\Framework\App\Request\DataPersistorInterface;
+use Magento\Backend\App\Action\Context;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Filter\FilterInput;
 use Magento\Framework\Registry;
 use Magento\Framework\Stdlib\DateTime\Filter\Date;
+use Magento\Framework\App\Request\DataPersistorInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 
 /**
@@ -81,7 +80,7 @@ class Save extends \Magento\CatalogRule\Controller\Adminhtml\Promo\Catalog imple
                 if ($this->getRequest()->getParam('to_date')) {
                     $filterValues['to_date'] = $this->_dateFilter;
                 }
-                $inputFilter = new FilterInput(
+                $inputFilter = new \Zend_Filter_Input(
                     $filterValues,
                     [],
                     $data
@@ -147,9 +146,8 @@ class Save extends \Magento\CatalogRule\Controller\Adminhtml\Promo\Catalog imple
                     __('Something went wrong while saving the rule data. Please review the error log.')
                 );
                 $this->_objectManager->get(\Psr\Log\LoggerInterface::class)->critical($e);
-                $ruleData = $data ?? $this->getRequest()->getPostValue();
-                $this->_objectManager->get(\Magento\Backend\Model\Session::class)->setPageData($ruleData);
-                $this->dataPersistor->set('catalog_rule', $ruleData);
+                $this->_objectManager->get(\Magento\Backend\Model\Session::class)->setPageData($data);
+                $this->dataPersistor->set('catalog_rule', $data);
                 $this->_redirect('catalog_rule/*/edit', ['id' => $this->getRequest()->getParam('rule_id')]);
                 return;
             }

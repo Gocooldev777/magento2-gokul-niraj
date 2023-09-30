@@ -4,16 +4,15 @@ declare (strict_types=1);
 namespace Rector\NodeNameResolver\NodeNameResolver;
 
 use PhpParser\Node;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use Rector\NodeNameResolver\Contract\NodeNameResolverInterface;
 use Rector\NodeNameResolver\NodeNameResolver;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements NodeNameResolverInterface<ClassLike>
  */
-final class ClassNameResolver implements NodeNameResolverInterface
+final class ClassNameResolver implements \Rector\NodeNameResolver\Contract\NodeNameResolverInterface
 {
     /**
      * @var \Rector\NodeNameResolver\NodeNameResolver
@@ -22,23 +21,23 @@ final class ClassNameResolver implements NodeNameResolverInterface
     /**
      * @required
      */
-    public function autowire(NodeNameResolver $nodeNameResolver) : void
+    public function autowire(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver) : void
     {
         $this->nodeNameResolver = $nodeNameResolver;
     }
     public function getNode() : string
     {
-        return ClassLike::class;
+        return \PhpParser\Node\Stmt\ClassLike::class;
     }
     /**
      * @param ClassLike $node
      */
-    public function resolve(Node $node) : ?string
+    public function resolve(\PhpParser\Node $node) : ?string
     {
-        if ($node->namespacedName instanceof Name) {
+        if (\property_exists($node, 'namespacedName') && $node->namespacedName instanceof \PhpParser\Node\Name) {
             return $node->namespacedName->toString();
         }
-        if (!$node->name instanceof Identifier) {
+        if ($node->name === null) {
             return null;
         }
         return $this->nodeNameResolver->getName($node->name);

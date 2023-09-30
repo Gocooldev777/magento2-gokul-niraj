@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection;
 
 /**
  * Represents a variable.
@@ -25,15 +25,15 @@ namespace RectorPrefix202304\Symfony\Component\DependencyInjection;
  */
 class Variable
 {
-    /**
-     * @var string
-     */
     private $name;
     public function __construct(string $name)
     {
         $this->name = $name;
     }
-    public function __toString() : string
+    /**
+     * @return string
+     */
+    public function __toString()
     {
         return $this->name;
     }

@@ -9,32 +9,17 @@ return [
     'top01' => [
         'topic' => 'top01',
         'disabled' => false,
-        'connections' => [
-            '' => ['name' => null,
-            'exchange' => 'magento',
-            'disabled' => false
-            ]
-        ]
+        'connections' => []
     ],
     'top02' => [
         'topic' => 'top02',
         'disabled' => false,
-        'connections' => [
-            '' => ['name' => null,
-                'exchange' => 'magento',
-                'disabled' => false
-            ]
-        ]
+        'connections' => []
     ],
     'top03' => [
         'topic' => 'top03',
         'disabled' => true,
-        'connections' => [
-            '' => ['name' => null,
-                'exchange' => 'magento',
-                'disabled' => false
-            ]
-        ]
+        'connections' => []
     ],
     'top04' => [
         'topic' => 'top04',

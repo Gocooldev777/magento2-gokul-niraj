@@ -186,7 +186,6 @@ final class MyTest extends \PHPUnit_Framework_TestCase
             'group',
             'internal',
             'method',
-            'mixin',
             'property',
             'property-read',
             'property-write',

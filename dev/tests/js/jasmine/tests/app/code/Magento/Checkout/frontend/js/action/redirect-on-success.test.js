@@ -35,7 +35,8 @@ define([
         });
 
         it('Checks if loader is called before redirect to success page.', function () {
-            spyOn(RedirectOnSuccess, 'redirectToSuccessPage').and.callFake(function () {});
+            spyOn(window.location, 'replace').and.returnValue(false);
+
             RedirectOnSuccess.execute();
 
             expect(FullScreenLoader.startLoader).toHaveBeenCalled();

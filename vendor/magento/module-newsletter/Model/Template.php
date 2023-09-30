@@ -5,10 +5,6 @@
  */
 namespace Magento\Newsletter\Model;
 
-use Magento\Framework\Filter\FilterInput;
-use Magento\Framework\Validator\EmailAddress;
-use Magento\Framework\Validator\IntUtils;
-
 /**
  * Template model
  *
@@ -44,9 +40,9 @@ class Template extends \Magento\Email\Model\AbstractTemplate
     /**
      * Mail object
      *
-     * @var string
+     * @var \Zend_Mail
+     *
      * @deprecated 100.3.0 Unused property
-     * @see no alternatives
      */
     protected $_mail;
 
@@ -144,17 +140,17 @@ class Template extends \Magento\Email\Model\AbstractTemplate
     public function validate()
     {
         $validators = [
-            'template_code' => [FilterInput::ALLOW_EMPTY => false],
-            'template_type' => IntUtils::class,
-            'template_sender_email' => EmailAddress::class,
-            'template_sender_name' => [FilterInput::ALLOW_EMPTY => false],
+            'template_code' => [\Zend_Filter_Input::ALLOW_EMPTY => false],
+            'template_type' => 'Int',
+            'template_sender_email' => 'EmailAddress',
+            'template_sender_name' => [\Zend_Filter_Input::ALLOW_EMPTY => false],
         ];
         $data = [];
         foreach (array_keys($validators) as $validateField) {
             $data[$validateField] = $this->getDataUsingMethod($validateField);
         }
 
-        $validateInput = new FilterInput([], $validators, $data);
+        $validateInput = new \Zend_Filter_Input([], $validators, $data);
         if (!$validateInput->isValid()) {
             $errorMessages = [];
             foreach ($validateInput->getMessages() as $messages) {
@@ -221,8 +217,7 @@ class Template extends \Magento\Email\Model\AbstractTemplate
                 'template_text',
                 __(
                     'Follow this link to unsubscribe <!-- This tag is for unsubscribe link  -->' .
-                    '<a href="{{var subscriber_data.unsubscription_link}}">
-                        {{var subscriber_data.unsubscription_link}}' .
+                    '<a href="{{var subscriber.getUnsubscriptionLink()}}">{{var subscriber.getUnsubscriptionLink()}}' .
                     '</a>'
                 )
             );

@@ -13,6 +13,8 @@ namespace Magento\Catalog\Model\Config\Source;
 class GridPerPage implements \Magento\Framework\Option\ArrayInterface
 {
     /**
+     * Options
+     *
      * @var array
      */
     protected $_options;
@@ -24,11 +26,11 @@ class GridPerPage implements \Magento\Framework\Option\ArrayInterface
      */
     public function __construct($perPageValues)
     {
-        $this->_options = $perPageValues !== null ? explode(',', $perPageValues) : [];
+        $this->_options = explode(',', $perPageValues);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function toOptionArray()
     {

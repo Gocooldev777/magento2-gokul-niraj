@@ -27,9 +27,9 @@ use PhpCsFixer\Tokenizer\Tokens;
 final class FunctionsAnalyzer
 {
     /**
-     * @var array{tokens: string, imports: list<NamespaceUseAnalysis>, declarations: list<int>}
+     * @var array
      */
-    private array $functionsAnalysis = ['tokens' => '', 'imports' => [], 'declarations' => []];
+    private $functionsAnalysis = ['tokens' => '', 'imports' => [], 'declarations' => []];
 
     /**
      * Important: risky because of the limited (file) scope of the tool.
@@ -90,7 +90,7 @@ final class FunctionsAnalyzer
             $scopeEndIndex = $declaration->getScopeEndIndex();
 
             if ($index >= $scopeStartIndex && $index <= $scopeEndIndex) {
-                $inGlobalNamespace = $declaration->isGlobalNamespace();
+                $inGlobalNamespace = '' === $declaration->getFullName();
 
                 break;
             }
@@ -137,7 +137,7 @@ final class FunctionsAnalyzer
     }
 
     /**
-     * @return array<string, ArgumentAnalysis>
+     * @return ArgumentAnalysis[]
      */
     public function getFunctionArguments(Tokens $tokens, int $functionIndex): array
     {

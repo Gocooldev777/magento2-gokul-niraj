@@ -20,7 +20,6 @@ use Magento\Framework\EntityManager\EntityManager;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\MessageQueue\BulkPublisherInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Asynchronous Bulk Management
@@ -105,18 +104,14 @@ class BulkManagement implements BulkManagementInterface
      */
     public function scheduleBulk($bulkUuid, array $operations, $description, $userId = null)
     {
-        $userType = $this->userContext->getUserType();
-        if ($userType === null) {
-            $userType = UserContextInterface::USER_TYPE_ADMIN;
-        }
-        if ($userId === null && $userType === UserContextInterface::USER_TYPE_ADMIN) {
-            $userId = $this->userContext->getUserId();
-        }
-
         $metadata = $this->metadataPool->getMetadata(BulkSummaryInterface::class);
         $connection = $this->resourceConnection->getConnectionByName($metadata->getEntityConnectionName());
         // save bulk summary and related operations
         $connection->beginTransaction();
+        $userType = $this->userContext->getUserType();
+        if ($userType === null) {
+            $userType = UserContextInterface::USER_TYPE_ADMIN;
+        }
         try {
             /** @var BulkSummaryInterface $bulkSummary */
             $bulkSummary = $this->bulkSummaryFactory->create();
@@ -161,7 +156,7 @@ class BulkManagement implements BulkManagementInterface
             $operation = reset($retriablyFailedOperations);
             //async consumer expects operations to be in the database
             // thus such operation should not be deleted but reopened
-            $shouldReopen = strpos($operation->getTopicName() ?? '', ConfigInterface::TOPIC_PREFIX) === 0;
+            $shouldReopen = strpos($operation->getTopicName(), ConfigInterface::TOPIC_PREFIX) === 0;
             $metadata = $this->metadataPool->getMetadata(OperationInterface::class);
             $linkField = $metadata->getLinkField();
             $ids = [];
@@ -200,7 +195,7 @@ class BulkManagement implements BulkManagementInterface
                     }
                 }
                 $connection->commit();
-            } catch (Throwable $exception) {
+            } catch (\Throwable $exception) {
                 $connection->rollBack();
                 $this->logger->critical($exception->getMessage());
                 $affectedOperations = 0;

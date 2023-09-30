@@ -20,7 +20,7 @@ abstract class Rate extends \Magento\Backend\App\Action
      *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'Magento_Tax::manage_tax';
+    const ADMIN_RESOURCE = 'Magento_Tax::manage_tax';
 
     /**
      * @var \Magento\Framework\Registry
@@ -68,7 +68,7 @@ abstract class Rate extends \Magento\Backend\App\Action
             if (is_array($value)) {
                 $result[$key] = $this->_processRateData($value);
             } else {
-                $result[$key] = $value !== null ? trim($value) : '';
+                $result[$key] = trim($value);
             }
         }
         return $result;

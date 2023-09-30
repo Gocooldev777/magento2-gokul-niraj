@@ -26,6 +26,6 @@ class CookieSameSiteValidator extends \Magento\Framework\Validator\AbstractValid
      */
     public function isValid($value)
     {
-        return $value !== null && in_array(strtolower($value), self::SAME_SITE_ALLOWED_VALUES);
+        return in_array(strtolower($value), self::SAME_SITE_ALLOWED_VALUES);
     }
 }

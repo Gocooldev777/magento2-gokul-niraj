@@ -23,7 +23,6 @@ use Magento\Framework\Filter\Template;
 use Magento\Framework\Filter\Template\Tokenizer\Parameter;
 use Magento\Framework\Filter\VariableResolverInterface;
 use Magento\Framework\Stdlib\StringUtils;
-use Magento\Framework\Translate\Inline\StateInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\ContentProcessorException;
 use Magento\Framework\View\Asset\ContentProcessorInterface;
@@ -54,12 +53,12 @@ class Filter extends Template
     /**
      * The name used in the {{trans}} directive
      */
-    public const TRANS_DIRECTIVE_NAME = 'trans';
+    const TRANS_DIRECTIVE_NAME = 'trans';
 
     /**
      * The regex to match interior portion of a {{trans "foo"}} translation directive
      */
-    public const TRANS_DIRECTIVE_REGEX = '/^\s*([\'"])([^\1]*?)(?<!\\\)\1(\s.*)?$/si';
+    const TRANS_DIRECTIVE_REGEX = '/^\s*([\'"])([^\1]*?)(?<!\\\)\1(\s.*)?$/si';
 
     /**
      * @var bool
@@ -120,6 +119,8 @@ class Filter extends Template
 
     /**
      * Core store config
+     * Variable factory
+     *
      * @var VariableFactory
      */
     protected $_variableFactory;
@@ -190,11 +191,6 @@ class Filter extends Template
     private $storeInformation;
 
     /**
-     * @var StateInterface
-     */
-    private $inlineTranslationState;
-
-    /**
      * Filter constructor.
      * @param StringUtils $string
      * @param LoggerInterface $logger
@@ -215,7 +211,6 @@ class Filter extends Template
      * @param array $variables
      * @param array $directiveProcessors
      * @param StoreInformation|null $storeInformation
-     * @param StateInterface|null $inlineTranslationState
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -237,8 +232,7 @@ class Filter extends Template
         CssInliner $cssInliner,
         $variables = [],
         array $directiveProcessors = [],
-        ?StoreInformation $storeInformation = null,
-        StateInterface $inlineTranslationState = null
+        ?StoreInformation $storeInformation = null
     ) {
         $this->_escaper = $escaper;
         $this->_assetRepo = $assetRepo;
@@ -257,8 +251,6 @@ class Filter extends Template
         $this->configVariables = $configVariables;
         $this->storeInformation = $storeInformation ?:
             ObjectManager::getInstance()->get(StoreInformation::class);
-        $this->inlineTranslationState = $inlineTranslationState ?:
-            ObjectManager::getInstance()->get(StateInterface::class);
         parent::__construct($string, $variables, $directiveProcessors, $variableResolver);
     }
 
@@ -624,9 +616,8 @@ class Filter extends Template
         if (empty($text)) {
             return '';
         }
-        $this->inlineTranslationState->disable();
+
         $text = __($text, $params)->render();
-        $this->inlineTranslationState->enable();
         return $this->applyModifiers($text, $modifiers);
     }
 
@@ -638,7 +629,7 @@ class Filter extends Template
      */
     protected function getTransParameters($value)
     {
-        if ($value === null || preg_match(self::TRANS_DIRECTIVE_REGEX, $value, $matches) !== 1) {
+        if (preg_match(self::TRANS_DIRECTIVE_REGEX, $value, $matches) !== 1) {
             return ['', []];  // malformed directive body; return without breaking list
         }
         // phpcs:disable Magento2.Functions.DiscouragedFunction
@@ -691,7 +682,7 @@ class Filter extends Template
      */
     protected function explodeModifiers($value, $default = null)
     {
-        $parts = $value !== null ? explode('|', $value, 2) : [];
+        $parts = explode('|', $value, 2);
         if (2 === count($parts)) {
             return $parts;
         }
@@ -710,8 +701,7 @@ class Filter extends Template
      */
     protected function applyModifiers($value, $modifiers)
     {
-        $modifiersParts = $modifiers !== null ? explode('|', $modifiers) : [];
-        foreach ($modifiersParts as $part) {
+        foreach (explode('|', $modifiers) as $part) {
             if (empty($part)) {
                 continue;
             }

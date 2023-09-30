@@ -6,18 +6,17 @@
 
 namespace Magento\Framework\Url;
 
-use Laminas\Validator\AbstractValidator;
 use Laminas\Validator\Uri;
 
 /**
  * URL validator
  */
-class Validator extends AbstractValidator
+class Validator extends \Zend_Validate_Abstract
 {
     /**#@+
      * Error keys
      */
-    public const INVALID_URL = 'uriInvalid';
+    const INVALID_URL = 'invalidUrl';
     /**#@-*/
 
     /**
@@ -27,12 +26,12 @@ class Validator extends AbstractValidator
 
     /**
      * @param Uri $validator
+     * @throws \Zend_Validate_Exception
      */
     public function __construct(Uri $validator)
     {
-        parent::__construct();
         // set translated message template
-        $this->setMessage((string)new \Magento\Framework\Phrase("Invalid URL '%value%'."), Uri::INVALID);
+        $this->setMessage((string)new \Magento\Framework\Phrase("Invalid URL '%value%'."), self::INVALID_URL);
         $this->validator = $validator;
         $this->validator->setAllowRelative(false);
     }
@@ -42,7 +41,7 @@ class Validator extends AbstractValidator
      *
      * @var array
      */
-    protected $messageTemplates = [Uri::INVALID => "Invalid URL '%value%'."];
+    protected $_messageTemplates = [self::INVALID_URL => "Invalid URL '%value%'."];
 
     /**
      * Validate value
@@ -52,12 +51,12 @@ class Validator extends AbstractValidator
      */
     public function isValid($value)
     {
-        $this->setValue($value);
+        $this->_setValue($value);
 
         $valid = $this->validator->isValid($value);
 
         if (!$valid) {
-            $this->error(Uri::INVALID);
+            $this->_error(self::INVALID_URL);
         }
 
         return $valid;

@@ -31,7 +31,6 @@ use Magento\Quote\Api\ShippingMethodManagementInterface as ShippingMethodManager
 use Magento\Quote\Model\QuoteIdMaskFactory;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Ui\Component\Form\Element\Multiline;
-use Magento\Framework\Escaper;
 
 /**
  * Default Config Provider for checkout
@@ -193,11 +192,6 @@ class DefaultConfigProvider implements ConfigProviderInterface
     private $configPostProcessor;
 
     /**
-     * @var Escaper
-     */
-    private $escaper;
-
-    /**
      * @param CheckoutHelper $checkoutHelper
      * @param Session $checkoutSession
      * @param CustomerRepository $customerRepository
@@ -228,7 +222,6 @@ class DefaultConfigProvider implements ConfigProviderInterface
      * @param AddressMetadataInterface $addressMetadata
      * @param AttributeOptionManagementInterface $attributeOptionManager
      * @param CustomerAddressDataProvider|null $customerAddressData
-     * @param Escaper|null $escaper
      * @codeCoverageIgnore
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -262,8 +255,7 @@ class DefaultConfigProvider implements ConfigProviderInterface
         CaptchaConfigPostProcessorInterface $configPostProcessor,
         AddressMetadataInterface $addressMetadata = null,
         AttributeOptionManagementInterface $attributeOptionManager = null,
-        CustomerAddressDataProvider $customerAddressData = null,
-        Escaper $escaper = null
+        CustomerAddressDataProvider $customerAddressData = null
     ) {
         $this->checkoutHelper = $checkoutHelper;
         $this->checkoutSession = $checkoutSession;
@@ -297,7 +289,6 @@ class DefaultConfigProvider implements ConfigProviderInterface
         $this->customerAddressData = $customerAddressData ?:
             ObjectManager::getInstance()->get(CustomerAddressDataProvider::class);
         $this->configPostProcessor = $configPostProcessor;
-        $this->escaper = $escaper ?? ObjectManager::getInstance()->get(Escaper::class);
     }
 
     /**
@@ -352,7 +343,6 @@ class DefaultConfigProvider implements ConfigProviderInterface
             'shipping/shipping_policy/shipping_policy_content',
             ScopeInterface::SCOPE_STORE
         );
-        $policyContent = $this->escaper->escapeHtml($policyContent);
         $output['shippingPolicy'] = [
             'isEnabled' => $this->scopeConfig->isSetFlag(
                 'shipping/shipping_policy/enable_shipping_policy',

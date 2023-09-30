@@ -211,7 +211,7 @@ define([
                         }, 0);
                         toTemplate.data[type] = {
                             value: value,
-                            formatted: utils.formatPriceLocale(value, format)
+                            formatted: utils.formatPrice(value, format)
                         };
                     });
 
@@ -387,9 +387,15 @@ define([
     function isValidQty(bundleOption) {
         var isValid = true,
             qtyElem = bundleOption.data('qtyField'),
-            bundleOptionType = bundleOption.prop('type');
+            bundleOptionType = bundleOption.prop('type'),
+            qtyValidator = qtyElem.data('validate') &&
+                typeof qtyElem.data('validate')['validate-item-quantity'] === 'object' ?
+                qtyElem.data('validate')['validate-item-quantity'] : null;
 
-        if (['radio', 'select-one'].includes(bundleOptionType) && qtyElem.val() < 0) {
+        if (['radio', 'select-one'].includes(bundleOptionType) &&
+            qtyValidator &&
+            (qtyElem.val() < qtyValidator.minAllowed || qtyElem.val() > qtyValidator.maxAllowed)
+        ) {
             isValid = false;
         }
 

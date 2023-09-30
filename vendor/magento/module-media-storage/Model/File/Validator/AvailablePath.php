@@ -26,29 +26,31 @@
  */
 namespace Magento\MediaStorage\Model\File\Validator;
 
-use Laminas\Validator\AbstractValidator;
-
-class AvailablePath extends AbstractValidator
+class AvailablePath extends \Zend_Validate_Abstract
 {
-    public const PROTECTED_PATH = 'protectedPath';
+    const PROTECTED_PATH = 'protectedPath';
 
-    public const NOT_AVAILABLE_PATH = 'notAvailablePath';
+    const NOT_AVAILABLE_PATH = 'notAvailablePath';
 
-    public const PROTECTED_LFI = 'protectedLfi';
+    const PROTECTED_LFI = 'protectedLfi';
 
     /**
      * The path
      *
      * @var string
      */
-    protected $value;
+    protected $_value;
 
     /**
+     * Protected paths
+     *
      * @var string[]
      */
     protected $_protectedPaths = [];
 
     /**
+     * Available paths
+     *
      * @var string[]
      */
     protected $_availablePaths = [];
@@ -61,17 +63,11 @@ class AvailablePath extends AbstractValidator
     protected $_pathsData;
 
     /**
-     * @var array
-     */
-    protected $messageTemplates;
-
-    /**
      * Construct
      */
     public function __construct()
     {
         $this->_initMessageTemplates();
-        parent::__construct();
     }
 
     /**
@@ -81,8 +77,8 @@ class AvailablePath extends AbstractValidator
      */
     protected function _initMessageTemplates()
     {
-        if (!$this->messageTemplates) {
-            $this->messageTemplates = [
+        if (!$this->_messageTemplates) {
+            $this->_messageTemplates = [
                 self::PROTECTED_PATH => __('Path "%value%" is protected and cannot be used.'),
                 self::NOT_AVAILABLE_PATH => __('Path "%value%" is not available and cannot be used.'),
                 self::PROTECTED_LFI => __('Path "%value%" may not include parent directory traversal ("../", "..\\").'),
@@ -196,37 +192,34 @@ class AvailablePath extends AbstractValidator
      * @return bool
      * @throws \Exception       Throw exception on empty both paths masks types
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function isValid($value)
     {
-        $value = $value !== null ? trim($value) : '';
-        $this->setValue($value);
+        $value = trim($value);
+        $this->_setValue($value);
 
         if (!$this->_availablePaths && !$this->_protectedPaths) {
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception(__('Please set available and/or protected paths list(s) before validation.'));
         }
 
-        if ($this->value && preg_match('#\.\.[\\\/]#', $this->value)) {
-            $this->error(self::PROTECTED_LFI, $this->value);
+        if (preg_match('#\.\.[\\\/]#', $this->_value)) {
+            $this->_error(self::PROTECTED_LFI, $this->_value);
             return false;
         }
 
         //validation
-        $value = str_replace('\\', '/', $this->value ?? '');
-        // phpcs:disable Magento2.Functions.DiscouragedFunction
+        $value = str_replace('\\', '/', $this->_value);
         $valuePathInfo = pathinfo(ltrim($value, '\\/'));
         if ($valuePathInfo['dirname'] == '.' || $valuePathInfo['dirname'] == '/') {
             $valuePathInfo['dirname'] = '';
         }
 
         if ($this->_protectedPaths && !$this->_isValidByPaths($valuePathInfo, $this->_protectedPaths, true)) {
-            $this->error(self::PROTECTED_PATH, $this->value);
+            $this->_error(self::PROTECTED_PATH, $this->_value);
             return false;
         }
         if ($this->_availablePaths && !$this->_isValidByPaths($valuePathInfo, $this->_availablePaths, false)) {
-            $this->error(self::NOT_AVAILABLE_PATH, $this->value);
+            $this->_error(self::NOT_AVAILABLE_PATH, $this->_value);
             return false;
         }
 
@@ -236,9 +229,9 @@ class AvailablePath extends AbstractValidator
     /**
      * Validate value by path masks
      *
-     * @param array $valuePathInfo Path info from value path
-     * @param string[] $paths Protected/available paths masks
-     * @param bool $protected Paths masks is protected?
+     * @param array $valuePathInfo  Path info from value path
+     * @param string[] $paths          Protected/available paths masks
+     * @param bool $protected       Paths masks is protected?
      * @return bool
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
@@ -246,15 +239,14 @@ class AvailablePath extends AbstractValidator
     protected function _isValidByPaths($valuePathInfo, $paths, $protected)
     {
         foreach ($paths as $path) {
-            $path = $path !== null ? ltrim($path, '\\/') : '';
+            $path = ltrim($path, '\\/');
             if (!isset($this->_pathsData[$path]['regFilename'])) {
-                // phpcs:disable Magento2.Functions.DiscouragedFunction
                 $pathInfo = pathinfo($path);
                 $options['file_mask'] = $pathInfo['basename'];
                 if ($pathInfo['dirname'] == '.' || $pathInfo['dirname'] == '/') {
                     $pathInfo['dirname'] = '';
                 } else {
-                    $pathInfo['dirname'] = str_replace('\\', '/', $pathInfo['dirname'] ?? '');
+                    $pathInfo['dirname'] = str_replace('\\', '/', $pathInfo['dirname']);
                 }
                 $options['dir_mask'] = $pathInfo['dirname'];
                 $this->_pathsData[$path]['options'] = $options;
@@ -263,17 +255,17 @@ class AvailablePath extends AbstractValidator
             }
 
             //file mask
-            if (false !== strpos($options['file_mask'] ?? '', '*')) {
+            if (false !== strpos($options['file_mask'], '*')) {
                 if (!isset($this->_pathsData[$path]['regFilename'])) {
                     //make regular
-                    $reg = $options['file_mask'] ?? '';
+                    $reg = $options['file_mask'];
                     $reg = str_replace('.', '\.', $reg);
                     $reg = str_replace('*', '.*?', $reg);
                     $reg = "/^({$reg})\$/";
                 } else {
                     $reg = $this->_pathsData[$path]['regFilename'];
                 }
-                $resultFile = preg_match($reg, $valuePathInfo['basename'] ?? '');
+                $resultFile = preg_match($reg, $valuePathInfo['basename']);
             } else {
                 $resultFile = $options['file_mask'] == $valuePathInfo['basename'];
             }

@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Resource;
+namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
 
 /**
  * FileExistenceResource represents a resource stored on the filesystem.
@@ -20,15 +20,9 @@ namespace RectorPrefix202304\Symfony\Component\Config\Resource;
  *
  * @final
  */
-class FileExistenceResource implements SelfCheckingResourceInterface
+class FileExistenceResource implements \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceInterface
 {
-    /**
-     * @var string
-     */
     private $resource;
-    /**
-     * @var bool
-     */
     private $exists;
     /**
      * @param string $resource The file path to the resource
@@ -46,6 +40,9 @@ class FileExistenceResource implements SelfCheckingResourceInterface
     {
         return $this->resource;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function isFresh(int $timestamp) : bool
     {
         return \file_exists($this->resource) === $this->exists;

@@ -5,9 +5,6 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-use Magento\Framework\Stdlib\StringUtils;
-
 /**
  * Truncate filter
  *
@@ -17,7 +14,7 @@ use Magento\Framework\Stdlib\StringUtils;
  * @deprecated 101.0.7
  * @see \Magento\Framework\Filter\TruncateFilter
  */
-class Truncate implements FilterInterface
+class Truncate implements \Zend_Filter_Interface
 {
     /**
      * @var int
@@ -40,19 +37,19 @@ class Truncate implements FilterInterface
     protected $breakWords;
 
     /**
-     * @var StringUtils
+     * @var \Magento\Framework\Stdlib\StringUtils
      */
     protected $string;
 
     /**
-     * @param StringUtils $string
+     * @param \Magento\Framework\Stdlib\StringUtils $string
      * @param int $length
      * @param string $etc
-     * @param string $remainder
+     * @param string &$remainder
      * @param bool $breakWords
      */
     public function __construct(
-        StringUtils $string,
+        \Magento\Framework\Stdlib\StringUtils $string,
         $length = 80,
         $etc = '...',
         &$remainder = '',

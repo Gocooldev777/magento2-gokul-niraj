@@ -15,8 +15,6 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
  */
 class Customer extends \Magento\Framework\App\Config\Value
 {
-    public const XML_PATH_CUSTOMER_ADDRESS_SHOW_COMPANY = 'customer/address/company_show';
-
     /**
      * @var \Magento\Eav\Model\Config
      */
@@ -76,7 +74,7 @@ class Customer extends \Magento\Framework\App\Config\Value
      */
     protected function _getAttributeCode()
     {
-        return $this->getField() === null ? '' : str_replace('_show', '', $this->getField());
+        return str_replace('_show', '', $this->getField());
     }
 
     /**
@@ -139,7 +137,7 @@ class Customer extends \Magento\Framework\App\Config\Value
                 $attributeObject->setData('scope_is_visible', null);
                 $attributeObject->save();
             }
-        } elseif ($this->getScope() == ScopeConfigInterface::SCOPE_TYPE_DEFAULT) {
+        } else if ($this->getScope() == ScopeConfigInterface::SCOPE_TYPE_DEFAULT) {
             $valueConfig = $this->getValueConfig($this->telephoneShowDefaultValue);
             foreach ($this->_getAttributeObjects() as $attributeObject) {
                 $attributeObject->setData('is_required', $valueConfig['is_required']);

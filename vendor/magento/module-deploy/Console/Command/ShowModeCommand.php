@@ -6,7 +6,6 @@
 
 namespace Magento\Deploy\Console\Command;
 
-use Magento\Framework\Console\Cli;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\App\State;
 use Symfony\Component\Console\Command\Command;
@@ -70,9 +69,7 @@ class ShowModeCommand extends Command
             if ($output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
                 $output->writeln($e->getTraceAsString());
             }
-            return Cli::RETURN_FAILURE;
+            return;
         }
-
-        return Cli::RETURN_SUCCESS;
     }
 }

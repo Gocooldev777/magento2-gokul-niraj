@@ -29,6 +29,39 @@ interface OrderExtensionInterface extends \Magento\Framework\Api\ExtensionAttrib
     public function setPaymentAdditionalInfo($paymentAdditionalInfo);
 
     /**
+     * @return \Magento\Tax\Api\Data\OrderTaxDetailsAppliedTaxInterface[]|null
+     */
+    public function getAppliedTaxes();
+
+    /**
+     * @param \Magento\Tax\Api\Data\OrderTaxDetailsAppliedTaxInterface[] $appliedTaxes
+     * @return $this
+     */
+    public function setAppliedTaxes($appliedTaxes);
+
+    /**
+     * @return \Magento\Tax\Api\Data\OrderTaxDetailsItemInterface[]|null
+     */
+    public function getItemAppliedTaxes();
+
+    /**
+     * @param \Magento\Tax\Api\Data\OrderTaxDetailsItemInterface[] $itemAppliedTaxes
+     * @return $this
+     */
+    public function setItemAppliedTaxes($itemAppliedTaxes);
+
+    /**
+     * @return boolean|null
+     */
+    public function getConvertingFromQuote();
+
+    /**
+     * @param boolean $convertingFromQuote
+     * @return $this
+     */
+    public function setConvertingFromQuote($convertingFromQuote);
+
+    /**
      * @return \Magento\GiftMessage\Api\Data\MessageInterface|null
      */
     public function getGiftMessage();
@@ -71,37 +104,4 @@ interface OrderExtensionInterface extends \Magento\Framework\Api\ExtensionAttrib
      * @return $this
      */
     public function setSendNotification($sendNotification);
-
-    /**
-     * @return \Magento\Tax\Api\Data\OrderTaxDetailsAppliedTaxInterface[]|null
-     */
-    public function getAppliedTaxes();
-
-    /**
-     * @param \Magento\Tax\Api\Data\OrderTaxDetailsAppliedTaxInterface[] $appliedTaxes
-     * @return $this
-     */
-    public function setAppliedTaxes($appliedTaxes);
-
-    /**
-     * @return \Magento\Tax\Api\Data\OrderTaxDetailsItemInterface[]|null
-     */
-    public function getItemAppliedTaxes();
-
-    /**
-     * @param \Magento\Tax\Api\Data\OrderTaxDetailsItemInterface[] $itemAppliedTaxes
-     * @return $this
-     */
-    public function setItemAppliedTaxes($itemAppliedTaxes);
-
-    /**
-     * @return boolean|null
-     */
-    public function getConvertingFromQuote();
-
-    /**
-     * @param boolean $convertingFromQuote
-     * @return $this
-     */
-    public function setConvertingFromQuote($convertingFromQuote);
 }

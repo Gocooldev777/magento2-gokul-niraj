@@ -46,11 +46,6 @@ class MethodAnnotationStructureUnitTest extends AbstractSniffUnitTest
      */
     public function getWarningList()
     {
-        return [
-            326 => 1,
-            336 => 1,
-            347 => 1,
-            358 => 1
-        ];
+        return [];
     }
 }

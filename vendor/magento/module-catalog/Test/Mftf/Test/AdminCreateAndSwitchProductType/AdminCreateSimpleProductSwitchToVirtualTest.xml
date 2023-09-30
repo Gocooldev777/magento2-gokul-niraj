@@ -27,7 +27,7 @@
                 <argument name="product" value="_defaultProduct"/>
             </actionGroup>
             <actionGroup ref="ResetProductGridToDefaultViewActionGroup" stepKey="resetSearch"/>
-            <actionGroup ref="AdminLogoutActionGroup" stepKey="amOnLogoutPage"/>
+            <amOnPage url="{{AdminLogoutPage.url}}" stepKey="amOnLogoutPage"/>
             <deleteData createDataKey="createPreReqCategory" stepKey="deletePreReqCategory"/>
         </after>
 

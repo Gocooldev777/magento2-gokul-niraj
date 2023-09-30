@@ -8,13 +8,13 @@ declare(strict_types=1);
 namespace Magento\InventorySales\Model\IsProductSalableForRequestedQtyCondition;
 
 use Magento\InventoryReservationsApi\Model\GetReservationsQuantityInterface;
-use Magento\InventorySalesApi\Model\GetSalableQtyInterface;
 use Magento\InventorySalesApi\Api\IsProductSalableForRequestedQtyInterface;
 use Magento\InventorySalesApi\Model\GetStockItemDataInterface;
 use Magento\InventorySalesApi\Api\Data\ProductSalableResultInterface;
 use Magento\InventorySalesApi\Api\Data\ProductSalableResultInterfaceFactory;
 use Magento\InventorySalesApi\Api\Data\ProductSalabilityErrorInterfaceFactory;
 use Magento\InventoryConfigurationApi\Api\GetStockItemConfigurationInterface;
+use Magento\InventoryConfigurationApi\Api\Data\StockItemConfigurationInterface;
 
 /**
  * @inheritdoc
@@ -47,32 +47,24 @@ class IsSalableWithReservationsCondition implements IsProductSalableForRequested
     private $productSalableResultFactory;
 
     /**
-     * @var GetSalableQtyInterface
-     */
-    private $getProductQtyInStock;
-
-    /**
      * @param GetStockItemDataInterface $getStockItemData
      * @param GetReservationsQuantityInterface $getReservationsQuantity
      * @param GetStockItemConfigurationInterface $getStockItemConfiguration
      * @param ProductSalabilityErrorInterfaceFactory $productSalabilityErrorFactory
      * @param ProductSalableResultInterfaceFactory $productSalableResultFactory
-     * @param GetSalableQtyInterface $getProductQtyInStock
      */
     public function __construct(
         GetStockItemDataInterface $getStockItemData,
         GetReservationsQuantityInterface $getReservationsQuantity,
         GetStockItemConfigurationInterface $getStockItemConfiguration,
         ProductSalabilityErrorInterfaceFactory $productSalabilityErrorFactory,
-        ProductSalableResultInterfaceFactory $productSalableResultFactory,
-        GetSalableQtyInterface $getProductQtyInStock
+        ProductSalableResultInterfaceFactory $productSalableResultFactory
     ) {
         $this->getStockItemData = $getStockItemData;
         $this->getReservationsQuantity = $getReservationsQuantity;
         $this->getStockItemConfiguration = $getStockItemConfiguration;
         $this->productSalabilityErrorFactory = $productSalabilityErrorFactory;
         $this->productSalableResultFactory = $productSalableResultFactory;
-        $this->getProductQtyInStock = $getProductQtyInStock;
     }
 
     /**
@@ -92,8 +84,14 @@ class IsSalableWithReservationsCondition implements IsProductSalableForRequested
             return $this->productSalableResultFactory->create(['errors' => $errors]);
         }
 
-        $qtyLeftInStock = $this->getProductQtyInStock->execute($sku, $stockId);
-        $isEnoughQty = bccomp((string)$qtyLeftInStock, (string)$requestedQty, 4) >= 0;
+        /** @var StockItemConfigurationInterface $stockItemConfiguration */
+        $stockItemConfiguration = $this->getStockItemConfiguration->execute($sku, $stockId);
+
+        $qtyWithReservation = $stockItemData[GetStockItemDataInterface::QUANTITY] +
+            $this->getReservationsQuantity->execute($sku, $stockId);
+        $qtyLeftInStock = $qtyWithReservation - $stockItemConfiguration->getMinQty();
+        $isInStock = bccomp((string)$qtyLeftInStock, (string)$requestedQty, 4) >= 0;
+        $isEnoughQty = (bool)$stockItemData[GetStockItemDataInterface::IS_SALABLE] && $isInStock;
 
         if (!$isEnoughQty) {
             $errors = [

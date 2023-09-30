@@ -6,12 +6,11 @@ namespace Rector\Transform\Rector\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\Interface_;
 use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * Covers cases like
  * - https://github.com/FriendsOfPHP/PHP-CS-Fixer/commit/a1cdb4d2dd8f45d731244eed406e1d537218cc66
@@ -19,15 +18,21 @@ use RectorPrefix202304\Webmozart\Assert\Assert;
  *
  * @see \Rector\Tests\Transform\Rector\Class_\MergeInterfacesRector\MergeInterfacesRectorTest
  */
-final class MergeInterfacesRector extends AbstractRector implements ConfigurableRectorInterface
+final class MergeInterfacesRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @api
+     * @deprecated
+     * @var string
+     */
+    public const OLD_TO_NEW_INTERFACES = 'old_to_new_interfaces';
     /**
      * @var array<string, string>
      */
     private $oldToNewInterfaces = [];
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Merges old interface to a new one, that already has its methods', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Merges old interface to a new one, that already has its methods', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 class SomeClass implements SomeInterface, SomeOldInterface
 {
 }
@@ -44,28 +49,23 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($node->implements === []) {
             return null;
         }
-        $hasChanged = \false;
         foreach ($node->implements as $key => $implement) {
             $oldInterfaces = \array_keys($this->oldToNewInterfaces);
             if (!$this->isNames($implement, $oldInterfaces)) {
                 continue;
             }
             $interface = $this->getName($implement);
-            $node->implements[$key] = new Name($this->oldToNewInterfaces[$interface]);
-            $hasChanged = \true;
-        }
-        if (!$hasChanged) {
-            return null;
+            $node->implements[$key] = new \PhpParser\Node\Name($this->oldToNewInterfaces[$interface]);
         }
         $this->makeImplementsUnique($node);
         return $node;
@@ -75,19 +75,19 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        Assert::allString(\array_keys($configuration));
-        Assert::allString($configuration);
-        $this->oldToNewInterfaces = $configuration;
+        $oldToNewInterfaces = $configuration[self::OLD_TO_NEW_INTERFACES] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($oldToNewInterfaces);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString(\array_keys($oldToNewInterfaces));
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($oldToNewInterfaces);
+        $this->oldToNewInterfaces = $oldToNewInterfaces;
     }
-    private function makeImplementsUnique(Class_ $class) : void
+    private function makeImplementsUnique(\PhpParser\Node\Stmt\Class_ $class) : void
     {
         $alreadyAddedNames = [];
-        /** @var array<int, Interface_> $implements */
-        $implements = $class->implements;
-        foreach ($implements as $key => $name) {
+        foreach ($class->implements as $key => $name) {
             $fqnName = $this->getName($name);
             if (\in_array($fqnName, $alreadyAddedNames, \true)) {
-                unset($class->implements[$key]);
+                $this->nodeRemover->removeImplements($class, $key);
                 continue;
             }
             $alreadyAddedNames[] = $fqnName;

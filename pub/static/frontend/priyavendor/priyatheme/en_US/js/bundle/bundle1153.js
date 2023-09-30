@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Ui/templates/form/element/urlInput/setting.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<!--display container to specify url options(Example: open in new tab)-->\n<div class=\"admin__field admin__field-option url-input-setting\" visible=\"visible\" click=\"checkboxClick\">\n    <input type=\"checkbox\"\n           class=\"admin__control-checkbox\"\n           ko-checked=\"settingValue\"\n           disable=\"disabled\"\n           ko-value=\"settingValue\"\n           attr=\"id: uid, name: inputName\"/>\n\n    <label class=\"admin__field-label\" text=\"settingLabel\" attr=\"for: uid\"></label>\n</div>\n"}
+}});

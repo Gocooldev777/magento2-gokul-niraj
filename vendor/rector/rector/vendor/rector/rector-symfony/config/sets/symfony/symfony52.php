@@ -1,10 +1,9 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
 use PHPStan\Type\ObjectType;
-use Rector\Config\RectorConfig;
 use Rector\Renaming\Rector\ClassConstFetch\RenameClassConstFetchRector;
 use Rector\Renaming\Rector\MethodCall\RenameMethodRector;
 use Rector\Renaming\Rector\PropertyFetch\RenamePropertyRector;
@@ -21,41 +20,34 @@ use Rector\Symfony\Rector\StaticCall\BinaryFileResponseCreateToNewInstanceRector
 use Rector\Symfony\Set\SymfonySetList;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddParamTypeDeclarationRector;
 use Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->sets([SymfonySetList::ANNOTATIONS_TO_ATTRIBUTES]);
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $containerConfigurator->import(\Rector\Symfony\Set\SymfonySetList::ANNOTATIONS_TO_ATTRIBUTES);
+    $services = $containerConfigurator->services();
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#form
-    $rectorConfig->rule(PropertyPathMapperToDataMapperRector::class);
+    $services->set(\Rector\Symfony\Rector\New_\PropertyPathMapperToDataMapperRector::class);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#httpfoundation
-    $rectorConfig->rule(BinaryFileResponseCreateToNewInstanceRector::class);
+    $services->set(\Rector\Symfony\Rector\StaticCall\BinaryFileResponseCreateToNewInstanceRector::class);
+    # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#mime
+    $services->set(\Rector\Renaming\Rector\MethodCall\RenameMethodRector::class)->configure([new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Mime\\Address', 'fromString', 'create')]);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#propertyaccess
-    $rectorConfig->rule(PropertyAccessorCreationBooleanToFlagsRector::class);
+    $services->set(\Rector\Symfony\Rector\New_\PropertyAccessorCreationBooleanToFlagsRector::class);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#propertyinfo
-    $rectorConfig->rule(ReflectionExtractorEnableMagicCallExtractorRector::class);
+    $services->set(\Rector\Symfony\Rector\MethodCall\ReflectionExtractorEnableMagicCallExtractorRector::class);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#security
-    $rectorConfig->ruleWithConfiguration(RenameClassConstFetchRector::class, [new RenameClassAndConstFetch('Symfony\\Component\\Security\\Http\\Firewall\\AccessListener', 'PUBLIC_ACCESS', 'Symfony\\Component\\Security\\Core\\Authorization\\Voter\\AuthenticatedVoter', 'PUBLIC_ACCESS')]);
-    $rectorConfig->ruleWithConfiguration(RenameMethodRector::class, [
-        # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#mime
-        new MethodCallRename('Symfony\\Component\\Mime\\Address', 'fromString', 'create'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\PreAuthenticatedToken', 'setProviderKey', 'setFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\PreAuthenticatedToken', 'getProviderKey', 'getFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\RememberMeToken', 'setProviderKey', 'setFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\RememberMeToken', 'getProviderKey', 'getFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\SwitchUserToken', 'setProviderKey', 'setFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\SwitchUserToken', 'getProviderKey', 'getFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\UsernamePasswordToken', 'setProviderKey', 'setFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\UsernamePasswordToken', 'getProviderKey', 'getFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Http\\Authentication\\DefaultAuthenticationSuccessHandler', 'setProviderKey', 'setFirewallName'),
-        new MethodCallRename('Symfony\\Component\\Security\\Http\\Authentication\\DefaultAuthenticationSuccessHandler', 'getProviderKey', 'getFirewallName'),
-    ]);
+    $services->set(\Rector\Renaming\Rector\ClassConstFetch\RenameClassConstFetchRector::class)->configure([new \Rector\Renaming\ValueObject\RenameClassAndConstFetch('Symfony\\Component\\Security\\Http\\Firewall\\AccessListener', 'PUBLIC_ACCESS', 'Symfony\\Component\\Security\\Core\\Authorization\\Voter\\AuthenticatedVoter', 'PUBLIC_ACCESS')]);
+    $services->set(\Rector\Renaming\Rector\MethodCall\RenameMethodRector::class)->configure([new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\PreAuthenticatedToken', 'setProviderKey', 'setFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\PreAuthenticatedToken', 'getProviderKey', 'getFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\RememberMeToken', 'setProviderKey', 'setFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\RememberMeToken', 'getProviderKey', 'getFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\SwitchUserToken', 'setProviderKey', 'setFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\SwitchUserToken', 'getProviderKey', 'getFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\UsernamePasswordToken', 'setProviderKey', 'setFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Core\\Authentication\\Token\\UsernamePasswordToken', 'getProviderKey', 'getFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Http\\Authentication\\DefaultAuthenticationSuccessHandler', 'setProviderKey', 'setFirewallName'), new \Rector\Renaming\ValueObject\MethodCallRename('Symfony\\Component\\Security\\Http\\Authentication\\DefaultAuthenticationSuccessHandler', 'getProviderKey', 'getFirewallName')]);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#dependencyinjection
-    $rectorConfig->rule(DefinitionAliasSetPrivateToSetPublicRector::class);
+    $services->set(\Rector\Symfony\Rector\MethodCall\DefinitionAliasSetPrivateToSetPublicRector::class);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#form
-    $rectorConfig->rule(FormBuilderSetDataMapperRector::class);
+    $services->set(\Rector\Symfony\Rector\MethodCall\FormBuilderSetDataMapperRector::class);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#validator
-    $rectorConfig->rule(ValidatorBuilderEnableAnnotationMappingRector::class);
+    $services->set(\Rector\Symfony\Rector\MethodCall\ValidatorBuilderEnableAnnotationMappingRector::class);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#notifier
-    $rectorConfig->ruleWithConfiguration(AddParamTypeDeclarationRector::class, [new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\NotifierInterface', 'send', 1, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notifier', 'getChannels', 1, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Channel\\ChannelInterface', 'notify', 1, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Channel\\ChannelInterface', 'supports', 1, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notification\\ChatNotificationInterface', 'asChatMessage', 0, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notification\\EmailNotificationInterface', 'asEmailMessage', 0, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\EmailRecipientInterface')), new AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notification\\SmsNotificationInterface', 'asSmsMessage', 0, new ObjectType('Symfony\\Component\\Notifier\\Recipient\\SmsRecipientInterface'))]);
+    $services->set(\Rector\TypeDeclaration\Rector\ClassMethod\AddParamTypeDeclarationRector::class)->configure([new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\NotifierInterface', 'send', 1, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notifier', 'getChannels', 1, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Channel\\ChannelInterface', 'notify', 1, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Channel\\ChannelInterface', 'supports', 1, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface'))]);
+    # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#notifier
+    $services->set(\Rector\TypeDeclaration\Rector\ClassMethod\AddParamTypeDeclarationRector::class)->configure([new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notification\\ChatNotificationInterface', 'asChatMessage', 0, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\RecipientInterface')), new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notification\\EmailNotificationInterface', 'asEmailMessage', 0, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\EmailRecipientInterface')), new \Rector\TypeDeclaration\ValueObject\AddParamTypeDeclaration('Symfony\\Component\\Notifier\\Notification\\SmsNotificationInterface', 'asSmsMessage', 0, new \PHPStan\Type\ObjectType('Symfony\\Component\\Notifier\\Recipient\\SmsRecipientInterface'))]);
     # https://github.com/symfony/symfony/blob/5.x/UPGRADE-5.2.md#security
-    $rectorConfig->ruleWithConfiguration(RenamePropertyRector::class, [new RenameProperty('Symfony\\Component\\Security\\Http\\RememberMe\\AbstractRememberMeServices', 'providerKey', 'firewallName')]);
+    $services->set(\Rector\Renaming\Rector\PropertyFetch\RenamePropertyRector::class)->configure([new \Rector\Renaming\ValueObject\RenameProperty('Symfony\\Component\\Security\\Http\\RememberMe\\AbstractRememberMeServices', 'providerKey', 'firewallName')]);
 };

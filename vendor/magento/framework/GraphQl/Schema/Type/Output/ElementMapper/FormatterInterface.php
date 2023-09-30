@@ -12,8 +12,6 @@ use Magento\Framework\GraphQl\Schema\Type\OutputTypeInterface;
 
 /**
  * Converter of GraphQL config elements to the objects compatible with GraphQL schema generator.
- *
- * @api
  */
 interface FormatterInterface
 {

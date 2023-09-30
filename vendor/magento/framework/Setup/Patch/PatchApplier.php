@@ -22,12 +22,12 @@ class PatchApplier
     /**
      * Flag means, that we need to read schema patches
      */
-    public const SCHEMA_PATCH = 'schema';
+    const SCHEMA_PATCH = 'schema';
 
     /**
      * Flag means, that we need to read data patches
      */
-    public const DATA_PATCH = 'data';
+    const DATA_PATCH = 'data';
 
     /**
      * @var PatchRegistryFactory
@@ -162,9 +162,7 @@ class PatchApplier
                     $dataPatch->apply();
                     $this->patchHistory->fixPatch(get_class($dataPatch));
                     foreach ($dataPatch->getAliases() as $patchAlias) {
-                        if (!$this->patchHistory->isApplied($patchAlias)) {
-                            $this->patchHistory->fixPatch($patchAlias);
-                        }
+                        $this->patchHistory->fixPatch($patchAlias);
                     }
                     $this->moduleDataSetup->getConnection()->commit();
                 } catch (\Exception $e) {
@@ -243,9 +241,7 @@ class PatchApplier
                 $schemaPatch->apply();
                 $this->patchHistory->fixPatch(get_class($schemaPatch));
                 foreach ($schemaPatch->getAliases() as $patchAlias) {
-                    if (!$this->patchHistory->isApplied($patchAlias)) {
-                        $this->patchHistory->fixPatch($patchAlias);
-                    }
+                    $this->patchHistory->fixPatch($patchAlias);
                 }
             } catch (\Exception $e) {
                 throw new SetupException(

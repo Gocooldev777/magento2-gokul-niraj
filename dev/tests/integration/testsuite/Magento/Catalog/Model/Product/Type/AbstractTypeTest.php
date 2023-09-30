@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Catalog\Model\Product\Type;
 
-use Laminas\File\Transfer\Adapter\Http;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Option;
@@ -377,7 +376,7 @@ class AbstractTypeTest extends TestCase
 
     public function testHasOptions()
     {
-        $this->markTestSkipped('Bug MAGE-2814');
+        $this->markTestIncomplete('Bug MAGE-2814');
 
         $product = new DataObject();
         $this->assertFalse($this->_model->hasOptions($product));
@@ -660,17 +659,17 @@ class AbstractTypeTest extends TestCase
     /**
      * Create prepared uploader instance for test
      *
-     * @return Http
+     * @return \Zend_File_Transfer_Adapter_Http
      * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      */
-    private function getPreparedUploader(): Http
+    private function getPreparedUploader(): \Zend_File_Transfer_Adapter_Http
     {
-        $uploader = new Http();
+        $uploader = new \Zend_File_Transfer_Adapter_Http();
         $refObject = new \ReflectionObject($uploader);
-        $validators = $refObject->getProperty('validators');
+        $validators = $refObject->getProperty('_validators');
         $validators->setAccessible(true);
         $validators->setValue($uploader, []);
-        $files = $refObject->getProperty('files');
+        $files = $refObject->getProperty('_files');
         $files->setAccessible(true);
         $filesValues = $files->getValue($uploader);
         foreach (array_keys($filesValues) as $value) {

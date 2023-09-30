@@ -9,8 +9,6 @@ namespace Magento\Elasticsearch\SearchAdapter\Query;
 
 /**
  * Value transformer of search term for matching with ES field types.
- *
- * @api
  */
 interface ValueTransformerInterface
 {

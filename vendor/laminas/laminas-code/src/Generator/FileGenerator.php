@@ -37,18 +37,6 @@ use const T_DOC_COMMENT;
 use const T_OPEN_TAG;
 use const T_WHITESPACE;
 
-/**
- * @psalm-type InputUses = array<
- *     string|int,
- *     array{
- *      'use': non-empty-string,
- *      'as': non-empty-string|null
- *     }|array{
- *      non-empty-string,
- *      non-empty-string|null
- *     }|non-empty-string
- * >
- */
 class FileGenerator extends AbstractGenerator
 {
     protected string $filename = '';
@@ -60,7 +48,7 @@ class FileGenerator extends AbstractGenerator
 
     protected string $namespace = '';
 
-    /** @psalm-var list<array{non-empty-string, non-empty-string|null}> */
+    /** @psalm-var list<array{string, string|null}> */
     protected array $uses = [];
 
     /**
@@ -90,9 +78,6 @@ class FileGenerator extends AbstractGenerator
     }
 
     /**
-     * @deprecated this API is deprecated, and will be removed in the next major release. Please
-     *             use the other constructors of this class instead.
-     *
      * @param  array $values
      * @return FileGenerator
      */
@@ -231,7 +216,7 @@ class FileGenerator extends AbstractGenerator
     }
 
     /**
-     * @param InputUses $uses
+     * @param  array $uses
      * @return FileGenerator
      */
     public function setUses(array $uses)
@@ -239,21 +224,22 @@ class FileGenerator extends AbstractGenerator
         foreach ($uses as $use) {
             $use = (array) $use;
             if (array_key_exists('use', $use) && array_key_exists('as', $use)) {
-                $this->setUse($use['use'], $use['as']);
-            } elseif (count($use) === 2) {
+                $import = $use['use'];
+                $alias  = $use['as'];
+            } elseif (count($use) == 2) {
                 [$import, $alias] = $use;
-
-                $this->setUse($import, $alias);
             } else {
-                $this->setUse(current($use));
+                $import = current($use);
+                $alias  = null;
             }
+            $this->setUse($import, $alias);
         }
         return $this;
     }
 
     /**
-     * @param  non-empty-string      $use
-     * @param  null|non-empty-string $as
+     * @param  string $use
+     * @param  null|string $as
      * @return FileGenerator
      */
     public function setUse($use, $as = null)
@@ -515,7 +501,10 @@ class FileGenerator extends AbstractGenerator
         //build uses array
         foreach ($classes as $class) {
             //check for duplicate use statements
-            $classUses = array_merge($classUses, $class->getUses());
+            $uses = $class->getUses();
+            if (! empty($uses) && is_array($uses)) {
+                $classUses = array_merge($classUses, $uses);
+            }
         }
 
         // process import statements

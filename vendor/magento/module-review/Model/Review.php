@@ -9,9 +9,6 @@ namespace Magento\Review\Model;
 use Magento\Framework\DataObject;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\DataObject\IdentityInterface;
-use Magento\Framework\Validator\NotEmpty;
-use Magento\Framework\Validator\ValidateException;
-use Magento\Framework\Validator\ValidatorChain;
 use Magento\Review\Model\ResourceModel\Review\Product\Collection as ProductCollection;
 use Magento\Review\Model\ResourceModel\Review\Status\Collection as StatusCollection;
 
@@ -39,39 +36,39 @@ class Review extends \Magento\Framework\Model\AbstractModel implements IdentityI
     protected $_eventPrefix = 'review';
 
     /**
-     * Cache tag value
+     * Cache tag
      */
-    public const CACHE_TAG = 'review_block';
+    const CACHE_TAG = 'review_block';
 
     /**
      * Product entity review code
      */
-    public const ENTITY_PRODUCT_CODE = 'product';
+    const ENTITY_PRODUCT_CODE = 'product';
 
     /**
      * Customer entity review code
      */
-    public const ENTITY_CUSTOMER_CODE = 'customer';
+    const ENTITY_CUSTOMER_CODE = 'customer';
 
     /**
      * Category entity review code
      */
-    public const ENTITY_CATEGORY_CODE = 'category';
+    const ENTITY_CATEGORY_CODE = 'category';
 
     /**
      * Approved review status code
      */
-    public const STATUS_APPROVED = 1;
+    const STATUS_APPROVED = 1;
 
     /**
      * Pending review status code
      */
-    public const STATUS_PENDING = 2;
+    const STATUS_PENDING = 2;
 
     /**
      * Not Approved review status code
      */
-    public const STATUS_NOT_APPROVED = 3;
+    const STATUS_NOT_APPROVED = 3;
 
     /**
      * Review product collection factory
@@ -105,7 +102,6 @@ class Review extends \Magento\Framework\Model\AbstractModel implements IdentityI
      * Review model summary
      *
      * @deprecated 100.3.3 Summary factory injected as separate property
-     * @see we don't recommend this approach anymore
      * @var \Magento\Review\Model\Review\Summary
      */
     protected $_reviewSummary;
@@ -221,7 +217,6 @@ class Review extends \Magento\Framework\Model\AbstractModel implements IdentityI
      * Get entity summary
      *
      * @deprecated 100.3.3
-     * @see we don't recommend this approach anymore
      * @param Product $product
      * @param int $storeId
      * @return void
@@ -274,21 +269,20 @@ class Review extends \Magento\Framework\Model\AbstractModel implements IdentityI
      * Validate review summary fields
      *
      * @return bool|string[]
-     * @throws ValidateException
      */
     public function validate()
     {
         $errors = [];
 
-        if (!ValidatorChain::is($this->getTitle(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($this->getTitle(), 'NotEmpty')) {
             $errors[] = __('Please enter a review summary.');
         }
 
-        if (!ValidatorChain::is($this->getNickname(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($this->getNickname(), 'NotEmpty')) {
             $errors[] = __('Please enter a nickname.');
         }
 
-        if (!ValidatorChain::is($this->getDetail(), NotEmpty::class)) {
+        if (!\Zend_Validate::is($this->getDetail(), 'NotEmpty')) {
             $errors[] = __('Please enter a review.');
         }
 
@@ -313,7 +307,6 @@ class Review extends \Magento\Framework\Model\AbstractModel implements IdentityI
      * Append review summary data object to product collection
      *
      * @deprecated 100.3.3
-     * @see we don't recommend this approach anymore
      * @param ProductCollection $collection
      * @return $this
      * @throws \Magento\Framework\Exception\NoSuchEntityException

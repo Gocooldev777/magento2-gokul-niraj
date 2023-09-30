@@ -45,7 +45,6 @@
             <actionGroup ref="AdminCreateStoreViewActionGroup" stepKey="createStoreView2">
                 <argument name="customStore" value="customStoreFR"/>
             </actionGroup>
-            <magentoCron groups="index" stepKey="reindex"/>
         </before>
 
         <after>
@@ -67,7 +66,6 @@
                 <argument name="customStore" value="customStoreFR"/>
             </actionGroup>
             <actionGroup ref="ClearFiltersAdminDataGridActionGroup" stepKey="clearWebsitesGridFilters"/>
-            <magentoCron groups="index" stepKey="reindex"/>
 
             <actionGroup ref="AdminOrdersGridClearFiltersActionGroup" stepKey="clearOrdersGridFilter"/>
 
@@ -163,11 +161,9 @@
 
         <actionGroup ref="GoToCheckoutFromMinicartActionGroup" stepKey="goToCheckoutFromMinicart" />
 
-        <waitForElementClickable selector="{{CheckoutPaymentSection.cartItemsArea}}" stepKey="waitForCartItemsClickable"/>
-        <waitForElementNotVisible selector="{{CheckoutPaymentSection.cartItemsAreaActive}}" stepKey="waitForCartItemsActive"/>
-        <click selector="{{CheckoutPaymentSection.cartItemsArea}}" stepKey="exposeMiniCart"/>
+        <conditionalClick selector="{{CheckoutPaymentSection.cartItemsArea}}" dependentSelector="{{CheckoutPaymentSection.cartItemsArea}}" visible="true" stepKey="exposeMiniCart"/>
 
-        <waitForPageLoad stepKey="waitForLoadingMaskForCartItem"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForLoadingMaskForCartItem"/>
         <waitForElement selector="{{CheckoutPaymentSection.cartItemsAreaActive}}" time="30" stepKey="waitForCartItemsAreaActive"/>
 
         <see selector="{{CheckoutPaymentSection.cartItems}}" userInput="$$createProduct.name$$" stepKey="seeProductInCart"/>
@@ -240,11 +236,9 @@
 
         <actionGroup ref="GoToCheckoutFromMinicartActionGroup" stepKey="goToCheckoutFromMinicart1" />
 
-        <waitForElementVisible selector="{{CheckoutPaymentSection.cartItemsArea}}" stepKey="waitForCartItemsVisible1"/>
-        <waitForElementNotVisible selector="{{CheckoutPaymentSection.cartItemsAreaActive}}" stepKey="waitForCartItemsActive1"/>
-        <click selector="{{CheckoutPaymentSection.cartItemsArea}}" stepKey="exposeMiniCart1"/>
+        <conditionalClick selector="{{CheckoutPaymentSection.cartItemsArea}}" dependentSelector="{{CheckoutPaymentSection.cartItemsArea}}" visible="true" stepKey="exposeMiniCart1"/>
 
-        <waitForPageLoad stepKey="waitForLoadingMaskForCartItem1"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForLoadingMaskForCartItem1"/>
         <waitForElement selector="{{CheckoutPaymentSection.cartItemsAreaActive}}" time="30" stepKey="waitForCartItemsAreaActive1"/>
 
         <see selector="{{CheckoutPaymentSection.cartItems}}" userInput="$$createProduct.name$$" stepKey="seeProductInCar1t"/>

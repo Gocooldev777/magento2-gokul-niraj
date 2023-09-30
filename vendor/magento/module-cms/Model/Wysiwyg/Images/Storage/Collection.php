@@ -42,8 +42,7 @@ class Collection extends \Magento\Framework\Data\Collection\Filesystem
      */
     protected function _generateRow($filename)
     {
-        $filename = $filename !== null ?
-            preg_replace('~[/\\\]+(?<![htps?]://)~', '/', $filename) : '';
+        $filename = preg_replace('~[/\\\]+(?<![htps?]://)~', '/', $filename);
         $path = $this->_filesystem->getDirectoryWrite(DirectoryList::MEDIA);
         try {
             $mtime = $path->stat($path->getRelativePath($filename))['mtime'];

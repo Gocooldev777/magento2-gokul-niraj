@@ -3,15 +3,12 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-
 namespace Magento\Framework\HTTP\PhpEnvironment;
 
 use Magento\Framework\App\RequestInterface;
 
 /**
  * Library for working with client ip address.
- *
- * @api
  */
 class RemoteAddress
 {

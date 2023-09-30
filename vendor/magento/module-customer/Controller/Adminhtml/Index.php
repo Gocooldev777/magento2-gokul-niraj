@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Customer\Controller\Adminhtml;
 
 use Magento\Customer\Api\AccountManagementInterface;
@@ -19,9 +17,8 @@ use Magento\Framework\DataObjectFactory as ObjectFactory;
 use Magento\Framework\Api\DataObjectHelper;
 
 /**
- * Class \Magento\Customer\Controller\Adminhtml\Index
+ * Class Index
  *
- * @api
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyFields)

@@ -15,7 +15,7 @@ use Magento\Catalog\Model\Product\Price\TierPriceStorage;
 use Magento\Catalog\Model\Product\Price\Validation\Result as PriceValidationResult;
 use Magento\Catalog\Model\Product\Price\Validation\TierPriceValidator;
 use Magento\Catalog\Model\ProductIdLocatorInterface;
-use Magento\Customer\Model\ResourceModel\Group\GetCustomerGroupCodesByIds;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -52,11 +52,6 @@ class TierPriceStorageTest extends TestCase
     private $tierPriceStorage;
 
     /**
-     * @var GetCustomerGroupCodesByIds|MockObject
-     */
-    private $getCustomerGroupCodesByIds;
-
-    /**
      * {@inheritdoc}
      */
     protected function setUp(): void
@@ -68,15 +63,17 @@ class TierPriceStorageTest extends TestCase
         $this->tierPriceFactory = $this->createMock(TierPriceFactory::class);
         $this->priceIndexProcessor = $this->createMock(PriceIndexerProcessor::class);
         $this->productIdLocator = $this->getMockForAbstractClass(ProductIdLocatorInterface::class);
-        $this->getCustomerGroupCodesByIds = $this->createMock(GetCustomerGroupCodesByIds::class);
 
-        $this->tierPriceStorage = new TierPriceStorage(
-            $this->tierPricePersistence,
-            $this->tierPriceValidator,
-            $this->tierPriceFactory,
-            $this->priceIndexProcessor,
-            $this->productIdLocator,
-            $this->getCustomerGroupCodesByIds
+        $objectManager = new ObjectManager($this);
+        $this->tierPriceStorage = $objectManager->getObject(
+            TierPriceStorage::class,
+            [
+                'tierPricePersistence' => $this->tierPricePersistence,
+                'tierPriceValidator' => $this->tierPriceValidator,
+                'tierPriceFactory' => $this->tierPriceFactory,
+                'priceIndexProcessor' => $this->priceIndexProcessor,
+                'productIdLocator' => $this->productIdLocator,
+            ]
         );
     }
 
@@ -88,38 +85,6 @@ class TierPriceStorageTest extends TestCase
     public function testGet()
     {
         $skus = ['simple', 'virtual'];
-        $rawPricesData = [
-            [
-                'value_id' => 1,
-                'entity_id' => 2,
-                'all_groups' => 1,
-                'customer_group_id' => 0,
-                'qty' => 2.0000,
-                'value' => 2.0000,
-                'percentage_value' => null,
-                'website_id' => 0
-            ],
-            [
-                'value_id' => 2,
-                'entity_id' => 3,
-                'all_groups' => 0,
-                'customer_group_id' => 1,
-                'qty' => 3.0000,
-                'value' => 3.0000,
-                'percentage_value' => null,
-                'website_id' => 0
-            ],
-            [
-                'value_id' => 3,
-                'entity_id' => 3,
-                'all_groups' => 0,
-                'customer_group_id' => 2,
-                'qty' => 3.0000,
-                'value' => 3.0000,
-                'percentage_value' => null,
-                'website_id' => 0
-            ]
-        ];
         $this->tierPriceValidator
             ->expects($this->once())
             ->method('validateSkus')
@@ -131,25 +96,36 @@ class TierPriceStorageTest extends TestCase
             ->willReturn(['simple' => ['2' => 'simple'], 'virtual' => ['3' => 'virtual']]);
         $this->tierPricePersistence->expects($this->once())
             ->method('get')
-            ->willReturn($rawPricesData);
-        $this->getCustomerGroupCodesByIds->expects($this->once())
-            ->method('execute')
-            ->with([1, 2])
-            ->willReturn([1 => 'General', 2 => 'Wholesale']);
+            ->willReturn(
+                [
+                    [
+                        'value_id' => 1,
+                        'entity_id' => 2,
+                        'all_groups' => 1,
+                        'customer_group_id' => 0,
+                        'qty' => 2.0000,
+                        'value' => 2.0000,
+                        'percentage_value' => null,
+                        'website_id' => 0
+                    ],
+                    [
+                        'value_id' => 2,
+                        'entity_id' => 3,
+                        'all_groups' => 1,
+                        'customer_group_id' => 0,
+                        'qty' => 3.0000,
+                        'value' => 3.0000,
+                        'percentage_value' => null,
+                        'website_id' => 0
+                    ]
+                ]
+            );
         $price = $this->getMockBuilder(TierPriceInterface::class)
             ->getMockForAbstractClass();
-        $this->tierPriceFactory
-            ->expects($this->exactly(3))
-            ->method('create')
-            ->withConsecutive(
-                [$rawPricesData[0], 'simple'],
-                [$rawPricesData[1] + ['customer_group_code' => 'General'], 'virtual'],
-                [$rawPricesData[2] + ['customer_group_code' => 'Wholesale'], 'virtual'],
-            )
-            ->willReturn($price);
+        $this->tierPriceFactory->expects($this->atLeastOnce())->method('create')->willReturn($price);
         $prices = $this->tierPriceStorage->get($skus);
         $this->assertNotEmpty($prices);
-        $this->assertCount(3, $prices);
+        $this->assertCount(2, $prices);
     }
 
     /**

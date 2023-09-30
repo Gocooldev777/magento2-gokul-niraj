@@ -4,12 +4,13 @@ declare (strict_types=1);
 namespace Rector\PhpAttribute\NodeAnalyzer;
 
 use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Reflection\ParameterReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Reflection\ReflectionProvider;
+use PHPStan\Type\BooleanType;
+use PHPStan\Type\IntegerType;
 use PHPStan\Type\TypeCombinator;
 use Rector\Core\PhpParser\Node\NodeFactory;
 use Rector\StaticTypeMapper\StaticTypeMapper;
@@ -30,7 +31,7 @@ final class ExprParameterReflectionTypeCorrector
      * @var \Rector\Core\PhpParser\Node\NodeFactory
      */
     private $nodeFactory;
-    public function __construct(StaticTypeMapper $staticTypeMapper, ReflectionProvider $reflectionProvider, NodeFactory $nodeFactory)
+    public function __construct(\Rector\StaticTypeMapper\StaticTypeMapper $staticTypeMapper, \PHPStan\Reflection\ReflectionProvider $reflectionProvider, \Rector\Core\PhpParser\Node\NodeFactory $nodeFactory)
     {
         $this->staticTypeMapper = $staticTypeMapper;
         $this->reflectionProvider = $reflectionProvider;
@@ -40,11 +41,8 @@ final class ExprParameterReflectionTypeCorrector
      * @param array<string|int, Expr|mixed> $items
      * @return array<string|int, Expr|mixed>
      */
-    public function correctItemsByAttributeClass($items, string $attributeClass) : array
+    public function correctItemsByAttributeClass(array $items, string $attributeClass) : array
     {
-        if ($items instanceof Array_) {
-            $items = $items->items;
-        }
         if (!$this->reflectionProvider->hasClass($attributeClass)) {
             return $items;
         }
@@ -53,12 +51,12 @@ final class ExprParameterReflectionTypeCorrector
         if (!$attributeClassReflection->hasConstructor()) {
             return $items;
         }
-        $extendedMethodReflection = $attributeClassReflection->getConstructor();
-        $parametersAcceptorWithPhpDocs = ParametersAcceptorSelector::selectSingle($extendedMethodReflection->getVariants());
+        $constructorClassMethodReflection = $attributeClassReflection->getConstructor();
+        $parametersAcceptor = \PHPStan\Reflection\ParametersAcceptorSelector::selectSingle($constructorClassMethodReflection->getVariants());
         foreach ($items as $name => $item) {
-            foreach ($parametersAcceptorWithPhpDocs->getParameters() as $parameterReflection) {
+            foreach ($parametersAcceptor->getParameters() as $parameterReflection) {
                 $correctedItem = $this->correctItemByParameterReflection($name, $item, $parameterReflection);
-                if (!$correctedItem instanceof Expr) {
+                if (!$correctedItem instanceof \PhpParser\Node\Expr) {
                     continue;
                 }
                 $items[$name] = $correctedItem;
@@ -68,12 +66,13 @@ final class ExprParameterReflectionTypeCorrector
         return $items;
     }
     /**
-     * @param string|int $name
+     * @param int|string $name
+     * @return \PhpParser\Node\Expr|null
      * @param mixed $item
      */
-    private function correctItemByParameterReflection($name, $item, ParameterReflection $parameterReflection) : ?\PhpParser\Node\Expr
+    private function correctItemByParameterReflection($name, $item, \PHPStan\Reflection\ParameterReflection $parameterReflection)
     {
-        if (!$item instanceof Expr) {
+        if (!$item instanceof \PhpParser\Node\Expr) {
             return null;
         }
         if ($name !== $parameterReflection->getName()) {
@@ -85,12 +84,12 @@ final class ExprParameterReflectionTypeCorrector
         if ($parameterType->accepts($currentType, \false)->yes()) {
             return null;
         }
-        $clearParameterType = TypeCombinator::removeNull($parameterType);
+        $clearParameterType = \PHPStan\Type\TypeCombinator::removeNull($parameterType);
         // correct type
-        if ($clearParameterType->isInteger()->yes() && $item instanceof String_) {
-            return new LNumber((int) $item->value);
+        if ($clearParameterType instanceof \PHPStan\Type\IntegerType && $item instanceof \PhpParser\Node\Scalar\String_) {
+            return new \PhpParser\Node\Scalar\LNumber((int) $item->value);
         }
-        if ($clearParameterType->isBoolean()->yes() && $item instanceof String_) {
+        if ($clearParameterType instanceof \PHPStan\Type\BooleanType && $item instanceof \PhpParser\Node\Scalar\String_) {
             if (\strtolower($item->value) === 'true') {
                 return $this->nodeFactory->createTrue();
             }

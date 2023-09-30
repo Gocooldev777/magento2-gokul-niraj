@@ -1,21 +1,36 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Error;
 
 /**
- * Implementing ClientAware allows graphql-php to decide if this error is safe to be shown to clients.
+ * This interface is used for [default error formatting](error-handling.md).
  *
- * Only errors that both implement this interface and return true from `isClientSafe()`
- * will retain their original error message during formatting.
+ * Only errors implementing this interface (and returning true from `isClientSafe()`)
+ * will be formatted with original error message.
  *
- * All other errors will have their message replaced with "Internal server error".
+ * All other errors will be formatted with generic "Internal server error".
  */
 interface ClientAware
 {
     /**
-     * Is it safe to show the error message to clients?
+     * Returns true when exception message is safe to be displayed to a client.
+     *
+     * @return bool
      *
      * @api
      */
-    public function isClientSafe(): bool;
+    public function isClientSafe();
+
+    /**
+     * Returns string describing a category of the error.
+     *
+     * Value "graphql" is reserved for errors produced by query parsing or validation, do not use it.
+     *
+     * @return string
+     *
+     * @api
+     */
+    public function getCategory();
 }

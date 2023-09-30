@@ -8,16 +8,14 @@ use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Foreach_;
 final class ForeachManipulator
 {
-    /**
-     * @param callable(Node $node, Foreach_ $foreach): ?Node $callable
-     */
-    public function matchOnlyStmt(Foreach_ $foreach, callable $callable) : ?Node
+    public function matchOnlyStmt(\PhpParser\Node\Stmt\Foreach_ $foreach, callable $callable) : ?\PhpParser\Node
     {
-        if (\count($foreach->stmts) !== 1) {
+        $stmts = $foreach->stmts;
+        if (\count($stmts) !== 1) {
             return null;
         }
-        $innerNode = $foreach->stmts[0];
-        $innerNode = $innerNode instanceof Expression ? $innerNode->expr : $innerNode;
+        $innerNode = $stmts[0];
+        $innerNode = $innerNode instanceof \PhpParser\Node\Stmt\Expression ? $innerNode->expr : $innerNode;
         return $callable($innerNode, $foreach);
     }
 }

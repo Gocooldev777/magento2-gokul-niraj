@@ -14,8 +14,6 @@ use Magento\Framework\View\Result\Page as View;
 
 /**
  * Manage custom layout files for CMS pages.
- *
- * @api
  */
 interface CustomLayoutManagerInterface
 {

@@ -7,14 +7,10 @@ var config = {
     map: {
         '*': {
             loadPlayer: 'Magento_ProductVideo/js/load-player',
-            fotoramaVideoEvents: 'Magento_ProductVideo/js/fotorama-add-video-events',
-            'vimeoWrapper': 'vimeo/vimeo-wrapper'
+            fotoramaVideoEvents: 'Magento_ProductVideo/js/fotorama-add-video-events'
         }
     },
     shim: {
-        vimeoAPI: {},
-        'Magento_ProductVideo/js/load-player': {
-            deps: ['vimeoWrapper']
-        }
+        vimeoAPI: {}
     }
 };

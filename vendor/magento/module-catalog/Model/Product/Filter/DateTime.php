@@ -7,14 +7,13 @@ declare(strict_types=1);
 
 namespace Magento\Catalog\Model\Product\Filter;
 
-use Laminas\Filter\FilterInterface;
 use Magento\Framework\Stdlib\DateTime as StdlibDateTime;
 use Magento\Framework\Stdlib\DateTime\Filter\DateTime as StdlibDateTimeFilter;
 
 /**
  * Product datetime fields values filter
  */
-class DateTime implements FilterInterface
+class DateTime implements \Zend_Filter_Interface
 {
     /**
      * @var StdlibDateTimeFilter

@@ -9,7 +9,6 @@ namespace Magento\MediaGalleryMetadataApi\Model;
 
 /**
  * File reader
- * @api
  */
 interface ReadFileInterface
 {

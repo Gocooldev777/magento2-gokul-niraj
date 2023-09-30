@@ -6,9 +6,8 @@
 namespace Magento\Framework\Api\Search;
 
 /**
- * Interface Aggregation Value
+ * Interface \Magento\Framework\Api\Search\AggregationValueInterface
  *
- * @api
  */
 interface AggregationValueInterface
 {

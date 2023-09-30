@@ -10,17 +10,9 @@ namespace Magento\Framework\Interception\Test\Unit\Code\Generator;
 use Composer\Autoload\ClassLoader;
 use Magento\Framework\Code\Generator\Io;
 use Magento\Framework\Interception\Code\Generator\Interceptor;
-use Magento\Framework\Interception\Code\Generator\ReflectionIntersectionTypeSample;
-use Magento\Framework\Interception\Code\Generator\ReflectionUnionTypeSample;
-use Magento\Framework\Interception\Code\Generator\Sample;
-use Magento\Framework\Interception\Code\Generator\SampleBackendMenu;
-use Magento\Framework\Interception\Code\Generator\TSample;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- */
 class InterceptorTest extends TestCase
 {
     /**
@@ -90,30 +82,15 @@ class InterceptorTest extends TestCase
     {
         return [
             [
-                Sample::class,
-                Sample\Interceptor::class,
+                \Magento\Framework\Interception\Code\Generator\Sample::class,
+                \Magento\Framework\Interception\Code\Generator\Sample\Interceptor::class,
                 'Interceptor'
             ],
             [
-                TSample::class,
-                TSample\Interceptor::class,
+                \Magento\Framework\Interception\Code\Generator\TSample::class,
+                \Magento\Framework\Interception\Code\Generator\TSample\Interceptor::class,
                 'TInterceptor'
-            ],
-            [
-                SampleBackendMenu::class,
-                SampleBackendMenu\Interceptor::class,
-                'SampleBackendMenuInterceptor',
-            ],
-            [
-                ReflectionUnionTypeSample::class,
-                ReflectionUnionTypeSample\Interceptor::class,
-                'ReflectionUnionTypeSampleInterceptor',
-            ],
-            [
-                ReflectionIntersectionTypeSample::class,
-                ReflectionIntersectionTypeSample\Interceptor::class,
-                'ReflectionIntersectionTypeSampleInterceptor',
-            ],
+            ]
         ];
     }
 }

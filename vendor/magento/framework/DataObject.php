@@ -12,7 +12,6 @@ namespace Magento\Framework;
  * @SuppressWarnings(PHPMD.NumberOfChildren)
  * @since 100.0.2
  */
-#[\AllowDynamicProperties] //@phpstan-ignore-line
 class DataObject implements \ArrayAccess
 {
     /**
@@ -121,7 +120,6 @@ class DataObject implements \ArrayAccess
      * @param string $key
      * @param string|int $index
      * @return mixed
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function getData($key = '', $index = null)
     {
@@ -130,7 +128,7 @@ class DataObject implements \ArrayAccess
         }
 
         /* process a/b/c key as ['a']['b']['c'] */
-        if ($key !== null && strpos($key, '/') !== false) {
+        if (strpos($key, '/') !== false) {
             $data = $this->getDataByPath($key);
         } else {
             $data = $this->_getData($key);
@@ -161,7 +159,7 @@ class DataObject implements \ArrayAccess
      */
     public function getDataByPath($path)
     {
-        $keys = explode('/', (string)$path);
+        $keys = explode('/', $path);
 
         $data = $this->_data;
         foreach ($keys as $key) {
@@ -210,7 +208,7 @@ class DataObject implements \ArrayAccess
      */
     public function setDataUsingMethod($key, $args = [])
     {
-        $method = 'set' . ($key !== null ? str_replace('_', '', ucwords($key, '_')) : '');
+        $method = 'set' . str_replace('_', '', ucwords($key, '_'));
         $this->{$method}($args);
         return $this;
     }
@@ -224,7 +222,7 @@ class DataObject implements \ArrayAccess
      */
     public function getDataUsingMethod($key, $args = null)
     {
-        $method = 'get' . ($key !== null ? str_replace('_', '', ucwords($key, '_')) : '');
+        $method = 'get' . str_replace('_', '', ucwords($key, '_'));
         return $this->{$method}($args);
     }
 
@@ -295,11 +293,11 @@ class DataObject implements \ArrayAccess
             if ($addCdata === true) {
                 $fieldValue = "<![CDATA[{$fieldValue}]]>";
             } else {
-                $fieldValue = $fieldValue !== null ? str_replace(
+                $fieldValue = str_replace(
                     ['&', '"', "'", '<', '>'],
                     ['&amp;', '&quot;', '&apos;', '&lt;', '&gt;'],
                     $fieldValue
-                ) : '';
+                );
             }
             $xml .= "<{$fieldName}>{$fieldValue}</{$fieldName}>\n";
         }
@@ -388,7 +386,7 @@ class DataObject implements \ArrayAccess
      */
     public function __call($method, $args)
     {
-        switch (substr((string)$method, 0, 3)) {
+        switch (substr($method, 0, 3)) {
             case 'get':
                 $key = $this->_underscore(substr($method, 3));
                 $index = isset($args[0]) ? $args[0] : null;

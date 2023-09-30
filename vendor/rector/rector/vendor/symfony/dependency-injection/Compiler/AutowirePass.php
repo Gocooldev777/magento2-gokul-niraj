@@ -8,87 +8,41 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Compiler;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler;
 
-use RectorPrefix202304\Symfony\Component\Config\Resource\ClassExistenceResource;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Attribute\Autowire;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Attribute\MapDecorated;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Attribute\TaggedLocator;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Attribute\Target;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerBuilder;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerInterface;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\AutowiringFailedException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\LazyProxy\ProxyHelper;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Reference;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\TypedReference;
+use RectorPrefix20211221\Symfony\Component\Config\Resource\ClassExistenceResource;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\TaggedLocator;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\Target;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\AutowiringFailedException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\ProxyHelper;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference;
 /**
  * Inspects existing service definitions and wires the autowired ones using the type hints of their classes.
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class AutowirePass extends AbstractRecursivePass
+class AutowirePass extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\Compiler\AbstractRecursivePass
 {
-    /**
-     * @var mixed[]
-     */
     private $types;
-    /**
-     * @var mixed[]
-     */
     private $ambiguousServiceTypes;
-    /**
-     * @var mixed[]
-     */
     private $autowiringAliases;
-    /**
-     * @var string|null
-     */
     private $lastFailure;
-    /**
-     * @var bool
-     */
     private $throwOnAutowiringException;
-    /**
-     * @var string|null
-     */
     private $decoratedClass;
-    /**
-     * @var string|null
-     */
     private $decoratedId;
-    /**
-     * @var mixed[]|null
-     */
     private $methodCalls;
-    /**
-     * @var object
-     */
     private $defaultArgument;
-    /**
-     * @var \Closure|null
-     */
     private $getPreviousValue;
-    /**
-     * @var int|null
-     */
     private $decoratedMethodIndex;
-    /**
-     * @var int|null
-     */
     private $decoratedMethodArgumentIndex;
-    /**
-     * @var $this|null
-     */
     private $typesClone;
-    /**
-     * @var mixed[]
-     */
     private $combinedAliases;
     public function __construct(bool $throwOnAutowireException = \true)
     {
@@ -102,7 +56,7 @@ class AutowirePass extends AbstractRecursivePass
     /**
      * {@inheritdoc}
      */
-    public function process(ContainerBuilder $container)
+    public function process(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
         $this->populateCombinedAliases($container);
         try {
@@ -122,14 +76,12 @@ class AutowirePass extends AbstractRecursivePass
     }
     /**
      * {@inheritdoc}
-     * @param mixed $value
-     * @return mixed
      */
     protected function processValue($value, bool $isRoot = \false)
     {
         try {
             return $this->doProcessValue($value, $isRoot);
-        } catch (AutowiringFailedException $e) {
+        } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\AutowiringFailedException $e) {
             if ($this->throwOnAutowiringException) {
                 throw $e;
             }
@@ -138,24 +90,23 @@ class AutowirePass extends AbstractRecursivePass
         }
     }
     /**
-     * @param mixed $value
      * @return mixed
      */
     private function doProcessValue($value, bool $isRoot = \false)
     {
-        if ($value instanceof TypedReference) {
+        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference) {
             if ($ref = $this->getAutowiredReference($value, \true)) {
                 return $ref;
             }
-            if (ContainerBuilder::RUNTIME_EXCEPTION_ON_INVALID_REFERENCE === $value->getInvalidBehavior()) {
+            if (\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder::RUNTIME_EXCEPTION_ON_INVALID_REFERENCE === $value->getInvalidBehavior()) {
                 $message = $this->createTypeNotFoundMessageCallback($value, 'it');
                 // since the error message varies by referenced id and $this->currentId, so should the id of the dummy errored definition
                 $this->container->register($id = \sprintf('.errored.%s.%s', $this->currentId, (string) $value), $value->getType())->addError($message);
-                return new TypedReference($id, $value->getType(), $value->getInvalidBehavior(), $value->getName());
+                return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($id, $value->getType(), $value->getInvalidBehavior(), $value->getName());
             }
         }
         $value = parent::processValue($value, $isRoot);
-        if (!$value instanceof Definition || !$value->isAutowired() || $value->isAbstract() || !$value->getClass()) {
+        if (!$value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition || !$value->isAutowired() || $value->isAbstract() || !$value->getClass()) {
             return $value;
         }
         if (!($reflectionClass = $this->container->getReflectionClass($value->getClass(), \false))) {
@@ -165,13 +116,13 @@ class AutowirePass extends AbstractRecursivePass
         $this->methodCalls = $value->getMethodCalls();
         try {
             $constructor = $this->getConstructor($value, \false);
-        } catch (RuntimeException $e) {
-            throw new AutowiringFailedException($this->currentId, $e->getMessage(), 0, $e);
+        } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException $e) {
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\AutowiringFailedException($this->currentId, $e->getMessage(), 0, $e);
         }
         if ($constructor) {
             \array_unshift($this->methodCalls, [$constructor, $value->getArguments()]);
         }
-        $checkAttributes = !$value->hasTag('container.ignore_attributes');
+        $checkAttributes = 80000 <= \PHP_VERSION_ID && !$value->hasTag('container.ignore_attributes');
         $this->methodCalls = $this->autowireCalls($reflectionClass, $isRoot, $checkAttributes);
         if ($constructor) {
             [, $arguments] = \array_shift($this->methodCalls);
@@ -198,10 +149,10 @@ class AutowirePass extends AbstractRecursivePass
             if ($method instanceof \ReflectionFunctionAbstract) {
                 $reflectionMethod = $method;
             } else {
-                $definition = new Definition($reflectionClass->name);
+                $definition = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition($reflectionClass->name);
                 try {
                     $reflectionMethod = $this->getReflectionMethod($definition, $method);
-                } catch (RuntimeException $e) {
+                } catch (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\RuntimeException $e) {
                     if ($definition->getFactory()) {
                         continue;
                     }
@@ -226,7 +177,7 @@ class AutowirePass extends AbstractRecursivePass
                 if ($namedArguments || !$value instanceof $this->defaultArgument) {
                     continue;
                 }
-                if (\is_array($value->value) ? $value->value : \is_object($value->value)) {
+                if (\PHP_VERSION_ID >= 80100 && (\is_array($value->value) ? $value->value : \is_object($value->value))) {
                     unset($arguments[$j]);
                     $namedArguments = $value->names;
                 } else {
@@ -253,38 +204,20 @@ class AutowirePass extends AbstractRecursivePass
         $this->defaultArgument->names = new \ArrayObject();
         foreach ($parameters as $index => $parameter) {
             $this->defaultArgument->names[$index] = $parameter->name;
-            if (\array_key_exists($parameter->name, $arguments)) {
-                $arguments[$index] = $arguments[$parameter->name];
-                unset($arguments[$parameter->name]);
-            }
             if (\array_key_exists($index, $arguments) && '' !== $arguments[$index]) {
                 continue;
             }
-            $type = ProxyHelper::getTypeHint($reflectionMethod, $parameter, \true);
+            $type = \RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\ProxyHelper::getTypeHint($reflectionMethod, $parameter, \true);
             if ($checkAttributes) {
                 foreach (\method_exists($parameter, 'getAttributes') ? $parameter->getAttributes() : [] as $attribute) {
-                    if (TaggedIterator::class === $attribute->getName()) {
+                    if (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\TaggedIterator::class === $attribute->getName()) {
                         $attribute = $attribute->newInstance();
-                        $arguments[$index] = new TaggedIteratorArgument($attribute->tag, $attribute->indexAttribute, $attribute->defaultIndexMethod, \false, $attribute->defaultPriorityMethod, (array) $attribute->exclude);
+                        $arguments[$index] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument($attribute->tag, $attribute->indexAttribute, $attribute->defaultIndexMethod, \false, $attribute->defaultPriorityMethod);
                         break;
                     }
-                    if (TaggedLocator::class === $attribute->getName()) {
+                    if (\RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\TaggedLocator::class === $attribute->getName()) {
                         $attribute = $attribute->newInstance();
-                        $arguments[$index] = new ServiceLocatorArgument(new TaggedIteratorArgument($attribute->tag, $attribute->indexAttribute, $attribute->defaultIndexMethod, \true, $attribute->defaultPriorityMethod, (array) $attribute->exclude));
-                        break;
-                    }
-                    if (Autowire::class === $attribute->getName()) {
-                        $value = $attribute->newInstance()->value;
-                        $value = $this->container->getParameterBag()->resolveValue($value);
-                        if ($value instanceof Reference && $parameter->allowsNull()) {
-                            $value = new Reference($value, ContainerInterface::NULL_ON_INVALID_REFERENCE);
-                        }
-                        $arguments[$index] = $value;
-                        break;
-                    }
-                    if (MapDecorated::class === $attribute->getName()) {
-                        $definition = $this->container->getDefinition($this->currentId);
-                        $arguments[$index] = new Reference($definition->innerServiceId ?? $this->currentId . '.inner', $definition->decorationOnInvalid ?? ContainerInterface::NULL_ON_INVALID_REFERENCE);
+                        $arguments[$index] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument(new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument($attribute->tag, $attribute->indexAttribute, $attribute->defaultIndexMethod, \true, $attribute->defaultPriorityMethod));
                         break;
                     }
                 }
@@ -305,9 +238,9 @@ class AutowirePass extends AbstractRecursivePass
                         --$index;
                         break;
                     }
-                    $type = ProxyHelper::getTypeHint($reflectionMethod, $parameter, \false);
+                    $type = \RectorPrefix20211221\Symfony\Component\DependencyInjection\LazyProxy\ProxyHelper::getTypeHint($reflectionMethod, $parameter, \false);
                     $type = $type ? \sprintf('is type-hinted "%s"', \ltrim($type, '\\')) : 'has no type-hint';
-                    throw new AutowiringFailedException($this->currentId, \sprintf('Cannot autowire service "%s": argument "$%s" of method "%s()" %s, you should configure its value explicitly.', $this->currentId, $parameter->name, $class !== $this->currentId ? $class . '::' . $method : $method, $type));
+                    throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\AutowiringFailedException($this->currentId, \sprintf('Cannot autowire service "%s": argument "$%s" of method "%s()" %s, you should configure its value explicitly.', $this->currentId, $parameter->name, $class !== $this->currentId ? $class . '::' . $method : $method, $type));
                 }
                 // specifically pass the default value
                 $arguments[$index] = clone $this->defaultArgument;
@@ -315,13 +248,13 @@ class AutowirePass extends AbstractRecursivePass
                 continue;
             }
             $getValue = function () use($type, $parameter, $class, $method) {
-                if (!($value = $this->getAutowiredReference($ref = new TypedReference($type, $type, ContainerBuilder::EXCEPTION_ON_INVALID_REFERENCE, Target::parseName($parameter)), \true))) {
+                if (!($value = $this->getAutowiredReference($ref = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($type, $type, \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder::EXCEPTION_ON_INVALID_REFERENCE, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Attribute\Target::parseName($parameter)), \true))) {
                     $failureMessage = $this->createTypeNotFoundMessageCallback($ref, \sprintf('argument "$%s" of method "%s()"', $parameter->name, $class !== $this->currentId ? $class . '::' . $method : $method));
                     if ($parameter->isDefaultValueAvailable()) {
                         $value = clone $this->defaultArgument;
                         $value->value = $parameter->getDefaultValue();
                     } elseif (!$parameter->allowsNull()) {
-                        throw new AutowiringFailedException($this->currentId, $failureMessage);
+                        throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\AutowiringFailedException($this->currentId, $failureMessage);
                     }
                 }
                 return $value;
@@ -336,7 +269,7 @@ class AutowirePass extends AbstractRecursivePass
                     $this->decoratedClass = null;
                     // Prevent further checks
                 } else {
-                    $arguments[$index] = new TypedReference($this->decoratedId, $this->decoratedClass);
+                    $arguments[$index] = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($this->decoratedId, $this->decoratedClass);
                     $this->getPreviousValue = $getValue;
                     $this->decoratedMethodIndex = $methodIndex;
                     $this->decoratedMethodArgumentIndex = $index;
@@ -355,13 +288,13 @@ class AutowirePass extends AbstractRecursivePass
         }
         // it's possible index 1 was set, then index 0, then 2, etc
         // make sure that we re-order so they're injected as expected
-        \ksort($arguments, \SORT_NATURAL);
+        \ksort($arguments);
         return $arguments;
     }
     /**
      * Returns a reference to the service matching the given type, if any.
      */
-    private function getAutowiredReference(TypedReference $reference, bool $filterType) : ?TypedReference
+    private function getAutowiredReference(\RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference $reference, bool $filterType) : ?\RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference
     {
         $this->lastFailure = null;
         $type = $reference->getType();
@@ -375,31 +308,31 @@ class AutowirePass extends AbstractRecursivePass
         }
         if (null !== ($name = $reference->getName())) {
             if ($this->container->has($alias = $type . ' $' . $name) && !$this->container->findDefinition($alias)->isAbstract()) {
-                return new TypedReference($alias, $type, $reference->getInvalidBehavior());
+                return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($alias, $type, $reference->getInvalidBehavior());
             }
             if (null !== ($alias = $this->combinedAliases[$alias] ?? null) && !$this->container->findDefinition($alias)->isAbstract()) {
-                return new TypedReference($alias, $type, $reference->getInvalidBehavior());
+                return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($alias, $type, $reference->getInvalidBehavior());
             }
             if ($this->container->has($name) && !$this->container->findDefinition($name)->isAbstract()) {
                 foreach ($this->container->getAliases() + $this->combinedAliases as $id => $alias) {
                     if ($name === (string) $alias && \strncmp($id, $type . ' $', \strlen($type . ' $')) === 0) {
-                        return new TypedReference($name, $type, $reference->getInvalidBehavior());
+                        return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($name, $type, $reference->getInvalidBehavior());
                     }
                 }
             }
         }
         if ($this->container->has($type) && !$this->container->findDefinition($type)->isAbstract()) {
-            return new TypedReference($type, $type, $reference->getInvalidBehavior());
+            return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($type, $type, $reference->getInvalidBehavior());
         }
         if (null !== ($alias = $this->combinedAliases[$type] ?? null) && !$this->container->findDefinition($alias)->isAbstract()) {
-            return new TypedReference($alias, $type, $reference->getInvalidBehavior());
+            return new \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference($alias, $type, $reference->getInvalidBehavior());
         }
         return null;
     }
     /**
      * Populates the list of available types.
      */
-    private function populateAvailableTypes(ContainerBuilder $container)
+    private function populateAvailableTypes(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container)
     {
         $this->types = [];
         $this->ambiguousServiceTypes = [];
@@ -414,7 +347,7 @@ class AutowirePass extends AbstractRecursivePass
     /**
      * Populates the list of available types for a given definition.
      */
-    private function populateAvailableType(ContainerBuilder $container, string $id, Definition $definition)
+    private function populateAvailableType(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, string $id, \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition $definition)
     {
         // Never use abstract services
         if ($definition->isAbstract()) {
@@ -453,10 +386,10 @@ class AutowirePass extends AbstractRecursivePass
         }
         $this->ambiguousServiceTypes[$type][] = $id;
     }
-    private function createTypeNotFoundMessageCallback(TypedReference $reference, string $label) : \Closure
+    private function createTypeNotFoundMessageCallback(\RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference $reference, string $label) : \Closure
     {
         if (null === $this->typesClone->container) {
-            $this->typesClone->container = new ContainerBuilder($this->container->getParameterBag());
+            $this->typesClone->container = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder($this->container->getParameterBag());
             $this->typesClone->container->setAliases($this->container->getAliases());
             $this->typesClone->container->setDefinitions($this->container->getDefinitions());
             $this->typesClone->container->setResourceTracking(\false);
@@ -466,12 +399,12 @@ class AutowirePass extends AbstractRecursivePass
             return $this->createTypeNotFoundMessage($reference, $label, $currentId);
         })->bindTo($this->typesClone);
     }
-    private function createTypeNotFoundMessage(TypedReference $reference, string $label, string $currentId) : string
+    private function createTypeNotFoundMessage(\RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference $reference, string $label, string $currentId) : string
     {
         if (!($r = $this->container->getReflectionClass($type = $reference->getType(), \false))) {
             // either $type does not exist or a parent class does not exist
             try {
-                $resource = new ClassExistenceResource($type, \false);
+                $resource = new \RectorPrefix20211221\Symfony\Component\Config\Resource\ClassExistenceResource($type, \false);
                 // isFresh() will explode ONLY if a parent class/trait does not exist
                 $resource->isFresh(0);
                 $parentMsg = \false;
@@ -494,13 +427,13 @@ class AutowirePass extends AbstractRecursivePass
         }
         return $message;
     }
-    private function createTypeAlternatives(ContainerBuilder $container, TypedReference $reference) : string
+    private function createTypeAlternatives(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, \RectorPrefix20211221\Symfony\Component\DependencyInjection\TypedReference $reference) : string
     {
         // try suggesting available aliases first
         if ($message = $this->getAliasesSuggestionForType($container, $type = $reference->getType())) {
             return ' ' . $message;
         }
-        if (!isset($this->ambiguousServiceTypes)) {
+        if (null === $this->ambiguousServiceTypes) {
             $this->populateAvailableTypes($container);
         }
         $servicesAndAliases = $container->getServiceIds();
@@ -518,7 +451,7 @@ class AutowirePass extends AbstractRecursivePass
         }
         return \sprintf(' You should maybe alias this %s to %s.', \class_exists($type, \false) ? 'class' : 'interface', $message);
     }
-    private function getAliasesSuggestionForType(ContainerBuilder $container, string $type) : ?string
+    private function getAliasesSuggestionForType(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container, string $type) : ?string
     {
         $aliases = [];
         foreach (\class_parents($type) + \class_implements($type) as $parent) {
@@ -550,7 +483,7 @@ class AutowirePass extends AbstractRecursivePass
             $this->autowiringAliases[$type][$name] = $name;
         }
     }
-    private function populateCombinedAliases(ContainerBuilder $container) : void
+    private function populateCombinedAliases(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerBuilder $container) : void
     {
         $this->combinedAliases = [];
         $reverseAliases = [];

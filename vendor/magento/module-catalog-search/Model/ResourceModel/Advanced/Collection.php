@@ -189,8 +189,10 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
         Advanced $advancedSearchResource = null
     ) {
         $this->searchRequestName = $searchRequestName;
-        $this->searchResultFactory = $searchResultFactory ?: ObjectManager::getInstance()
-            ->get(SearchResultFactory::class);
+        if ($searchResultFactory === null) {
+            $this->searchResultFactory = \Magento\Framework\App\ObjectManager::getInstance()
+                ->get(\Magento\Framework\Api\Search\SearchResultFactory::class);
+        }
         $this->searchCriteriaResolverFactory = $searchCriteriaResolverFactory ?: ObjectManager::getInstance()
             ->get(SearchCriteriaResolverFactory::class);
         $this->searchResultApplierFactory = $searchResultApplierFactory ?: ObjectManager::getInstance()
@@ -239,7 +241,7 @@ class Collection extends \Magento\Catalog\Model\ResourceModel\Product\Collection
     public function addFieldsToFilter($fields)
     {
         if ($fields) {
-            $this->filters = array_replace_recursive($this->filters, $fields);
+            $this->filters = array_merge($this->filters, $fields);
         }
         return $this;
     }

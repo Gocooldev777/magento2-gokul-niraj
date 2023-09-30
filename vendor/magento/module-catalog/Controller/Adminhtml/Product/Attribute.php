@@ -9,7 +9,6 @@
  */
 namespace Magento\Catalog\Controller\Adminhtml\Product;
 
-use Laminas\Validator\Regex;
 use Magento\Framework\Controller\Result;
 use Magento\Framework\View\Result\PageFactory;
 
@@ -20,7 +19,7 @@ abstract class Attribute extends \Magento\Backend\App\Action
      *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'Magento_Catalog::attributes_attributes';
+    const ADMIN_RESOURCE = 'Magento_Catalog::attributes_attributes';
 
     /**
      * @var \Magento\Framework\Cache\FrontendInterface
@@ -33,6 +32,8 @@ abstract class Attribute extends \Magento\Backend\App\Action
     protected $_entityTypeId;
 
     /**
+     * Core registry
+     *
      * @var \Magento\Framework\Registry
      */
     protected $_coreRegistry = null;
@@ -79,8 +80,6 @@ abstract class Attribute extends \Magento\Backend\App\Action
     }
 
     /**
-     * Method to create action page.
-     *
      * @param \Magento\Framework\Phrase|null $title
      * @return \Magento\Backend\Model\View\Result\Page
      */
@@ -125,7 +124,7 @@ abstract class Attribute extends \Magento\Backend\App\Action
             0,
             30
         );
-        $validatorAttrCode = new Regex(['pattern' => '/^[a-z][a-z_0-9]{0,29}[a-z0-9]$/']);
+        $validatorAttrCode = new \Zend_Validate_Regex(['pattern' => '/^[a-z][a-z_0-9]{0,29}[a-z0-9]$/']);
         if (!$validatorAttrCode->isValid($code)) {
             // md5() here is not for cryptographic use.
             // phpcs:ignore Magento2.Security.InsecureFunction

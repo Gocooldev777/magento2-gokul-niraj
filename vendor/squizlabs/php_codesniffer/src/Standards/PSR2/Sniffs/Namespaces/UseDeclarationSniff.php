@@ -285,7 +285,7 @@ class UseDeclarationSniff implements Sniff
         }
 
         // Ignore USE keywords for traits.
-        if ($phpcsFile->hasCondition($stackPtr, [T_CLASS, T_TRAIT, T_ENUM]) === true) {
+        if ($phpcsFile->hasCondition($stackPtr, [T_CLASS, T_TRAIT]) === true) {
             return true;
         }
 

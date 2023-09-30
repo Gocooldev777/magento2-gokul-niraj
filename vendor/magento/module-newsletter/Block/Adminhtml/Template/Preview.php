@@ -74,9 +74,6 @@ class Preview extends \Magento\Backend\Block\Widget
         if ($this->getRequest()->getParam('subscriber')) {
             $vars['subscriber']->load($this->getRequest()->getParam('subscriber'));
         }
-        $vars['subscriber_data']['unsubscription_link'] = $vars['subscriber'] ?
-            $vars['subscriber']->getUnsubscriptionLink() :
-            null;
 
         $template->emulateDesign($this->getStoreId());
         $templateProcessed = $this->_appState->emulateAreaCode(

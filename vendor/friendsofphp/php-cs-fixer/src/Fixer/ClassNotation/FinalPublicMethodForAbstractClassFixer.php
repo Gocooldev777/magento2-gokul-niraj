@@ -27,9 +27,9 @@ use PhpCsFixer\Tokenizer\Tokens;
 final class FinalPublicMethodForAbstractClassFixer extends AbstractFixer
 {
     /**
-     * @var array<string, true>
+     * @var array
      */
-    private array $magicMethods = [
+    private $magicMethods = [
         '__construct' => true,
         '__destruct' => true,
         '__call' => true,

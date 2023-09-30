@@ -12,8 +12,6 @@ use Magento\Framework\App\ActionInterface;
 
 /**
  * Marker for actions processing OPTIONS requests.
- *
- * @api
  */
 interface HttpOptionsActionInterface extends ActionInterface
 {

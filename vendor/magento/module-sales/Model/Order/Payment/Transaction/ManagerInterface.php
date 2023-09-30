@@ -11,7 +11,6 @@ use Magento\Sales\Model\Order\Payment\Transaction;
 
 /**
  * Manage payment transaction
- * @api
  */
 interface ManagerInterface
 {

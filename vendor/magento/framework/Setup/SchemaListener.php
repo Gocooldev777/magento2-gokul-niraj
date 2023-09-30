@@ -21,17 +21,17 @@ class SchemaListener
     /**
      * Ignore all ddl queries.
      */
-    public const IGNORE_ON = 0;
+    const IGNORE_ON = 0;
 
     /**
      * Disable ignore mode.
      */
-    public const IGNORE_OFF = 1;
+    const IGNORE_OFF = 1;
 
     /**
      * Staging FK keys installer key. Indicates that changes should be moved from ordinary module to staging module.
      */
-    public const STAGING_FK_KEYS = 2;
+    const STAGING_FK_KEYS = 2;
 
     /**
      * @var array
@@ -131,7 +131,7 @@ class SchemaListener
             $definition = ['type' => $definition];
         }
         $definition = $this->doColumnMapping($definition);
-        $definition['name'] = $columnName !== null ? strtolower($columnName) : '';
+        $definition['name'] = strtolower($columnName);
         $definitionType = $definition['type'] === 'int' ? 'integer' : $definition['type'];
         $columnComment = $definition['comment'] ?? null;
         $definition = $this->definitionMappers[$definitionType]->convertToDefinition($definition);
@@ -160,7 +160,7 @@ class SchemaListener
                 'type' => 'primary',
                 'name' => $primaryKeyName,
                 'disabled' => false,
-                'columns' => [$columnName => $columnName !== null ? strtolower($columnName) : '']
+                'columns' => [$columnName => strtolower($columnName)]
             ];
 
             $this->log($tableName, $dataToLog);
@@ -180,9 +180,9 @@ class SchemaListener
     public function renameTable($oldTableName, $newTableName)
     {
         $moduleName = $this->getModuleName();
-        $oldTableName = (string)$oldTableName;
+
         if (isset($this->tables[$moduleName][strtolower($oldTableName)])) {
-            $this->tables[$moduleName][strtolower((string)$newTableName)] =
+            $this->tables[$moduleName][strtolower($newTableName)] =
                 $this->tables[$moduleName][strtolower($oldTableName)];
             unset($this->tables[$moduleName][strtolower($oldTableName)]);
         }
@@ -224,7 +224,7 @@ class SchemaListener
         $definition = $this->castColumnDefinition($definition, $columnName);
         $definition = $this->addPrimaryKeyIfExists($tableName, $columnName, $definition, $primaryKeyName);
         $definition['onCreate'] = $onCreate;
-        $dataToLog['columns'][strtolower((string)$columnName)] = $definition;
+        $dataToLog['columns'][strtolower($columnName)] = $definition;
         $this->log($tableName, $dataToLog);
     }
 
@@ -258,7 +258,7 @@ class SchemaListener
      */
     public function dropColumn($tableName, $columnName)
     {
-        $dataToLog['columns'][strtolower((string)$columnName)] = [
+        $dataToLog['columns'][strtolower($columnName)] = [
             'disabled' => true
         ];
         $this->log($tableName, $dataToLog);
@@ -332,7 +332,6 @@ class SchemaListener
             return;
         }
         $moduleName = $this->getModuleName();
-        $tableName = (string)$tableName;
         if (isset($this->tables[$moduleName][strtolower($tableName)])) {
             $this->tables[$moduleName][strtolower($tableName)] = array_replace_recursive(
                 $this->tables[$moduleName][strtolower($tableName)],
@@ -365,10 +364,10 @@ class SchemaListener
     ) {
         $dataToLog['constraints']['foreign'][$fkName] =
             [
-                'table' => $tableName !== null ? strtolower($tableName) : '',
-                'column' => $columnName !== null ? strtolower($columnName) : '',
-                'referenceTable' => $refTableName !== null ? strtolower($refTableName) : '',
-                'referenceColumn' => $refColumnName !== null ? strtolower($refColumnName) : '',
+                'table' => strtolower($tableName),
+                'column' => strtolower($columnName),
+                'referenceTable' => strtolower($refTableName),
+                'referenceColumn' => strtolower($refColumnName),
                 'onDelete' => $onDelete,
                 'disabled' => false
             ];
@@ -487,7 +486,7 @@ class SchemaListener
      */
     public function createTable(Table $table)
     {
-        $engine = strtolower($table->getOption('type') ?? '');
+        $engine = strtolower($table->getOption('type'));
         $this->tables[$this->getModuleName()][strtolower($table->getName())] =
             [
                 'engine' => $engine,
@@ -524,7 +523,6 @@ class SchemaListener
      */
     public function dropTable($tableName)
     {
-        $tableName = (string)$tableName;
         if (isset($this->tables[$this->getModuleName()][strtolower($tableName)])) {
             unset($this->tables[$this->getModuleName()][strtolower($tableName)]);
         } else {

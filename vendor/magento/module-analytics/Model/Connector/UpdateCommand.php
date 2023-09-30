@@ -5,12 +5,12 @@
  */
 namespace Magento\Analytics\Model\Connector;
 
-use Laminas\Http\Request;
 use Magento\Analytics\Model\AnalyticsToken;
 use Magento\Analytics\Model\Config\Backend\Baseurl\SubscriptionUpdateHandler;
 use Magento\Analytics\Model\Connector\Http\ResponseResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\FlagManager;
+use Magento\Framework\HTTP\ZendClient;
 use Magento\Store\Model\Store;
 use Psr\Log\LoggerInterface;
 
@@ -88,7 +88,7 @@ class UpdateCommand implements CommandInterface
         $result = false;
         if ($this->analyticsToken->isTokenExist()) {
             $response = $this->httpClient->request(
-                Request::METHOD_PUT,
+                ZendClient::PUT,
                 $this->config->getValue($this->updateUrlPath),
                 [
                     "url" => $this->flagManager
@@ -103,9 +103,7 @@ class UpdateCommand implements CommandInterface
                     sprintf(
                         'Update of the subscription for MBI service has been failed: %s. Content-Type: %s',
                         !empty($response->getBody()) ? $response->getBody() : 'Response body is empty',
-                        $response->getHeaders()->has('Content-Type') ?
-                            $response->getHeaders()->get('Content-Type')->getFieldValue() :
-                            ''
+                        $response->getHeader('Content-Type')
                     )
                 );
             }

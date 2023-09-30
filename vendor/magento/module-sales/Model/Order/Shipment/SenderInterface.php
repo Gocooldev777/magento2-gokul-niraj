@@ -7,7 +7,6 @@ namespace Magento\Sales\Model\Order\Shipment;
 
 /**
  * Interface for notification sender for Shipment.
- * @api
  */
 interface SenderInterface
 {

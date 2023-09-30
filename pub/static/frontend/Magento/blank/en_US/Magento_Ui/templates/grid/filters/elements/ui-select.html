@@ -124,9 +124,10 @@
                     id: uid+2,
                     placeholder: filterPlaceholder
                 },
-                textInput: filterInputValue,
+                valueUpdate: 'afterkeydown',
+                value: filterInputValue,
                 hasFocus: filterOptionsFocus
-                ">
+                "/>
             <label
                     class="admin__action-multiselect-search-label"
                     data-action="advanced-select-search"

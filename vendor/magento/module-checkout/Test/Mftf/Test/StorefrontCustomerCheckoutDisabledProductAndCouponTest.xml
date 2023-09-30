@@ -63,7 +63,7 @@
         </actionGroup>
 
         <!-- Sign out Customer from storefront -->
-        <actionGroup ref="StorefrontCustomerLogoutActionGroup" stepKey="customerLogout"/>
+        <actionGroup ref="StorefrontSignOutActionGroup" stepKey="customerLogout"/>
 
         <!-- Login to admin panel -->
         <openNewTab stepKey="openNewTab"/>

@@ -11,8 +11,6 @@ use Magento\Framework\DB\Adapter\AdapterInterface;
 
 /**
  * Retrier Interface
- *
- * @api
  */
 interface DeadlockRetrierInterface
 {

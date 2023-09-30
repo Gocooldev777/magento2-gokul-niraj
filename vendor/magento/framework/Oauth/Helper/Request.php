@@ -5,7 +5,6 @@
  */
 namespace Magento\Framework\Oauth\Helper;
 
-use Laminas\Http\Client;
 use Magento\Framework\App\RequestInterface;
 use Laminas\Uri\UriFactory;
 
@@ -17,15 +16,15 @@ class Request
     /**#@+
      * HTTP Response Codes
      */
-    public const HTTP_OK = 200;
+    const HTTP_OK = 200;
 
-    public const HTTP_BAD_REQUEST = 400;
+    const HTTP_BAD_REQUEST = 400;
 
-    public const HTTP_UNAUTHORIZED = 401;
+    const HTTP_UNAUTHORIZED = 401;
 
-    public const HTTP_METHOD_NOT_ALLOWED = 405;
+    const HTTP_METHOD_NOT_ALLOWED = 405;
 
-    public const HTTP_INTERNAL_ERROR = 500;
+    const HTTP_INTERNAL_ERROR = 500;
 
     /**#@-*/
 
@@ -39,7 +38,7 @@ class Request
     {
         $oauthParams = $this->_processRequest(
             $httpRequest->getHeader('Authorization'),
-            $httpRequest->getHeader('Content-Type'),
+            $httpRequest->getHeader(\Zend_Http_Client::CONTENT_TYPE),
             $httpRequest->getContent(),
             $this->getRequestUrl($httpRequest)
         );
@@ -75,7 +74,7 @@ class Request
         }
 
         if ($requestBodyString !== null && $contentTypeHeader &&
-            0 === strpos($contentTypeHeader, Client::ENC_URLENCODED)
+            0 === strpos($contentTypeHeader, \Zend_Http_Client::ENC_URLENCODED)
         ) {
             $protocolParamsNotSet = !$protocolParams;
 

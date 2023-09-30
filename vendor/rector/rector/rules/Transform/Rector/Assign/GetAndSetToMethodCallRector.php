@@ -18,12 +18,17 @@ use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Transform\ValueObject\GetAndSetToMethodCall;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Transform\Rector\Assign\GetAndSetToMethodCallRector\GetAndSetToMethodCallRectorTest
  */
-final class GetAndSetToMethodCallRector extends AbstractRector implements ConfigurableRectorInterface
+final class GetAndSetToMethodCallRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
+    /**
+     * @deprecated
+     * @var string
+     */
+    public const TYPE_TO_METHOD_CALLS = 'type_to_method_calls';
     /**
      * @var GetAndSetToMethodCall[]
      */
@@ -38,14 +43,14 @@ final class GetAndSetToMethodCallRector extends AbstractRector implements Config
      * @var \Rector\Core\NodeManipulator\MagicPropertyFetchAnalyzer
      */
     private $magicPropertyFetchAnalyzer;
-    public function __construct(PropertyFetchAnalyzer $propertyFetchAnalyzer, MagicPropertyFetchAnalyzer $magicPropertyFetchAnalyzer)
+    public function __construct(\Rector\Core\NodeAnalyzer\PropertyFetchAnalyzer $propertyFetchAnalyzer, \Rector\Core\NodeManipulator\MagicPropertyFetchAnalyzer $magicPropertyFetchAnalyzer)
     {
         $this->propertyFetchAnalyzer = $propertyFetchAnalyzer;
         $this->magicPropertyFetchAnalyzer = $magicPropertyFetchAnalyzer;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Turns defined `__get`/`__set` to specific method calls.', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Turns defined `__get`/`__set` to specific method calls.', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 $container = new SomeContainer;
 $container->someService = $someService;
 CODE_SAMPLE
@@ -53,22 +58,22 @@ CODE_SAMPLE
 $container = new SomeContainer;
 $container->setService("someService", $someService);
 CODE_SAMPLE
-, [new GetAndSetToMethodCall('SomeContainer', 'addService', 'getService')])]);
+, [new \Rector\Transform\ValueObject\GetAndSetToMethodCall('SomeContainer', 'addService', 'getService')])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [Assign::class, PropertyFetch::class];
+        return [\PhpParser\Node\Expr\Assign::class, \PhpParser\Node\Expr\PropertyFetch::class];
     }
     /**
      * @param Assign|PropertyFetch $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        if ($node instanceof Assign) {
-            if ($node->var instanceof PropertyFetch) {
+        if ($node instanceof \PhpParser\Node\Expr\Assign) {
+            if ($node->var instanceof \PhpParser\Node\Expr\PropertyFetch) {
                 return $this->processMagicSet($node->expr, $node->var);
             }
             return null;
@@ -80,10 +85,11 @@ CODE_SAMPLE
      */
     public function configure(array $configuration) : void
     {
-        Assert::allIsAOf($configuration, GetAndSetToMethodCall::class);
-        $this->getAndSetToMethodCalls = $configuration;
+        $getAndSetToMethodCalls = $configuration[self::TYPE_TO_METHOD_CALLS] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allIsAOf($getAndSetToMethodCalls, \Rector\Transform\ValueObject\GetAndSetToMethodCall::class);
+        $this->getAndSetToMethodCalls = $getAndSetToMethodCalls;
     }
-    private function processMagicSet(Expr $expr, PropertyFetch $propertyFetch) : ?Node
+    private function processMagicSet(\PhpParser\Node\Expr $expr, \PhpParser\Node\Expr\PropertyFetch $propertyFetch) : ?\PhpParser\Node
     {
         foreach ($this->getAndSetToMethodCalls as $getAndSetToMethodCall) {
             $objectType = $getAndSetToMethodCall->getObjectType();
@@ -94,15 +100,15 @@ CODE_SAMPLE
         }
         return null;
     }
-    private function processPropertyFetch(PropertyFetch $propertyFetch) : ?MethodCall
+    private function processPropertyFetch(\PhpParser\Node\Expr\PropertyFetch $propertyFetch) : ?\PhpParser\Node\Expr\MethodCall
     {
-        $parentNode = $propertyFetch->getAttribute(AttributeKey::PARENT_NODE);
+        $parentNode = $propertyFetch->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
         foreach ($this->getAndSetToMethodCalls as $getAndSetToMethodCall) {
             if ($this->shouldSkipPropertyFetch($propertyFetch, $getAndSetToMethodCall->getObjectType())) {
                 continue;
             }
             // setter, skip
-            if (!$parentNode instanceof Assign) {
+            if (!$parentNode instanceof \PhpParser\Node\Expr\Assign) {
                 return $this->createMethodCallNodeFromPropertyFetchNode($propertyFetch, $getAndSetToMethodCall->getGetMethod());
             }
             if ($parentNode->var !== $propertyFetch) {
@@ -111,7 +117,7 @@ CODE_SAMPLE
         }
         return null;
     }
-    private function shouldSkipPropertyFetch(PropertyFetch $propertyFetch, ObjectType $objectType) : bool
+    private function shouldSkipPropertyFetch(\PhpParser\Node\Expr\PropertyFetch $propertyFetch, \PHPStan\Type\ObjectType $objectType) : bool
     {
         if (!$this->isObjectType($propertyFetch->var, $objectType)) {
             return \true;
@@ -121,12 +127,12 @@ CODE_SAMPLE
         }
         return $this->propertyFetchAnalyzer->isPropertyToSelf($propertyFetch);
     }
-    private function createMethodCallNodeFromAssignNode(PropertyFetch $propertyFetch, Expr $expr, string $method) : MethodCall
+    private function createMethodCallNodeFromAssignNode(\PhpParser\Node\Expr\PropertyFetch $propertyFetch, \PhpParser\Node\Expr $expr, string $method) : \PhpParser\Node\Expr\MethodCall
     {
         $propertyName = $this->getName($propertyFetch->name);
         return $this->nodeFactory->createMethodCall($propertyFetch->var, $method, [$propertyName, $expr]);
     }
-    private function createMethodCallNodeFromPropertyFetchNode(PropertyFetch $propertyFetch, string $method) : MethodCall
+    private function createMethodCallNodeFromPropertyFetchNode(\PhpParser\Node\Expr\PropertyFetch $propertyFetch, string $method) : \PhpParser\Node\Expr\MethodCall
     {
         /** @var Variable $variableNode */
         $variableNode = $propertyFetch->var;

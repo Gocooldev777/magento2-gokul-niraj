@@ -12,7 +12,6 @@ use Magento\SalesRule\Api\Exception\CodeRequestLimitException;
 
 /**
  * Determine whether number of requests for coupon codes has reached a limit.
- * @api
  */
 interface CodeLimitManagerInterface
 {

@@ -8,80 +8,91 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Definition\Builder;
+namespace RectorPrefix20211221\Symfony\Component\Config\Definition\Builder;
 
 /**
  * This class provides a fluent interface for building a node.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class NodeBuilder implements NodeParentInterface
+class NodeBuilder implements \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\NodeParentInterface
 {
     protected $parent;
     protected $nodeMapping;
     public function __construct()
     {
-        $this->nodeMapping = ['variable' => VariableNodeDefinition::class, 'scalar' => ScalarNodeDefinition::class, 'boolean' => BooleanNodeDefinition::class, 'integer' => IntegerNodeDefinition::class, 'float' => FloatNodeDefinition::class, 'array' => ArrayNodeDefinition::class, 'enum' => EnumNodeDefinition::class];
+        $this->nodeMapping = ['variable' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\VariableNodeDefinition::class, 'scalar' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition::class, 'boolean' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\BooleanNodeDefinition::class, 'integer' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition::class, 'float' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\FloatNodeDefinition::class, 'array' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition::class, 'enum' => \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\EnumNodeDefinition::class];
     }
     /**
      * Set the parent node.
      *
      * @return $this
      */
-    public function setParent(ParentNodeDefinitionInterface $parent = null)
+    public function setParent(\RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\ParentNodeDefinitionInterface $parent = null)
     {
-        if (1 > \func_num_args()) {
-            \RectorPrefix202304\trigger_deprecation('symfony/form', '6.2', 'Calling "%s()" without any arguments is deprecated, pass null explicitly instead.', __METHOD__);
-        }
         $this->parent = $parent;
         return $this;
     }
     /**
      * Creates a child array node.
+     *
+     * @return ArrayNodeDefinition
      */
-    public function arrayNode(string $name) : ArrayNodeDefinition
+    public function arrayNode(string $name)
     {
         return $this->node($name, 'array');
     }
     /**
      * Creates a child scalar node.
+     *
+     * @return ScalarNodeDefinition
      */
-    public function scalarNode(string $name) : ScalarNodeDefinition
+    public function scalarNode(string $name)
     {
         return $this->node($name, 'scalar');
     }
     /**
      * Creates a child Boolean node.
+     *
+     * @return BooleanNodeDefinition
      */
-    public function booleanNode(string $name) : BooleanNodeDefinition
+    public function booleanNode(string $name)
     {
         return $this->node($name, 'boolean');
     }
     /**
      * Creates a child integer node.
+     *
+     * @return IntegerNodeDefinition
      */
-    public function integerNode(string $name) : IntegerNodeDefinition
+    public function integerNode(string $name)
     {
         return $this->node($name, 'integer');
     }
     /**
      * Creates a child float node.
+     *
+     * @return FloatNodeDefinition
      */
-    public function floatNode(string $name) : FloatNodeDefinition
+    public function floatNode(string $name)
     {
         return $this->node($name, 'float');
     }
     /**
      * Creates a child EnumNode.
+     *
+     * @return EnumNodeDefinition
      */
-    public function enumNode(string $name) : EnumNodeDefinition
+    public function enumNode(string $name)
     {
         return $this->node($name, 'enum');
     }
     /**
      * Creates a child variable node.
+     *
+     * @return VariableNodeDefinition
      */
-    public function variableNode(string $name) : VariableNodeDefinition
+    public function variableNode(string $name)
     {
         return $this->node($name, 'variable');
     }
@@ -97,10 +108,12 @@ class NodeBuilder implements NodeParentInterface
     /**
      * Creates a child node.
      *
+     * @return NodeDefinition
+     *
      * @throws \RuntimeException When the node type is not registered
      * @throws \RuntimeException When the node class is not found
      */
-    public function node(?string $name, string $type) : NodeDefinition
+    public function node(?string $name, string $type)
     {
         $class = $this->getNodeClass($type);
         $node = new $class($name);
@@ -122,9 +135,9 @@ class NodeBuilder implements NodeParentInterface
      *
      * @return $this
      */
-    public function append(NodeDefinition $node)
+    public function append(\RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\NodeDefinition $node)
     {
-        if ($node instanceof BuilderAwareInterface) {
+        if ($node instanceof \RectorPrefix20211221\Symfony\Component\Config\Definition\Builder\BuilderAwareInterface) {
             $builder = clone $this;
             $builder->setParent(null);
             $node->setBuilder($builder);
@@ -152,10 +165,12 @@ class NodeBuilder implements NodeParentInterface
     /**
      * Returns the class name of the node definition.
      *
+     * @return string
+     *
      * @throws \RuntimeException When the node type is not registered
      * @throws \RuntimeException When the node class is not found
      */
-    protected function getNodeClass(string $type) : string
+    protected function getNodeClass(string $type)
     {
         $type = \strtolower($type);
         if (!isset($this->nodeMapping[$type])) {

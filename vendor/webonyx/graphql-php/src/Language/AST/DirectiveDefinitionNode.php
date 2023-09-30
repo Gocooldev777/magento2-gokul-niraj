@@ -1,26 +1,26 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class DirectiveDefinitionNode extends Node implements TypeSystemDefinitionNode
 {
-    public string $kind = NodeKind::DIRECTIVE_DEFINITION;
+    /** @var string */
+    public $kind = NodeKind::DIRECTIVE_DEFINITION;
 
-    public NameNode $name;
+    /** @var NameNode */
+    public $name;
 
-    public ?StringValueNode $description = null;
+    /** @var StringValueNode|null */
+    public $description;
 
     /** @var NodeList<InputValueDefinitionNode> */
-    public NodeList $arguments;
+    public $arguments;
 
-    public bool $repeatable;
+    /** @var bool */
+    public $repeatable;
 
     /** @var NodeList<NameNode> */
-    public NodeList $locations;
-
-    public function __construct(array $vars)
-    {
-        parent::__construct($vars);
-        $this->arguments ??= new NodeList([]);
-    }
+    public $locations;
 }

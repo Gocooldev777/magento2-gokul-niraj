@@ -29,9 +29,6 @@ final class RangeAnalyzer
 
     /**
      * Meaningful compare of tokens within ranges.
-     *
-     * @param array{start: int, end: int} $range1
-     * @param array{start: int, end: int} $range2
      */
     public static function rangeEqualsRange(Tokens $tokens, array $range1, array $range2): bool
     {

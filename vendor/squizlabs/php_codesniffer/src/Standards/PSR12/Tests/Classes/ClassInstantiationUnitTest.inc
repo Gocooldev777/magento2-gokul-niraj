@@ -42,6 +42,3 @@ $class = new ${$obj?->classname};
 $anonWithAttribute = new #[SomeAttribute('summary')] class {
     public const SOME_STUFF = 'foo';
 };
-
-$foo = new parent();
-$foo = new parent;

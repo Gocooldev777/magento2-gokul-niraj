@@ -1,12 +1,10 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Controller\Paypal;
 
-use Magento\Framework\App\Action\HttpGetActionInterface;
-use Magento\Framework\App\Action\HttpPostActionInterface;
 use PayPal\Braintree\Model\Paypal\CreditApi;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
@@ -14,7 +12,7 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
 
-class Cart extends Action implements HttpGetActionInterface, HttpPostActionInterface
+class Cart extends Action
 {
     /**
      * @var CreditApi
@@ -74,7 +72,6 @@ class Cart extends Action implements HttpGetActionInterface, HttpPostActionInter
 
     /**
      * Return response for bad request
-     *
      * @param ResultInterface $response
      * @return ResultInterface
      */

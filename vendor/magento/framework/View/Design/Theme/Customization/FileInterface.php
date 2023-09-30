@@ -7,8 +7,6 @@ namespace Magento\Framework\View\Design\Theme\Customization;
 
 /**
  * Theme service file interface
- *
- * @api
  */
 interface FileInterface
 {

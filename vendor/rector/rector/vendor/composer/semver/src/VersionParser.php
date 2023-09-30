@@ -8,12 +8,12 @@
  * For the full copyright and license information, please view
  * the LICENSE file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Composer\Semver;
+namespace RectorPrefix20211221\Composer\Semver;
 
-use RectorPrefix202304\Composer\Semver\Constraint\ConstraintInterface;
-use RectorPrefix202304\Composer\Semver\Constraint\MatchAllConstraint;
-use RectorPrefix202304\Composer\Semver\Constraint\MultiConstraint;
-use RectorPrefix202304\Composer\Semver\Constraint\Constraint;
+use RectorPrefix20211221\Composer\Semver\Constraint\ConstraintInterface;
+use RectorPrefix20211221\Composer\Semver\Constraint\MatchAllConstraint;
+use RectorPrefix20211221\Composer\Semver\Constraint\MultiConstraint;
+use RectorPrefix20211221\Composer\Semver\Constraint\Constraint;
 /**
  * Version parser.
  *
@@ -47,7 +47,7 @@ class VersionParser
      */
     public static function parseStability($version)
     {
-        $version = (string) \preg_replace('{#.+$}', '', (string) $version);
+        $version = (string) \preg_replace('{#.+$}', '', $version);
         if (\strpos($version, 'dev-') === 0 || '-dev' === \substr($version, -4)) {
             return 'dev';
         }
@@ -75,14 +75,14 @@ class VersionParser
      */
     public static function normalizeStability($stability)
     {
-        $stability = \strtolower((string) $stability);
+        $stability = \strtolower($stability);
         return $stability === 'rc' ? 'RC' : $stability;
     }
     /**
      * Normalizes a version string to be able to perform comparisons on it.
      *
      * @param string $version
-     * @param ?string $fullVersion optional complete version string to give more context
+     * @param string $fullVersion optional complete version string to give more context
      *
      * @throws \UnexpectedValueException
      *
@@ -90,7 +90,7 @@ class VersionParser
      */
     public function normalize($version, $fullVersion = null)
     {
-        $version = \trim((string) $version);
+        $version = \trim($version);
         $origVersion = $version;
         if (null === $fullVersion) {
             $fullVersion = $version;
@@ -167,7 +167,7 @@ class VersionParser
      */
     public function parseNumericAliasPrefix($branch)
     {
-        if (\preg_match('{^(?P<version>(\\d++\\.)*\\d++)(?:\\.x)?-dev$}i', (string) $branch, $matches)) {
+        if (\preg_match('{^(?P<version>(\\d++\\.)*\\d++)(?:\\.x)?-dev$}i', $branch, $matches)) {
             return $matches['version'] . '.';
         }
         return \false;
@@ -181,7 +181,7 @@ class VersionParser
      */
     public function normalizeBranch($name)
     {
-        $name = \trim((string) $name);
+        $name = \trim($name);
         if (\preg_match('{^v?(\\d++)(\\.(?:\\d++|[xX*]))?(\\.(?:\\d++|[xX*]))?(\\.(?:\\d++|[xX*]))?$}i', $name, $matches)) {
             $version = '';
             for ($i = 1; $i < 5; ++$i) {
@@ -197,15 +197,13 @@ class VersionParser
      * @param string $name
      *
      * @return string
-     *
-     * @deprecated No need to use this anymore in theory, Composer 2 does not normalize any branch names to 9999999-dev anymore
      */
     public function normalizeDefaultBranch($name)
     {
         if ($name === 'dev-master' || $name === 'dev-default' || $name === 'dev-trunk') {
             return '9999999-dev';
         }
-        return (string) $name;
+        return $name;
     }
     /**
      * Parses a constraint string into MultiConstraint and/or Constraint objects.
@@ -216,8 +214,8 @@ class VersionParser
      */
     public function parseConstraints($constraints)
     {
-        $prettyConstraint = (string) $constraints;
-        $orConstraints = \preg_split('{\\s*\\|\\|?\\s*}', \trim((string) $constraints));
+        $prettyConstraint = $constraints;
+        $orConstraints = \preg_split('{\\s*\\|\\|?\\s*}', \trim($constraints));
         if (\false === $orConstraints) {
             throw new \RuntimeException('Failed to preg_split string: ' . $constraints);
         }
@@ -240,11 +238,11 @@ class VersionParser
             if (1 === \count($constraintObjects)) {
                 $constraint = $constraintObjects[0];
             } else {
-                $constraint = new MultiConstraint($constraintObjects);
+                $constraint = new \RectorPrefix20211221\Composer\Semver\Constraint\MultiConstraint($constraintObjects);
             }
             $orGroups[] = $constraint;
         }
-        $constraint = MultiConstraint::create($orGroups, \false);
+        $constraint = \RectorPrefix20211221\Composer\Semver\Constraint\MultiConstraint::create($orGroups, \false);
         $constraint->setPrettyString($prettyConstraint);
         return $constraint;
     }
@@ -276,9 +274,9 @@ class VersionParser
         }
         if (\preg_match('{^(v)?[xX*](\\.[xX*])*$}i', $constraint, $match)) {
             if (!empty($match[1]) || !empty($match[2])) {
-                return array(new Constraint('>=', '0.0.0.0-dev'));
+                return array(new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('>=', '0.0.0.0-dev'));
             }
-            return array(new MatchAllConstraint());
+            return array(new \RectorPrefix20211221\Composer\Semver\Constraint\MatchAllConstraint());
         }
         $versionRegex = 'v?(\\d++)(?:\\.(\\d++))?(?:\\.(\\d++))?(?:\\.(\\d++))?(?:' . self::$modifierRegex . '|\\.([xX*][.-]?dev))(?:\\+[^\\s]+)?';
         // Tilde Range
@@ -310,12 +308,12 @@ class VersionParser
                 $stabilitySuffix .= '-dev';
             }
             $lowVersion = $this->normalize(\substr($constraint . $stabilitySuffix, 1));
-            $lowerBound = new Constraint('>=', $lowVersion);
+            $lowerBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('>=', $lowVersion);
             // For upper bound, we increment the position of one more significance,
             // but highPosition = 0 would be illegal
             $highPosition = \max(1, $position - 1);
             $highVersion = $this->manipulateVersionString($matches, $highPosition, 1) . '-dev';
-            $upperBound = new Constraint('<', $highVersion);
+            $upperBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('<', $highVersion);
             return array($lowerBound, $upperBound);
         }
         // Caret Range
@@ -338,11 +336,11 @@ class VersionParser
                 $stabilitySuffix .= '-dev';
             }
             $lowVersion = $this->normalize(\substr($constraint . $stabilitySuffix, 1));
-            $lowerBound = new Constraint('>=', $lowVersion);
+            $lowerBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('>=', $lowVersion);
             // For upper bound, we increment the position of one more significance,
             // but highPosition = 0 would be illegal
             $highVersion = $this->manipulateVersionString($matches, $position, 1) . '-dev';
-            $upperBound = new Constraint('<', $highVersion);
+            $upperBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('<', $highVersion);
             return array($lowerBound, $upperBound);
         }
         // X Range
@@ -360,9 +358,9 @@ class VersionParser
             $lowVersion = $this->manipulateVersionString($matches, $position) . '-dev';
             $highVersion = $this->manipulateVersionString($matches, $position, 1) . '-dev';
             if ($lowVersion === '0.0.0.0-dev') {
-                return array(new Constraint('<', $highVersion));
+                return array(new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('<', $highVersion));
             }
-            return array(new Constraint('>=', $lowVersion), new Constraint('<', $highVersion));
+            return array(new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('>=', $lowVersion), new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('<', $highVersion));
         }
         // Hyphen Range
         //
@@ -377,19 +375,19 @@ class VersionParser
                 $lowStabilitySuffix = '-dev';
             }
             $lowVersion = $this->normalize($matches['from']);
-            $lowerBound = new Constraint('>=', $lowVersion . $lowStabilitySuffix);
+            $lowerBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('>=', $lowVersion . $lowStabilitySuffix);
             $empty = function ($x) {
                 return $x === 0 || $x === '0' ? \false : empty($x);
             };
             if (!$empty($matches[12]) && !$empty($matches[13]) || !empty($matches[15]) || !empty($matches[17]) || !empty($matches[18])) {
                 $highVersion = $this->normalize($matches['to']);
-                $upperBound = new Constraint('<=', $highVersion);
+                $upperBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('<=', $highVersion);
             } else {
                 $highMatch = array('', $matches[11], $matches[12], $matches[13], $matches[14]);
                 // validate to version
                 $this->normalize($matches['to']);
                 $highVersion = $this->manipulateVersionString($highMatch, $empty($matches[12]) ? 1 : 2, 1) . '-dev';
-                $upperBound = new Constraint('<', $highVersion);
+                $upperBound = new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint('<', $highVersion);
             }
             return array($lowerBound, $upperBound);
         }
@@ -417,7 +415,7 @@ class VersionParser
                         }
                     }
                 }
-                return array(new Constraint($matches[1] ?: '=', $version));
+                return array(new \RectorPrefix20211221\Composer\Semver\Constraint\Constraint($matches[1] ?: '=', $version));
             } catch (\Exception $e) {
             }
         }

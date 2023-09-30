@@ -273,7 +273,7 @@ class Shipping implements RateCollectorInterface
      */
     private function prepareCarrier(string $carrierCode, RateRequest $request): AbstractCarrier
     {
-        $carrier = $this->isShippingCarrierAvailable($carrierCode, $request->getStoreId())
+        $carrier = $this->isShippingCarrierAvailable($carrierCode)
             ? $this->_carrierFactory->create($carrierCode, $request->getStoreId())
             : null;
         if (!$carrier) {
@@ -541,15 +541,13 @@ class Shipping implements RateCollectorInterface
      * Checks availability of carrier.
      *
      * @param string $carrierCode
-     * @param null|int $storeId
      * @return bool
      */
-    private function isShippingCarrierAvailable(string $carrierCode, ?int $storeId = null): bool
+    private function isShippingCarrierAvailable(string $carrierCode): bool
     {
         return $this->_scopeConfig->isSetFlag(
             'carriers/' . $carrierCode . '/' . $this->_availabilityConfigField,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-            $storeId
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
 }

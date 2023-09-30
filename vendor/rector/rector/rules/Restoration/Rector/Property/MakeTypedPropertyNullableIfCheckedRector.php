@@ -5,7 +5,6 @@ namespace Rector\Restoration\Rector\Property;
 
 use PhpParser\Node;
 use PhpParser\Node\ComplexType;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
@@ -15,33 +14,16 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use Rector\Core\Rector\AbstractRector;
-use Rector\Privatization\NodeManipulator\VisibilityManipulator;
-use Rector\TypeDeclaration\AlreadyAssignDetector\ConstructorAssignDetector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\Restoration\Rector\Property\MakeTypedPropertyNullableIfCheckedRector\MakeTypedPropertyNullableIfCheckedRectorTest
  */
-final class MakeTypedPropertyNullableIfCheckedRector extends AbstractRector
+final class MakeTypedPropertyNullableIfCheckedRector extends \Rector\Core\Rector\AbstractRector
 {
-    /**
-     * @readonly
-     * @var \Rector\Privatization\NodeManipulator\VisibilityManipulator
-     */
-    private $visibilityManipulator;
-    /**
-     * @readonly
-     * @var \Rector\TypeDeclaration\AlreadyAssignDetector\ConstructorAssignDetector
-     */
-    private $constructorAssignDetector;
-    public function __construct(VisibilityManipulator $visibilityManipulator, ConstructorAssignDetector $constructorAssignDetector)
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        $this->visibilityManipulator = $visibilityManipulator;
-        $this->constructorAssignDetector = $constructorAssignDetector;
-    }
-    public function getRuleDefinition() : RuleDefinition
-    {
-        return new RuleDefinition('Make typed property nullable if checked', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Make typed property nullable if checked', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 final class SomeClass
 {
     private AnotherClass $anotherClass;
@@ -74,49 +56,34 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Property::class];
+        return [\PhpParser\Node\Stmt\Property::class];
     }
     /**
      * @param Property $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($this->shouldSkipProperty($node)) {
             return null;
         }
         /** @var PropertyProperty $onlyProperty */
         $onlyProperty = $node->props[0];
-        //Skip properties with default values
-        if ($onlyProperty->default instanceof Expr) {
+        $isPropretyNullChecked = $this->isPropertyNullChecked($onlyProperty);
+        if (!$isPropretyNullChecked) {
             return null;
         }
-        $classLike = $this->betterNodeFinder->findParentType($onlyProperty, Class_::class);
-        if (!$classLike instanceof Class_) {
-            return null;
-        }
-        $isPropertyConstructorAssigned = $this->isPropertyConstructorAssigned($classLike, $onlyProperty);
-        if ($isPropertyConstructorAssigned) {
-            return null;
-        }
-        $isPropertyNullChecked = $this->isPropertyNullChecked($classLike, $onlyProperty);
-        if (!$isPropertyNullChecked) {
-            return null;
-        }
-        if ($node->type instanceof ComplexType) {
+        if ($node->type instanceof \PhpParser\Node\ComplexType) {
             return null;
         }
         $currentPropertyType = $node->type;
         if ($currentPropertyType === null) {
             return null;
         }
-        $node->type = new NullableType($currentPropertyType);
+        $node->type = new \PhpParser\Node\NullableType($currentPropertyType);
         $onlyProperty->default = $this->nodeFactory->createNull();
-        if ($node->isReadonly()) {
-            $this->visibilityManipulator->removeReadonly($node);
-        }
         return $node;
     }
-    private function shouldSkipProperty(Property $property) : bool
+    private function shouldSkipProperty(\PhpParser\Node\Stmt\Property $property) : bool
     {
         if (\count($property->props) !== 1) {
             return \true;
@@ -124,24 +91,23 @@ CODE_SAMPLE
         if ($property->type === null) {
             return \true;
         }
-        return $property->type instanceof NullableType;
+        return $property->type instanceof \PhpParser\Node\NullableType;
     }
-    private function isPropertyConstructorAssigned(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
+    private function isPropertyNullChecked(\PhpParser\Node\Stmt\PropertyProperty $onlyPropertyProperty) : bool
     {
-        $propertyName = $this->nodeNameResolver->getName($onlyPropertyProperty);
-        return $this->constructorAssignDetector->isPropertyAssigned($class, $propertyName);
-    }
-    private function isPropertyNullChecked(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
-    {
-        if ($this->isIdenticalOrNotIdenticalToNull($class, $onlyPropertyProperty)) {
+        $classLike = $this->betterNodeFinder->findParentType($onlyPropertyProperty, \PhpParser\Node\Stmt\Class_::class);
+        if (!$classLike instanceof \PhpParser\Node\Stmt\Class_) {
+            return \false;
+        }
+        if ($this->isIdenticalOrNotIdenticalToNull($classLike, $onlyPropertyProperty)) {
             return \true;
         }
-        return $this->isBooleanNot($class, $onlyPropertyProperty);
+        return $this->isBooleanNot($classLike, $onlyPropertyProperty);
     }
-    private function isIdenticalOrNotIdenticalToNull(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
+    private function isIdenticalOrNotIdenticalToNull(\PhpParser\Node\Stmt\Class_ $class, \PhpParser\Node\Stmt\PropertyProperty $onlyPropertyProperty) : bool
     {
         $isIdenticalOrNotIdenticalToNull = \false;
-        $this->traverseNodesWithCallable($class->stmts, function (Node $node) use($onlyPropertyProperty, &$isIdenticalOrNotIdenticalToNull) {
+        $this->traverseNodesWithCallable($class->stmts, function (\PhpParser\Node $node) use($onlyPropertyProperty, &$isIdenticalOrNotIdenticalToNull) {
             $matchedPropertyFetchName = $this->matchPropertyFetchNameComparedToNull($node);
             if ($matchedPropertyFetchName === null) {
                 return null;
@@ -153,14 +119,14 @@ CODE_SAMPLE
         });
         return $isIdenticalOrNotIdenticalToNull;
     }
-    private function isBooleanNot(Class_ $class, PropertyProperty $onlyPropertyProperty) : bool
+    private function isBooleanNot(\PhpParser\Node\Stmt\Class_ $class, \PhpParser\Node\Stmt\PropertyProperty $onlyPropertyProperty) : bool
     {
         $isBooleanNot = \false;
-        $this->traverseNodesWithCallable($class->stmts, function (Node $node) use($onlyPropertyProperty, &$isBooleanNot) {
-            if (!$node instanceof BooleanNot) {
+        $this->traverseNodesWithCallable($class->stmts, function (\PhpParser\Node $node) use($onlyPropertyProperty, &$isBooleanNot) {
+            if (!$node instanceof \PhpParser\Node\Expr\BooleanNot) {
                 return null;
             }
-            if (!$node->expr instanceof PropertyFetch) {
+            if (!$node->expr instanceof \PhpParser\Node\Expr\PropertyFetch) {
                 return null;
             }
             if (!$this->isName($node->expr->var, 'this')) {
@@ -178,14 +144,14 @@ CODE_SAMPLE
      * $this-><someProprety> === null
      * null === $this-><someProprety>
      */
-    private function matchPropertyFetchNameComparedToNull(Node $node) : ?string
+    private function matchPropertyFetchNameComparedToNull(\PhpParser\Node $node) : ?string
     {
-        if (!$node instanceof Identical && !$node instanceof NotIdentical) {
+        if (!$node instanceof \PhpParser\Node\Expr\BinaryOp\Identical && !$node instanceof \PhpParser\Node\Expr\BinaryOp\NotIdentical) {
             return null;
         }
-        if ($node->left instanceof PropertyFetch && $this->valueResolver->isNull($node->right)) {
+        if ($node->left instanceof \PhpParser\Node\Expr\PropertyFetch && $this->valueResolver->isNull($node->right)) {
             $propertyFetch = $node->left;
-        } elseif ($node->right instanceof PropertyFetch && $this->valueResolver->isNull($node->left)) {
+        } elseif ($node->right instanceof \PhpParser\Node\Expr\PropertyFetch && $this->valueResolver->isNull($node->left)) {
             $propertyFetch = $node->right;
         } else {
             return null;

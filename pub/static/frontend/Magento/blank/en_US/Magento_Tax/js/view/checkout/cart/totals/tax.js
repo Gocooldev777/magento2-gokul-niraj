@@ -21,7 +21,7 @@ define([
          * @override
          */
         ifShowValue: function () {
-            if (parseInt(this.getPureValue()) === 0) { //eslint-disable-line radix
+            if (this.getPureValue() === 0) {
                 return isZeroTaxDisplayed;
             }
 

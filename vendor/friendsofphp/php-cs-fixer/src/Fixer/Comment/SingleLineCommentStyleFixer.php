@@ -105,7 +105,7 @@ $c = 3;
     /**
      * {@inheritdoc}
      *
-     * Must run after HeaderCommentFixer, NoUselessReturnFixer, PhpdocToCommentFixer.
+     * Must run after HeaderCommentFixer, NoUselessReturnFixer.
      */
     public function getPriority(): int
     {

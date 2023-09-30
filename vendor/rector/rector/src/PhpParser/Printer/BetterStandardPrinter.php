@@ -3,47 +3,45 @@
 declare (strict_types=1);
 namespace Rector\Core\PhpParser\Printer;
 
-use RectorPrefix202304\Nette\Utils\Strings;
-use PhpParser\Comment;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrowFunction;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Expr\Yield_;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
-use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\EncapsedStringPart;
-use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Declare_;
-use PhpParser\Node\Stmt\InlineHTML;
 use PhpParser\Node\Stmt\Nop;
+use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\PrettyPrinter\Standard;
 use Rector\Comments\NodeDocBlock\DocBlockUpdater;
-use Rector\Core\Configuration\RectorConfigProvider;
-use Rector\Core\Contract\PhpParser\NodePrinterInterface;
-use Rector\Core\NodeDecorator\MixPhpHtmlDecorator;
 use Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace;
-use Rector\Core\Provider\CurrentFileProvider;
+use Rector\Core\PhpParser\Printer\Whitespace\IndentCharacterDetector;
 use Rector\Core\Util\StringUtils;
-use Rector\Core\ValueObject\Application\File;
-use Rector\Core\ValueObject\Reporting\FileDiff;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 /**
  * @see \Rector\Core\Tests\PhpParser\Printer\BetterStandardPrinterTest
- *
- * @property array<string, array{string, bool, string, null}> $insertionMap
  */
-final class BetterStandardPrinter extends Standard implements NodePrinterInterface
+final class BetterStandardPrinter extends \PhpParser\PrettyPrinter\Standard
 {
+    /**
+     * @var string
+     * @see https://regex101.com/r/QA7mai/1
+     */
+    private const EMPTY_STARTING_TAG_REGEX = '/^<\\?php\\s+\\?>\\n?/';
+    /**
+     * @var string
+     * @see https://regex101.com/r/IVNkrt/1
+     */
+    private const EMPTY_ENDING_TAG_REGEX = '/<\\?php$/';
     /**
      * @var string
      * @see https://regex101.com/r/jUFizd/1
@@ -77,33 +75,21 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     private $tabOrSpaceIndentCharacter = ' ';
     /**
      * @readonly
+     * @var \Rector\Core\PhpParser\Printer\Whitespace\IndentCharacterDetector
+     */
+    private $indentCharacterDetector;
+    /**
+     * @readonly
      * @var \Rector\Comments\NodeDocBlock\DocBlockUpdater
      */
     private $docBlockUpdater;
     /**
-     * @readonly
-     * @var \Rector\Core\Configuration\RectorConfigProvider
-     */
-    private $rectorConfigProvider;
-    /**
-     * @readonly
-     * @var \Rector\Core\Provider\CurrentFileProvider
-     */
-    private $currentFileProvider;
-    /**
-     * @readonly
-     * @var \Rector\Core\NodeDecorator\MixPhpHtmlDecorator
-     */
-    private $mixPhpHtmlDecorator;
-    /**
      * @param mixed[] $options
      */
-    public function __construct(DocBlockUpdater $docBlockUpdater, RectorConfigProvider $rectorConfigProvider, CurrentFileProvider $currentFileProvider, MixPhpHtmlDecorator $mixPhpHtmlDecorator, array $options = [])
+    public function __construct(\Rector\Core\PhpParser\Printer\Whitespace\IndentCharacterDetector $indentCharacterDetector, \Rector\Comments\NodeDocBlock\DocBlockUpdater $docBlockUpdater, array $options = [])
     {
+        $this->indentCharacterDetector = $indentCharacterDetector;
         $this->docBlockUpdater = $docBlockUpdater;
-        $this->rectorConfigProvider = $rectorConfigProvider;
-        $this->currentFileProvider = $currentFileProvider;
-        $this->mixPhpHtmlDecorator = $mixPhpHtmlDecorator;
         parent::__construct($options);
         // print return type double colon right after the bracket "function(): string"
         $this->initializeInsertionMap();
@@ -111,7 +97,6 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
         $this->insertionMap['Stmt_Function->returnType'] = [')', \false, ': ', null];
         $this->insertionMap['Expr_Closure->returnType'] = [')', \false, ': ', null];
         $this->insertionMap['Expr_ArrowFunction->returnType'] = [')', \false, ': ', null];
-        $this->tabOrSpaceIndentCharacter = $this->rectorConfigProvider->getIndentChar();
     }
     /**
      * @param Node[] $stmts
@@ -121,21 +106,22 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     public function printFormatPreserving(array $stmts, array $origStmts, array $origTokens) : string
     {
         $newStmts = $this->resolveNewStmts($stmts);
+        // detect per print
+        $this->tabOrSpaceIndentCharacter = $this->indentCharacterDetector->detect($origTokens);
         $content = parent::printFormatPreserving($newStmts, $origStmts, $origTokens);
+        // strip empty starting/ending php tags
+        if (\array_key_exists(0, $stmts) && $stmts[0] instanceof \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace) {
+            $content = \RectorPrefix20211221\Nette\Utils\Strings::replace($content, self::EMPTY_STARTING_TAG_REGEX, '');
+            $content = \RectorPrefix20211221\Nette\Utils\Strings::replace(\rtrim($content), self::EMPTY_ENDING_TAG_REGEX, '') . "\n";
+        }
         // add new line in case of added stmts
-        if (\count($newStmts) !== \count($origStmts) && !StringUtils::isMatch($content, self::NEWLINE_END_REGEX)) {
+        if (\count($stmts) !== \count($origStmts) && !\Rector\Core\Util\StringUtils::isMatch($content, self::NEWLINE_END_REGEX)) {
             $content .= $this->nl;
         }
-        if (!$this->mixPhpHtmlDecorator->isRequireReprintInlineHTML()) {
-            return $content;
-        }
-        // ensure disable flag isRequireReprintInlineHTML on change file
-        $this->mixPhpHtmlDecorator->disableIsRequireReprintInlineHTML();
-        $content = $this->cleanSurplusTag($content);
-        return $this->cleanEndWithPHPOpenTag($content);
+        return $content;
     }
     /**
-     * @param \PhpParser\Node|mixed[]|null $node
+     * @param mixed[]|\PhpParser\Node|null $node
      */
     public function print($node) : string
     {
@@ -156,21 +142,15 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
         $stmts = \array_values($stmts);
         return parent::prettyPrintFile($stmts) . \PHP_EOL;
     }
-    /**
-     * @api magic method in parent
-     */
-    public function pFileWithoutNamespace(FileWithoutNamespace $fileWithoutNamespace) : string
+    public function pFileWithoutNamespace(\Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace $fileWithoutNamespace) : string
     {
         $content = $this->pStmts($fileWithoutNamespace->stmts, \false);
         return \ltrim($content);
     }
-    protected function p(Node $node, $parentFormatPreserved = \false) : string
+    protected function p(\PhpParser\Node $node, $parentFormatPreserved = \false) : string
     {
         $content = parent::p($node, $parentFormatPreserved);
-        if ($node instanceof Expr) {
-            $content = $this->resolveContentOnExpr($node, $content);
-        }
-        return $node->getAttribute(AttributeKey::WRAPPED_IN_PARENTHESES) === \true ? '(' . $content . ')' : $content;
+        return $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::WRAPPED_IN_PARENTHESES) === \true ? '(' . $content . ')' : $content;
     }
     /**
      * This allows to use both spaces and tabs vs. original space-only
@@ -186,9 +166,9 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
      */
     protected function indent() : void
     {
-        $indentSize = $this->rectorConfigProvider->getIndentSize();
-        $this->indentLevel += $indentSize;
-        $this->nl .= \str_repeat($this->tabOrSpaceIndentCharacter, $indentSize);
+        $multiplier = $this->tabOrSpaceIndentCharacter === ' ' ? 4 : 1;
+        $this->indentLevel += $multiplier;
+        $this->nl .= \str_repeat($this->tabOrSpaceIndentCharacter, $multiplier);
     }
     /**
      * This allows to use both spaces and tabs vs. original space-only
@@ -215,7 +195,7 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     {
         // reindex positions for printer
         $nodes = \array_values($nodes);
-        $this->decorateInlineHTMLOrNopAndUpdatePhpdocInfo($nodes);
+        $this->moveCommentsFromAttributeObjectToCommentsAttribute($nodes);
         $content = parent::pArray($nodes, $origNodes, $pos, $indentAdjustment, $parentNodeType, $subNodeName, $fixup);
         if ($content === null) {
             return $content;
@@ -223,7 +203,7 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
         if (!$this->containsNop($nodes)) {
             return $content;
         }
-        return Strings::replace($content, self::EXTRA_SPACE_BEFORE_NOP_REGEX);
+        return \RectorPrefix20211221\Nette\Utils\Strings::replace($content, self::EXTRA_SPACE_BEFORE_NOP_REGEX, '');
     }
     /**
      * Do not preslash all slashes (parent behavior), but only those:
@@ -236,15 +216,15 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
      */
     protected function pSingleQuotedString(string $string) : string
     {
-        return "'" . Strings::replace($string, self::QUOTED_SLASH_REGEX, '\\\\$0') . "'";
+        return "'" . \RectorPrefix20211221\Nette\Utils\Strings::replace($string, self::QUOTED_SLASH_REGEX, '\\\\$0') . "'";
     }
     /**
      * Emulates 1_000 in PHP 7.3- version
      */
-    protected function pScalar_DNumber(DNumber $dNumber) : string
+    protected function pScalar_DNumber(\PhpParser\Node\Scalar\DNumber $dNumber) : string
     {
-        if ($this->shouldPrintNewRawValue($dNumber)) {
-            return (string) $dNumber->getAttribute(AttributeKey::RAW_VALUE);
+        if (\is_string($dNumber->value)) {
+            return $dNumber->value;
         }
         return parent::pScalar_DNumber($dNumber);
     }
@@ -254,58 +234,50 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
      * ↓
      * "use ("
      */
-    protected function pExpr_Closure(Closure $closure) : string
+    protected function pExpr_Closure(\PhpParser\Node\Expr\Closure $closure) : string
     {
         $closureContent = parent::pExpr_Closure($closure);
-        if ($closure->uses === []) {
-            return $closureContent;
-        }
-        return Strings::replace($closureContent, self::USE_REGEX, '$1 (');
+        return \RectorPrefix20211221\Nette\Utils\Strings::replace($closureContent, self::USE_REGEX, '$1 (');
     }
     /**
      * Do not add "()" on Expressions
      * @see https://github.com/rectorphp/rector/pull/401#discussion_r181487199
      */
-    protected function pExpr_Yield(Yield_ $yield) : string
+    protected function pExpr_Yield(\PhpParser\Node\Expr\Yield_ $yield) : string
     {
-        if (!$yield->value instanceof Expr) {
+        if ($yield->value === null) {
             return 'yield';
         }
-        $parentNode = $yield->getAttribute(AttributeKey::PARENT_NODE);
+        $parentNode = $yield->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::PARENT_NODE);
         // brackets are needed only in case of assign, @see https://www.php.net/manual/en/language.generators.syntax.php
-        $shouldAddBrackets = $parentNode instanceof Assign;
-        return \sprintf('%syield %s%s%s', $shouldAddBrackets ? '(' : '', $yield->key instanceof Expr ? $this->p($yield->key) . ' => ' : '', $this->p($yield->value), $shouldAddBrackets ? ')' : '');
+        $shouldAddBrackets = $parentNode instanceof \PhpParser\Node\Expr\Assign;
+        return \sprintf('%syield %s%s%s', $shouldAddBrackets ? '(' : '', $yield->key !== null ? $this->p($yield->key) . ' => ' : '', $this->p($yield->value), $shouldAddBrackets ? ')' : '');
     }
     /**
      * Print arrays in short [] by default,
      * to prevent manual explicit array shortening.
      */
-    protected function pExpr_Array(Array_ $array) : string
+    protected function pExpr_Array(\PhpParser\Node\Expr\Array_ $array) : string
     {
-        if (!$array->hasAttribute(AttributeKey::KIND)) {
-            $array->setAttribute(AttributeKey::KIND, Array_::KIND_SHORT);
-        }
-        if ($array->getAttribute(AttributeKey::NEWLINED_ARRAY_PRINT) === \true) {
-            $printedArray = '[';
-            $printedArray .= $this->pCommaSeparatedMultiline($array->items, \true);
-            return $printedArray . ($this->nl . ']');
+        if (!$array->hasAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND)) {
+            $array->setAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND, \PhpParser\Node\Expr\Array_::KIND_SHORT);
         }
         return parent::pExpr_Array($array);
     }
     /**
      * Fixes escaping of regular patterns
      */
-    protected function pScalar_String(String_ $string) : string
+    protected function pScalar_String(\PhpParser\Node\Scalar\String_ $string) : string
     {
-        $isRegularPattern = (bool) $string->getAttribute(AttributeKey::IS_REGULAR_PATTERN, \false);
+        $isRegularPattern = (bool) $string->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::IS_REGULAR_PATTERN, \false);
         if (!$isRegularPattern) {
             return parent::pScalar_String($string);
         }
-        $kind = $string->getAttribute(AttributeKey::KIND, String_::KIND_SINGLE_QUOTED);
-        if ($kind === String_::KIND_DOUBLE_QUOTED) {
+        $kind = $string->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND, \PhpParser\Node\Scalar\String_::KIND_SINGLE_QUOTED);
+        if ($kind === \PhpParser\Node\Scalar\String_::KIND_DOUBLE_QUOTED) {
             return $this->wrapValueWith($string, '"');
         }
-        if ($kind === String_::KIND_SINGLE_QUOTED) {
+        if ($kind === \PhpParser\Node\Scalar\String_::KIND_SINGLE_QUOTED) {
             return $this->wrapValueWith($string, "'");
         }
         return parent::pScalar_String($string);
@@ -315,7 +287,7 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
      */
     protected function pStmts(array $nodes, bool $indent = \true) : string
     {
-        $this->decorateInlineHTMLOrNopAndUpdatePhpdocInfo($nodes);
+        $this->moveCommentsFromAttributeObjectToCommentsAttribute($nodes);
         return parent::pStmts($nodes, $indent);
     }
     /**
@@ -323,26 +295,41 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
      * ↓
      * "...$params): ReturnType"
      */
-    protected function pStmt_ClassMethod(ClassMethod $classMethod) : string
+    protected function pStmt_ClassMethod(\PhpParser\Node\Stmt\ClassMethod $classMethod) : string
     {
         $content = parent::pStmt_ClassMethod($classMethod);
-        if (!$classMethod->returnType instanceof Node) {
-            return $content;
-        }
         // this approach is chosen, to keep changes in parent pStmt_ClassMethod() updated
-        return Strings::replace($content, self::REPLACE_COLON_WITH_SPACE_REGEX, '$1: ');
+        return \RectorPrefix20211221\Nette\Utils\Strings::replace($content, self::REPLACE_COLON_WITH_SPACE_REGEX, '$1: ');
+    }
+    /**
+     * Clean class and trait from empty "use x;" for traits causing invalid code
+     */
+    protected function pStmt_Class(\PhpParser\Node\Stmt\Class_ $class) : string
+    {
+        $shouldReindex = \false;
+        foreach ($class->stmts as $key => $stmt) {
+            // remove empty ones
+            if ($stmt instanceof \PhpParser\Node\Stmt\TraitUse && $stmt->traits === []) {
+                unset($class->stmts[$key]);
+                $shouldReindex = \true;
+            }
+        }
+        if ($shouldReindex) {
+            $class->stmts = \array_values($class->stmts);
+        }
+        return parent::pStmt_Class($class);
     }
     /**
      * It remove all spaces extra to parent
      */
-    protected function pStmt_Declare(Declare_ $declare) : string
+    protected function pStmt_Declare(\PhpParser\Node\Stmt\Declare_ $declare) : string
     {
         $declareString = parent::pStmt_Declare($declare);
-        return Strings::replace($declareString, '#\\s+#');
+        return \RectorPrefix20211221\Nette\Utils\Strings::replace($declareString, '#\\s+#', '');
     }
-    protected function pExpr_Ternary(Ternary $ternary) : string
+    protected function pExpr_Ternary(\PhpParser\Node\Expr\Ternary $ternary) : string
     {
-        $kind = $ternary->getAttribute(AttributeKey::KIND);
+        $kind = $ternary->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::KIND);
         if ($kind === 'wrapped_with_brackets') {
             $pExprTernary = parent::pExpr_Ternary($ternary);
             return '(' . $pExprTernary . ')';
@@ -352,20 +339,20 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     /**
      * Remove extra \\ from FQN use imports, for easier use in the code
      */
-    protected function pStmt_Use(Use_ $use) : string
+    protected function pStmt_Use(\PhpParser\Node\Stmt\Use_ $use) : string
     {
-        if ($use->type !== Use_::TYPE_NORMAL) {
+        if ($use->type !== \PhpParser\Node\Stmt\Use_::TYPE_NORMAL) {
             return parent::pStmt_Use($use);
         }
         foreach ($use->uses as $useUse) {
-            if (!$useUse->name instanceof FullyQualified) {
+            if (!$useUse->name instanceof \PhpParser\Node\Name\FullyQualified) {
                 continue;
             }
-            $useUse->name = new Name($useUse->name->toString());
+            $useUse->name = new \PhpParser\Node\Name($useUse->name->toString());
         }
         return parent::pStmt_Use($use);
     }
-    protected function pScalar_EncapsedStringPart(EncapsedStringPart $encapsedStringPart) : string
+    protected function pScalar_EncapsedStringPart(\PhpParser\Node\Scalar\EncapsedStringPart $encapsedStringPart) : string
     {
         // parent throws exception, but we need to compare string
         return '`' . $encapsedStringPart->value . '`';
@@ -374,8 +361,8 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     {
         $result = parent::pCommaSeparated($nodes);
         $last = \end($nodes);
-        if ($last instanceof Node) {
-            $trailingComma = $last->getAttribute(AttributeKey::FUNC_ARGS_TRAILING_COMMA);
+        if ($last instanceof \PhpParser\Node) {
+            $trailingComma = $last->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::FUNC_ARGS_TRAILING_COMMA);
             if ($trailingComma === \false) {
                 $result = \rtrim($result, ',');
             }
@@ -383,100 +370,12 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
         return $result;
     }
     /**
-     * Override parent pModifiers to set position of final and abstract modifier early, so instead of
-     *
-     *      public final const MY_CONSTANT = "Hello world!";
-     *
-     * it should be
-     *
-     *      final public const MY_CONSTANT = "Hello world!";
-     *
-     * @see https://github.com/rectorphp/rector/issues/6963
-     * @see https://github.com/nikic/PHP-Parser/pull/826
-     */
-    protected function pModifiers(int $modifiers) : string
-    {
-        return (($modifiers & Class_::MODIFIER_FINAL) !== 0 ? 'final ' : '') . (($modifiers & Class_::MODIFIER_ABSTRACT) !== 0 ? 'abstract ' : '') . (($modifiers & Class_::MODIFIER_PUBLIC) !== 0 ? 'public ' : '') . (($modifiers & Class_::MODIFIER_PROTECTED) !== 0 ? 'protected ' : '') . (($modifiers & Class_::MODIFIER_PRIVATE) !== 0 ? 'private ' : '') . (($modifiers & Class_::MODIFIER_STATIC) !== 0 ? 'static ' : '') . (($modifiers & Class_::MODIFIER_READONLY) !== 0 ? 'readonly ' : '');
-    }
-    /**
-     * Invoke re-print even if only raw value was changed.
-     * That allows PHPStan to use int strict types, while changing the value with literal "_"
-     * @return string|int
-     */
-    protected function pScalar_LNumber(LNumber $lNumber)
-    {
-        if ($this->shouldPrintNewRawValue($lNumber)) {
-            return (string) $lNumber->getAttribute(AttributeKey::RAW_VALUE);
-        }
-        return parent::pScalar_LNumber($lNumber);
-    }
-    /**
-     * Keep attributes on newlines
-     */
-    protected function pParam(Param $param) : string
-    {
-        return $this->pAttrGroups($param->attrGroups) . $this->pModifiers($param->flags) . ($param->type instanceof Node ? $this->p($param->type) . ' ' : '') . ($param->byRef ? '&' : '') . ($param->variadic ? '...' : '') . $this->p($param->var) . ($param->default instanceof Expr ? ' = ' . $this->p($param->default) : '');
-    }
-    private function cleanEndWithPHPOpenTag(string $content) : string
-    {
-        if (\substr_compare($content, "<?php \n", -\strlen("<?php \n")) === 0) {
-            return \substr($content, 0, -7);
-        }
-        if (\substr_compare($content, '<?php ', -\strlen('<?php ')) === 0) {
-            return \substr($content, 0, -6);
-        }
-        return $content;
-    }
-    private function cleanSurplusTag(string $content) : string
-    {
-        $content = \str_replace('<?php <?php', '<?php', $content);
-        $content = \str_replace('?>?>', '?>', $content);
-        if (\strncmp($content, "?>\n", \strlen("?>\n")) === 0) {
-            return \substr($content, 3);
-        }
-        if (\strncmp($content, "<?php\n\n?>", \strlen("<?php\n\n?>")) === 0) {
-            return \substr($content, 10);
-        }
-        return $content;
-    }
-    /**
-     * @param \PhpParser\Node\Scalar\LNumber|\PhpParser\Node\Scalar\DNumber $lNumber
-     */
-    private function shouldPrintNewRawValue($lNumber) : bool
-    {
-        return $lNumber->getAttribute(AttributeKey::REPRINT_RAW_VALUE) === \true;
-    }
-    private function resolveContentOnExpr(Expr $expr, string $content) : string
-    {
-        $parentNode = $expr->getAttribute(AttributeKey::PARENT_NODE);
-        if (!$parentNode instanceof ArrowFunction) {
-            return $content;
-        }
-        if ($parentNode->expr !== $expr) {
-            return $content;
-        }
-        if (!$parentNode->hasAttribute(AttributeKey::COMMENT_CLOSURE_RETURN_MIRRORED)) {
-            return $content;
-        }
-        /** @var Comment[] $comments */
-        $comments = $expr->getAttribute(AttributeKey::COMMENTS) ?? [];
-        if ($comments === []) {
-            return $content;
-        }
-        $text = '';
-        foreach ($comments as $comment) {
-            $text .= $comment->getText() . "\n";
-        }
-        return $content = $text . $content;
-    }
-    /**
      * @param Node[] $stmts
      * @return Node[]|mixed[]
      */
     private function resolveNewStmts(array $stmts) : array
     {
-        $stmts = \array_values($stmts);
-        if (\count($stmts) === 1 && $stmts[0] instanceof FileWithoutNamespace) {
+        if (\count($stmts) === 1 && $stmts[0] instanceof \Rector\Core\PhpParser\Node\CustomNode\FileWithoutNamespace) {
             return $this->resolveNewStmts($stmts[0]->stmts);
         }
         return $stmts;
@@ -484,20 +383,12 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     /**
      * @param array<Node|null> $nodes
      */
-    private function decorateInlineHTMLOrNopAndUpdatePhpdocInfo(array $nodes) : void
+    private function moveCommentsFromAttributeObjectToCommentsAttribute(array $nodes) : void
     {
-        $file = $this->currentFileProvider->getFile();
-        $hasDiff = $file instanceof File && $file->getFileDiff() instanceof FileDiff;
         // move phpdoc from node to "comment" attribute
-        foreach ($nodes as $key => $node) {
-            if (!$node instanceof Node) {
+        foreach ($nodes as $node) {
+            if (!$node instanceof \PhpParser\Node) {
                 continue;
-            }
-            if ($node instanceof InlineHTML && $hasDiff) {
-                $this->mixPhpHtmlDecorator->decorateInlineHTML($node, $key, $nodes);
-            }
-            if ($node instanceof Nop && $hasDiff) {
-                $this->mixPhpHtmlDecorator->decorateAfterNop($node, $key, $nodes);
             }
             $this->docBlockUpdater->updateNodeWithPhpDocInfo($node);
         }
@@ -508,13 +399,13 @@ final class BetterStandardPrinter extends Standard implements NodePrinterInterfa
     private function containsNop(array $nodes) : bool
     {
         foreach ($nodes as $node) {
-            if ($node instanceof Nop) {
+            if ($node instanceof \PhpParser\Node\Stmt\Nop) {
                 return \true;
             }
         }
         return \false;
     }
-    private function wrapValueWith(String_ $string, string $wrap) : string
+    private function wrapValueWith(\PhpParser\Node\Scalar\String_ $string, string $wrap) : string
     {
         return $wrap . $string->value . $wrap;
     }

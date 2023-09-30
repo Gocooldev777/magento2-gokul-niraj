@@ -34,7 +34,7 @@ class AfterAddressSaveObserver implements ObserverInterface
     /**
      * VAT ID validation processed flag code
      */
-    public const VIV_PROCESSED_FLAG = 'viv_after_address_save_processed';
+    const VIV_PROCESSED_FLAG = 'viv_after_address_save_processed';
 
     /**
      * @var HelperAddress
@@ -141,7 +141,8 @@ class AfterAddressSaveObserver implements ObserverInterface
             if ($customerAddress->getVatId() == ''
                 || !$this->_customerVat->isCountryInEU($customerAddress->getCountry())
             ) {
-                $defaultGroupId = $this->_groupManagement->getDefaultGroup($customer->getStore())->getId();
+                $defaultGroupId = $customer->getGroupId() ? $customer->getGroupId() :
+                    $this->_groupManagement->getDefaultGroup($customer->getStore())->getId();
                 if (!$customer->getDisableAutoGroupChange() && $customer->getGroupId() != $defaultGroupId) {
                     $customer->setGroupId($defaultGroupId);
                     $customer->save();

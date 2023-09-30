@@ -222,6 +222,14 @@ class ASTAnonymousClass extends ASTClass implements ASTNode
     }
 
     /**
+     * @return int
+     */
+    public function accept(ASTVisitor $visitor, $data = null)
+    {
+        return $visitor->visitAnonymousClass($this, $data);
+    }
+
+    /**
      * The magic sleep method will be called by PHP's runtime environment right
      * before an instance of this class gets serialized. It should return an
      * array with those property names that should be serialized for this class.
@@ -281,15 +289,13 @@ class ASTAnonymousClass extends ASTClass implements ASTNode
      */
     protected function setMetadataInteger($index, $value)
     {
-        $this->setMetadata($index, (string)$value);
+        $this->setMetadata($index, $value);
     }
 
     /**
      * Returns the value that was stored under the given index.
      *
      * @param int $index
-     *
-     * @return string
      *
      * @since 0.10.4
      */
@@ -304,7 +310,6 @@ class ASTAnonymousClass extends ASTClass implements ASTNode
      * container.
      *
      * @param int $index
-     * @param string $value
      *
      * @return void
      *

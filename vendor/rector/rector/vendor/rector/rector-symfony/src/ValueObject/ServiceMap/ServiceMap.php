@@ -9,8 +9,7 @@ use Rector\Symfony\ValueObject\ServiceDefinition;
 final class ServiceMap
 {
     /**
-     * @var ServiceDefinition[]
-     * @readonly
+     * @var \Rector\Symfony\ValueObject\ServiceDefinition[]
      */
     private $services;
     /**
@@ -24,17 +23,22 @@ final class ServiceMap
     {
         return isset($this->services[$id]);
     }
-    public function getServiceType(string $id) : ?Type
+    public function getServiceType(string $id) : ?\PHPStan\Type\Type
     {
         $serviceDefinition = $this->getService($id);
-        if (!$serviceDefinition instanceof ServiceDefinition) {
+        if (!$serviceDefinition instanceof \Rector\Symfony\ValueObject\ServiceDefinition) {
             return null;
         }
         $class = $serviceDefinition->getClass();
         if ($class === null) {
             return null;
         }
-        return new ObjectType($class);
+        /** @var string[] $interfaces */
+        $interfaces = (array) \class_implements($class);
+        foreach ($interfaces as $interface) {
+            return new \PHPStan\Type\ObjectType($interface);
+        }
+        return new \PHPStan\Type\ObjectType($class);
     }
     /**
      * @return ServiceDefinition[]
@@ -53,14 +57,7 @@ final class ServiceMap
         }
         return $servicesWithTag;
     }
-    /**
-     * @return ServiceDefinition[]
-     */
-    public function getServices() : array
-    {
-        return $this->services;
-    }
-    private function getService(string $id) : ?ServiceDefinition
+    private function getService(string $id) : ?\Rector\Symfony\ValueObject\ServiceDefinition
     {
         return $this->services[$id] ?? null;
     }

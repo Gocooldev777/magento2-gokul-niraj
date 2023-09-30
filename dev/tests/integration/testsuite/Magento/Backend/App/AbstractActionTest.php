@@ -5,8 +5,6 @@
  */
 namespace Magento\Backend\App;
 
-use Magento\TestFramework\Bootstrap;
-
 /**
  * Test class for \Magento\Backend\App\AbstractAction.
  * @magentoAppArea adminhtml
@@ -93,7 +91,7 @@ class AbstractActionTest extends \Magento\TestFramework\TestCase\AbstractBackend
             ->get(\Magento\Framework\Acl\Builder::class)
             ->getAcl();
         if ($isLimitedAccess) {
-            $acl->deny(Bootstrap::ADMIN_ROLE_ID, $resource);
+            $acl->deny(null, $resource);
         }
 
         $this->dispatch('backend/admin/dashboard');

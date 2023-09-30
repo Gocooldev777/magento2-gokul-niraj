@@ -9,8 +9,6 @@ namespace Magento\Framework\Filesystem;
 
 /**
  * A pool of stream wrappers.
- *
- * @api
  */
 interface DriverPoolInterface
 {

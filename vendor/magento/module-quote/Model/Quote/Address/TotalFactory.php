@@ -6,8 +6,6 @@
 
 /**
  * Factory class for \Magento\Quote\Model\Quote\Address\Total\AbstractTotal
- *
- * @api
  */
 namespace Magento\Quote\Model\Quote\Address;
 

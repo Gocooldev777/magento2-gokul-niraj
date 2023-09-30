@@ -5,16 +5,16 @@
  */
 namespace Magento\Eav\Model\Adminhtml\System\Config\Source\Inputtype;
 
-use Laminas\Validator\InArray;
-
 /**
  * Validator for check input type value
  *
  * @author     Magento Core Team <core@magentocommerce.com>
  */
-class Validator extends InArray
+class Validator extends \Zend_Validate_InArray
 {
     /**
+     * Eav data
+     *
      * @var \Magento\Eav\Helper\Data
      */
     protected $_eavData = null;
@@ -30,7 +30,7 @@ class Validator extends InArray
         $haystack = $this->_eavData->getInputTypesValidatorData();
 
         //reset message template and set custom
-        $this->messageTemplates = null;
+        $this->_messageTemplates = null;
         $this->_initMessageTemplates();
 
         //parent construct with options
@@ -44,8 +44,8 @@ class Validator extends InArray
      */
     protected function _initMessageTemplates()
     {
-        if (!$this->messageTemplates) {
-            $this->messageTemplates = [
+        if (!$this->_messageTemplates) {
+            $this->_messageTemplates = [
                 self::NOT_IN_ARRAY => __('Input type "%value%" not found in the input types list.'),
             ];
         }
@@ -60,8 +60,8 @@ class Validator extends InArray
      */
     public function addInputType($type)
     {
-        if (!in_array((string)$type, $this->haystack, true)) {
-            $this->haystack[] = (string)$type;
+        if (!in_array((string)$type, $this->_haystack, true)) {
+            $this->_haystack[] = (string)$type;
         }
         return $this;
     }

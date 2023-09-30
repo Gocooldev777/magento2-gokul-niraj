@@ -39,8 +39,7 @@ final class NoExtraBlankLinesFixer extends AbstractFixer implements Configurable
     /**
      * @var string[]
      */
-    private static array $availableTokens = [
-        'attribute',
+    private static $availableTokens = [
         'break',
         'case',
         'continue',
@@ -59,16 +58,22 @@ final class NoExtraBlankLinesFixer extends AbstractFixer implements Configurable
     /**
      * @var array<int, string> key is token id, value is name of callback
      */
-    private array $tokenKindCallbackMap;
+    private $tokenKindCallbackMap;
 
     /**
      * @var array<string, string> token prototype, value is name of callback
      */
-    private array $tokenEqualsMap;
+    private $tokenEqualsMap;
 
-    private Tokens $tokens;
+    /**
+     * @var Tokens
+     */
+    private $tokens;
 
-    private TokensAnalyzer $tokensAnalyzer;
+    /**
+     * @var TokensAnalyzer
+     */
+    private $tokensAnalyzer;
 
     /**
      * {@inheritdoc}
@@ -81,40 +86,45 @@ final class NoExtraBlankLinesFixer extends AbstractFixer implements Configurable
 
         parent::configure($configuration);
 
-        $tokensConfiguration = $this->configuration['tokens'];
-
-        $this->tokenEqualsMap = [];
-
-        if (\in_array('curly_brace_block', $tokensConfiguration, true)) {
-            $this->tokenEqualsMap['{'] = 'fixStructureOpenCloseIfMultiLine'; // i.e. not: CT::T_ARRAY_INDEX_CURLY_BRACE_OPEN
-        }
-
-        if (\in_array('parenthesis_brace_block', $tokensConfiguration, true)) {
-            $this->tokenEqualsMap['('] = 'fixStructureOpenCloseIfMultiLine'; // i.e. not: CT::T_BRACE_CLASS_INSTANTIATION_OPEN
-        }
-
-        static $configMap = [
-            'attribute' => [CT::T_ATTRIBUTE_CLOSE, 'fixAfterToken'],
-            'break' => [T_BREAK, 'fixAfterToken'],
-            'case' => [T_CASE, 'fixAfterCaseToken'],
-            'continue' => [T_CONTINUE, 'fixAfterToken'],
-            'default' => [T_DEFAULT, 'fixAfterToken'],
-            'extra' => [T_WHITESPACE, 'removeMultipleBlankLines'],
-            'return' => [T_RETURN, 'fixAfterToken'],
-            'square_brace_block' => [CT::T_ARRAY_SQUARE_BRACE_OPEN, 'fixStructureOpenCloseIfMultiLine'],
-            'switch' => [T_SWITCH, 'fixAfterToken'],
-            'throw' => [T_THROW, 'fixAfterThrowToken'],
-            'use' => [T_USE, 'removeBetweenUse'],
-            'use_trait' => [CT::T_USE_TRAIT, 'removeBetweenUse'],
+        static $reprToTokenMap = [
+            'break' => T_BREAK,
+            'case' => T_CASE,
+            'continue' => T_CONTINUE,
+            'curly_brace_block' => '{',
+            'default' => T_DEFAULT,
+            'extra' => T_WHITESPACE,
+            'parenthesis_brace_block' => '(',
+            'return' => T_RETURN,
+            'square_brace_block' => CT::T_ARRAY_SQUARE_BRACE_OPEN,
+            'switch' => T_SWITCH,
+            'throw' => T_THROW,
+            'use' => T_USE,
+            'use_trait' => CT::T_USE_TRAIT,
         ];
 
-        $this->tokenKindCallbackMap = [];
+        static $tokenKindCallbackMap = [
+            T_BREAK => 'fixAfterToken',
+            T_CASE => 'fixAfterToken',
+            T_CONTINUE => 'fixAfterToken',
+            T_DEFAULT => 'fixAfterToken',
+            T_RETURN => 'fixAfterToken',
+            T_SWITCH => 'fixAfterToken',
+            T_THROW => 'fixAfterThrowToken',
+            T_USE => 'removeBetweenUse',
+            T_WHITESPACE => 'removeMultipleBlankLines',
+            CT::T_USE_TRAIT => 'removeBetweenUse',
+            CT::T_ARRAY_SQUARE_BRACE_OPEN => 'fixStructureOpenCloseIfMultiLine', // typeless '[' tokens should not be fixed (too rare)
+        ];
 
-        foreach ($tokensConfiguration as $config) {
-            if (isset($configMap[$config])) {
-                $this->tokenKindCallbackMap[$configMap[$config][0]] = $configMap[$config][1];
-            }
-        }
+        static $tokenEqualsMap = [
+            '{' => 'fixStructureOpenCloseIfMultiLine', // i.e. not: CT::T_ARRAY_INDEX_CURLY_BRACE_OPEN
+            '(' => 'fixStructureOpenCloseIfMultiLine', // i.e. not: CT::T_BRACE_CLASS_INSTANTIATION_OPEN
+        ];
+
+        $tokensAssoc = array_flip(array_intersect_key($reprToTokenMap, array_flip($this->configuration['tokens'])));
+
+        $this->tokenKindCallbackMap = array_intersect_key($tokenKindCallbackMap, $tokensAssoc);
+        $this->tokenEqualsMap = array_intersect_key($tokenEqualsMap, $tokensAssoc);
     }
 
     /**
@@ -283,7 +293,6 @@ switch($a) {
     {
         $this->tokens = $tokens;
         $this->tokensAnalyzer = new TokensAnalyzer($this->tokens);
-
         for ($index = $tokens->getSize() - 1; $index > 0; --$index) {
             $this->fixByToken($tokens[$index], $index);
         }
@@ -329,13 +338,11 @@ switch($a) {
     private function removeBetweenUse(int $index): void
     {
         $next = $this->tokens->getNextTokenOfKind($index, [';', [T_CLOSE_TAG]]);
-
         if (null === $next || $this->tokens[$next]->isGivenKind(T_CLOSE_TAG)) {
             return;
         }
 
         $nextUseCandidate = $this->tokens->getNextMeaningfulToken($next);
-
         if (null === $nextUseCandidate || !$this->tokens[$nextUseCandidate]->isGivenKind($this->tokens[$index]->getId()) || !$this->containsLinebreak($index, $nextUseCandidate)) {
             return;
         }
@@ -368,19 +375,6 @@ switch($a) {
 
             if ($this->tokens[$i]->isWhitespace() && str_contains($this->tokens[$i]->getContent(), "\n")) {
                 break;
-            }
-        }
-
-        $this->removeEmptyLinesAfterLineWithTokenAt($index);
-    }
-
-    private function fixAfterCaseToken(int $index): void
-    {
-        if (\defined('T_ENUM')) { // @TODO: drop condition when PHP 8.1+ is required
-            $enumSwitchIndex = $this->tokens->getPrevTokenOfKind($index, [[T_SWITCH], [T_ENUM]]);
-
-            if (!$this->tokens[$enumSwitchIndex]->isGivenKind(T_SWITCH)) {
-                return;
             }
         }
 
@@ -436,12 +430,16 @@ switch($a) {
 
         for ($i = $end; $i < $tokenCount && $this->tokens[$i]->isWhitespace(); ++$i) {
             $content = $this->tokens[$i]->getContent();
-
             if (substr_count($content, "\n") < 1) {
                 continue;
             }
 
-            $newContent = Preg::replace('/^.*\R(\h*)$/s', $ending.'$1', $content);
+            $pos = strrpos($content, "\n");
+            if ($pos + 2 <= \strlen($content)) { // preserve indenting where possible
+                $newContent = $ending.substr($content, $pos + 1);
+            } else {
+                $newContent = $ending;
+            }
 
             $this->tokens[$i] = new Token([T_WHITESPACE, $newContent]);
         }

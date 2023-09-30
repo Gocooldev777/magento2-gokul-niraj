@@ -4,9 +4,8 @@ declare (strict_types=1);
 namespace Rector\ChangesReporting\ValueObject;
 
 use Rector\Core\Contract\Rector\RectorInterface;
-use RectorPrefix202304\Symplify\EasyParallel\Contract\SerializableInterface;
-use RectorPrefix202304\Webmozart\Assert\Assert;
-final class RectorWithLineChange implements SerializableInterface
+use RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface;
+final class RectorWithLineChange implements \RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface
 {
     /**
      * @var string
@@ -27,12 +26,12 @@ final class RectorWithLineChange implements SerializableInterface
      */
     private $line;
     /**
-     * @param string|\Rector\Core\Contract\Rector\RectorInterface $rectorClass
+     * @param \Rector\Core\Contract\Rector\RectorInterface|string $rectorClass
      */
     public function __construct($rectorClass, int $line)
     {
         $this->line = $line;
-        if ($rectorClass instanceof RectorInterface) {
+        if ($rectorClass instanceof \Rector\Core\Contract\Rector\RectorInterface) {
             $rectorClass = \get_class($rectorClass);
         }
         $this->rectorClass = $rectorClass;
@@ -44,20 +43,19 @@ final class RectorWithLineChange implements SerializableInterface
     {
         return $this->rectorClass;
     }
-    /**
-     * @param array<string, mixed> $json
-     * @return $this
-     */
-    public static function decode(array $json) : \RectorPrefix202304\Symplify\EasyParallel\Contract\SerializableInterface
+    public function getLine() : int
     {
-        $rectorClass = $json[self::KEY_RECTOR_CLASS];
-        Assert::string($rectorClass);
-        $line = $json[self::KEY_LINE];
-        Assert::integer($line);
-        return new self($rectorClass, $line);
+        return $this->line;
     }
     /**
-     * @return array{rector_class: class-string<RectorInterface>, line: int}
+     * @param array<string, mixed> $json
+     */
+    public static function decode(array $json) : \RectorPrefix20211221\Symplify\EasyParallel\Contract\SerializableInterface
+    {
+        return new self($json[self::KEY_RECTOR_CLASS], $json[self::KEY_LINE]);
+    }
+    /**
+     * @return array<string, mixed>
      */
     public function jsonSerialize() : array
     {

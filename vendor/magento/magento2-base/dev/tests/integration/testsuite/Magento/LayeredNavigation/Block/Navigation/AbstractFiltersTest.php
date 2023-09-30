@@ -121,22 +121,7 @@ abstract class AbstractFiltersTest extends TestCase
 
         if ($attributeData['is_filterable']) {
             $this->assertNotNull($filter);
-            $preparedItems = $this->prepareFilterItems($filter);
-            $this->assertCount(count($expectation), $preparedItems);
-
-            foreach ($preparedItems as $key => $preparedItem) {
-                $this->assertEquals($expectation[$key], $preparedItem);
-                $item = $filter->getItems()[$key];
-                $this->createNavigationBlockInstance();
-                $this->navigationBlock->getRequest()->setParams(
-                    $this->getRequestParams((string) $item->getValueString())
-                );
-                $this->navigationBlock->getLayer()->setCurrentCategory($category);
-                $this->navigationBlock->setLayout($this->layout);
-                $collectionSize = $this->navigationBlock->getLayer()->getProductCollection()->count();
-                $this->assertEquals($expectation[$key]['count'], $collectionSize);
-                $this->assertEquals($collectionSize, $item->getData('count'));
-            }
+            $this->assertEquals($expectation, $this->prepareFilterItems($filter));
         } else {
             $this->assertNull($filter);
         }
@@ -366,22 +351,19 @@ abstract class AbstractFiltersTest extends TestCase
      */
     protected function createNavigationBlockInstance(): void
     {
-        if ($this->getLayerType() === Resolver::CATALOG_LAYER_SEARCH) {
-            $class = SearchNavigationBlock::class;
-            $this->objectManager->removeSharedInstance('searchFilterList');
-        } else {
-            $class = CategoryNavigationBlock::class;
-            $this->objectManager->removeSharedInstance('categoryFilterList');
-        }
-
         $layerResolver = $this->objectManager->create(Resolver::class);
-        $layerResolver->create($this->getLayerType());
-        $this->navigationBlock = $this->objectManager->create(
-            $class,
-            [
-                'layerResolver' => $layerResolver,
-            ]
-        );
+
+        if ($this->getLayerType() === Resolver::CATALOG_LAYER_SEARCH) {
+            $layerResolver->create(Resolver::CATALOG_LAYER_SEARCH);
+            $this->navigationBlock = $this->objectManager->create(
+                SearchNavigationBlock::class,
+                [
+                    'layerResolver' => $layerResolver,
+                ]
+            );
+        } else {
+            $this->navigationBlock = $this->objectManager->create(CategoryNavigationBlock::class);
+        }
     }
 
     /**

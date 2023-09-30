@@ -13,8 +13,6 @@ use Magento\GraphQl\Model\Query\ContextInterface;
 
 /**
  * Add additional joins, attributes, and clauses to a category collection.
- *
- * @api
  */
 interface CollectionProcessorInterface
 {

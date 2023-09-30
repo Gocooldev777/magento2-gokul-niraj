@@ -84,21 +84,21 @@ final class CleanNamespaceFixer extends AbstractLinesBeforeNamespaceFixer
 
         $tillIndex = $tokens->getPrevMeaningfulToken($tillIndex);
 
-        $spaceIndices = [];
+        $spaceIndexes = [];
 
         for (; $index <= $tillIndex; ++$index) {
             if ($tokens[$index]->isGivenKind(T_WHITESPACE)) {
-                $spaceIndices[] = $index;
+                $spaceIndexes[] = $index;
             } elseif ($tokens[$index]->isComment()) {
                 $tokens->clearAt($index);
             }
         }
 
         if ($tokens[$index - 1]->isWhitespace()) {
-            array_pop($spaceIndices);
+            array_pop($spaceIndexes);
         }
 
-        foreach ($spaceIndices as $i) {
+        foreach ($spaceIndexes as $i) {
             $tokens->clearAt($i);
         }
 

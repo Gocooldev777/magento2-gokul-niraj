@@ -17,9 +17,6 @@
 
 namespace PHPMD;
 
-use PHPMD\Exception\RuleClassFileNotFoundException;
-use PHPMD\Exception\RuleClassNotFoundException;
-use PHPMD\Exception\RuleSetNotFoundException;
 use RuntimeException;
 
 /**
@@ -248,20 +245,16 @@ class RuleSetFactory
      */
     private function parseRuleNode(RuleSet $ruleSet, \SimpleXMLElement $node)
     {
-        $ref = (string)$node['ref'];
-
-        if ($ref === '') {
-            $this->parseSingleRuleNode($ruleSet, $node);
-
-            return;
-        }
-
-        if (substr($ref, -3, 3) === 'xml') {
+        if ($node['ref'] !== null && substr($node['ref'], -3, 3) === 'xml') {
             $this->parseRuleSetReferenceNode($ruleSet, $node);
 
             return;
         }
+        if ('' === (string)$node['ref']) {
+            $this->parseSingleRuleNode($ruleSet, $node);
 
+            return;
+        }
         $this->parseRuleReferenceNode($ruleSet, $node);
     }
 
@@ -331,7 +324,7 @@ class RuleSetFactory
      */
     private function parseSingleRuleNode(RuleSet $ruleSet, \SimpleXMLElement $ruleNode)
     {
-        $fileName = '';
+        $fileName = "";
 
         $ruleSetFolderPath = dirname($ruleSet->getFileName());
 

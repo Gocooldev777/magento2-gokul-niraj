@@ -4,31 +4,30 @@ declare (strict_types=1);
 namespace Rector\CodeQuality\Rector\If_;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\Core\NodeManipulator\IfManipulator;
 use Rector\Core\Rector\AbstractRector;
+use Rector\NodeTypeResolver\Node\AttributeKey;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\CodeQuality\Rector\If_\SimplifyIfNotNullReturnRector\SimplifyIfNotNullReturnRectorTest
  */
-final class SimplifyIfNotNullReturnRector extends AbstractRector
+final class SimplifyIfNotNullReturnRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
      * @readonly
      * @var \Rector\Core\NodeManipulator\IfManipulator
      */
     private $ifManipulator;
-    public function __construct(IfManipulator $ifManipulator)
+    public function __construct(\Rector\Core\NodeManipulator\IfManipulator $ifManipulator)
     {
         $this->ifManipulator = $ifManipulator;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Changes redundant null check to instant return', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Changes redundant null check to instant return', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 $newNode = 'something';
 if ($newNode !== null) {
     return $newNode;
@@ -47,38 +46,40 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [StmtsAwareInterface::class];
+        return [\PhpParser\Node\Stmt\If_::class];
     }
     /**
-     * @param StmtsAwareInterface $node
+     * @param If_ $node
      */
-    public function refactor(Node $node) : ?StmtsAwareInterface
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        foreach ((array) $node->stmts as $key => $stmt) {
-            if (!$stmt instanceof If_) {
-                continue;
-            }
-            if (!isset($node->stmts[$key + 1])) {
+        $comparedNode = $this->ifManipulator->matchIfNotNullReturnValue($node);
+        if ($comparedNode !== null) {
+            $insideIfNode = $node->stmts[0];
+            $nextNode = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+            if (!$nextNode instanceof \PhpParser\Node\Stmt\Return_) {
                 return null;
             }
-            $nextNode = $node->stmts[$key + 1];
-            if (!$nextNode instanceof Return_) {
-                continue;
-            }
-            $expr = $this->ifManipulator->matchIfNotNullReturnValue($stmt);
-            if (!$expr instanceof Expr) {
-                continue;
-            }
-            $insideIfNode = $stmt->stmts[0];
-            if (!$nextNode->expr instanceof Expr) {
-                continue;
+            if ($nextNode->expr === null) {
+                return null;
             }
             if (!$this->valueResolver->isNull($nextNode->expr)) {
-                continue;
+                return null;
             }
-            unset($node->stmts[$key]);
-            $node->stmts[$key + 1] = $insideIfNode;
-            return $node;
+            $this->removeNode($nextNode);
+            return $insideIfNode;
+        }
+        $comparedNode = $this->ifManipulator->matchIfValueReturnValue($node);
+        if ($comparedNode !== null) {
+            $nextNode = $node->getAttribute(\Rector\NodeTypeResolver\Node\AttributeKey::NEXT_NODE);
+            if (!$nextNode instanceof \PhpParser\Node\Stmt\Return_) {
+                return null;
+            }
+            if (!$this->nodeComparator->areNodesEqual($comparedNode, $nextNode->expr)) {
+                return null;
+            }
+            $this->removeNode($nextNode);
+            return clone $nextNode;
         }
         return null;
     }

@@ -9,8 +9,6 @@ namespace Magento\Framework\GraphQl\Schema\Type\Entity;
 
 /**
  * Produces mapped GraphQL type names to their respective entity models.
- *
- * @api
  */
 interface MapperInterface
 {
@@ -20,5 +18,5 @@ interface MapperInterface
      * @param string $entityName
      * @return string[]
      */
-    public function getMappedTypes(string $entityName): array;
+    public function getMappedTypes(string $entityName) : array;
 }

@@ -182,7 +182,12 @@ return [
             "Element 'virtualType', attribute 'name': [facet 'pattern'] The value '' is not accepted by the pattern '" .
             "(\\\\?[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)" .
             "(\\\\[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)*'." .
-            "\nLine: 2\n"
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'name': '' is not a valid value of the atomic type 'phpClassName'." .
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'name': Warning: No precomputed value available, the value was either " .
+            "invalid or something strange happend." .
+            "\nLine: 2\n",
         ],
     ],
     'virtualtype with empty_type' => [
@@ -193,7 +198,9 @@ return [
             "Element 'virtualType', attribute 'type': [facet 'pattern'] The value '' is not accepted by the pattern '" .
             "(\\\\?[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)" .
             "(\\\\[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)*'." .
-            "\nLine: 2\n"
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'type': '' is not a valid value of the atomic type 'phpClassName'." .
+            "\nLine: 2\n",
         ],
     ],
     'virtualtype with invalid_type' => [
@@ -205,7 +212,13 @@ return [
             "is not accepted by the pattern '" .
             "(\\\\?[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)" .
             "(\\\\[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)*'." .
-            "\nLine: 2\n"
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'name': '777Digits\\IsNotAllowed' " .
+            "is not a valid value of the atomic type 'phpClassName'." .
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'name': Warning: No precomputed value available, the value was either " .
+            "invalid or something strange happend." .
+            "\nLine: 2\n",
         ],
     ],
     'virtualtype with digits_and_prefix_slash' => [
@@ -217,7 +230,13 @@ return [
             "is not accepted by the pattern '" .
             "(\\\\?[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)" .
             "(\\\\[a-zA-Z_\x7f-\xc3\xbf][a-zA-Z0-9_\x7f-\xc3\xbf]*)*'." .
-            "\nLine: 2\n"
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'name': '\\777Digits\\IsNotAllowed' " .
+            "is not a valid value of the atomic type 'phpClassName'." .
+            "\nLine: 2\n",
+            "Element 'virtualType', attribute 'name': Warning: No precomputed value available, the value was either " .
+            "invalid or something strange happend." .
+            "\nLine: 2\n",
         ],
     ],
 ];

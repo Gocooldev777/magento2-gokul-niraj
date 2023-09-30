@@ -1,13 +1,13 @@
 <?php
 
-namespace RectorPrefix202304\React\Socket;
+namespace RectorPrefix20211221\React\Socket;
 
-use RectorPrefix202304\Evenement\EventEmitter;
-use RectorPrefix202304\React\EventLoop\LoopInterface;
-use RectorPrefix202304\React\Stream\DuplexResourceStream;
-use RectorPrefix202304\React\Stream\Util;
-use RectorPrefix202304\React\Stream\WritableResourceStream;
-use RectorPrefix202304\React\Stream\WritableStreamInterface;
+use RectorPrefix20211221\Evenement\EventEmitter;
+use RectorPrefix20211221\React\EventLoop\LoopInterface;
+use RectorPrefix20211221\React\Stream\DuplexResourceStream;
+use RectorPrefix20211221\React\Stream\Util;
+use RectorPrefix20211221\React\Stream\WritableResourceStream;
+use RectorPrefix20211221\React\Stream\WritableStreamInterface;
 /**
  * The actual connection implementation for ConnectionInterface
  *
@@ -16,7 +16,7 @@ use RectorPrefix202304\React\Stream\WritableStreamInterface;
  * @see ConnectionInterface
  * @internal
  */
-class Connection extends EventEmitter implements ConnectionInterface
+class Connection extends \RectorPrefix20211221\Evenement\EventEmitter implements \RectorPrefix20211221\React\Socket\ConnectionInterface
 {
     /**
      * Internal flag whether this is a Unix domain socket (UDS) connection
@@ -36,7 +36,7 @@ class Connection extends EventEmitter implements ConnectionInterface
     /** @internal */
     public $stream;
     private $input;
-    public function __construct($resource, LoopInterface $loop)
+    public function __construct($resource, \RectorPrefix20211221\React\EventLoop\LoopInterface $loop)
     {
         // PHP < 7.3.3 (and PHP < 7.2.15) suffers from a bug where feof() might
         // block with 100% CPU usage on fragmented TLS records.
@@ -57,9 +57,9 @@ class Connection extends EventEmitter implements ConnectionInterface
         // This applies to all streams because TLS may be enabled later on.
         // See https://github.com/reactphp/socket/issues/105
         $limitWriteChunks = \PHP_VERSION_ID < 70018 || \PHP_VERSION_ID >= 70100 && \PHP_VERSION_ID < 70104;
-        $this->input = new DuplexResourceStream($resource, $loop, $clearCompleteBuffer ? -1 : null, new WritableResourceStream($resource, $loop, null, $limitWriteChunks ? 8192 : null));
+        $this->input = new \RectorPrefix20211221\React\Stream\DuplexResourceStream($resource, $loop, $clearCompleteBuffer ? -1 : null, new \RectorPrefix20211221\React\Stream\WritableResourceStream($resource, $loop, null, $limitWriteChunks ? 8192 : null));
         $this->stream = $resource;
-        Util::forwardEvents($this->input, $this, array('data', 'end', 'error', 'close', 'pipe', 'drain'));
+        \RectorPrefix20211221\React\Stream\Util::forwardEvents($this->input, $this, array('data', 'end', 'error', 'close', 'pipe', 'drain'));
         $this->input->on('close', array($this, 'close'));
     }
     public function isReadable()
@@ -78,7 +78,7 @@ class Connection extends EventEmitter implements ConnectionInterface
     {
         $this->input->resume();
     }
-    public function pipe(WritableStreamInterface $dest, array $options = array())
+    public function pipe(\RectorPrefix20211221\React\Stream\WritableStreamInterface $dest, array $options = array())
     {
         return $this->input->pipe($dest, $options);
     }
@@ -102,9 +102,13 @@ class Connection extends EventEmitter implements ConnectionInterface
             return;
         }
         // Try to cleanly shut down socket and ignore any errors in case other
-        // side already closed. Underlying Stream implementation will take care
-        // of closing stream resource, so we otherwise keep this open here.
+        // side already closed. Shutting down may return to blocking mode on
+        // some legacy versions, so reset to non-blocking just in case before
+        // continuing to close the socket resource.
+        // Underlying Stream implementation will take care of closing file
+        // handle, so we otherwise keep this open here.
         @\stream_socket_shutdown($this->stream, \STREAM_SHUT_RDWR);
+        \stream_set_blocking($this->stream, \false);
     }
     public function getRemoteAddress()
     {
@@ -128,13 +132,13 @@ class Connection extends EventEmitter implements ConnectionInterface
         if ($this->unix) {
             // remove trailing colon from address for HHVM < 3.19: https://3v4l.org/5C1lo
             // note that technically ":" is a valid address, so keep this in place otherwise
-            if (\substr($address, -1) === ':' && \defined('RectorPrefix202304\\HHVM_VERSION_ID') && \RectorPrefix202304\HHVM_VERSION_ID < 31900) {
+            if (\substr($address, -1) === ':' && \defined('HHVM_VERSION_ID') && \HHVM_VERSION_ID < 31900) {
                 $address = (string) \substr($address, 0, -1);
                 // @codeCoverageIgnore
             }
             // work around unknown addresses should return null value: https://3v4l.org/5C1lo and https://bugs.php.net/bug.php?id=74556
             // PHP uses "\0" string and HHVM uses empty string (colon removed above)
-            if ($address === '' || $address[0] === "\x00") {
+            if ($address === '' || $address[0] === "\0") {
                 return null;
                 // @codeCoverageIgnore
             }

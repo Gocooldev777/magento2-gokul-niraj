@@ -3,7 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
 
 namespace Magento\CatalogGraphQl\Model\Resolver\Products\Query;
 
@@ -13,8 +12,6 @@ use Magento\GraphQl\Model\Query\ContextInterface;
 
 /**
  * Search for products by criteria
- *
- * @api
  */
 interface ProductQueryInterface
 {

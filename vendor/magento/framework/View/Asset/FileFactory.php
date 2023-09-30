@@ -9,8 +9,6 @@ use Magento\Framework\ObjectManagerInterface;
 
 /**
  * Factory class for \Magento\Framework\View\Asset\File
- *
- * @api
  */
 class FileFactory
 {

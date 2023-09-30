@@ -27,17 +27,17 @@ class Bundle
     /**
      * Path to package subdirectory where bundle files are located
      */
-    public const BUNDLE_JS_DIR = 'js/bundle';
+    const BUNDLE_JS_DIR = 'js/bundle';
 
     /**
      * Matched file extension name for JavaScript files
      */
-    public const ASSET_TYPE_JS = 'js';
+    const ASSET_TYPE_JS = 'js';
 
     /**
      * Matched file extension name for template files
      */
-    public const ASSET_TYPE_HTML = 'html';
+    const ASSET_TYPE_HTML = 'html';
 
     /**
      * Public static directory writable interface
@@ -157,7 +157,7 @@ class Bundle
                     . '/' . $sourcePath['locale']
                     . '/' . $filePath;
             } else {
-                $sourcePath = str_replace('\\', '/', $sourcePath ?? '');
+                $sourcePath = str_replace('\\', '/', $sourcePath);
                 $sourcePath = $this->pubStaticDir->getRelativePath($sourcePath);
                 $filePath = substr($sourcePath, strlen($area . '/' . $theme . '/' . $locale) + 1);
             }
@@ -241,7 +241,7 @@ class Bundle
      */
     private function prepareExcludePath($path)
     {
-        if ($path !== null && strpos($path, Repository::FILE_ID_SEPARATOR) !== false) {
+        if (strpos($path, Repository::FILE_ID_SEPARATOR) !== false) {
             list($excludedModule, $excludedPath) = explode(Repository::FILE_ID_SEPARATOR, $path);
             if ($excludedModule == 'Lib') {
                 return $excludedPath;

@@ -6,52 +6,40 @@
  */
 namespace Magento\CatalogRule\Controller\Adminhtml\Promo\Catalog;
 
-use Magento\CatalogRule\Controller\Adminhtml\Promo\Catalog as CatalogAction;
-use Magento\CatalogRule\Model\Rule;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface as HttpPostActionInterface;
 use Magento\Rule\Model\Condition\AbstractCondition;
-use Magento\Rule\Model\Condition\ConditionInterface;
+use Magento\CatalogRule\Controller\Adminhtml\Promo\Catalog as CatalogAction;
 
 class NewConditionHtml extends CatalogAction implements HttpPostActionInterface, HttpGetActionInterface
 {
     /**
-     * Execute new condition html.
-     *
      * @return void
      */
     public function execute()
     {
-        $objectId = $this->getRequest()->getParam('id');
-        $formNamespace = $this->getRequest()->getParam('form_namespace');
-        $types = explode(
-            '|',
-            str_replace('-', '/', $this->getRequest()->getParam('type', ''))
-        );
-        $objectType = $types[0];
-        $reponseBody = '';
+        $id = $this->getRequest()->getParam('id');
+        $formName = $this->getRequest()->getParam('form_namespace');
+        $typeArr = explode('|', str_replace('-', '/', $this->getRequest()->getParam('type')));
+        $type = $typeArr[0];
 
-        if (class_exists($objectType) && !in_array(ConditionInterface::class, class_implements($objectType))) {
-            $this->getResponse()->setBody($reponseBody);
-            return;
-        }
-
-        $conditionModel = $this->_objectManager->create($objectType)
-            ->setId($objectId)
-            ->setType($objectType)
-            ->setRule($this->_objectManager->create(Rule::class))
+        $model = $this->_objectManager->create($type)
+            ->setId($id)
+            ->setType($type)
+            ->setRule($this->_objectManager->create(\Magento\CatalogRule\Model\Rule::class))
             ->setPrefix('conditions');
 
-        if (!empty($types[1])) {
-            $conditionModel->setAttribute($types[1]);
+        if (!empty($typeArr[1])) {
+            $model->setAttribute($typeArr[1]);
         }
 
-        if ($conditionModel instanceof AbstractCondition) {
-            $conditionModel->setJsFormObject($this->getRequest()->getParam('form'));
-            $conditionModel->setFormName($formNamespace);
-            $reponseBody = $conditionModel->asHtmlRecursive();
+        if ($model instanceof AbstractCondition) {
+            $model->setJsFormObject($this->getRequest()->getParam('form'));
+            $model->setFormName($formName);
+            $html = $model->asHtmlRecursive();
+        } else {
+            $html = '';
         }
-
-        $this->getResponse()->setBody($reponseBody);
+        $this->getResponse()->setBody($html);
     }
 }

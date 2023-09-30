@@ -6,7 +6,6 @@ const CONSTANT2 = 2;
 
 use Something;
 use SomethingElse;
-use function interface_exists;
 
 declare(ticks=1);
 
@@ -62,11 +61,6 @@ if (!class_exists('MyClass')) {
 if (!interface_exists('MyInterface')) {
     // Define an interface.
     interface MyInterface {}
-}
-
-if (!interface_exists('MyEnum')) {
-    // Define an enum.
-    enum MyEnum {}
 }
 
 #[\Attribute]

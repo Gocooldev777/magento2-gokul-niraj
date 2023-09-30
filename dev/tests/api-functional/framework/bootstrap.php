@@ -10,7 +10,6 @@ use Magento\Framework\Autoload\AutoloaderRegistry;
 require_once __DIR__ . '/../../../../app/bootstrap.php';
 require_once __DIR__ . '/autoload.php';
 
-error_reporting(E_ALL);
 $testsBaseDir = dirname(__DIR__);
 $integrationTestsDir = realpath("{$testsBaseDir}/../integration");
 $fixtureBaseDir = $integrationTestsDir . '/testsuite';
@@ -107,9 +106,6 @@ try {
     $overrideConfig->init();
     Magento\TestFramework\Workaround\Override\Fixture\Resolver::setInstance(
         new  \Magento\TestFramework\WebapiWorkaround\Override\Fixture\Resolver($overrideConfig)
-    );
-    Magento\TestFramework\Fixture\DataFixtureStorageManager::setStorage(
-        new Magento\TestFramework\Fixture\DataFixtureStorage()
     );
     \Magento\TestFramework\Workaround\Override\Config::setInstance($overrideConfig);
     unset($bootstrap, $application, $settings, $shell, $overrideConfig);

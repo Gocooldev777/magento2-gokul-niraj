@@ -21,6 +21,8 @@ class Advanced extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
     protected $_eventManager = null;
 
     /**
+     * Store manager
+     *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
     protected $_storeManager;
@@ -78,7 +80,7 @@ class Advanced extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
                 $condition = $value;
             }
         } else {
-            if ($value && strlen($value) > 0) {
+            if (strlen($value) > 0) {
                 if (in_array($attribute->getBackendType(), ['varchar', 'text', 'static'])) {
                     $condition = ['like' => $value]; // text search
                 } else {

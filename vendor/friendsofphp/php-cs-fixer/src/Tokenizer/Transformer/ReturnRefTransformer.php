@@ -41,7 +41,15 @@ final class ReturnRefTransformer extends AbstractTransformer
      */
     public function process(Tokens $tokens, Token $token, int $index): void
     {
-        if ($token->equals('&') && $tokens[$tokens->getPrevMeaningfulToken($index)]->isGivenKind([T_FUNCTION, T_FN])) {
+        $prevKinds = [T_FUNCTION];
+        if (\PHP_VERSION_ID >= 70400) {
+            $prevKinds[] = T_FN;
+        }
+
+        if (
+            ($token->equals('&') || (\defined('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG') && $token->isGivenKind(T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG)))
+            && $tokens[$tokens->getPrevMeaningfulToken($index)]->isGivenKind($prevKinds)
+        ) {
             $tokens[$index] = new Token([CT::T_RETURN_REF, '&']);
         }
     }

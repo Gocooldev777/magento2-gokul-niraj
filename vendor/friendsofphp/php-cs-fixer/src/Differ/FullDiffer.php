@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace PhpCsFixer\Differ;
 
-use SebastianBergmann\Diff\Differ;
-use SebastianBergmann\Diff\Output\StrictUnifiedDiffOutputBuilder;
+use PhpCsFixer\Diff\Differ;
+use PhpCsFixer\Diff\Output\StrictUnifiedDiffOutputBuilder;
 
 /**
  * @author Dariusz Rumiński <dariusz.ruminski@gmail.com>
@@ -24,7 +24,10 @@ use SebastianBergmann\Diff\Output\StrictUnifiedDiffOutputBuilder;
  */
 final class FullDiffer implements DifferInterface
 {
-    private Differ $differ;
+    /**
+     * @var Differ
+     */
+    private $differ;
 
     public function __construct()
     {

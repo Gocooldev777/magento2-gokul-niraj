@@ -8,32 +8,30 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\ParameterBag;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag;
 
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Container;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Container;
 /**
  * @author Nicolas Grekas <p@tchwork.com>
  */
-class ContainerBag extends FrozenParameterBag implements ContainerBagInterface
+class ContainerBag extends \RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\FrozenParameterBag implements \RectorPrefix20211221\Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface
 {
-    /**
-     * @var \Symfony\Component\DependencyInjection\Container
-     */
     private $container;
-    public function __construct(Container $container)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\Container $container)
     {
         $this->container = $container;
     }
     /**
      * {@inheritdoc}
      */
-    public function all() : array
+    public function all()
     {
         return $this->container->getParameterBag()->all();
     }
     /**
      * {@inheritdoc}
-     * @return mixed[]|bool|string|int|float|\UnitEnum|null
+     *
+     * @return array|bool|string|int|float|null
      */
     public function get(string $name)
     {
@@ -41,8 +39,10 @@ class ContainerBag extends FrozenParameterBag implements ContainerBagInterface
     }
     /**
      * {@inheritdoc}
+     *
+     * @return bool
      */
-    public function has(string $name) : bool
+    public function has(string $name)
     {
         return $this->container->hasParameter($name);
     }

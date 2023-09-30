@@ -8,23 +8,23 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Definition;
+namespace RectorPrefix20211221\Symfony\Component\Config\Definition;
 
-use RectorPrefix202304\Symfony\Component\Config\Definition\Exception\InvalidTypeException;
+use RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidTypeException;
 /**
  * This node represents an integer value in the config tree.
  *
  * @author Jeanmonod David <david.jeanmonod@gmail.com>
  */
-class IntegerNode extends NumericNode
+class IntegerNode extends \RectorPrefix20211221\Symfony\Component\Config\Definition\NumericNode
 {
     /**
-     * @param mixed $value
+     * {@inheritdoc}
      */
     protected function validateType($value)
     {
         if (!\is_int($value)) {
-            $ex = new InvalidTypeException(\sprintf('Invalid type for path "%s". Expected "int", but got "%s".', $this->getPath(), \get_debug_type($value)));
+            $ex = new \RectorPrefix20211221\Symfony\Component\Config\Definition\Exception\InvalidTypeException(\sprintf('Invalid type for path "%s". Expected "int", but got "%s".', $this->getPath(), \get_debug_type($value)));
             if ($hint = $this->getInfo()) {
                 $ex->addHint($hint);
             }
@@ -32,6 +32,9 @@ class IntegerNode extends NumericNode
             throw $ex;
         }
     }
+    /**
+     * {@inheritdoc}
+     */
     protected function getValidPlaceholderTypes() : array
     {
         return ['int'];

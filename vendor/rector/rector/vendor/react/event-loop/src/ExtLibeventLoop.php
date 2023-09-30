@@ -1,12 +1,12 @@
 <?php
 
-namespace RectorPrefix202304\React\EventLoop;
+namespace RectorPrefix20211221\React\EventLoop;
 
 use BadMethodCallException;
 use Event;
 use EventBase;
-use RectorPrefix202304\React\EventLoop\Tick\FutureTickQueue;
-use RectorPrefix202304\React\EventLoop\Timer\Timer;
+use RectorPrefix20211221\React\EventLoop\Tick\FutureTickQueue;
+use RectorPrefix20211221\React\EventLoop\Timer\Timer;
 use SplObjectStorage;
 /**
  * [Deprecated] An `ext-libevent` based event loop.
@@ -19,8 +19,8 @@ use SplObjectStorage;
  * An [unofficial update](https://github.com/php/pecl-event-libevent/pull/2) for
  * PHP 7 does exist, but it is known to cause regular crashes due to `SEGFAULT`s.
  * To reiterate: Using this event loop on PHP 7 is not recommended.
- * Accordingly, neither the [`Loop` class](#loop) nor the deprecated
- * [`Factory` class](#factory) will try to use this event loop on PHP 7.
+ * Accordingly, the [`Factory`](#factory) will not try to use this event loop on
+ * PHP 7.
  *
  * This event loop is known to trigger a readable listener only if
  * the stream *becomes* readable (edge-triggered) and may not trigger if the
@@ -34,7 +34,7 @@ use SplObjectStorage;
  * @link https://pecl.php.net/package/libevent
  * @deprecated 1.2.0, use [`ExtEventLoop`](#exteventloop) instead.
  */
-final class ExtLibeventLoop implements LoopInterface
+final class ExtLibeventLoop implements \RectorPrefix20211221\React\EventLoop\LoopInterface
 {
     /** @internal */
     const MICROSECONDS_PER_SECOND = 1000000;
@@ -53,12 +53,12 @@ final class ExtLibeventLoop implements LoopInterface
     public function __construct()
     {
         if (!\function_exists('event_base_new')) {
-            throw new BadMethodCallException('Cannot create ExtLibeventLoop, ext-libevent extension missing');
+            throw new \BadMethodCallException('Cannot create ExtLibeventLoop, ext-libevent extension missing');
         }
         $this->eventBase = \event_base_new();
-        $this->futureTickQueue = new FutureTickQueue();
-        $this->timerEvents = new SplObjectStorage();
-        $this->signals = new SignalsHandler();
+        $this->futureTickQueue = new \RectorPrefix20211221\React\EventLoop\Tick\FutureTickQueue();
+        $this->timerEvents = new \SplObjectStorage();
+        $this->signals = new \RectorPrefix20211221\React\EventLoop\SignalsHandler();
         $this->createTimerCallback();
         $this->createStreamCallback();
     }
@@ -110,17 +110,17 @@ final class ExtLibeventLoop implements LoopInterface
     }
     public function addTimer($interval, $callback)
     {
-        $timer = new Timer($interval, $callback, \false);
+        $timer = new \RectorPrefix20211221\React\EventLoop\Timer\Timer($interval, $callback, \false);
         $this->scheduleTimer($timer);
         return $timer;
     }
     public function addPeriodicTimer($interval, $callback)
     {
-        $timer = new Timer($interval, $callback, \true);
+        $timer = new \RectorPrefix20211221\React\EventLoop\Timer\Timer($interval, $callback, \true);
         $this->scheduleTimer($timer);
         return $timer;
     }
-    public function cancelTimer(TimerInterface $timer)
+    public function cancelTimer(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
     {
         if ($this->timerEvents->contains($timer)) {
             $event = $this->timerEvents[$timer];
@@ -175,7 +175,7 @@ final class ExtLibeventLoop implements LoopInterface
      *
      * @param TimerInterface $timer
      */
-    private function scheduleTimer(TimerInterface $timer)
+    private function scheduleTimer(\RectorPrefix20211221\React\EventLoop\TimerInterface $timer)
     {
         $this->timerEvents[$timer] = $event = \event_timer_new();
         \event_timer_set($event, $this->timerCallback, $timer);
@@ -201,7 +201,7 @@ final class ExtLibeventLoop implements LoopInterface
             }
             // Reschedule periodic timers ...
             if ($timer->isPeriodic()) {
-                \event_add($timers[$timer], $timer->getInterval() * ExtLibeventLoop::MICROSECONDS_PER_SECOND);
+                \event_add($timers[$timer], $timer->getInterval() * \RectorPrefix20211221\React\EventLoop\ExtLibeventLoop::MICROSECONDS_PER_SECOND);
                 // Clean-up one shot timers ...
             } else {
                 $that->cancelTimer($timer);

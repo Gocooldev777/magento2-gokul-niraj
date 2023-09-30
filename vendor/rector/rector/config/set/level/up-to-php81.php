@@ -1,14 +1,17 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202304;
+namespace RectorPrefix20211221;
 
-use Rector\Config\RectorConfig;
+use Rector\Core\Configuration\Option;
 use Rector\Core\ValueObject\PhpVersion;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-return static function (RectorConfig $rectorConfig) : void {
-    $rectorConfig->sets([SetList::PHP_81, LevelSetList::UP_TO_PHP_80]);
-    // parameter must be defined after import, to override imported param version
-    $rectorConfig->phpVersion(PhpVersion::PHP_81);
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+return static function (\Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator $containerConfigurator) : void {
+    $containerConfigurator->import(\Rector\Set\ValueObject\SetList::PHP_81);
+    $containerConfigurator->import(\Rector\Set\ValueObject\LevelSetList::UP_TO_PHP_80);
+    // parameter must be defined after import, to override impored param version
+    $parameters = $containerConfigurator->parameters();
+    $parameters->set(\Rector\Core\Configuration\Option::PHP_VERSION_FEATURES, \Rector\Core\ValueObject\PhpVersion::PHP_81);
 };

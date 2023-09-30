@@ -96,13 +96,13 @@ define([
         },
 
         loadPayPalButton: function (paypalCheckoutInstance, funding) {
-            let paypalPayment = Braintree.config.paypal,
+            var paypalPayment = Braintree.config.paypal,
                 onPaymentMethodReceived = Braintree.config.onPaymentMethodReceived;
-            let style = {
-                color: Braintree.getColor(funding),
-                shape: Braintree.getShape(funding),
-                size: Braintree.getSize(funding),
-                label: Braintree.getLabel(funding)
+            var style = {
+                color: Braintree.getColor(),
+                shape: Braintree.getShape(),
+                layout: Braintree.getLayout(),
+                size: Braintree.getSize()
             };
 
             if (Braintree.getBranding()) {
@@ -113,13 +113,16 @@ define([
             }
 
             if (funding === 'credit') {
+                style.layout = "horizontal";
+                style.color = "darkblue";
                 Braintree.config.buttonId = this.clientConfig.buttonCreditId;
             } else if (funding === 'paylater') {
+                style.layout = "horizontal";
+                style.color = "white";
                 Braintree.config.buttonId = this.clientConfig.buttonPaylaterId;
             } else {
                 Braintree.config.buttonId = this.clientConfig.buttonPayPalId;
             }
-
             // Render
             Braintree.config.paypalInstance = paypalCheckoutInstance;
             var events = Braintree.events;

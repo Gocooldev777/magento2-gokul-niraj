@@ -161,7 +161,7 @@ class CssInliner extends AbstractHtmlProcessor
      *
      * @param string $css the CSS to inline, must be UTF-8-encoded
      *
-     * @return $this
+     * @return self fluent interface
      *
      * @throws ParseException in debug mode, if an invalid selector is encountered
      * @throws \RuntimeException in debug mode, if an internal PCRE error occurs
@@ -179,7 +179,7 @@ class CssInliner extends AbstractHtmlProcessor
         if ($this->isStyleBlocksParsingEnabled) {
             $combinedCss .= $this->getCssFromAllStyleNodes();
         }
-        $parsedCss = new CssDocument($combinedCss, $this->debug);
+        $parsedCss = new CssDocument($combinedCss);
 
         $excludedNodes = $this->getNodesToExclude();
         $cssRules = $this->collateCssRules($parsedCss);
@@ -218,7 +218,7 @@ class CssInliner extends AbstractHtmlProcessor
     /**
      * Disables the parsing of inline styles.
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function disableInlineStyleAttributesParsing(): self
     {
@@ -230,7 +230,7 @@ class CssInliner extends AbstractHtmlProcessor
     /**
      * Disables the parsing of `<style>` blocks.
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function disableStyleBlocksParsing(): self
     {
@@ -244,7 +244,7 @@ class CssInliner extends AbstractHtmlProcessor
      *
      * @param string $mediaName the media type name, e.g., "braille"
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function addAllowedMediaType(string $mediaName): self
     {
@@ -258,7 +258,7 @@ class CssInliner extends AbstractHtmlProcessor
      *
      * @param string $mediaName the tag name, e.g., "braille"
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function removeAllowedMediaType(string $mediaName): self
     {
@@ -276,7 +276,7 @@ class CssInliner extends AbstractHtmlProcessor
      *
      * @param string $selector the selector to exclude, e.g., ".editor"
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function addExcludedSelector(string $selector): self
     {
@@ -290,7 +290,7 @@ class CssInliner extends AbstractHtmlProcessor
      *
      * @param string $selector the selector to no longer exclude, e.g., ".editor"
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function removeExcludedSelector(string $selector): self
     {
@@ -306,7 +306,7 @@ class CssInliner extends AbstractHtmlProcessor
      *
      * @param bool $debug set to true to enable debug mode
      *
-     * @return $this
+     * @return self fluent interface
      */
     public function setDebug(bool $debug): self
     {

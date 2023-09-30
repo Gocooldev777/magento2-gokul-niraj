@@ -31,11 +31,11 @@ use Magento\Framework\Exception\LocalizedException;
  */
 class Storage extends \Magento\Framework\DataObject
 {
-    public const DIRECTORY_NAME_REGEXP = '/^[a-z0-9\-\_]+$/si';
+    const DIRECTORY_NAME_REGEXP = '/^[a-z0-9\-\_]+$/si';
 
-    public const THUMBS_DIRECTORY_NAME = '.thumbs';
+    const THUMBS_DIRECTORY_NAME = '.thumbs';
 
-    public const THUMB_PLACEHOLDER_PATH_SUFFIX = 'Magento_Cms::images/placeholder_thumbnail.jpg';
+    const THUMB_PLACEHOLDER_PATH_SUFFIX = 'Magento_Cms::images/placeholder_thumbnail.jpg';
 
     private const MEDIA_GALLERY_IMAGE_FOLDERS_CONFIG_PATH
         = 'system/media_storage_configuration/allowed_resources/media_gallery_image_folders';
@@ -278,7 +278,7 @@ class Storage extends \Magento\Framework\DataObject
             $subDirectories = $this->_directoryDatabaseFactory->create();
             $directories = $subDirectories->getSubdirectories($path);
             foreach ($directories as $directory) {
-                $fullPath = ($path === null ? '' : rtrim($path, '/')) . '/' . $directory['name'];
+                $fullPath = rtrim($path, '/') . '/' . $directory['name'];
                 $this->_directory->create($fullPath);
             }
         }
@@ -325,12 +325,11 @@ class Storage extends \Magento\Framework\DataObject
         $storageRootLength = strlen($storageRoot);
 
         foreach ($collection as $key => $value) {
-            $filename = $value->getFilename() ?? '';
-            $mediaSubPathname = substr($filename, $storageRootLength);
+            $mediaSubPathname = substr($value->getFilename(), $storageRootLength);
             $rootChildParts = explode('/', '/' . ltrim($mediaSubPathname, '/'));
 
             if (array_key_exists($rootChildParts[1], $conditions['plain'])
-                || ($regExp && preg_match($regExp, $filename))) {
+                || ($regExp && preg_match($regExp, $value->getFilename()))) {
                 $collection->removeItemByKey($key);
             }
         }
@@ -471,13 +470,13 @@ class Storage extends \Magento\Framework\DataObject
      */
     public function createDirectory($name, $path)
     {
-        if (!preg_match(self::DIRECTORY_NAME_REGEXP, (string)$name)) {
+        if (!preg_match(self::DIRECTORY_NAME_REGEXP, $name)) {
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('Please rename the folder using only Latin letters, numbers, underscores and dashes.')
             );
         }
 
-        if (!($this->isDirectoryAllowed(rtrim((string)$path, '/') . '/' . $name))) {
+        if (!($this->isDirectoryAllowed(rtrim($path, '/') . '/' . $name))) {
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('We cannot create the folder under the selected directory.')
             );
@@ -488,7 +487,7 @@ class Storage extends \Magento\Framework\DataObject
             $path = $this->_cmsWysiwygImages->getStorageRoot();
         }
 
-        $newPath = rtrim((string)$path, '/') . '/' . $name;
+        $newPath = rtrim($path, '/') . '/' . $name;
         $relativeNewPath = $this->_directory->getRelativePath($newPath);
         if ($this->_directory->isDirectory($relativeNewPath)) {
             throw new \Magento\Framework\Exception\LocalizedException(
@@ -628,7 +627,7 @@ class Storage extends \Magento\Framework\DataObject
         }
 
         // create thumbnail
-        $this->resizeFile(rtrim($targetPath, '/') . '/' . ltrim($uploader->getUploadedFileName() ?? '', '/'), true);
+        $this->resizeFile(rtrim($targetPath, '/') . '/' . ltrim($uploader->getUploadedFileName(), '/'), true);
 
         return $result;
     }
@@ -646,7 +645,7 @@ class Storage extends \Magento\Framework\DataObject
     {
         $mediaRootDir = $this->_cmsWysiwygImages->getStorageRoot();
 
-        if ($filePath !== null && strpos($filePath, $mediaRootDir) === 0) {
+        if (strpos($filePath, (string) $mediaRootDir) === 0) {
             $relativeFilePath = substr($filePath, strlen($mediaRootDir));
             // phpcs:ignore Magento2.Functions.DiscouragedFunction
             $thumbPath = $relativeFilePath === basename($filePath)
@@ -833,7 +832,7 @@ class Storage extends \Magento\Framework\DataObject
 
         $ext = "";
         if (array_key_exists('extension', $this->ioFile->getPathInfo($filename))) {
-            $ext = strtolower($this->ioFile->getPathInfo($filename)['extension'] ?? '');
+            $ext = strtolower($this->ioFile->getPathInfo($filename)['extension']);
         }
         return in_array($ext, $this->_getData('_image_extensions'));
     }
@@ -883,7 +882,7 @@ class Storage extends \Magento\Framework\DataObject
                 __('We can\'t delete root directory %1 right now.', $path)
             );
         }
-        if (strpos($path, $root) !== 0) {
+        if (strpos($path, (string) $root) !== 0) {
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('Directory %1 is not under storage root path.', $path)
             );
@@ -966,7 +965,7 @@ class Storage extends \Magento\Framework\DataObject
     {
         $storageRoot = $this->_cmsWysiwygImages->getStorageRoot();
         $storageRootLength = strlen($storageRoot);
-        $mediaSubPathname = $directoryPath === null ? '' : substr($directoryPath, $storageRootLength);
+        $mediaSubPathname = substr($directoryPath, $storageRootLength);
         if (!$mediaSubPathname) {
             return false;
         }
@@ -989,7 +988,7 @@ class Storage extends \Magento\Framework\DataObject
             $regExp = '/^(';
             $or = '';
             foreach ($mediaGalleryImageFolders as $folder) {
-                $folderPattern = str_replace('/', '[\/]+', $folder ?? '');
+                $folderPattern = str_replace('/', '[\/]+', $folder);
                 $regExp .= $or . $folderPattern . '\b(?!-)(?:\/?[a-zA-Z0-9\-\_]+)*\/?$';
                 $or = '|';
             }
@@ -1020,7 +1019,7 @@ class Storage extends \Magento\Framework\DataObject
 
             $this->allowedDirs = [];
             foreach ($imageFolders as $folder) {
-                $this->allowedDirs[] = explode('/', $folder ?? '');
+                $this->allowedDirs[] = explode('/', $folder);
             }
         }
         return $this->allowedDirs;

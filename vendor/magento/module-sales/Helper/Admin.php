@@ -166,13 +166,7 @@ class Admin extends \Magento\Framework\App\Helper\AbstractHelper
 
             $internalErrors = libxml_use_internal_errors(true);
 
-            $convmap = [0x80, 0x10FFFF, 0, 0x1FFFFF];
-            $data = mb_encode_numericentity(
-                $data,
-                $convmap,
-                'UTF-8'
-            );
-
+            $data = mb_convert_encoding($data, 'HTML-ENTITIES', 'UTF-8');
             $domDocument->loadHTML(
                 '<html><body id="' . $wrapperElementId . '">' . $data . '</body></html>'
             );
@@ -198,17 +192,7 @@ class Admin extends \Magento\Framework\App\Helper\AbstractHelper
                 }
             }
 
-            $result = mb_decode_numericentity(
-                // phpcs:ignore Magento2.Functions.DiscouragedFunction
-                html_entity_decode(
-                    $domDocument->saveHTML(),
-                    ENT_QUOTES|ENT_SUBSTITUTE,
-                    'UTF-8'
-                ),
-                $convmap,
-                'UTF-8'
-            );
-
+            $result = mb_convert_encoding($domDocument->saveHTML(), 'UTF-8', 'HTML-ENTITIES');
             preg_match('/<body id="' . $wrapperElementId . '">(.+)<\/body><\/html>$/si', $result, $matches);
             $data = !empty($matches) ? $matches[1] : '';
         }

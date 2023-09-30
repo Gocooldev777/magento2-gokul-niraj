@@ -7,12 +7,11 @@ declare(strict_types=1);
 
 namespace Magento\Usps\Test\Unit\Model;
 
-use Laminas\Http\Response;
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\HTTP\LaminasClient;
-use Magento\Framework\HTTP\LaminasClientFactory;
+use Magento\Framework\HTTP\ZendClient;
+use Magento\Framework\HTTP\ZendClientFactory;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
@@ -40,7 +39,7 @@ use PHPUnit\Framework\TestCase;
 class CarrierTest extends TestCase
 {
     /**
-     * @var Response|MockObject
+     * @var \Zend_Http_Response|MockObject
      */
     private $httpResponse;
 
@@ -75,7 +74,7 @@ class CarrierTest extends TestCase
     private $dataHelper;
 
     /**
-     * @var LaminasClient|MockObject
+     * @var ZendClient|MockObject
      */
     private $httpClient;
 
@@ -179,13 +178,11 @@ class CarrierTest extends TestCase
             ReturnShipment::class,
             require __DIR__ . '/_files/return_shipment_request_data.php'
         );
-        $this->httpClient->expects(self::once())
+        $this->httpClient->expects(self::exactly(2))
             ->method('setParameterGet')
-            ->with(
-                $this->callback(function ($params) {
-                    return $params['API'] === 'SignatureConfirmationCertifyV3' &&
-                        str_contains($params['XML'], '<WeightInOunces>80</WeightInOunces>');
-                })
+            ->withConsecutive(
+                ['API', 'SignatureConfirmationCertifyV3'],
+                ['XML', $this->stringContains('<WeightInOunces>80</WeightInOunces>')]
             );
 
         $this->assertNotEmpty($this->carrier->returnOfShipment($request)->getInfo()[0]['tracking_number']);
@@ -203,13 +200,14 @@ class CarrierTest extends TestCase
         );
 
         $request->setRecipientAddressCountryCode('UK');
-        $this->httpClient->expects($this->once())
+        $formattedValuesRegex = '(<Value>5.00<\/Value>).*';
+        $formattedValuesRegex .= '(<NetOunces>0.00<\/NetOunces>)';
+
+        $this->httpClient->expects($this->exactly(2))
             ->method('setParameterGet')
-            ->with(
-                $this->callback(function ($params) {
-                    return $params['API'] === 'ExpressMailIntl' &&
-                        preg_match('/(<Value>5.00<\/Value>).*(<NetOunces>0.00<\/NetOunces>)/', $params['XML']);
-                })
+            ->withConsecutive(
+                ['API', 'ExpressMailIntl'],
+                ['XML', $this->matchesRegularExpression('/' . $formattedValuesRegex . '/')]
             );
 
         $this->carrier->returnOfShipment($request);
@@ -555,15 +553,15 @@ class CarrierTest extends TestCase
      */
     private function getHttpClientFactory(): MockObject
     {
-        $this->httpResponse = $this->getMockBuilder(Response::class)
+        $this->httpResponse = $this->getMockBuilder(\Zend_Http_Response::class)
             ->disableOriginalConstructor()
             ->setMethods(['getBody'])
             ->getMock();
-        $this->httpClient = $this->getMockBuilder(LaminasClient::class)
+        $this->httpClient = $this->getMockBuilder(ZendClient::class)
             ->getMock();
-        $this->httpClient->method('send')
+        $this->httpClient->method('request')
             ->willReturn($this->httpResponse);
-        $httpClientFactory = $this->getMockBuilder(LaminasClientFactory::class)
+        $httpClientFactory = $this->getMockBuilder(ZendClientFactory::class)
             ->disableOriginalConstructor()
             ->getMock();
         $httpClientFactory->method('create')

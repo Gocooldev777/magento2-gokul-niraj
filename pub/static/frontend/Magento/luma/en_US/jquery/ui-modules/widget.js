@@ -1,5 +1,5 @@
 /*!
- * jQuery UI Widget 1.13.1
+ * jQuery UI Widget 1.13.0
  * http://jqueryui.com
  *
  * Copyright jQuery Foundation and other contributors
@@ -499,8 +499,6 @@ $.Widget.prototype = {
 		}, options );
 
 		function bindRemoveEvent() {
-			var nodesToBind = [];
-
 			options.element.each( function( _, element ) {
 				var isTracked = $.map( that.classesElementLookup, function( elements ) {
 					return elements;
@@ -510,12 +508,10 @@ $.Widget.prototype = {
 					} );
 
 				if ( !isTracked ) {
-					nodesToBind.push( element );
+					that._on( $( element ), {
+						remove: "_untrackClassesElement"
+					} );
 				}
-			} );
-
-			that._on( $( nodesToBind ), {
-				remove: "_untrackClassesElement"
 			} );
 		}
 

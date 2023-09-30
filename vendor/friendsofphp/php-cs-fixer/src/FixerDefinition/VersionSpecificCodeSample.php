@@ -19,13 +19,16 @@ namespace PhpCsFixer\FixerDefinition;
  */
 final class VersionSpecificCodeSample implements VersionSpecificCodeSampleInterface
 {
-    private CodeSampleInterface $codeSample;
-
-    private VersionSpecificationInterface $versionSpecification;
+    /**
+     * @var CodeSampleInterface
+     */
+    private $codeSample;
 
     /**
-     * @param null|array<string, mixed> $configuration
+     * @var VersionSpecificationInterface
      */
+    private $versionSpecification;
+
     public function __construct(
         string $code,
         VersionSpecificationInterface $versionSpecification,

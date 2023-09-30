@@ -8,8 +8,6 @@ namespace Braintree;
  */
 class GraphQLClient
 {
-    protected $_service = null;
-
     // phpcs:ignore PEAR.Commenting.FunctionComment.Missing
     public function __construct($config)
     {

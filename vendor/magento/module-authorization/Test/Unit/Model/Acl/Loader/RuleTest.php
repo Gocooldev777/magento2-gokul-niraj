@@ -97,11 +97,6 @@ class RuleTest extends TestCase
      */
     public function testPopulateAclFromCache(): void
     {
-        $rules = [
-            ['role_id' => 1, 'resource_id' => 'Magento_Backend::all', 'permission' => 'allow'],
-            ['role_id' => 2, 'resource_id' => 1, 'permission' => 'allow'],
-            ['role_id' => 3, 'resource_id' => 1, 'permission' => 'deny']
-        ];
         $this->resourceMock->expects($this->never())->method('getTable');
         $this->resourceMock->expects($this->never())
             ->method('getConnection');
@@ -110,11 +105,17 @@ class RuleTest extends TestCase
             ->method('load')
             ->with(Rule::ACL_RULE_CACHE_KEY)
             ->willReturn(
-                json_encode($rules)
+                json_encode(
+                    [
+                        ['role_id' => 1, 'resource_id' => 'Magento_Backend::all', 'permission' => 'allow'],
+                        ['role_id' => 2, 'resource_id' => 1, 'permission' => 'allow'],
+                        ['role_id' => 3, 'resource_id' => 1, 'permission' => 'deny']
+                    ]
+                )
             );
 
         $aclMock = $this->createMock(Acl::class);
-        $aclMock->method('hasResource')->willReturn(true);
+        $aclMock->method('has')->willReturn(true);
         $aclMock
             ->method('allow')
             ->withConsecutive(
@@ -122,21 +123,9 @@ class RuleTest extends TestCase
                 ['1', 'Magento_Backend::all', null],
                 ['2', 1, null]
             );
-
         $aclMock
             ->method('deny')
-            ->withConsecutive(
-                ['3', 1, null]
-            );
-
-        $aclMock
-            ->method('getResources')
-            ->willReturn([
-                'Magento_Backend::all',
-                'Magento_Backend::admin',
-                'Vendor_MyModule::menu',
-                'Vendor_MyModule::index'
-            ]);
+            ->with('3', 1, null);
 
         $this->model->populateAcl($aclMock);
     }

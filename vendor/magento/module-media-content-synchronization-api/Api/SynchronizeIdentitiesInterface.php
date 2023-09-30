@@ -11,7 +11,6 @@ use Magento\MediaContentApi\Api\Data\ContentIdentityInterface;
 
 /**
  * Synchronize bulk assets and contents
- * @api
  */
 interface SynchronizeIdentitiesInterface
 {

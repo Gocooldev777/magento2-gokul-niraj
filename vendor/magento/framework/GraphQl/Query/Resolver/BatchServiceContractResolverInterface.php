@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 
 /**
  * Resolve multiple brunches/leaves by executing a batch service contract.
- *
- * @api
  */
 interface BatchServiceContractResolverInterface
 {

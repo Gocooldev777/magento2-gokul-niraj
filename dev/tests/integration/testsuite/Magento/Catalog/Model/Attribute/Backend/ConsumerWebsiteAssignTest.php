@@ -14,12 +14,12 @@ use Magento\Catalog\Model\Product\Action;
 use Magento\Framework\Bulk\OperationInterface;
 use Magento\Framework\DB\Adapter\DeadlockException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\MessageQueue\ConsumerFactory;
 use Magento\Framework\MessageQueue\MessageEncoder;
 use Magento\Framework\ObjectManagerInterface;
+use Magento\MysqlMq\Model\Driver\Queue;
 use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\TestFramework\Helper\Bootstrap;
-use Magento\TestFramework\MessageQueue\ClearQueueProcessor;
+use Magento\TestFramework\MysqlMq\DeleteTopicRelatedMessages;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,20 +29,22 @@ use PHPUnit\Framework\TestCase;
  *
  * @magentoDbIsolation disabled
  * @magentoAppArea adminhtml
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ConsumerWebsiteAssignTest extends TestCase
 {
     private const TOPIC_NAME = 'product_action_attribute.website.update';
 
-    /** @var ClearQueueProcessor */
-    private static $clearQueueProcessor;
+    /** @var DeleteTopicRelatedMessages */
+    private static $deleteTopicRelatedMessages;
 
     /** @var ObjectManagerInterface */
     private $objectManager;
 
     /** @var ConsumerWebsiteAssign */
     private $consumer;
+
+    /** @var Queue */
+    private $queue;
 
     /** @var MessageEncoder */
     private $messageEncoder;
@@ -56,9 +58,6 @@ class ConsumerWebsiteAssignTest extends TestCase
     /** @var CollectionFactory */
     private $operationCollectionFactory;
 
-    /** @var ConsumerFactory */
-    private $consumerFactory;
-
     /**
      * @inheritdoc
      */
@@ -67,8 +66,8 @@ class ConsumerWebsiteAssignTest extends TestCase
         parent::setUpBeforeClass();
 
         $objectManager = Bootstrap::getObjectManager();
-        self::$clearQueueProcessor = $objectManager->get(ClearQueueProcessor::class);
-        self::$clearQueueProcessor->execute('product_action_attribute.website.update');
+        self::$deleteTopicRelatedMessages = $objectManager->get(DeleteTopicRelatedMessages::class);
+        self::$deleteTopicRelatedMessages->execute(self::TOPIC_NAME);
     }
 
     /**
@@ -80,11 +79,14 @@ class ConsumerWebsiteAssignTest extends TestCase
 
         $this->objectManager = Bootstrap::getObjectManager();
         $this->consumer = $this->objectManager->get(ConsumerWebsiteAssign::class);
+        $this->queue = $this->objectManager->create(
+            Queue::class,
+            ['queueName' => 'product_action_attribute.website.update']
+        );
         $this->messageEncoder = $this->objectManager->get(MessageEncoder::class);
         $this->productRepository = $this->objectManager->get(ProductRepositoryInterface::class);
         $this->websiteRepository = $this->objectManager->get(WebsiteRepositoryInterface::class);
         $this->operationCollectionFactory = $this->objectManager->get(CollectionFactory::class);
-        $this->consumerFactory = $this->objectManager->get(ConsumerFactory::class);
     }
 
     /**
@@ -93,7 +95,7 @@ class ConsumerWebsiteAssignTest extends TestCase
     protected function tearDown(): void
     {
         $this->objectManager->removeSharedInstance(Action::class);
-        self::$clearQueueProcessor->execute('product_action_attribute.website.update');
+        self::$deleteTopicRelatedMessages->execute(self::TOPIC_NAME);
 
         parent::tearDown();
     }
@@ -210,8 +212,9 @@ class ConsumerWebsiteAssignTest extends TestCase
      */
     private function processMessages(): void
     {
-        $consumer = $this->consumerFactory->get('product_action_attribute.website.update');
-        $consumer->process(1);
+        $envelope = $this->queue->dequeue();
+        $decodedMessage = $this->messageEncoder->decode(self::TOPIC_NAME, $envelope->getBody());
+        $this->consumer->process($decodedMessage);
     }
 
     /**

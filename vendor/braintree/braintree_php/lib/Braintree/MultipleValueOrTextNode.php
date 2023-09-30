@@ -8,8 +8,6 @@ namespace Braintree;
  */
 class MultipleValueOrTextNode extends MultipleValueNode
 {
-    private $textNode;
-
     // phpcs:ignore PEAR.Commenting.FunctionComment.Missing
     public function __construct($name)
     {

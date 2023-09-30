@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_SalesRule/template/cart/totals/discount.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<!-- ko if: isDisplayed() -->\n<tr class=\"totals\">\n    <th colspan=\"1\" style=\"\" class=\"mark\" scope=\"row\">\n        <span class=\"title\" data-bind=\"text: getTitle()\"></span>\n        <span class=\"discount coupon\" data-bind=\"text: getCouponLabel()\"></span>\n    </th>\n    <td class=\"amount\" data-bind=\"attr: {'data-th': title}\">\n        <span><span class=\"price\" data-bind=\"text: getValue()\"></span></span>\n    </td>\n</tr>\n<!-- /ko -->\n"}
+}});

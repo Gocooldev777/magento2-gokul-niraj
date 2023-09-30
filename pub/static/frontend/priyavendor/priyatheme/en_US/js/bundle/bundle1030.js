@@ -1,0 +1,3 @@
+require.config({"config": {
+        "text":{"Magento_Checkout/template/summary/grand-total.html":"<!--\n/**\n * Copyright \u00a9 Magento, Inc. All rights reserved.\n * See COPYING.txt for license details.\n */\n-->\n<!-- ko if: isDisplayed() -->\n<tr class=\"grand totals\">\n    <td class=\"mark\" scope=\"row\">\n        <strong data-bind=\"i18n: title\"></strong>\n    </td>\n    <td class=\"amount\" data-bind=\"attr: {'data-th': $t(title)}\">\n        <strong><span class=\"price\" data-bind=\"text: getValue()\"></span></strong>\n        <!-- ko foreach: elems() -->\n            <!-- ko template: getTemplate() --><!-- /ko -->\n        <!-- /ko -->\n    </td>\n</tr>\n<!-- /ko -->\n"}
+}});

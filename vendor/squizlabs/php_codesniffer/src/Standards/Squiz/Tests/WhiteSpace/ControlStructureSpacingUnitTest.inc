@@ -261,9 +261,3 @@ $expr = match( $foo ){
 
 };
 echo $expr;
-
-if($true) {
-
-    enum SomeEnum {}
-
-}

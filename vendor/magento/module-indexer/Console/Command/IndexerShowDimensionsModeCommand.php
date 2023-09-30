@@ -19,9 +19,9 @@ use Symfony\Component\Console\Input\InputArgument;
  */
 class IndexerShowDimensionsModeCommand extends AbstractIndexerCommand
 {
-    private const INPUT_KEY_INDEXER = 'indexer';
-    private const DIMENSION_MODE_NONE = 'none';
-    private const XML_PATH_DIMENSIONS_MODE_MASK = 'indexer/%s/dimensions_mode';
+    const INPUT_KEY_INDEXER = 'indexer';
+    const DIMENSION_MODE_NONE = 'none';
+    const XML_PATH_DIMENSIONS_MODE_MASK = 'indexer/%s/dimensions_mode';
     /**
      * @var string
      */
@@ -36,31 +36,24 @@ class IndexerShowDimensionsModeCommand extends AbstractIndexerCommand
      * @var string[]
      */
     private $indexers;
-    /**
-     * @var string[]
-     */
-    private $optionalIndexers;
 
     /**
      * @param ObjectManagerFactory $objectManagerFactory
      * @param ScopeConfigInterface $configReader
      * @param array $indexers
-     * @param array $optionalIndexers
      */
     public function __construct(
         ObjectManagerFactory $objectManagerFactory,
         ScopeConfigInterface $configReader,
-        array $indexers,
-        array $optionalIndexers = []
+        array $indexers
     ) {
         $this->configReader = $configReader;
         $this->indexers = $indexers;
-        $this->optionalIndexers = $optionalIndexers;
         parent::__construct($objectManagerFactory);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function configure()
     {
@@ -71,7 +64,7 @@ class IndexerShowDimensionsModeCommand extends AbstractIndexerCommand
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
@@ -99,12 +92,10 @@ class IndexerShowDimensionsModeCommand extends AbstractIndexerCommand
                 $output->writeln(sprintf('%-50s ', $indexer->getTitle() . ':') . $mode);
             }
         } catch (\Exception $e) {
-            if (!in_array($indexerId, $this->optionalIndexers)) { /** @phpstan-ignore-line */
-                $output->writeln('"' . $indexer->getTitle() . '" indexer process unknown error:' . PHP_EOL);
-                $output->writeln($e->getMessage() . PHP_EOL);
-                // we must have an exit code higher than zero to indicate something was wrong
-                $returnValue = Cli::RETURN_FAILURE;
-            }
+            $output->writeln('"' . $indexer->getTitle() . '" indexer process unknown error:' . PHP_EOL);
+            $output->writeln($e->getMessage() . PHP_EOL);
+            // we must have an exit code higher than zero to indicate something was wrong
+            $returnValue = Cli::RETURN_FAILURE;
         }
 
         return $returnValue;
@@ -121,7 +112,7 @@ class IndexerShowDimensionsModeCommand extends AbstractIndexerCommand
         $arguments[] = new InputArgument(
             self::INPUT_KEY_INDEXER,
             InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
-            $optionDescription . ' (' . implode(',', $this->indexers) . ')'
+            $optionDescription . ' (' . implode($this->indexers) . ')'
         );
 
         return $arguments;

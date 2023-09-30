@@ -7,13 +7,10 @@ declare(strict_types=1);
 namespace Magento\Customer\Model\Address;
 
 use Magento\Customer\Api\CustomerRepositoryInterface;
-use Magento\Customer\Model\AddressRegistry;
-use Magento\Customer\Model\ResourceModel\Address\Attribute\Collection as AddressAttributeCollection;
 use Magento\Customer\Model\ResourceModel\Address\CollectionFactory;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Type;
 use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\View\Element\UiComponent\ContextInterface;
 use Magento\Customer\Model\Address;
 use Magento\Customer\Model\FileUploaderDataResolver;
@@ -24,7 +21,6 @@ use Magento\Ui\Component\Form\Element\Multiline;
  * Dataprovider of customer addresses for customer address grid.
  *
  * @property \Magento\Customer\Model\ResourceModel\Address\Collection $collection
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
 {
@@ -45,7 +41,7 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
      */
     private $allowToShowHiddenAttributes;
 
-    /**
+    /*
      * @var ContextInterface
      */
     private $context;
@@ -77,11 +73,6 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
     private $attributeMetadataResolver;
 
     /**
-     * @var AddressRegistry
-     */
-    private $addressRegistry;
-
-    /**
      * DataProvider constructor.
      * @param string $name
      * @param string $primaryFieldName
@@ -95,7 +86,6 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
      * @param array $meta
      * @param array $data
      * @param bool $allowToShowHiddenAttributes
-     * @param AddressRegistry|null $addressRegistry
      * @throws \Magento\Framework\Exception\LocalizedException
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -111,8 +101,7 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
         AttributeMetadataResolver $attributeMetadataResolver,
         array $meta = [],
         array $data = [],
-        $allowToShowHiddenAttributes = true,
-        ?AddressRegistry $addressRegistry = null
+        $allowToShowHiddenAttributes = true
     ) {
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
         $this->collection = $addressCollectionFactory->create();
@@ -122,7 +111,6 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
         $this->context = $context;
         $this->fileUploaderDataResolver = $fileUploaderDataResolver;
         $this->attributeMetadataResolver = $attributeMetadataResolver;
-        $this->addressRegistry = $addressRegistry ?? ObjectManager::getInstance()->get(AddressRegistry::class);
         $this->meta['general']['children'] = $this->getAttributesMeta(
             $eavConfig->getEntityType('customer_address')
         );
@@ -218,23 +206,11 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
      * @param Type $entityType
      * @return array
      * @throws \Magento\Framework\Exception\LocalizedException
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function getAttributesMeta(Type $entityType): array
     {
         $meta = [];
-        /** @var AddressAttributeCollection $attributes */
         $attributes = $entityType->getAttributeCollection();
-        $customerId = $this->context->getRequestParam('parent_id');
-        $entityId = $this->context->getRequestParam('entity_id');
-        if (!$customerId && $entityId) {
-            $customerId = $this->addressRegistry->retrieve($entityId)->getParentId();
-        }
-
-        if ($customerId) {
-            $customer = $this->customerRepository->getById($customerId);
-            $attributes->setWebsite($customer->getWebsiteId());
-        }
         /* @var AbstractAttribute $attribute */
         foreach ($attributes as $attribute) {
             if (\in_array($attribute->getFrontendInput(), $this->bannedInputTypes, true)) {
@@ -243,18 +219,12 @@ class DataProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
             if (\in_array($attribute->getAttributeCode(), self::$attributesToEliminate, true)) {
                 continue;
             }
+
             $meta[$attribute->getAttributeCode()] = $this->attributeMetadataResolver->getAttributesMeta(
                 $attribute,
                 $entityType,
                 $this->allowToShowHiddenAttributes
             );
-            if ($attribute->getAttributeCode() === 'street' && $entityId) {
-                $customerAddressStreet = $this->addressRegistry->retrieve($entityId)->getStreet();
-                $meta[$attribute->getAttributeCode()]["arguments"]["data"]["config"]["size"] = max(
-                    $meta[$attribute->getAttributeCode()]["arguments"]["data"]["config"]["size"],
-                    count($customerAddressStreet)
-                );
-            }
         }
         $this->attributeMetadataResolver->processWebsiteMeta($meta);
 

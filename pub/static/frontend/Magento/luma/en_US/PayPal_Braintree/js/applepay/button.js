@@ -7,7 +7,6 @@ define(
         "knockout",
         "jquery",
         'braintree',
-        'braintreeDataCollector',
         'braintreeApplePay',
         'mage/translate',
         'Magento_Checkout/js/model/payment/additional-validators',
@@ -17,7 +16,6 @@ define(
         ko,
         jQuery,
         braintree,
-        dataCollector,
         applePay,
         $t,
         additionalValidators
@@ -60,114 +58,105 @@ define(
                         return;
                     }
 
-                        dataCollector.create({
-                            client: clientInstance
-                        }, function (dataCollectorErr, dataCollectorInstance) {
-                            if (dataCollectorErr) {
+                    applePay.create({
+                        client: clientInstance
+                    }, function (applePayErr, applePayInstance) {
+                        // No instance
+                        if (applePayErr) {
+                            console.error('Braintree ApplePay Error creating applePayInstance:', applePayErr);
+                            return;
+                        }
+
+                        // Create a button within the KO element, as apple pay can only be instantiated through
+                        // a valid on click event (ko onclick bind interferes with this).
+                        var el = document.createElement('div');
+                        el.className = "braintree-apple-pay-button";
+                        el.title = $t("Pay with Apple Pay");
+                        el.alt = $t("Pay with Apple Pay");
+                        el.addEventListener('click', function (e) {
+                            e.preventDefault();
+
+                            if (!additionalValidators.validate()) {
+                                return false;
+                            }
+                            // Payment request object
+                            var paymentRequest = applePayInstance.createPaymentRequest(context.getPaymentRequest());
+                            if (!paymentRequest) {
+                                alert($t("We're unable to take payments through Apple Pay at the moment. Please try an alternative payment method."));
+                                console.error('Braintree ApplePay Unable to create paymentRequest', paymentRequest);
                                 return;
                             }
 
-                            applePay.create({
-                                client: clientInstance
-                            }, function (applePayErr, applePayInstance) {
-                                // No instance
-                                if (applePayErr) {
-                                    console.error('Braintree ApplePay Error creating applePayInstance:', applePayErr);
-                                    return;
-                                }
+                            // Show the loader
+                            jQuery("body").loader('show');
 
-                                // Create a button within the KO element, as apple pay can only be instantiated through
-                                // a valid on click event (ko onclick bind interferes with this).
-                                var el = document.createElement('div');
-                                el.className = "braintree-apple-pay-button";
-                                el.title = $t("Pay with Apple Pay");
-                                el.alt = $t("Pay with Apple Pay");
-                                el.addEventListener('click', function (e) {
-                                    e.preventDefault();
+                            // Init apple pay session
+                            try {
+                                var session = new ApplePaySession(1, paymentRequest);
+                            } catch (err) {
+                                jQuery("body").loader('hide');
+                                console.error('Braintree ApplePay Unable to create ApplePaySession', err);
+                                alert($t("We're unable to take payments through Apple Pay at the moment. Please try an alternative payment method."));
+                                return false;
+                            }
 
-                                    if (!additionalValidators.validate()) {
-                                        return false;
-                                    }
-                                    // Payment request object
-                                    var paymentRequest = applePayInstance.createPaymentRequest(context.getPaymentRequest());
-                                    if (!paymentRequest) {
+                            // Handle invalid merchant
+                            session.onvalidatemerchant = function (event) {
+                                applePayInstance.performValidation({
+                                    validationURL: event.validationURL,
+                                    displayName: context.getDisplayName()
+                                }, function (validationErr, merchantSession) {
+                                    if (validationErr) {
+                                        session.abort();
+                                        console.error('Braintree ApplePay Error validating merchant:', validationErr);
                                         alert($t("We're unable to take payments through Apple Pay at the moment. Please try an alternative payment method."));
-                                        console.error('Braintree ApplePay Unable to create paymentRequest', paymentRequest);
                                         return;
                                     }
 
-                                    // Show the loader
-                                    jQuery("body").loader('show');
-
-                                    // Init apple pay session
-                                    try {
-                                        var session = new ApplePaySession(1, paymentRequest);
-                                    } catch (err) {
-                                        jQuery("body").loader('hide');
-                                        console.error('Braintree ApplePay Unable to create ApplePaySession', err);
-                                        alert($t("We're unable to take payments through Apple Pay at the moment. Please try an alternative payment method."));
-                                        return false;
-                                    }
-
-                                    // Handle invalid merchant
-                                    session.onvalidatemerchant = function (event) {
-                                        applePayInstance.performValidation({
-                                            validationURL: event.validationURL,
-                                            displayName: context.getDisplayName()
-                                        }, function (validationErr, merchantSession) {
-                                            if (validationErr) {
-                                                session.abort();
-                                                console.error('Braintree ApplePay Error validating merchant:', validationErr);
-                                                alert($t("We're unable to take payments through Apple Pay at the moment. Please try an alternative payment method."));
-                                                return;
-                                            }
-
-                                            session.completeMerchantValidation(merchantSession);
-                                        });
-                                    };
-
-                                    // Attach payment auth event
-                                    session.onpaymentauthorized = function (event) {
-                                        applePayInstance.tokenize({
-                                            token: event.payment.token
-                                        }, function (tokenizeErr, payload) {
-                                            if (tokenizeErr) {
-                                                console.error('Error tokenizing Apple Pay:', tokenizeErr);
-                                                session.completePayment(ApplePaySession.STATUS_FAILURE);
-                                                return;
-                                            }
-
-                                            // Pass the nonce back to the payment method
-                                            context.startPlaceOrder(payload.nonce, event, session, dataCollectorInstance.deviceData);
-                                        });
-                                    };
-
-                                    // Attach onShippingContactSelect method
-                                    if (typeof context.onShippingContactSelect === 'function') {
-                                        session.onshippingcontactselected = function (event) {
-                                            return context.onShippingContactSelect(event, session);
-                                        };
-                                    }
-
-                                    // Attach onShippingMethodSelect method
-                                    if (typeof context.onShippingMethodSelect === 'function') {
-                                        session.onshippingmethodselected = function (event) {
-                                            return context.onShippingMethodSelect(event, session);
-                                        };
-                                    }
-
-                                    // Hook
-                                    if (typeof context.onButtonClick === 'function') {
-                                        context.onButtonClick(session, this, e);
-                                    } else {
-                                        jQuery("body").loader('hide');
-                                        session.begin();
-                                    }
+                                    session.completeMerchantValidation(merchantSession);
                                 });
-                                element.appendChild(el);
-                            });
-                        });
+                            };
 
+                            // Attach payment auth event
+                            session.onpaymentauthorized = function (event) {
+                                applePayInstance.tokenize({
+                                    token: event.payment.token
+                                }, function (tokenizeErr, payload) {
+                                    if (tokenizeErr) {
+                                        console.error('Error tokenizing Apple Pay:', tokenizeErr);
+                                        session.completePayment(ApplePaySession.STATUS_FAILURE);
+                                        return;
+                                    }
+
+                                    // Pass the nonce back to the payment method
+                                    context.startPlaceOrder(payload.nonce, event, session);
+                                });
+                            };
+
+                            // Attach onShippingContactSelect method
+                            if (typeof context.onShippingContactSelect === 'function') {
+                                session.onshippingcontactselected = function (event) {
+                                    return context.onShippingContactSelect(event, session);
+                                };
+                            }
+
+                            // Attach onShippingMethodSelect method
+                            if (typeof context.onShippingMethodSelect === 'function') {
+                                session.onshippingmethodselected = function (event) {
+                                    return context.onShippingMethodSelect(event, session);
+                                };
+                            }
+
+                            // Hook
+                            if (typeof context.onButtonClick === 'function') {
+                                context.onButtonClick(session, this, e);
+                            } else {
+                                jQuery("body").loader('hide');
+                                session.begin();
+                            }
+                        });
+                        element.appendChild(el);
+                    });
                 });
             },
 

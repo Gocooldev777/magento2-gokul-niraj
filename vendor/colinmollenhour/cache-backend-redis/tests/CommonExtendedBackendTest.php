@@ -1,19 +1,54 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Zend
+ * @package    Zend_Cache
+ * @subpackage UnitTests
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: CommonExtendedBackendTest.php 23775 2011-03-01 17:25:24Z ralph $
+ */
 
-require_once 'vendor/autoload.php';
+/**
+ * @see Zend_Cache_CommonBackendTest
+ */
 require_once 'CommonBackendTest.php';
 
-abstract class CommonExtendedBackendTest extends CommonBackendTest
-{
+/**
+ * @category   Zend
+ * @package    Zend_Cache
+ * @subpackage UnitTests
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @group      Zend_Cache
+ */
+class Zend_Cache_CommonExtendedBackendTest extends Zend_Cache_CommonBackendTest {
+
     private $_capabilities;
 
-    public function setUp($noTag = false): void
+    public function __construct($name = null, array $data = array(), $dataName = '')
     {
-        parent::setUp($noTag);
+        parent::__construct($name);
+    }
+
+    public function setUp($notag = false)
+    {
+        parent::setUp($notag);
         $this->_capabilities = $this->_instance->getCapabilities();
     }
 
-    public function testGetFillingPercentage(): void
+    public function testGetFillingPercentage()
     {
         $res = $this->_instance->getFillingPercentage();
         $this->assertTrue(is_integer($res));
@@ -21,19 +56,21 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue($res <= 100);
     }
 
-    public function testGetFillingPercentageOnEmptyBackend(): void
+    public function testGetFillingPercentageOnEmptyBackend()
     {
-        $this->_instance->clean();
+        $this->_instance->setDirectives(array('logging' => false)); // ???
+        $this->_instance->clean(Zend_Cache::CLEANING_MODE_ALL);
         $res = $this->_instance->getFillingPercentage();
+        $this->_instance->setDirectives(array('logging' => true)); // ???
         $this->assertTrue(is_integer($res));
         $this->assertTrue($res >= 0);
         $this->assertTrue($res <= 100);
     }
 
-    public function testGetIds(): void
+    public function testGetIds()
     {
         if (!($this->_capabilities['get_list'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIds();
@@ -43,24 +80,24 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(in_array('bar3', $res));
     }
 
-    public function testGetTags(): void
+    public function testGetTags()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getTags();
-        $this->assertCount(4, $res);
+        $this->assertEquals(4, count($res));
         $this->assertTrue(in_array('tag1', $res));
         $this->assertTrue(in_array('tag2', $res));
         $this->assertTrue(in_array('tag3', $res));
         $this->assertTrue(in_array('tag4', $res));
     }
 
-    public function testGetIdsMatchingTags(): void
+    public function testGetIdsMatchingTags()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsMatchingTags(array('tag3'));
@@ -70,10 +107,10 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(in_array('bar3', $res));
     }
 
-    public function testGetIdsMatchingTags2(): void
+    public function testGetIdsMatchingTags2()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsMatchingTags(array('tag2'));
@@ -81,21 +118,21 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(in_array('bar3', $res));
     }
 
-    public function testGetIdsMatchingTags3(): void
+    public function testGetIdsMatchingTags3()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsMatchingTags(array('tag9999'));
-        $this->assertEmpty($res);
+        $this->assertTrue(count($res) == 0);
     }
 
 
-    public function testGetIdsMatchingTags4(): void
+    public function testGetIdsMatchingTags4()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsMatchingTags(array('tag3', 'tag4'));
@@ -103,20 +140,20 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(in_array('bar', $res));
     }
 
-    public function testGetIdsNotMatchingTags(): void
+    public function testGetIdsNotMatchingTags()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsNotMatchingTags(array('tag3'));
-        $this->assertCount(0, $res);
+        $this->assertEquals(0, count($res));
     }
 
-    public function testGetIdsNotMatchingTags2(): void
+    public function testGetIdsNotMatchingTags2()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsNotMatchingTags(array('tag1'));
@@ -125,10 +162,10 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(in_array('bar3', $res));
     }
 
-    public function testGetIdsNotMatchingTags3(): void
+    public function testGetIdsNotMatchingTags3()
     {
         if (!($this->_capabilities['tags'])) {
-            # unsupported by this backend
+            # unsupported by this backend
             return;
         }
         $res = $this->_instance->getIdsNotMatchingTags(array('tag1', 'tag4'));
@@ -136,14 +173,14 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(in_array('bar3', $res));
     }
 
-    public function testGetMetadatas($noTag = false)
+    public function testGetMetadatas($notag = false)
     {
         $res = $this->_instance->getMetadatas('bar');
         $this->assertTrue(isset($res['tags']));
         $this->assertTrue(isset($res['mtime']));
         $this->assertTrue(isset($res['expire']));
-        if ($noTag) {
-            $this->assertEmpty($res['tags']);
+        if ($notag) {
+            $this->assertTrue(count($res['tags']) == 0);
         } else {
             $this->assertTrue(count($res['tags']) == 2);
             $this->assertTrue(in_array('tag3', $res['tags']));
@@ -153,18 +190,17 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue($res['mtime'] <= time());
     }
 
-    public function testTouch(): void
+    public function testTouch()
     {
         $res = $this->_instance->getMetadatas('bar');
-        $this->assertGreaterThan(time(), $res['expire']);
         $bool = $this->_instance->touch('bar', 30);
         $this->assertTrue($bool);
         $res2 = $this->_instance->getMetadatas('bar');
-        $this->assertGreaterThanOrEqual(29, $res2['expire'] - $res['expire']);
+        $this->assertEquals($res2['expire'] - $res['expire'], 30);
         $this->assertTrue(($res2['mtime'] >= $res['mtime']));
     }
 
-    public function testGetCapabilities(): void
+    public function testGetCapabilities()
     {
         $res = $this->_instance->getCapabilities();
         $this->assertTrue(isset($res['tags']));
@@ -174,4 +210,7 @@ abstract class CommonExtendedBackendTest extends CommonBackendTest
         $this->assertTrue(isset($res['infinite_lifetime']));
         $this->assertTrue(isset($res['get_list']));
     }
+
 }
+
+

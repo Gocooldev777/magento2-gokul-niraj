@@ -5,7 +5,7 @@
  */
 namespace Magento\Framework\MessageQueue\Publisher;
 
-use Magento\Framework\MessageQueue\DefaultValueProvider;
+use Magento\Framework\MessageQueue\Publisher\Config\PublisherConnectionInterface;
 
 /**
  * Test access to publisher configuration declared in deprecated queue.xml configs using Publisher\ConfigInterface.
@@ -19,15 +19,9 @@ class DeprecatedConfigTest extends \PHPUnit\Framework\TestCase
      */
     private $objectManager;
 
-    /**
-     * @var DefaultValueProvider
-     */
-    private $defaultValueProvider;
-
     protected function setUp(): void
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $this->defaultValueProvider = $this->objectManager->get(DefaultValueProvider::class);
     }
 
     public function testGetPublisher()
@@ -39,7 +33,7 @@ class DeprecatedConfigTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($publisher->isDisabled());
 
         $connection = $publisher->getConnection();
-        $this->assertEquals($this->defaultValueProvider->getConnection(), $connection->getName());
+        $this->assertEquals('amqp', $connection->getName());
         $this->assertEquals('magento', $connection->getExchange());
         $this->assertFalse($connection->isDisabled());
     }
@@ -53,7 +47,7 @@ class DeprecatedConfigTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($publisher->isDisabled());
 
         $connection = $publisher->getConnection();
-        $this->assertEquals('db', $connection->getName());
+        $this->assertEquals('amqp', $connection->getName());
         $this->assertEquals('customExchange', $connection->getExchange());
         $this->assertFalse($connection->isDisabled());
     }
@@ -67,7 +61,7 @@ class DeprecatedConfigTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($publisher->isDisabled());
 
         $connection = $publisher->getConnection();
-        $this->assertEquals($this->defaultValueProvider->getConnection(), $connection->getName());
+        $this->assertEquals('amqp', $connection->getName());
         $this->assertEquals('magento', $connection->getExchange());
         $this->assertFalse($connection->isDisabled());
     }

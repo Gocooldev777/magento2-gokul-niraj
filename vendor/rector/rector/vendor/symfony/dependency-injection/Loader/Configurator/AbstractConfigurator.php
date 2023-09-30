@@ -8,28 +8,26 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Loader\Configurator;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use RectorPrefix202304\Symfony\Component\Config\Loader\ParamConfigurator;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Alias;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Definition;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Parameter;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\Reference;
-use RectorPrefix202304\Symfony\Component\ExpressionLanguage\Expression;
+use RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\AbstractArgument;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference;
+use RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression;
 abstract class AbstractConfigurator
 {
     public const FACTORY = 'unknown';
     /**
-     * @var callable(mixed, bool)|null
+     * @var callable(mixed, bool $allowService)|null
      */
     public static $valuePreProcessor;
-    /** @internal
-     * @var \Symfony\Component\DependencyInjection\Definition|\Symfony\Component\DependencyInjection\Alias|null */
-    protected $definition = null;
+    /** @internal */
+    protected $definition;
     public function __call(string $method, array $args)
     {
         if (\method_exists($this, 'set' . $method)) {
@@ -37,7 +35,10 @@ abstract class AbstractConfigurator
         }
         throw new \BadMethodCallException(\sprintf('Call to undefined method "%s::%s()".', static::class, $method));
     }
-    public function __sleep() : array
+    /**
+     * @return array
+     */
+    public function __sleep()
     {
         throw new \BadMethodCallException('Cannot serialize ' . __CLASS__);
     }
@@ -48,12 +49,12 @@ abstract class AbstractConfigurator
     /**
      * Checks that a value is valid, optionally replacing Definition and Reference configurators by their configure value.
      *
-     * @param bool $allowServices whether Definition and Reference are allowed; by default, only scalars and arrays are
+     * @param mixed $value
+     * @param bool  $allowServices whether Definition and Reference are allowed; by default, only scalars and arrays are
      *
      * @return mixed the value, optionally cast to a Definition/Reference
-     * @param mixed $value
      */
-    public static function processValue($value, bool $allowServices = \false)
+    public static function processValue($value, $allowServices = \false)
     {
         if (\is_array($value)) {
             foreach ($value as $k => $v) {
@@ -64,35 +65,35 @@ abstract class AbstractConfigurator
         if (self::$valuePreProcessor) {
             $value = (self::$valuePreProcessor)($value, $allowServices);
         }
-        if ($value instanceof ReferenceConfigurator) {
-            $reference = new Reference($value->id, $value->invalidBehavior);
-            return $value instanceof ClosureReferenceConfigurator ? new ServiceClosureArgument($reference) : $reference;
+        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\ReferenceConfigurator) {
+            $reference = new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference($value->id, $value->invalidBehavior);
+            return $value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\ClosureReferenceConfigurator ? new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument($reference) : $reference;
         }
-        if ($value instanceof InlineServiceConfigurator) {
+        if ($value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Loader\Configurator\InlineServiceConfigurator) {
             $def = $value->definition;
             $value->definition = null;
             return $def;
         }
-        if ($value instanceof ParamConfigurator) {
+        if ($value instanceof \RectorPrefix20211221\Symfony\Component\Config\Loader\ParamConfigurator) {
             return (string) $value;
         }
         if ($value instanceof self) {
-            throw new InvalidArgumentException(\sprintf('"%s()" can be used only at the root of service configuration files.', $value::FACTORY));
+            throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('"%s()" can be used only at the root of service configuration files.', $value::FACTORY));
         }
         switch (\true) {
             case null === $value:
             case \is_scalar($value):
                 return $value;
-            case $value instanceof ArgumentInterface:
-            case $value instanceof Definition:
-            case $value instanceof Expression:
-            case $value instanceof Parameter:
-            case $value instanceof AbstractArgument:
-            case $value instanceof Reference:
+            case $value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\ArgumentInterface:
+            case $value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Definition:
+            case $value instanceof \RectorPrefix20211221\Symfony\Component\ExpressionLanguage\Expression:
+            case $value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Parameter:
+            case $value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Argument\AbstractArgument:
+            case $value instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Reference:
                 if ($allowServices) {
                     return $value;
                 }
         }
-        throw new InvalidArgumentException(\sprintf('Cannot use values of type "%s" in service configuration files.', \get_debug_type($value)));
+        throw new \RectorPrefix20211221\Symfony\Component\DependencyInjection\Exception\InvalidArgumentException(\sprintf('Cannot use values of type "%s" in service configuration files.', \get_debug_type($value)));
     }
 }

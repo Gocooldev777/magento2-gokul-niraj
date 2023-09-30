@@ -3,9 +3,9 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\CatalogUrlRewrite\Model\Map;
+
+use Magento\Framework\DB\Select;
 
 /**
  * Interface for a hash data map
@@ -15,8 +15,6 @@ namespace Magento\CatalogUrlRewrite\Model\Map;
  * The map, upon initialization, might have a dependency on some other DataMapInterfaces
  * The map has to free memory after we're done using it
  * We need to destroy those maps too when calling resetData
- *
- * @api
  */
 interface HashMapInterface
 {

@@ -36,7 +36,7 @@ final class ArgumentsAnalyzer
     }
 
     /**
-     * Returns start and end token indices of arguments.
+     * Returns start and end token indexes of arguments.
      *
      * Returns an array with each key being the first token of an
      * argument and the value the last. Including non-function tokens
@@ -87,16 +87,6 @@ final class ArgumentsAnalyzer
 
     public function getArgumentInfo(Tokens $tokens, int $argumentStart, int $argumentEnd): ArgumentAnalysis
     {
-        static $skipTypes = null;
-
-        if (null === $skipTypes) {
-            $skipTypes = [T_ELLIPSIS, CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PUBLIC, CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PROTECTED, CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PRIVATE];
-
-            if (\defined('T_READONLY')) { // @TODO: drop condition when PHP 8.1+ is required
-                $skipTypes[] = T_READONLY;
-            }
-        }
-
         $info = [
             'default' => null,
             'name' => null,
@@ -111,16 +101,10 @@ final class ArgumentsAnalyzer
         for ($index = $argumentStart; $index <= $argumentEnd; ++$index) {
             $token = $tokens[$index];
 
-            if (\defined('T_ATTRIBUTE') && $token->isGivenKind(T_ATTRIBUTE)) {
-                $index = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_ATTRIBUTE, $index);
-
-                continue;
-            }
-
             if (
                 $token->isComment()
                 || $token->isWhitespace()
-                || $token->isGivenKind($skipTypes)
+                || $token->isGivenKind([T_ELLIPSIS, CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PUBLIC, CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PROTECTED, CT::T_CONSTRUCTOR_PROPERTY_PROMOTION_PRIVATE])
                 || $token->equals('&')
             ) {
                 continue;
@@ -135,6 +119,12 @@ final class ArgumentsAnalyzer
             }
 
             if ($token->equals('=')) {
+                continue;
+            }
+
+            if (\defined('T_ATTRIBUTE') && $token->isGivenKind(T_ATTRIBUTE)) {
+                $index = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_ATTRIBUTE, $index);
+
                 continue;
             }
 

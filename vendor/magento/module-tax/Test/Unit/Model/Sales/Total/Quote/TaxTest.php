@@ -48,7 +48,7 @@ use PHPUnit\Framework\TestCase;
  */
 class TaxTest extends TestCase
 {
-    public const TAX = 0.2;
+    const TAX = 0.2;
 
     /**
      * Tests the specific method
@@ -72,7 +72,7 @@ class TaxTest extends TestCase
         $addressData,
         $verifyData
     ) {
-        $this->markTestSkipped('Source code is not testable. Need to be refactored before unit testing');
+        $this->markTestIncomplete('Source code is not testable. Need to be refactored before unit testing');
         $shippingAssignmentMock = $this->getMockForAbstractClass(ShippingAssignmentInterface::class);
         $totalsMock = $this->createMock(Total::class);
         $objectManager = new ObjectManager($this);

@@ -197,8 +197,7 @@ class Notifications implements ModifierInterface
     {
         $version = strtolower($this->getTargetVersion());
         $edition = strtolower($this->productMetadata->getEdition());
-        $locale = $this->session->getUser()->getInterfaceLocale();
-        $locale = $locale !== null ? strtolower($locale) : '';
+        $locale = strtolower($this->session->getUser()->getInterfaceLocale());
 
         $cacheKey = self::$cachePrefix . $version . "-" . $edition . "-" . $locale;
         $modalContent = $this->cacheStorage->load($cacheKey);

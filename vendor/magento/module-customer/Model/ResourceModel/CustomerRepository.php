@@ -204,7 +204,7 @@ class CustomerRepository implements CustomerRepositoryInterface
         $prevCustomerData = $prevCustomerDataArr = null;
         if ($customer->getId()) {
             $prevCustomerData = $this->getById($customer->getId());
-            $prevCustomerDataArr = $this->prepareCustomerData($prevCustomerData->__toArray());
+            $prevCustomerDataArr = $prevCustomerData->__toArray();
         }
         /** @var $customer \Magento\Customer\Model\Data\Customer */
         $customerArr = $customer->__toArray();
@@ -219,8 +219,6 @@ class CustomerRepository implements CustomerRepositoryInterface
         $customer->setAddresses($origAddresses);
         /** @var CustomerModel $customerModel */
         $customerModel = $this->customerFactory->create(['data' => $customerData]);
-        $this->populateWithOrigData($customerModel, $prevCustomerDataArr);
-
         //Model's actual ID field maybe different than "id" so "id" field from $customerData may be ignored.
         $customerModel->setId($customer->getId());
         $storeId = $customerModel->getStoreId();
@@ -295,21 +293,6 @@ class CustomerRepository implements CustomerRepositoryInterface
             ]
         );
         return $savedCustomer;
-    }
-
-    /**
-     * Populate customer model with previous data
-     *
-     * @param CustomerModel $customerModel
-     * @param ?array $prevCustomerDataArr
-     */
-    private function populateWithOrigData(CustomerModel $customerModel, ?array $prevCustomerDataArr)
-    {
-        if (!empty($prevCustomerDataArr)) {
-            foreach ($prevCustomerDataArr as $field => $value) {
-                $customerModel->setOrigData($field, $value);
-            }
-        }
     }
 
     /**
@@ -485,7 +468,6 @@ class CustomerRepository implements CustomerRepositoryInterface
      * Helper function that adds a FilterGroup to the collection.
      *
      * @deprecated 101.0.0
-     * @see no alternative
      * @param FilterGroup $filterGroup
      * @param Collection $collection
      * @return void
@@ -528,22 +510,5 @@ class CustomerRepository implements CustomerRepositoryInterface
         if (!isset($customerArr['group_id']) && $prevCustomerDataArr && isset($prevCustomerDataArr['group_id'])) {
             $customerModel->setGroupId($prevCustomerDataArr['group_id']);
         }
-    }
-
-    /**
-     * Prepare customer data.
-     *
-     * @param array $customerData
-     * @return array
-     */
-    private function prepareCustomerData(array $customerData): array
-    {
-        if (isset($customerData[CustomerInterface::CUSTOM_ATTRIBUTES])) {
-            foreach ($customerData[CustomerInterface::CUSTOM_ATTRIBUTES] as $attribute) {
-                $customerData[$attribute['attribute_code']] = $attribute['value'];
-            }
-            unset($customerData[CustomerInterface::CUSTOM_ATTRIBUTES]);
-        }
-        return $customerData;
     }
 }

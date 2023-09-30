@@ -12,8 +12,6 @@ use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Thrown when too many payment processing/saving requests have been initiated by a user.
- *
- * @api
  */
 class PaymentProcessingRateLimitExceededException extends LocalizedException
 {

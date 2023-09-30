@@ -9,8 +9,7 @@
  */
 define([
     'jquery',
-    'jquery-ui-modules/widget',
-    'vimeoWrapper'
+    'jquery-ui-modules/widget'
 ], function ($) {
     'use strict';
 
@@ -241,14 +240,6 @@ define([
 
                 return;
             }
-
-            // if script already loaded by other library
-            if (window.YT) {
-                videoRegister.register('youtube', true);
-                $(window).trigger('youtubeapiready');
-
-                return;
-            }
             videoRegister.register('youtube');
 
             element = document.createElement('script');
@@ -316,8 +307,7 @@ define([
         _create: function () {
             var timestamp,
                 additionalParams = '',
-                src,
-                id;
+                src;
 
             this._initialize();
             timestamp = new Date().getTime();
@@ -335,11 +325,10 @@ define([
                 this._code +
                 timestamp +
                 additionalParams;
-            id = 'vimeo' + this._code + timestamp;
             this.element.append(
                 $('<iframe></iframe>')
                     .attr('frameborder', 0)
-                    .attr('id', id)
+                    .attr('id', 'vimeo' + this._code + timestamp)
                     .attr('width', this._width)
                     .attr('height', this._height)
                     .attr('src', src)
@@ -349,11 +338,10 @@ define([
                     .attr('referrerPolicy', 'origin')
                     .attr('allow', 'autoplay')
             );
+            this._player = window.$f(this.element.children(':first')[0]);
 
-            /* eslint-disable no-undef */
-            this._player = new Vimeo.Player(this.element.children(':first')[0]);
-
-            this._player.ready().then(function () {
+            // Froogaloop throws error without a registered ready event
+            this._player.addEvent('ready', function (id) {
                 $('#' + id).closest('.fotorama__stage__frame').addClass('fotorama__product-video--loaded');
             });
         },
@@ -362,7 +350,7 @@ define([
          * Play command for Vimeo
          */
         play: function () {
-            this._player.play();
+            this._player.api('play');
             this._playing = true;
         },
 
@@ -370,7 +358,7 @@ define([
          * Pause command for Vimeo
          */
         pause: function () {
-            this._player.pause();
+            this._player.api('pause');
             this._playing = false;
         },
 
@@ -378,7 +366,7 @@ define([
          * Stop command for Vimeo
          */
         stop: function () {
-            this._player.unload();
+            this._player.api('unload');
             this._playing = false;
         },
 

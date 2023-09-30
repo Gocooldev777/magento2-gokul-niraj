@@ -6,10 +6,9 @@
  */
 namespace Magento\Backend\Controller\Adminhtml\Ajax;
 
-use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Backend\App\Action;
 
-class Translate extends \Magento\Backend\App\Action implements HttpPostActionInterface
+class Translate extends \Magento\Backend\App\Action
 {
     /**
      * @var \Magento\Framework\Translate\Inline\ParserInterface
@@ -24,7 +23,7 @@ class Translate extends \Magento\Backend\App\Action implements HttpPostActionInt
     /**
      * Authorization level of a basic admin session
      */
-    public const ADMIN_RESOURCE = 'Magento_Backend::content_translation';
+    const ADMIN_RESOURCE = 'Magento_Backend::content_translation';
 
     /**
      * @param Action\Context $context
@@ -53,7 +52,8 @@ class Translate extends \Magento\Backend\App\Action implements HttpPostActionInt
         /** @var \Magento\Framework\Controller\Result\Json $resultJson */
         $resultJson = $this->resultJsonFactory->create();
         try {
-            $response = $this->inlineParser->processAjaxPost($translate);
+            $this->inlineParser->processAjaxPost($translate);
+            $response = ['success' => 'true'];
         } catch (\Exception $e) {
             $response = ['error' => 'true', 'message' => $e->getMessage()];
         }

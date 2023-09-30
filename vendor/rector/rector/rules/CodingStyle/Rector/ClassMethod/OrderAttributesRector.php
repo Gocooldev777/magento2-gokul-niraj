@@ -16,24 +16,24 @@ use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Core\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Webmozart\Assert\Assert;
 /**
- * @see \Rector\Tests\CodingStyle\Rector\ClassMethod\OrderAttributesRector\SpecificOrder\SpecificOrderAttributesRectorTest
+ * @see \Rector\Tests\CodingStyle\Rector\ClassMethod\OrderAttributesRector\OrderAttributesRectorTest
  */
-final class OrderAttributesRector extends AbstractRector implements ConfigurableRectorInterface
+final class OrderAttributesRector extends \Rector\Core\Rector\AbstractRector implements \Rector\Core\Contract\Rector\ConfigurableRectorInterface
 {
     /**
-     * @api
+     * @deprecated
      * @var string
      */
-    public const ALPHABETICALLY = 'alphabetically';
+    public const ATTRIBUTES_ORDER = 'attributes_order';
     /**
-     * @var array<string, int>|array<string>
+     * @var array<string, int>
      */
-    private $configuration = [];
-    public function getRuleDefinition() : RuleDefinition
+    private $attributesOrderByName = [];
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Order attributes by desired names', [new ConfiguredCodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Order attributes by desired names', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample(<<<'CODE_SAMPLE'
 #[Second]
 #[First]
 class Someclass
@@ -47,43 +47,30 @@ class Someclass
 {
 }
 CODE_SAMPLE
-, ['First', 'Second']), new ConfiguredCodeSample(<<<'CODE_SAMPLE'
-#[BAttribute]
-#[AAttribute]
-class Someclass
-{
-}
-CODE_SAMPLE
-, <<<'CODE_SAMPLE'
-#[AAttribute]
-#[BAttribute]
-class Someclass
-{
-}
-CODE_SAMPLE
-, [self::ALPHABETICALLY])]);
+, ['First', 'Second'])]);
     }
     /**
      * @return array<class-string<Node>>
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class, Property::class, Param::class, ClassMethod::class, Function_::class, Closure::class, ArrowFunction::class];
+        return [\PhpParser\Node\Stmt\Class_::class, \PhpParser\Node\Stmt\Property::class, \PhpParser\Node\Param::class, \PhpParser\Node\Stmt\ClassMethod::class, \PhpParser\Node\Stmt\Function_::class, \PhpParser\Node\Expr\Closure::class, \PhpParser\Node\Expr\ArrowFunction::class];
     }
     /**
      * @param ClassMethod|Property|Function_|Closure|Param|Class_|ArrowFunction $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
         if ($node->attrGroups === []) {
             return null;
         }
         $originalAttrGroups = $node->attrGroups;
-        if ($this->isAlphabetically($this->configuration)) {
-            $currentAttrGroups = $this->sortAlphabetically($originalAttrGroups);
-        } else {
-            $currentAttrGroups = $this->sortBySpecificOrder($originalAttrGroups);
-        }
+        $currentAttrGroups = $originalAttrGroups;
+        \usort($currentAttrGroups, function (\PhpParser\Node\AttributeGroup $firstAttributeGroup, \PhpParser\Node\AttributeGroup $secondAttributeGroup) : int {
+            $firstAttributePosition = $this->resolveAttributeGroupPosition($firstAttributeGroup);
+            $secondAttributePosition = $this->resolveAttributeGroupPosition($secondAttributeGroup);
+            return $firstAttributePosition <=> $secondAttributePosition;
+        });
         if ($currentAttrGroups === $originalAttrGroups) {
             return null;
         }
@@ -93,48 +80,17 @@ CODE_SAMPLE
     /**
      * @param mixed[] $configuration
      */
-    public function configure(array $configuration = [self::ALPHABETICALLY]) : void
+    public function configure(array $configuration) : void
     {
-        Assert::allString($configuration);
-        Assert::minCount($configuration, 1);
-        $this->configuration = $this->isAlphabetically($configuration) ? $configuration : \array_flip($configuration);
+        $attributesOrder = $configuration[self::ATTRIBUTES_ORDER] ?? $configuration;
+        \RectorPrefix20211221\Webmozart\Assert\Assert::isArray($attributesOrder);
+        \RectorPrefix20211221\Webmozart\Assert\Assert::allString($attributesOrder);
+        $this->attributesOrderByName = \array_flip($attributesOrder);
     }
-    /**
-     * @param array<AttributeGroup> $originalAttrGroups
-     * @return array<AttributeGroup>
-     */
-    private function sortAlphabetically(array $originalAttrGroups) : array
-    {
-        \usort($originalAttrGroups, function (AttributeGroup $firstAttributeGroup, AttributeGroup $secondAttributeGroup) : int {
-            $currentNamespace = $this->getName($firstAttributeGroup->attrs[0]->name);
-            $nextNamespace = $this->getName($secondAttributeGroup->attrs[0]->name);
-            return \strcmp($currentNamespace, $nextNamespace);
-        });
-        return $originalAttrGroups;
-    }
-    /**
-     * @param array<AttributeGroup> $originalAttrGroups
-     * @return array<AttributeGroup>
-     */
-    private function sortBySpecificOrder(array $originalAttrGroups) : array
-    {
-        \usort($originalAttrGroups, function (AttributeGroup $firstAttributeGroup, AttributeGroup $secondAttributeGroup) : int {
-            $firstAttributePosition = $this->resolveAttributeGroupPosition($firstAttributeGroup);
-            $secondAttributePosition = $this->resolveAttributeGroupPosition($secondAttributeGroup);
-            return $firstAttributePosition <=> $secondAttributePosition;
-        });
-        return $originalAttrGroups;
-    }
-    private function resolveAttributeGroupPosition(AttributeGroup $attributeGroup) : int
+    private function resolveAttributeGroupPosition(\PhpParser\Node\AttributeGroup $attributeGroup) : int
     {
         $attrName = $this->getName($attributeGroup->attrs[0]->name);
-        return (int) ($this->configuration[$attrName] ?? \count($this->configuration));
-    }
-    /**
-     * @param array<string, int>|array<string> $configuration
-     */
-    private function isAlphabetically(array $configuration) : bool
-    {
-        return \count($configuration) === 1 && $configuration[0] === self::ALPHABETICALLY;
+        // 1000 makes the attribute last, as positioned attributes have a higher priority
+        return $this->attributesOrderByName[$attrName] ?? 1000;
     }
 }

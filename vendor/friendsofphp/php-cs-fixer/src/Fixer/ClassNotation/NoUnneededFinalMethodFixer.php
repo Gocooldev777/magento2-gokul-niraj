@@ -36,7 +36,7 @@ final class NoUnneededFinalMethodFixer extends AbstractFixer implements Configur
     public function getDefinition(): FixerDefinitionInterface
     {
         return new FixerDefinition(
-            'Removes `final` from methods where possible.',
+            'A `final` class must not have `final` methods and `private` methods must not be `final`.',
             [
                 new CodeSample(
                     '<?php
@@ -78,15 +78,7 @@ class Bar
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        if (!$tokens->isAllTokenKindsFound([T_FINAL, T_FUNCTION])) {
-            return false;
-        }
-
-        if (\defined('T_ENUM') && $tokens->isTokenKindFound(T_ENUM)) { // @TODO: drop condition when PHP 8.1+ is required
-            return true;
-        }
-
-        return $tokens->isTokenKindFound(T_CLASS);
+        return $tokens->isAllTokenKindsFound([T_CLASS, T_FINAL]);
     }
 
     public function isRisky(): bool
@@ -99,10 +91,10 @@ class Bar
      */
     protected function applyFix(\SplFileInfo $file, Tokens $tokens): void
     {
-        foreach ($this->getMethods($tokens) as $element) {
+        foreach ($this->getClassMethods($tokens) as $element) {
             $index = $element['method_final_index'];
 
-            if ($element['method_of_enum'] || $element['class_is_final']) {
+            if ($element['class_is_final']) {
                 $this->clearFinal($tokens, $index);
 
                 continue;
@@ -129,12 +121,11 @@ class Bar
         ]);
     }
 
-    private function getMethods(Tokens $tokens): \Generator
+    private function getClassMethods(Tokens $tokens): \Generator
     {
         $tokensAnalyzer = new TokensAnalyzer($tokens);
         $modifierKinds = [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_FINAL, T_ABSTRACT, T_STATIC];
 
-        $enums = [];
         $classesAreFinal = [];
         $elements = $tokensAnalyzer->getClassyElements();
 
@@ -153,10 +144,13 @@ class Bar
 
             $classIndex = $element['classIndex'];
 
-            if (!\array_key_exists($classIndex, $enums)) {
-                $enums[$classIndex] = \defined('T_ENUM') && $tokens[$classIndex]->isGivenKind(T_ENUM); // @TODO: drop condition when PHP 8.1+ is required
+            if (!\array_key_exists($classIndex, $classesAreFinal)) {
+                $prevToken = $tokens[$tokens->getPrevMeaningfulToken($classIndex)];
+                $classesAreFinal[$classIndex] = $prevToken->isGivenKind(T_FINAL);
             }
 
+            $element['class_is_final'] = $classesAreFinal[$classIndex];
+            $element['method_is_constructor'] = '__construct' === strtolower($tokens[$tokens->getNextMeaningfulToken($index)]->getContent());
             $element['method_final_index'] = null;
             $element['method_is_private'] = false;
 
@@ -171,23 +165,6 @@ class Bar
                     $element['method_final_index'] = $previous;
                 }
             } while ($tokens[$previous]->isGivenKind($modifierKinds));
-
-            if ($enums[$classIndex]) {
-                $element['method_of_enum'] = true;
-
-                yield $element;
-
-                continue;
-            }
-
-            if (!\array_key_exists($classIndex, $classesAreFinal)) {
-                $prevToken = $tokens[$tokens->getPrevMeaningfulToken($classIndex)];
-                $classesAreFinal[$classIndex] = $prevToken->isGivenKind(T_FINAL);
-            }
-
-            $element['method_of_enum'] = false;
-            $element['class_is_final'] = $classesAreFinal[$classIndex];
-            $element['method_is_constructor'] = '__construct' === strtolower($tokens[$tokens->getNextMeaningfulToken($index)]->getContent());
 
             yield $element;
         }

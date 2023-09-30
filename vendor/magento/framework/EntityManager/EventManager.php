@@ -8,6 +8,9 @@ namespace Magento\Framework\EntityManager;
 
 use Magento\Framework\Event\ManagerInterface;
 
+/**
+ * Class EventManager
+ */
 class EventManager
 {
     /**
@@ -33,12 +36,10 @@ class EventManager
      */
     private function resolveEntityPrefix($entityType)
     {
-        return $entityType !== null ? strtolower(str_replace("\\", "_", $entityType)) : '';
+        return strtolower(str_replace("\\", "_", $entityType));
     }
 
     /**
-     * Method to dispatch entity event.
-     *
      * @param string $entityType
      * @param string $eventSuffix
      * @param array $data
@@ -53,8 +54,6 @@ class EventManager
     }
 
     /**
-     * Method to dispatch.
-     *
      * @param string $eventName
      * @param array $data
      * @return void

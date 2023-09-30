@@ -38,12 +38,12 @@ final class NativeConstantInvocationFixer extends AbstractFixer implements Confi
     /**
      * @var array<string, true>
      */
-    private array $constantsToEscape = [];
+    private $constantsToEscape = [];
 
     /**
      * @var array<string, true>
      */
-    private array $caseInsensitiveConstantsToEscape = [];
+    private $caseInsensitiveConstantsToEscape = [];
 
     /**
      * {@inheritdoc}
@@ -161,10 +161,7 @@ namespace {
 
         $caseInsensitiveConstantsToEscape = array_diff(
             array_unique($caseInsensitiveConstantsToEscape),
-            array_map(
-                static fn (string $function): string => strtolower($function),
-                $uniqueConfiguredExclude,
-            ),
+            array_map(static function (string $function): string { return strtolower($function); }, $uniqueConfiguredExclude)
         );
 
         // Store the cache
@@ -191,7 +188,7 @@ namespace {
         // 'scope' is 'namespaced' here
         /** @var NamespaceAnalysis $namespace */
         foreach (array_reverse($namespaces) as $namespace) {
-            if ($namespace->isGlobalNamespace()) {
+            if ('' === $namespace->getFullName()) {
                 continue;
             }
 
@@ -209,7 +206,7 @@ namespace {
                 if (!\is_string($constantName) || '' === trim($constantName) || trim($constantName) !== $constantName) {
                     throw new InvalidOptionsException(sprintf(
                         'Each element must be a non-empty, trimmed string, got "%s" instead.',
-                        get_debug_type($constantName)
+                        \is_object($constantName) ? \get_class($constantName) : \gettype($constantName)
                     ));
                 }
             }

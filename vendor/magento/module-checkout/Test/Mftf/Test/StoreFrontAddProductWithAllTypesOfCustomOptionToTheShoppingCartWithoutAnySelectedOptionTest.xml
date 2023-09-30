@@ -36,7 +36,6 @@
         </actionGroup>
 
         <!--Click on Add To Cart button-->
-        <waitForElementClickable selector="{{StorefrontProductActionSection.addToCart}}" stepKey="waitForAddToCartButton"/>
         <click selector="{{StorefrontProductActionSection.addToCart}}" stepKey="addToCart"/>
         <waitForPageLoad stepKey="waitForPageToLoad"/>
 

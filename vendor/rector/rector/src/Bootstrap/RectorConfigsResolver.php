@@ -4,22 +4,22 @@ declare (strict_types=1);
 namespace Rector\Core\Bootstrap;
 
 use Rector\Core\ValueObject\Bootstrap\BootstrapConfigs;
-use RectorPrefix202304\Symfony\Component\Console\Input\ArgvInput;
-use RectorPrefix202304\Webmozart\Assert\Assert;
+use RectorPrefix20211221\Symfony\Component\Console\Input\ArgvInput;
+use RectorPrefix20211221\Symplify\SmartFileSystem\Exception\FileNotFoundException;
 final class RectorConfigsResolver
 {
-    public function provide() : BootstrapConfigs
+    public function provide() : \Rector\Core\ValueObject\Bootstrap\BootstrapConfigs
     {
-        $argvInput = new ArgvInput();
+        $argvInput = new \RectorPrefix20211221\Symfony\Component\Console\Input\ArgvInput();
         $mainConfigFile = $this->resolveFromInputWithFallback($argvInput, 'rector.php');
         $rectorRecipeConfigFile = $this->resolveRectorRecipeConfig($argvInput);
         $configFiles = [];
         if ($rectorRecipeConfigFile !== null) {
             $configFiles[] = $rectorRecipeConfigFile;
         }
-        return new BootstrapConfigs($mainConfigFile, $configFiles);
+        return new \Rector\Core\ValueObject\Bootstrap\BootstrapConfigs($mainConfigFile, $configFiles);
     }
-    private function resolveRectorRecipeConfig(ArgvInput $argvInput) : ?string
+    private function resolveRectorRecipeConfig(\RectorPrefix20211221\Symfony\Component\Console\Input\ArgvInput $argvInput) : ?string
     {
         if ($argvInput->getFirstArgument() !== 'generate') {
             return null;
@@ -31,16 +31,19 @@ final class RectorConfigsResolver
         }
         return $rectorRecipeFilePath;
     }
-    private function resolveFromInput(ArgvInput $argvInput) : ?string
+    private function resolveFromInput(\RectorPrefix20211221\Symfony\Component\Console\Input\ArgvInput $argvInput) : ?string
     {
         $configFile = $this->getOptionValue($argvInput, ['--config', '-c']);
         if ($configFile === null) {
             return null;
         }
-        Assert::fileExists($configFile);
+        if (!\file_exists($configFile)) {
+            $message = \sprintf('File "%s" was not found', $configFile);
+            throw new \RectorPrefix20211221\Symplify\SmartFileSystem\Exception\FileNotFoundException($message);
+        }
         return \realpath($configFile);
     }
-    private function resolveFromInputWithFallback(ArgvInput $argvInput, string $fallbackFile) : ?string
+    private function resolveFromInputWithFallback(\RectorPrefix20211221\Symfony\Component\Console\Input\ArgvInput $argvInput, string $fallbackFile) : ?string
     {
         $configFile = $this->resolveFromInput($argvInput);
         if ($configFile !== null) {
@@ -59,7 +62,7 @@ final class RectorConfigsResolver
     /**
      * @param string[] $optionNames
      */
-    private function getOptionValue(ArgvInput $argvInput, array $optionNames) : ?string
+    private function getOptionValue(\RectorPrefix20211221\Symfony\Component\Console\Input\ArgvInput $argvInput, array $optionNames) : ?string
     {
         foreach ($optionNames as $optionName) {
             if ($argvInput->hasParameterOption($optionName, \true)) {

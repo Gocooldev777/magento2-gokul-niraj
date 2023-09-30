@@ -5,11 +5,10 @@
  */
 namespace PayPal\Braintree\Test\Unit\Gateway\Http\Client;
 
-use Magento\Framework\DataObject;
-use Magento\Payment\Gateway\Http\TransferInterface;
-use Magento\Payment\Model\Method\Logger;
 use PayPal\Braintree\Gateway\Http\Client\TransactionSale;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
+use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Payment\Model\Method\Logger;
 use Psr\Log\LoggerInterface;
 
 class TransactionSaleTest extends \PHPUnit\Framework\TestCase
@@ -86,12 +85,12 @@ class TransactionSaleTest extends \PHPUnit\Framework\TestCase
      */
     public function testPlaceRequestSuccess()
     {
-        $this->markTestSkipped('Skip this test');
         $response = $this->getResponseObject();
         $this->adapter->expects($this->once())
             ->method('sale')
             ->with($this->getTransferData())
-            ->willReturn($response);
+            ->willReturn($response)
+        ;
 
         $this->loggerMock->expects($this->once())
             ->method('debug')
@@ -123,11 +122,11 @@ class TransactionSaleTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return DataObject
+     * @return \stdClass
      */
     private function getResponseObject()
     {
-        $obj = new DataObject();
+        $obj = new \stdClass;
         $obj->success = true;
 
         return $obj;

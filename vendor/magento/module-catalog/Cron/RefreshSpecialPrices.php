@@ -6,6 +6,7 @@
 namespace Magento\Catalog\Cron;
 
 use Magento\Catalog\Api\Data\CategoryInterface;
+use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
 
@@ -58,7 +59,6 @@ class RefreshSpecialPrices
      * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate
      * @param \Magento\Eav\Model\Config $eavConfig
      * @param \Magento\Catalog\Model\Indexer\Product\Price\Processor $processor
-     * @param MetadataPool $metadataPool
      */
     public function __construct(
         \Magento\Store\Model\StoreManagerInterface $storeManager,
@@ -66,8 +66,7 @@ class RefreshSpecialPrices
         \Magento\Framework\Stdlib\DateTime $dateTime,
         \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
         \Magento\Eav\Model\Config $eavConfig,
-        \Magento\Catalog\Model\Indexer\Product\Price\Processor $processor,
-        MetadataPool $metadataPool
+        \Magento\Catalog\Model\Indexer\Product\Price\Processor $processor
     ) {
         $this->_storeManager = $storeManager;
         $this->_resource = $resource;
@@ -75,7 +74,6 @@ class RefreshSpecialPrices
         $this->_localeDate = $localeDate;
         $this->_eavConfig = $eavConfig;
         $this->_processor = $processor;
-        $this->metadataPool = $metadataPool;
     }
 
     /**
@@ -141,8 +139,8 @@ class RefreshSpecialPrices
         $attribute = $this->_eavConfig->getAttribute(\Magento\Catalog\Model\Product::ENTITY, $attrCode);
         $attributeId = $attribute->getAttributeId();
 
-        $linkField = $this->metadataPool->getMetadata(CategoryInterface::class)->getLinkField();
-        $identifierField = $this->metadataPool->getMetadata(CategoryInterface::class)->getIdentifierField();
+        $linkField = $this->getMetadataPool()->getMetadata(CategoryInterface::class)->getLinkField();
+        $identifierField = $this->getMetadataPool()->getMetadata(CategoryInterface::class)->getIdentifierField();
 
         $connection = $this->_getConnection();
 
@@ -166,10 +164,24 @@ class RefreshSpecialPrices
             $attrConditionValue
         );
 
-        $selectData = $connection->fetchCol($select);
+        $selectData = $connection->fetchCol($select, $identifierField);
 
         if (!empty($selectData)) {
             $this->_processor->getIndexer()->reindexList($selectData);
         }
+    }
+
+    /**
+     * Get MetadataPool instance
+     * @return MetadataPool
+     *
+     * @deprecated 101.0.0
+     */
+    private function getMetadataPool()
+    {
+        if (null === $this->metadataPool) {
+            $this->metadataPool = ObjectManager::getInstance()->get(MetadataPool::class);
+        }
+        return $this->metadataPool;
     }
 }

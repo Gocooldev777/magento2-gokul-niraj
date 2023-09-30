@@ -18,13 +18,10 @@
             <group value="checkout"/>
         </annotations>
         <before>
-            <magentoCLI command="config:set {{EnableFlatRateConfigData.path}} {{EnableFlatRateConfigData.value}}" stepKey="enableFlatRate"/>
             <!-- Create Simple Product -->
             <createData entity="SimpleProduct2" stepKey="createSimpleProduct">
                 <field key="price">160</field>
             </createData>
-            <!-- Flat Rate Shipping method default setup -->
-            <createData entity="FlatRateShippingMethodDefault" stepKey="setDefaultFlatRateShippingMethod"/>
         </before>
         <after>
             <!-- Delete created product -->
@@ -49,9 +46,8 @@
 
         <waitForElementVisible selector="{{CheckoutPaymentSection.billingAddressNotSameCheckbox}}" stepKey="waitForElementToBeVisible"/>
         <uncheckOption selector="{{CheckoutPaymentSection.billingAddressNotSameCheckbox}}" stepKey="uncheckSameBillingAndShippingAddress"/>
-        <waitForPageLoad stepKey="waitForAddressUnchecked"/>
         <conditionalClick selector="{{CheckoutShippingSection.editActiveAddressButton}}" dependentSelector="{{CheckoutShippingSection.editActiveAddressButton}}" visible="true" stepKey="clickEditButton"/>
-        <waitForPageLoad stepKey="waitForLoadingMask"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForLoadingMask"/>
 
         <!-- Fill in New Billing Address -->
         <actionGroup ref="StorefrontFillBillingAddressActionGroup" stepKey="fillBillingAddress">
@@ -72,8 +68,8 @@
         <actionGroup ref="StorefrontCheckoutClickNextButtonActionGroup" stepKey="clickOnNextButton"/>
 
         <!-- Place order -->
-        <comment userInput="BIC workaround" stepKey="waitForPaymentSectionLoaded"/>
-        <actionGroup ref="ClickPlaceOrderActionGroup" stepKey="clickPlaceOrderButton"/>
+        <waitForElement selector="{{CheckoutPaymentSection.paymentSectionTitle}}" stepKey="waitForPaymentSectionLoaded"/>
+        <click selector="{{CheckoutPaymentSection.placeOrder}}" stepKey="clickPlaceOrderButton"/>
         <seeElement selector="{{CheckoutSuccessMainSection.success}}" stepKey="orderIsSuccessfullyPlaced"/>
     </test>
 </tests>

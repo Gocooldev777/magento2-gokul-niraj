@@ -109,7 +109,6 @@ class OperatorBracketSniff implements Sniff
                 T_OPEN_SHORT_ARRAY    => true,
                 T_CASE                => true,
                 T_EXIT                => true,
-                T_MATCH_ARROW         => true,
             ];
 
             if (isset($invalidTokens[$tokens[$previousToken]['code']]) === true) {
@@ -142,7 +141,6 @@ class OperatorBracketSniff implements Sniff
             T_THIS,
             T_SELF,
             T_STATIC,
-            T_PARENT,
             T_OBJECT_OPERATOR,
             T_NULLSAFE_OBJECT_OPERATOR,
             T_DOUBLE_COLON,

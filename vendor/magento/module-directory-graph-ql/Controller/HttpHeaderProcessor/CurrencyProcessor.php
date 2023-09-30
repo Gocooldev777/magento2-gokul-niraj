@@ -30,7 +30,6 @@ class CurrencyProcessor implements HttpHeaderProcessorInterface
 
     /**
      * @var SessionManagerInterface
-     * @deprecated
      */
     private $session;
 
@@ -66,21 +65,37 @@ class CurrencyProcessor implements HttpHeaderProcessorInterface
     public function processHeaderValue(string $headerValue) : void
     {
         try {
-            $currentStore = $this->storeManager->getStore();
-            $defaultCode = $currentStore->getDefaultCurrency()->getCode();
-            if (empty($headerValue)) {
-                $this->httpContext->setValue(
-                    HttpContext::CONTEXT_CURRENCY,
-                    $currentStore->getCurrentCurrency()->getCode(),
-                    $defaultCode
-                );
-            } else {
-                $headerCurrency = strtoupper(trim($headerValue));
-                if (!in_array($headerCurrency, $currentStore->getAvailableCurrencyCodes(true))) {
+            if (!empty($headerValue)) {
+                $headerCurrency = strtoupper(ltrim(rtrim($headerValue)));
+                /** @var \Magento\Store\Model\Store $currentStore */
+                $currentStore = $this->storeManager->getStore();
+                if (in_array($headerCurrency, $currentStore->getAvailableCurrencyCodes(true))) {
+                    $currentStore->setCurrentCurrencyCode($headerCurrency);
+                } else {
+                    /** @var \Magento\Store\Model\Store $store */
+                    $store = $this->storeManager->getStore() ?? $this->storeManager->getDefaultStoreView();
                     //skip store not found exception as it will be handled in graphql validation
-                    $this->logger->warning(__('Currency not allowed for store %1', [$currentStore->getCode()]));
+                    $this->logger->warning(__('Currency not allowed for store %1', [$store->getCode()]));
+                    $this->httpContext->setValue(
+                        HttpContext::CONTEXT_CURRENCY,
+                        $headerCurrency,
+                        $store->getDefaultCurrency()->getCode()
+                    );
                 }
-                $this->httpContext->setValue(HttpContext::CONTEXT_CURRENCY, $headerCurrency, $defaultCode);
+            } else {
+                if ($this->session->getCurrencyCode()) {
+                    /** @var \Magento\Store\Model\Store $currentStore */
+                    $currentStore = $this->storeManager->getStore() ?? $this->storeManager->getDefaultStoreView();
+                    $currentStore->setCurrentCurrencyCode($this->session->getCurrencyCode());
+                } else {
+                    /** @var \Magento\Store\Model\Store $store */
+                    $store = $this->storeManager->getStore() ?? $this->storeManager->getDefaultStoreView();
+                    $this->httpContext->setValue(
+                        HttpContext::CONTEXT_CURRENCY,
+                        $store->getCurrentCurrency()->getCode(),
+                        $store->getDefaultCurrency()->getCode()
+                    );
+                }
             }
         } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
             //skip store not found exception as it will be handled in graphql validation

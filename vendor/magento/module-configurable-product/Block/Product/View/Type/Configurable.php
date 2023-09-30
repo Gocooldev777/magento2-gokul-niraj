@@ -268,7 +268,7 @@ class Configurable extends \Magento\Catalog\Block\Product\View\AbstractView
                         'caption' => $image->getLabel(),
                         'position' => $image->getPosition(),
                         'isMain' => $image->getFile() == $product->getImage(),
-                        'type' =>  $image->getMediaType() ? str_replace('external-', '', $image->getMediaType()) : '',
+                        'type' => str_replace('external-', '', $image->getMediaType()),
                         'videoUrl' => $image->getVideoUrl(),
                     ];
             }
@@ -332,23 +332,18 @@ class Configurable extends \Magento\Catalog\Block\Product\View\AbstractView
         $tierPrices = [];
         $tierPriceModel = $product->getPriceInfo()->getPrice('tier_price');
         foreach ($tierPriceModel->getTierPriceList() as $tierPrice) {
-            $price = $this->_taxData->displayPriceExcludingTax() ?
-                $tierPrice['price']->getBaseAmount() : $tierPrice['price']->getValue();
-
             $tierPriceData = [
                 'qty' => $this->localeFormat->getNumber($tierPrice['price_qty']),
-                'price' => $this->localeFormat->getNumber($price),
+                'price' => $this->localeFormat->getNumber($tierPrice['price']->getValue()),
                 'percentage' => $this->localeFormat->getNumber(
                     $tierPriceModel->getSavePercent($tierPrice['price'])
                 ),
             ];
 
-            if ($this->_taxData->displayBothPrices()) {
-                $tierPriceData['basePrice'] = $this->localeFormat->getNumber(
-                    $tierPrice['price']->getBaseAmount()
-                );
+            if (isset($tierPrice['excl_tax_price'])) {
+                $excludingTax = $tierPrice['excl_tax_price'];
+                $tierPriceData['excl_tax_price'] = $this->localeFormat->getNumber($excludingTax->getBaseAmount());
             }
-
             $tierPrices[] = $tierPriceData;
         }
 

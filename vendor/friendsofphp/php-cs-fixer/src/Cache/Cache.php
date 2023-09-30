@@ -21,12 +21,15 @@ namespace PhpCsFixer\Cache;
  */
 final class Cache implements CacheInterface
 {
-    private SignatureInterface $signature;
+    /**
+     * @var SignatureInterface
+     */
+    private $signature;
 
     /**
-     * @var array<string, string>
+     * @var array<string, int>
      */
-    private array $hashes = [];
+    private $hashes = [];
 
     public function __construct(SignatureInterface $signature)
     {
@@ -43,7 +46,7 @@ final class Cache implements CacheInterface
         return \array_key_exists($file, $this->hashes);
     }
 
-    public function get(string $file): ?string
+    public function get(string $file): ?int
     {
         if (!$this->has($file)) {
             return null;
@@ -52,7 +55,7 @@ final class Cache implements CacheInterface
         return $this->hashes[$file];
     }
 
-    public function set(string $file, string $hash): void
+    public function set(string $file, int $hash): void
     {
         $this->hashes[$file] = $hash;
     }
@@ -85,6 +88,8 @@ final class Cache implements CacheInterface
 
     /**
      * @throws \InvalidArgumentException
+     *
+     * @return Cache
      */
     public static function fromJson(string $json): self
     {
@@ -126,11 +131,7 @@ final class Cache implements CacheInterface
 
         $cache = new self($signature);
 
-        $cache->hashes = array_map(function ($v): string {
-            // before v3.11.1 the hashes were crc32 encoded and saved as integers
-            // @TODO: remove the to string cast/array_map in v4.0
-            return \is_int($v) ? (string) $v : $v;
-        }, $data['hashes']);
+        $cache->hashes = $data['hashes'];
 
         return $cache;
     }

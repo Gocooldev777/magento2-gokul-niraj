@@ -7,13 +7,7 @@ declare(strict_types=1);
 
 namespace Magento\Directory\Model\Currency\Import;
 
-use Exception;
-use Laminas\Http\Request;
-use Magento\Directory\Model\CurrencyFactory;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\HTTP\LaminasClientFactory as HttpClientFactory;
 use Magento\Store\Model\ScopeInterface;
-use Magento\Framework\HTTP\LaminasClient;
 
 /**
  * Currency rate import model (From http://fixer.io/)
@@ -23,18 +17,20 @@ class FixerIo extends AbstractImport
     /**
      * @var string
      */
-    public const CURRENCY_CONVERTER_URL = 'http://data.fixer.io/api/latest?access_key={{ACCESS_KEY}}'
+    const CURRENCY_CONVERTER_URL = 'http://data.fixer.io/api/latest?access_key={{ACCESS_KEY}}'
         . '&base={{CURRENCY_FROM}}&symbols={{CURRENCY_TO}}';
 
     /**
-     * @var HttpClientFactory
+     * Http Client Factory
+     *
+     * @var \Magento\Framework\HTTP\ZendClientFactory
      */
     protected $httpClientFactory;
 
     /**
      * Core scope config
      *
-     * @var ScopeConfigInterface
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     private $scopeConfig;
 
@@ -46,14 +42,14 @@ class FixerIo extends AbstractImport
     /**
      * Initialize dependencies
      *
-     * @param CurrencyFactory $currencyFactory
-     * @param ScopeConfigInterface $scopeConfig
-     * @param HttpClientFactory $httpClientFactory
+     * @param \Magento\Directory\Model\CurrencyFactory $currencyFactory
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory
      */
     public function __construct(
-        CurrencyFactory $currencyFactory,
-        ScopeConfigInterface $scopeConfig,
-        HttpClientFactory $httpClientFactory
+        \Magento\Directory\Model\CurrencyFactory $currencyFactory,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Framework\HTTP\ZendClientFactory $httpClientFactory
     ) {
         parent::__construct($currencyFactory);
         $this->scopeConfig = $scopeConfig;
@@ -150,25 +146,25 @@ class FixerIo extends AbstractImport
      */
     private function getServiceResponse(string $url, int $retry = 0): array
     {
-        /** @var LaminasClient $httpClient */
+        /** @var \Magento\Framework\HTTP\ZendClient $httpClient */
         $httpClient = $this->httpClientFactory->create();
         $response = [];
 
         try {
-            $httpClient->setUri($url);
-            $httpClient->setOptions(
-                [
-                    'timeout' => $this->scopeConfig->getValue(
-                        'currency/fixerio/timeout',
-                        ScopeInterface::SCOPE_STORE
-                    ),
-                ]
-            );
-            $httpClient->setMethod(Request::METHOD_GET);
-            $jsonResponse = $httpClient->send()->getBody();
+            $jsonResponse = $httpClient->setUri($url)
+                ->setConfig(
+                    [
+                        'timeout' => $this->scopeConfig->getValue(
+                            'currency/fixerio/timeout',
+                            ScopeInterface::SCOPE_STORE
+                        ),
+                    ]
+                )
+                ->request('GET')
+                ->getBody();
 
             $response = json_decode($jsonResponse, true);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             if ($retry == 0) {
                 $response = $this->getServiceResponse($url, 1);
             }

@@ -10,11 +10,11 @@ use PHPStan\Type\Type;
 use Rector\NodeTypeResolver\PHPStan\Type\TypeFactory;
 use Rector\StaticTypeMapper\Contract\PhpParser\PhpParserNodeMapperInterface;
 use Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper;
-use RectorPrefix202304\Symfony\Contracts\Service\Attribute\Required;
+use RectorPrefix20211221\Symfony\Contracts\Service\Attribute\Required;
 /**
  * @implements PhpParserNodeMapperInterface<NullableType>
  */
-final class NullableTypeNodeMapper implements PhpParserNodeMapperInterface
+final class NullableTypeNodeMapper implements \Rector\StaticTypeMapper\Contract\PhpParser\PhpParserNodeMapperInterface
 {
     /**
      * @var \Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper
@@ -25,27 +25,29 @@ final class NullableTypeNodeMapper implements PhpParserNodeMapperInterface
      * @var \Rector\NodeTypeResolver\PHPStan\Type\TypeFactory
      */
     private $typeFactory;
-    public function __construct(TypeFactory $typeFactory)
+    public function __construct(\Rector\NodeTypeResolver\PHPStan\Type\TypeFactory $typeFactory)
     {
         $this->typeFactory = $typeFactory;
     }
     /**
      * @required
      */
-    public function autowire(PhpParserNodeMapper $phpParserNodeMapper) : void
+    public function autowire(\Rector\StaticTypeMapper\Mapper\PhpParserNodeMapper $phpParserNodeMapper) : void
     {
         $this->phpParserNodeMapper = $phpParserNodeMapper;
     }
     public function getNodeType() : string
     {
-        return NullableType::class;
+        return \PhpParser\Node\NullableType::class;
     }
     /**
      * @param NullableType $node
      */
-    public function mapToPHPStan(Node $node) : Type
+    public function mapToPHPStan(\PhpParser\Node $node) : \PHPStan\Type\Type
     {
-        $types = [$this->phpParserNodeMapper->mapToPHPStanType($node->type), new NullType()];
+        $types = [];
+        $types[] = $this->phpParserNodeMapper->mapToPHPStanType($node->type);
+        $types[] = new \PHPStan\Type\NullType();
         return $this->typeFactory->createMixedPassedOrUnionType($types);
     }
 }

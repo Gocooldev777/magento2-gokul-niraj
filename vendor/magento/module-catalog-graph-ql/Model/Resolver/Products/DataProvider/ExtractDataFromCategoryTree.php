@@ -7,47 +7,140 @@ declare(strict_types=1);
 
 namespace Magento\CatalogGraphQl\Model\Resolver\Products\DataProvider;
 
-use Magento\Catalog\Model\Category;
-use Magento\Catalog\Model\ResourceModel\Category\Collection;
-use Magento\CatalogGraphQl\Model\Resolver\Products\DataProvider\CategoryTree\Wrapper\NodeWrapperFactory;
+use Magento\CatalogGraphQl\Model\Category\Hydrator;
+use Magento\Catalog\Api\Data\CategoryInterface;
 
 /**
- * Data extractor for category tree processing in GraphQL resolvers.
+ * Extract data from category tree
  */
 class ExtractDataFromCategoryTree
 {
     /**
-     * @var NodeWrapperFactory
+     * @var Hydrator
      */
-    private $nodeWrapperFactory;
+    private $categoryHydrator;
 
     /**
-     * @param NodeWrapperFactory $nodeWrapperFactory
+     * @var CategoryInterface
      */
-    public function __construct(NodeWrapperFactory $nodeWrapperFactory)
-    {
-        $this->nodeWrapperFactory = $nodeWrapperFactory;
+    private $iteratingCategory;
+
+    /**
+     * @var int
+     */
+    private $startCategoryFetchLevel = 1;
+
+    /**
+     * @param Hydrator $categoryHydrator
+     */
+    public function __construct(
+        Hydrator $categoryHydrator
+    ) {
+        $this->categoryHydrator = $categoryHydrator;
     }
 
     /**
-     * Build result tree from collection
+     * Extract data from category tree
      *
-     * @param Collection $collection
-     * @param array $topLevelCategoryIds
+     * @param \Iterator $iterator
      * @return array
      */
-    public function buildTree(Collection $collection, array $topLevelCategoryIds) : array
+    public function execute(\Iterator $iterator): array
     {
-        $wrapper = $this->nodeWrapperFactory->create();
-        /** @var Category $item */
-        foreach ($collection->getItems() as $item) {
-            $wrapper->wrap($item);
-        }
         $tree = [];
-        foreach ($topLevelCategoryIds as $topLevelCategory) {
-            $tree[] = $wrapper->getNodeById($topLevelCategory)->renderArray();
+        /** @var CategoryInterface $rootCategory */
+        $rootCategory = $iterator->current();
+        while ($iterator->valid()) {
+            /** @var CategoryInterface $currentCategory */
+            $currentCategory = $iterator->current();
+            $iterator->next();
+            if ($this->areParentsActive($currentCategory, $rootCategory, (array)$iterator)) {
+                $pathElements = explode("/", $currentCategory->getPath());
+                if (empty($tree)) {
+                    $this->startCategoryFetchLevel = count($pathElements) - 1;
+                }
+                $this->iteratingCategory = $currentCategory;
+                $currentLevelTree = $this->explodePathToArray($pathElements, $this->startCategoryFetchLevel);
+                if (empty($tree)) {
+                    $tree = $currentLevelTree;
+                }
+                $tree = $this->mergeCategoriesTrees($tree, $currentLevelTree);
+            }
         }
+
         return $this->sortTree($tree);
+    }
+
+    /**
+     * Test that all parents of the current category are active.
+     *
+     * Assumes that $categoriesArray are key-pair values and key is the ID of the category and
+     * all categories in this list are queried as active.
+     *
+     * @param CategoryInterface $currentCategory
+     * @param CategoryInterface $rootCategory
+     * @param array $categoriesArray
+     * @return bool
+     */
+    private function areParentsActive(
+        CategoryInterface $currentCategory,
+        CategoryInterface $rootCategory,
+        array $categoriesArray
+    ): bool {
+        if ($currentCategory === $rootCategory) {
+            return true;
+        } elseif (array_key_exists($currentCategory->getParentId(), $categoriesArray)) {
+            return $this->areParentsActive(
+                $categoriesArray[$currentCategory->getParentId()],
+                $rootCategory,
+                $categoriesArray
+            );
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Merge together complex categories trees
+     *
+     * @param array $tree1
+     * @param array $tree2
+     * @return array
+     */
+    private function mergeCategoriesTrees(array &$tree1, array &$tree2): array
+    {
+        $mergedTree = $tree1;
+        foreach ($tree2 as $currentKey => &$value) {
+            if (is_array($value) && isset($mergedTree[$currentKey]) && is_array($mergedTree[$currentKey])) {
+                $mergedTree[$currentKey] = $this->mergeCategoriesTrees($mergedTree[$currentKey], $value);
+            } else {
+                $mergedTree[$currentKey] = $value;
+            }
+        }
+        return $mergedTree;
+    }
+
+    /**
+     * Recursive method to generate tree for one category path
+     *
+     * @param array $pathElements
+     * @param int $index
+     * @return array
+     */
+    private function explodePathToArray(array $pathElements, int $index): array
+    {
+        $tree = [];
+        $tree[$pathElements[$index]]['id'] = $pathElements[$index];
+        if ($index === count($pathElements) - 1) {
+            $tree[$pathElements[$index]] = $this->categoryHydrator->hydrateCategory($this->iteratingCategory);
+            $tree[$pathElements[$index]]['model'] = $this->iteratingCategory;
+        }
+        $currentIndex = $index;
+        $index++;
+        if (isset($pathElements[$index])) {
+            $tree[$pathElements[$currentIndex]]['children'] = $this->explodePathToArray($pathElements, $index);
+        }
+        return $tree;
     }
 
     /**
@@ -56,10 +149,10 @@ class ExtractDataFromCategoryTree
      * @param array $tree
      * @return array
      */
-    private function sortTree(array &$tree): array
+    private function sortTree(array $tree): array
     {
         foreach ($tree as &$node) {
-            if (!empty($node['children'])) {
+            if ($node['children']) {
                 uasort($node['children'], function ($element1, $element2) {
                     return ($element1['position'] <=> $element2['position']);
                 });

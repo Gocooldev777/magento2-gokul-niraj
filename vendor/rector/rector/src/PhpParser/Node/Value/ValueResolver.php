@@ -5,15 +5,13 @@ namespace Rector\Core\PhpParser\Node\Value;
 
 use PhpParser\ConstExprEvaluationException;
 use PhpParser\ConstExprEvaluator;
+use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
-use PhpParser\Node\Name;
-use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar\MagicConst\Dir;
 use PhpParser\Node\Scalar\MagicConst\File;
-use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\Constant\ConstantArrayType;
@@ -28,7 +26,6 @@ use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 /**
  * @see \Rector\Core\Tests\PhpParser\Node\Value\ValueResolverTest
- * @todo make use of constant type of $scope->getType()
  */
 final class ValueResolver
 {
@@ -66,7 +63,7 @@ final class ValueResolver
      * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
-    public function __construct(NodeNameResolver $nodeNameResolver, NodeTypeResolver $nodeTypeResolver, ConstFetchAnalyzer $constFetchAnalyzer, ReflectionProvider $reflectionProvider, CurrentFileProvider $currentFileProvider, BetterNodeFinder $betterNodeFinder)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver, \Rector\Core\NodeAnalyzer\ConstFetchAnalyzer $constFetchAnalyzer, \PHPStan\Reflection\ReflectionProvider $reflectionProvider, \Rector\Core\Provider\CurrentFileProvider $currentFileProvider, \Rector\Core\PhpParser\Node\BetterNodeFinder $betterNodeFinder)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->nodeTypeResolver = $nodeTypeResolver;
@@ -78,24 +75,32 @@ final class ValueResolver
     /**
      * @param mixed $value
      */
-    public function isValue(Expr $expr, $value) : bool
+    public function isValue(\PhpParser\Node\Expr $expr, $value) : bool
     {
         return $this->getValue($expr) === $value;
     }
-    /**
-     * @return mixed
-     */
-    public function getValue(Expr $expr, bool $resolvedClassReference = \false)
+    public function getStringValue(\PhpParser\Node\Expr $expr) : string
     {
-        if ($expr instanceof Concat) {
+        $resolvedValue = $this->getValue($expr);
+        if (!\is_string($resolvedValue)) {
+            throw new \Rector\Core\Exception\ShouldNotHappenException();
+        }
+        return $resolvedValue;
+    }
+    /**
+     * @return mixed|null
+     */
+    public function getValue(\PhpParser\Node\Expr $expr, bool $resolvedClassReference = \false)
+    {
+        if ($expr instanceof \PhpParser\Node\Expr\BinaryOp\Concat) {
             return $this->processConcat($expr, $resolvedClassReference);
         }
-        if ($expr instanceof ClassConstFetch && $resolvedClassReference) {
+        if ($expr instanceof \PhpParser\Node\Expr\ClassConstFetch && $resolvedClassReference) {
             $class = $this->nodeNameResolver->getName($expr->class);
-            if (\in_array($class, [ObjectReference::SELF, ObjectReference::STATIC], \true)) {
+            if (\in_array($class, [\Rector\Core\Enum\ObjectReference::SELF()->getValue(), \Rector\Core\Enum\ObjectReference::STATIC()->getValue()], \true)) {
                 // @todo scope is needed
-                $classLike = $this->betterNodeFinder->findParentType($expr, ClassLike::class);
-                if ($classLike instanceof ClassLike) {
+                $classLike = $this->betterNodeFinder->findParentType($expr, \PhpParser\Node\Stmt\ClassLike::class);
+                if ($classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
                     return (string) $this->nodeNameResolver->getName($classLike);
                 }
             }
@@ -103,27 +108,31 @@ final class ValueResolver
                 return $class;
             }
         }
-        $value = $this->resolveExprValueForConst($expr);
+        try {
+            $constExprEvaluator = $this->getConstExprEvaluator();
+            $value = $constExprEvaluator->evaluateDirectly($expr);
+        } catch (\PhpParser\ConstExprEvaluationException $exception) {
+            $value = null;
+        }
         if ($value !== null) {
             return $value;
         }
-        if ($expr instanceof ConstFetch) {
+        if ($expr instanceof \PhpParser\Node\Expr\ConstFetch) {
             return $this->nodeNameResolver->getName($expr);
         }
         $nodeStaticType = $this->nodeTypeResolver->getType($expr);
-        if ($nodeStaticType instanceof ConstantArrayType) {
+        if ($nodeStaticType instanceof \PHPStan\Type\Constant\ConstantArrayType) {
             return $this->extractConstantArrayTypeValue($nodeStaticType);
         }
-        if ($nodeStaticType instanceof ConstantScalarType) {
+        if ($nodeStaticType instanceof \PHPStan\Type\ConstantScalarType) {
             return $nodeStaticType->getValue();
         }
         return null;
     }
     /**
-     * @api symfony
      * @param mixed[] $expectedValues
      */
-    public function isValues(Expr $expr, array $expectedValues) : bool
+    public function isValues(\PhpParser\Node\Expr $expr, array $expectedValues) : bool
     {
         foreach ($expectedValues as $expectedValue) {
             if ($this->isValue($expr, $expectedValue)) {
@@ -132,21 +141,27 @@ final class ValueResolver
         }
         return \false;
     }
-    public function isFalse(Expr $expr) : bool
+    public function isFalse(\PhpParser\Node $node) : bool
     {
-        return $this->constFetchAnalyzer->isFalse($expr);
+        return $this->constFetchAnalyzer->isFalse($node);
     }
-    public function isTrueOrFalse(Expr $expr) : bool
+    public function isTrueOrFalse(\PhpParser\Node $node) : bool
     {
-        return $this->constFetchAnalyzer->isTrueOrFalse($expr);
+        return $this->constFetchAnalyzer->isTrueOrFalse($node);
     }
-    public function isTrue(Expr $expr) : bool
+    public function isTrue(\PhpParser\Node $node) : bool
     {
-        return $this->constFetchAnalyzer->isTrue($expr);
+        return $this->constFetchAnalyzer->isTrue($node);
     }
-    public function isNull(Expr $expr) : bool
+    public function isNull(\PhpParser\Node $node) : bool
     {
-        return $this->constFetchAnalyzer->isNull($expr);
+        return $this->constFetchAnalyzer->isNull($node);
+    }
+    public function isValueEqual(\PhpParser\Node\Expr $firstExpr, \PhpParser\Node\Expr $secondExpr) : bool
+    {
+        $firstValue = $this->getValue($firstExpr);
+        $secondValue = $this->getValue($secondExpr);
+        return $firstValue === $secondValue;
     }
     /**
      * @param Expr[]|null[] $nodes
@@ -155,7 +170,7 @@ final class ValueResolver
     public function areValuesEqual(array $nodes, array $expectedValues) : bool
     {
         foreach ($nodes as $i => $node) {
-            if (!$node instanceof Expr) {
+            if ($node === null) {
                 return \false;
             }
             if (!$this->isValue($node, $expectedValues[$i])) {
@@ -164,48 +179,36 @@ final class ValueResolver
         }
         return \true;
     }
-    /**
-     * @return mixed
-     */
-    private function resolveExprValueForConst(Expr $expr)
-    {
-        try {
-            $constExprEvaluator = $this->getConstExprEvaluator();
-            return $constExprEvaluator->evaluateDirectly($expr);
-        } catch (ConstExprEvaluationException $exception) {
-        }
-        return null;
-    }
-    private function processConcat(Concat $concat, bool $resolvedClassReference) : string
+    private function processConcat(\PhpParser\Node\Expr\BinaryOp\Concat $concat, bool $resolvedClassReference) : string
     {
         return $this->getValue($concat->left, $resolvedClassReference) . $this->getValue($concat->right, $resolvedClassReference);
     }
-    private function getConstExprEvaluator() : ConstExprEvaluator
+    private function getConstExprEvaluator() : \PhpParser\ConstExprEvaluator
     {
-        if ($this->constExprEvaluator instanceof ConstExprEvaluator) {
+        if ($this->constExprEvaluator !== null) {
             return $this->constExprEvaluator;
         }
-        $this->constExprEvaluator = new ConstExprEvaluator(function (Expr $expr) {
-            if ($expr instanceof Dir) {
+        $this->constExprEvaluator = new \PhpParser\ConstExprEvaluator(function (\PhpParser\Node\Expr $expr) {
+            if ($expr instanceof \PhpParser\Node\Scalar\MagicConst\Dir) {
                 // __DIR__
                 return $this->resolveDirConstant();
             }
-            if ($expr instanceof File) {
+            if ($expr instanceof \PhpParser\Node\Scalar\MagicConst\File) {
                 // __FILE__
                 return $this->resolveFileConstant($expr);
             }
             // resolve "SomeClass::SOME_CONST"
-            if ($expr instanceof ClassConstFetch && $expr->class instanceof Name) {
+            if ($expr instanceof \PhpParser\Node\Expr\ClassConstFetch) {
                 return $this->resolveClassConstFetch($expr);
             }
-            throw new ConstExprEvaluationException(\sprintf('Expression of type "%s" cannot be evaluated', $expr->getType()));
+            throw new \PhpParser\ConstExprEvaluationException(\sprintf('Expression of type "%s" cannot be evaluated', $expr->getType()));
         });
         return $this->constExprEvaluator;
     }
     /**
-     * @return mixed[]|null
+     * @return mixed[]
      */
-    private function extractConstantArrayTypeValue(ConstantArrayType $constantArrayType) : ?array
+    private function extractConstantArrayTypeValue(\PHPStan\Type\Constant\ConstantArrayType $constantArrayType) : ?array
     {
         $keys = [];
         foreach ($constantArrayType->getKeyTypes() as $i => $keyType) {
@@ -214,11 +217,11 @@ final class ValueResolver
         }
         $values = [];
         foreach ($constantArrayType->getValueTypes() as $i => $valueType) {
-            if ($valueType instanceof ConstantArrayType) {
+            if ($valueType instanceof \PHPStan\Type\Constant\ConstantArrayType) {
                 $value = $this->extractConstantArrayTypeValue($valueType);
-            } elseif ($valueType instanceof ConstantScalarType) {
+            } elseif ($valueType instanceof \PHPStan\Type\ConstantScalarType) {
                 $value = $valueType->getValue();
-            } elseif ($valueType instanceof TypeWithClassName) {
+            } elseif ($valueType instanceof \PHPStan\Type\TypeWithClassName) {
                 continue;
             } else {
                 return null;
@@ -230,34 +233,34 @@ final class ValueResolver
     private function resolveDirConstant() : string
     {
         $file = $this->currentFileProvider->getFile();
-        if (!$file instanceof \Rector\Core\ValueObject\Application\File) {
-            throw new ShouldNotHappenException();
-        }
-        return \dirname($file->getFilePath());
+        $smartFileInfo = $file->getSmartFileInfo();
+        return $smartFileInfo->getPath();
     }
-    private function resolveFileConstant(File $file) : string
+    private function resolveFileConstant(\PhpParser\Node\Scalar\MagicConst\File $file) : string
     {
         $file = $this->currentFileProvider->getFile();
-        if (!$file instanceof \Rector\Core\ValueObject\Application\File) {
-            throw new ShouldNotHappenException();
-        }
-        return $file->getFilePath();
+        $smartFileInfo = $file->getSmartFileInfo();
+        return $smartFileInfo->getPathname();
     }
     /**
      * @return string|mixed
      */
-    private function resolveClassConstFetch(ClassConstFetch $classConstFetch)
+    private function resolveClassConstFetch(\PhpParser\Node\Expr\ClassConstFetch $classConstFetch)
     {
         $class = $this->nodeNameResolver->getName($classConstFetch->class);
         $constant = $this->nodeNameResolver->getName($classConstFetch->name);
         if ($class === null) {
-            throw new ShouldNotHappenException();
+            throw new \Rector\Core\Exception\ShouldNotHappenException();
         }
         if ($constant === null) {
-            throw new ShouldNotHappenException();
+            throw new \Rector\Core\Exception\ShouldNotHappenException();
         }
-        if (\in_array($class, [ObjectReference::SELF, ObjectReference::STATIC, ObjectReference::PARENT], \true)) {
-            $class = $this->resolveClassFromSelfStaticParent($classConstFetch, $class);
+        if ($class === \Rector\Core\Enum\ObjectReference::SELF()->getValue()) {
+            $classLike = $this->betterNodeFinder->findParentType($classConstFetch, \PhpParser\Node\Stmt\ClassLike::class);
+            if (!$classLike instanceof \PhpParser\Node\Stmt\ClassLike) {
+                throw new \Rector\Core\Exception\ShouldNotHappenException();
+            }
+            $class = (string) $this->nodeNameResolver->getName($classLike);
         }
         if ($constant === 'class') {
             return $class;
@@ -266,41 +269,14 @@ final class ValueResolver
         if (\defined($classConstantReference)) {
             return \constant($classConstantReference);
         }
-        if (!$this->reflectionProvider->hasClass($class)) {
-            // fallback to constant reference itself, to avoid fatal error
-            return $classConstantReference;
-        }
-        $classReflection = $this->reflectionProvider->getClass($class);
-        if (!$classReflection->hasConstant($constant)) {
-            // fallback to constant reference itself, to avoid fatal error
-            return $classConstantReference;
-        }
-        if ($classReflection->isEnum()) {
-            // fallback to constant reference itself, to avoid fatal error
-            return $classConstantReference;
-        }
-        $constantReflection = $classReflection->getConstant($constant);
-        $valueExpr = $constantReflection->getValueExpr();
-        if ($valueExpr instanceof ConstFetch) {
-            return $this->resolveExprValueForConst($valueExpr);
-        }
-        return $this->getValue($valueExpr);
-    }
-    private function resolveClassFromSelfStaticParent(ClassConstFetch $classConstFetch, string $class) : string
-    {
-        $classLike = $this->betterNodeFinder->findParentType($classConstFetch, ClassLike::class);
-        if (!$classLike instanceof ClassLike) {
-            throw new ShouldNotHappenException('Complete class parent node for to class const fetch, so "self" or "static" references is resolvable to a class name');
-        }
-        if ($class === ObjectReference::PARENT) {
-            if (!$classLike instanceof Class_) {
-                throw new ShouldNotHappenException('Complete class parent node for to class const fetch, so "parent" references is resolvable to lookup parent class');
+        if ($this->reflectionProvider->hasClass($class)) {
+            $classReflection = $this->reflectionProvider->getClass($class);
+            if ($classReflection->hasConstant($constant)) {
+                $constantReflection = $classReflection->getConstant($constant);
+                return $constantReflection->getValue();
             }
-            if (!$classLike->extends instanceof FullyQualified) {
-                throw new ShouldNotHappenException();
-            }
-            return $classLike->extends->toString();
         }
-        return (string) $this->nodeNameResolver->getName($classLike);
+        // fallback to constant reference itself, to avoid fatal error
+        return $classConstantReference;
     }
 }

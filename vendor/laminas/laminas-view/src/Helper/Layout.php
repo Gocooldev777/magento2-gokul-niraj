@@ -1,32 +1,19 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Helper;
 
 use Laminas\View\Exception;
 use Laminas\View\Model\ModelInterface as Model;
 
-use function assert;
-use function sprintf;
-
 /**
  * View helper for retrieving layout object
- *
- * @psalm-suppress DeprecatedMethod
- * @final
  */
 class Layout extends AbstractHelper
 {
-    use DeprecatedAbstractHelperHierarchyTrait;
-
-    /** @var ViewModel|null */
+    /**
+     * @var ViewModel
+     */
     protected $viewModelHelper;
-
-    public function __construct(?ViewModel $viewModelHelper = null)
-    {
-        $this->viewModelHelper = $viewModelHelper;
-    }
 
     /**
      * Set layout template or retrieve "layout" view model
@@ -60,19 +47,20 @@ class Layout extends AbstractHelper
      * Get the root view model
      *
      * @throws Exception\RuntimeException
-     * @return Model
+     * @return null|Model
      */
     protected function getRoot()
     {
-        $root = $this->getViewModelHelper()->getRoot();
-        if (! $root instanceof Model) {
+        $helper = $this->getViewModelHelper();
+
+        if (! $helper->hasRoot()) {
             throw new Exception\RuntimeException(sprintf(
                 '%s: no view model currently registered as root in renderer',
                 __METHOD__
             ));
         }
 
-        return $root;
+        return $helper->getRoot();
     }
 
     /**
@@ -90,18 +78,12 @@ class Layout extends AbstractHelper
     /**
      * Retrieve the view model helper
      *
-     * @deprecated since >= 2.20.0. The view model helper should be injected into the constructor.
-     *             This method will be removed in version 3.0 of this component.
-     *
      * @return ViewModel
      */
     protected function getViewModelHelper()
     {
-        if (! $this->viewModelHelper) {
-            $renderer = $this->getView();
-            $helper   = $renderer->plugin('view_model');
-            assert($helper instanceof ViewModel);
-            $this->viewModelHelper = $helper;
+        if (null === $this->viewModelHelper) {
+            $this->viewModelHelper = $this->getView()->plugin('view_model');
         }
 
         return $this->viewModelHelper;

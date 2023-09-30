@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 /**
+ * Unit Test for \Magento\Framework\Filesystem\Directory\Write
+ *
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
@@ -13,9 +15,6 @@ use Magento\Framework\Filesystem\File\WriteFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Unit Test for \Magento\Framework\Filesystem\Directory\Write
- */
 class WriteTest extends TestCase
 {
     /**
@@ -93,7 +92,9 @@ class WriteTest extends TestCase
 
     public function testCreateSymlinkTargetDirectoryExists()
     {
-        $targetDir = $this->getMockForAbstractClass(WriteInterface::class);
+        $targetDir = $this->getMockBuilder(WriteInterface::class)
+            ->getMock();
+        $targetDir->driver = $this->driver;
         $sourcePath = 'source/path/file';
         $destinationDirectory = 'destination/path';
         $destinationFile = $destinationDirectory . '/' . 'file';
@@ -116,7 +117,7 @@ class WriteTest extends TestCase
             ->with(
                 $this->getAbsolutePath($sourcePath),
                 $this->getAbsolutePath($destinationFile),
-                $this->driver
+                $targetDir->driver
             )->willReturn(true);
 
         $this->assertTrue($this->write->createSymlink($sourcePath, $destinationFile, $targetDir));
@@ -169,6 +170,8 @@ class WriteTest extends TestCase
     {
         if ($targetDir !== null) {
             /** @noinspection PhpUndefinedFieldInspection */
+            $targetDir->driver = $this->getMockBuilder(DriverInterface::class)
+                ->getMockForAbstractClass();
             $targetDirPath = 'TARGET_PATH/';
             $targetDir->expects($this->once())
                 ->method('getAbsolutePath')

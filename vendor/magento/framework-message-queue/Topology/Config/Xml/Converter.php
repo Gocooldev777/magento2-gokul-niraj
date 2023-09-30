@@ -5,12 +5,12 @@
  */
 namespace Magento\Framework\MessageQueue\Topology\Config\Xml;
 
+use Magento\Framework\Stdlib\BooleanUtils;
+use Magento\Framework\Data\Argument\InterpreterInterface;
 use Magento\Framework\Config\Converter\Dom\Flat as FlatConverter;
 use Magento\Framework\Config\Dom\ArrayNodeConfig;
 use Magento\Framework\Config\Dom\NodePathMatcher;
-use Magento\Framework\Data\Argument\InterpreterInterface;
 use Magento\Framework\MessageQueue\DefaultValueProvider;
-use Magento\Framework\Stdlib\BooleanUtils;
 
 /**
  * Converts MessageQueue topology config from \DOMDocument to array
@@ -30,6 +30,8 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
     private $booleanUtils;
 
     /**
+     * Argument interpreter.
+     *
      * @var InterpreterInterface
      */
     private $argumentInterpreter;
@@ -57,8 +59,7 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
     }
 
     /**
-     * @inheritdoc
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * {@inheritdoc}
      */
     public function convert($source)
     {
@@ -66,7 +67,7 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
         /** @var $exchange \DOMElement */
         foreach ($source->getElementsByTagName('exchange') as $exchange) {
             $name = $this->getAttributeValue($exchange, 'name');
-            $connection = $this->getAttributeValue($exchange, 'connection', $this->defaultValue->getConnection());
+            $connection = $this->getAttributeValue($exchange, 'connection');
 
             $bindings = [];
             $exchangeArguments = [];
@@ -86,19 +87,10 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
                 }
             }
 
-            // @codingStandardsIgnoreStart
-            if (isset($result[$name . '--' . $connection]['bindings']) && count($bindings) > 0) {
-                $bindings = array_merge($result[$name . '--' . $connection]['bindings'], $bindings);
-            }
-            if (isset($result[$name . '--' . $connection]['arguments']) && count($exchangeArguments) > 0) {
-                $exchangeArguments = array_merge($result[$name . '--' . $connection]['arguments'], $exchangeArguments);
-            }
-            // @codingStandardsIgnoreEnd
-
             $autoDelete = $this->getAttributeValue($exchange, 'autoDelete', false);
             $result[$name . '--' . $connection] = [
                 'name' => $name,
-                'type' => $this->getAttributeValue($exchange, 'type', 'topic'),
+                'type' => $this->getAttributeValue($exchange, 'type'),
                 'connection' => $connection,
                 'durable' => $this->booleanUtils->toBoolean($this->getAttributeValue($exchange, 'durable', true)),
                 'autoDelete' => $this->booleanUtils->toBoolean($autoDelete),
@@ -169,6 +161,7 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
     private function processBindings($node, $bindings)
     {
         $bindingArguments = [];
+        $id = $this->getAttributeValue($node, 'id');
         $isDisabled = $this->booleanUtils->toBoolean(
             $this->getAttributeValue($node, 'disabled', false)
         );
@@ -178,18 +171,12 @@ class Converter implements \Magento\Framework\Config\ConverterInterface
             }
             $bindingArguments = $this->processArguments($arguments);
         }
-
-        $destinationType = $this->getAttributeValue($node, 'destinationType', 'queue');
-        $destination = $this->getAttributeValue($node, 'destination');
-        $topic = $this->getAttributeValue($node, 'topic');
-        $bindingId = $destinationType . '--' . $destination . '--' . $topic;
-
-        $bindings[$bindingId] = [
-            'id' => $bindingId,
-            'destinationType' => $destinationType,
-            'destination' => $destination,
+        $bindings[$id] = [
+            'id' => $id,
+            'destinationType' => $this->getAttributeValue($node, 'destinationType'),
+            'destination' => $this->getAttributeValue($node, 'destination'),
             'disabled' => $isDisabled,
-            'topic' => $topic,
+            'topic' => $this->getAttributeValue($node, 'topic'),
             'arguments' => $bindingArguments
         ];
         return $bindings;

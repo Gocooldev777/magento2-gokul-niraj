@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Laminas\View\Model;
 
 use Laminas\Json\Json;
@@ -14,16 +12,16 @@ class JsonModel extends ViewModel
      * JSON probably won't need to be captured into a
      * a parent container by default.
      *
-     * @var string|null
+     * @var string
      */
-    protected $captureTo;
+    protected $captureTo = null;
 
     /**
      * JSONP callback (if set, wraps the return in a function call)
      *
-     * @var string|null
+     * @var string
      */
-    protected $jsonpCallback;
+    protected $jsonpCallback = null;
 
     /**
      * JSON is usually terminal
@@ -61,7 +59,7 @@ class JsonModel extends ViewModel
         ];
 
         if (null !== $this->jsonpCallback) {
-            return $this->jsonpCallback . '(' . Json::encode($variables, false, $options) . ');';
+            return $this->jsonpCallback.'('.Json::encode($variables, false, $options).');';
         }
         return Json::encode($variables, false, $options);
     }

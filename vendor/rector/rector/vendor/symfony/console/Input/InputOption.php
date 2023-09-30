@@ -8,14 +8,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Input;
+namespace RectorPrefix20211221\Symfony\Component\Console\Input;
 
-use RectorPrefix202304\Symfony\Component\Console\Command\Command;
-use RectorPrefix202304\Symfony\Component\Console\Completion\CompletionInput;
-use RectorPrefix202304\Symfony\Component\Console\Completion\CompletionSuggestions;
-use RectorPrefix202304\Symfony\Component\Console\Completion\Suggestion;
-use RectorPrefix202304\Symfony\Component\Console\Exception\InvalidArgumentException;
-use RectorPrefix202304\Symfony\Component\Console\Exception\LogicException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException;
+use RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException;
 /**
  * Represents a command line option.
  *
@@ -48,7 +44,7 @@ class InputOption
      */
     private $name;
     /**
-     * @var string|mixed[]|null
+     * @var mixed[]|string|null
      */
     private $shortcut;
     /**
@@ -56,32 +52,27 @@ class InputOption
      */
     private $mode;
     /**
-     * @var string|int|bool|mixed[]|null|float
+     * @var mixed[]|bool|float|int|string|null
      */
     private $default;
-    /**
-     * @var mixed[]|\Closure
-     */
-    private $suggestedValues;
     /**
      * @var string
      */
     private $description;
     /**
-     * @param string|mixed[] $shortcut The shortcuts, can be null, a string of shortcuts delimited by | or an array of shortcuts
-     * @param int|null                                                                      $mode            The option mode: One of the VALUE_* constants
-     * @param string|bool|int|float|mixed[] $default The default value (must be null for self::VALUE_NONE)
-     * @param array|\Closure(CompletionInput,CompletionSuggestions):list<string|Suggestion> $suggestedValues The values used for input completion
+     * @param mixed[]|string $shortcut The shortcuts, can be null, a string of shortcuts delimited by | or an array of shortcuts
+     * @param int|null                         $mode     The option mode: One of the VALUE_* constants
+     * @param mixed[]|bool|float|int|string $default The default value (must be null for self::VALUE_NONE)
      *
      * @throws InvalidArgumentException If option mode is invalid or incompatible
      */
-    public function __construct(string $name, $shortcut = null, int $mode = null, string $description = '', $default = null, $suggestedValues = [])
+    public function __construct(string $name, $shortcut = null, int $mode = null, string $description = '', $default = null)
     {
         if (\strncmp($name, '--', \strlen('--')) === 0) {
             $name = \substr($name, 2);
         }
         if (empty($name)) {
-            throw new InvalidArgumentException('An option name cannot be empty.');
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException('An option name cannot be empty.');
         }
         if (empty($shortcut)) {
             $shortcut = null;
@@ -94,27 +85,23 @@ class InputOption
             $shortcuts = \array_filter($shortcuts);
             $shortcut = \implode('|', $shortcuts);
             if (empty($shortcut)) {
-                throw new InvalidArgumentException('An option shortcut cannot be empty.');
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException('An option shortcut cannot be empty.');
             }
         }
         if (null === $mode) {
             $mode = self::VALUE_NONE;
         } elseif ($mode >= self::VALUE_NEGATABLE << 1 || $mode < 1) {
-            throw new InvalidArgumentException(\sprintf('Option mode "%s" is not valid.', $mode));
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException(\sprintf('Option mode "%s" is not valid.', $mode));
         }
         $this->name = $name;
         $this->shortcut = $shortcut;
         $this->mode = $mode;
         $this->description = $description;
-        $this->suggestedValues = $suggestedValues;
-        if ($suggestedValues && !$this->acceptValue()) {
-            throw new LogicException('Cannot set suggested values if the option does not accept a value.');
-        }
         if ($this->isArray() && !$this->acceptValue()) {
-            throw new InvalidArgumentException('Impossible to have an option mode VALUE_IS_ARRAY if the option does not accept a value.');
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException('Impossible to have an option mode VALUE_IS_ARRAY if the option does not accept a value.');
         }
         if ($this->isNegatable() && $this->acceptValue()) {
-            throw new InvalidArgumentException('Impossible to have an option mode VALUE_NEGATABLE if the option also accepts a value.');
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\InvalidArgumentException('Impossible to have an option mode VALUE_NEGATABLE if the option also accepts a value.');
         }
         $this->setDefault($default);
     }
@@ -173,28 +160,26 @@ class InputOption
         return self::VALUE_NEGATABLE === (self::VALUE_NEGATABLE & $this->mode);
     }
     /**
-     * @param string|bool|int|float|mixed[] $default
+     * @param mixed[]|bool|float|int|string $default
      */
     public function setDefault($default = null)
     {
-        if (1 > \func_num_args()) {
-            \RectorPrefix202304\trigger_deprecation('symfony/console', '6.2', 'Calling "%s()" without any arguments is deprecated, pass null explicitly instead.', __METHOD__);
-        }
         if (self::VALUE_NONE === (self::VALUE_NONE & $this->mode) && null !== $default) {
-            throw new LogicException('Cannot set a default value when using InputOption::VALUE_NONE mode.');
+            throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException('Cannot set a default value when using InputOption::VALUE_NONE mode.');
         }
         if ($this->isArray()) {
             if (null === $default) {
                 $default = [];
             } elseif (!\is_array($default)) {
-                throw new LogicException('A default value for an array option must be an array.');
+                throw new \RectorPrefix20211221\Symfony\Component\Console\Exception\LogicException('A default value for an array option must be an array.');
             }
         }
         $this->default = $this->acceptValue() || $this->isNegatable() ? $default : \false;
     }
     /**
      * Returns the default value.
-     * @return string|bool|int|float|mixed[]|null
+     *
+     * @return string|bool|int|float|array|null
      */
     public function getDefault()
     {
@@ -206,25 +191,6 @@ class InputOption
     public function getDescription() : string
     {
         return $this->description;
-    }
-    public function hasCompletion() : bool
-    {
-        return [] !== $this->suggestedValues;
-    }
-    /**
-     * Adds suggestions to $suggestions for the current completion input.
-     *
-     * @see Command::complete()
-     */
-    public function complete(CompletionInput $input, CompletionSuggestions $suggestions) : void
-    {
-        $values = $this->suggestedValues;
-        if ($values instanceof \Closure && !\is_array($values = $values($input))) {
-            throw new LogicException(\sprintf('Closure for option "%s" must return an array. Got "%s".', $this->name, \get_debug_type($values)));
-        }
-        if ($values) {
-            $suggestions->suggestValues($values);
-        }
     }
     /**
      * Checks whether the given option equals this one.

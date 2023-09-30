@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Resource;
+namespace RectorPrefix20211221\Symfony\Component\Config\Resource;
 
 /**
  * FileResource represents a resource stored on the filesystem.
@@ -19,10 +19,10 @@ namespace RectorPrefix202304\Symfony\Component\Config\Resource;
  *
  * @final
  */
-class FileResource implements SelfCheckingResourceInterface
+class FileResource implements \RectorPrefix20211221\Symfony\Component\Config\Resource\SelfCheckingResourceInterface
 {
     /**
-     * @var string
+     * @var string|false
      */
     private $resource;
     /**
@@ -32,11 +32,10 @@ class FileResource implements SelfCheckingResourceInterface
      */
     public function __construct(string $resource)
     {
-        $resolvedResource = \realpath($resource) ?: (\file_exists($resource) ? $resource : \false);
-        if (\false === $resolvedResource) {
+        $this->resource = \realpath($resource) ?: (\file_exists($resource) ? $resource : \false);
+        if (\false === $this->resource) {
             throw new \InvalidArgumentException(\sprintf('The file "%s" does not exist.', $resource));
         }
-        $this->resource = $resolvedResource;
     }
     public function __toString() : string
     {
@@ -49,6 +48,9 @@ class FileResource implements SelfCheckingResourceInterface
     {
         return $this->resource;
     }
+    /**
+     * {@inheritdoc}
+     */
     public function isFresh(int $timestamp) : bool
     {
         return \false !== ($filemtime = @\filemtime($this->resource)) && $filemtime <= $timestamp;

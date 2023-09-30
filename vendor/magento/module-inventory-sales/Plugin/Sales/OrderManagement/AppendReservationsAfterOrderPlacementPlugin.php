@@ -8,18 +8,21 @@ declare(strict_types=1);
 namespace Magento\InventorySales\Plugin\Sales\OrderManagement;
 
 use Magento\InventoryCatalogApi\Model\GetProductTypesBySkusInterface;
-use Magento\InventoryCatalogApi\Model\GetSkusByProductIdsInterface;
 use Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForProductTypeInterface;
-use Magento\InventorySales\Model\AppendReservations;
-use Magento\InventorySales\Model\ReservationExecutionInterface;
-use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
-use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
-use Magento\InventorySalesApi\Api\Data\SalesEventExtensionInterface;
-use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
-use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
-use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderManagementInterface;
+use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
+use Magento\InventorySalesApi\Api\Data\SalesEventInterface;
+use Magento\InventorySalesApi\Api\Data\SalesEventInterfaceFactory;
+use Magento\InventoryCatalogApi\Model\GetSkusByProductIdsInterface;
+use Magento\Store\Api\WebsiteRepositoryInterface;
+use Magento\InventorySalesApi\Api\Data\SalesChannelInterfaceFactory;
+use Magento\InventorySalesApi\Api\Data\SalesChannelInterface;
+use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
+use Magento\InventorySalesApi\Api\Data\SalesEventExtensionFactory;
+use Magento\InventorySalesApi\Api\Data\SalesEventExtensionInterface;
+use Magento\InventorySales\Model\CheckItemsQuantity;
+use Magento\InventorySalesApi\Model\StockByWebsiteIdResolverInterface;
 
 /**
  * Add reservation during order placement
@@ -38,6 +41,16 @@ class AppendReservationsAfterOrderPlacementPlugin
     private $getSkusByProductIds;
 
     /**
+     * @var WebsiteRepositoryInterface
+     */
+    private $websiteRepository;
+
+    /**
+     * @var SalesChannelInterfaceFactory
+     */
+    private $salesChannelFactory;
+
+    /**
      * @var SalesEventInterfaceFactory
      */
     private $salesEventFactory;
@@ -46,6 +59,16 @@ class AppendReservationsAfterOrderPlacementPlugin
      * @var ItemToSellInterfaceFactory
      */
     private $itemsToSellFactory;
+
+    /**
+     * @var CheckItemsQuantity
+     */
+    private $checkItemsQuantity;
+
+    /**
+     * @var StockByWebsiteIdResolverInterface
+     */
+    private $stockByWebsiteIdResolver;
 
     /**
      * @var GetProductTypesBySkusInterface
@@ -58,47 +81,54 @@ class AppendReservationsAfterOrderPlacementPlugin
     private $isSourceItemManagementAllowedForProductType;
 
     /**
-     * @var AppendReservations
+     * @var SalesEventExtensionFactory;
      */
-    private $appendReservations;
-
-    /**
-     * @var ReservationExecutionInterface
-     */
-    private $reservationExecution;
+    private $salesEventExtensionFactory;
 
     /**
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
      * @param GetSkusByProductIdsInterface $getSkusByProductIds
+     * @param WebsiteRepositoryInterface $websiteRepository
+     * @param SalesChannelInterfaceFactory $salesChannelFactory
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToSellInterfaceFactory $itemsToSellFactory
+     * @param CheckItemsQuantity $checkItemsQuantity
+     * @param StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver
      * @param GetProductTypesBySkusInterface $getProductTypesBySkus
      * @param IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType
-     * @param AppendReservations $appendReservations
-     * @param ReservationExecutionInterface $reservationExecution
+     * @param SalesEventExtensionFactory $salesEventExtensionFactory
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
         GetSkusByProductIdsInterface $getSkusByProductIds,
+        WebsiteRepositoryInterface $websiteRepository,
+        SalesChannelInterfaceFactory $salesChannelFactory,
         SalesEventInterfaceFactory $salesEventFactory,
         ItemToSellInterfaceFactory $itemsToSellFactory,
+        CheckItemsQuantity $checkItemsQuantity,
+        StockByWebsiteIdResolverInterface $stockByWebsiteIdResolver,
         GetProductTypesBySkusInterface $getProductTypesBySkus,
         IsSourceItemManagementAllowedForProductTypeInterface $isSourceItemManagementAllowedForProductType,
-        AppendReservations $appendReservations,
-        ReservationExecutionInterface $reservationExecution
+        SalesEventExtensionFactory $salesEventExtensionFactory
     ) {
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
         $this->getSkusByProductIds = $getSkusByProductIds;
+        $this->websiteRepository = $websiteRepository;
+        $this->salesChannelFactory = $salesChannelFactory;
         $this->salesEventFactory = $salesEventFactory;
         $this->itemsToSellFactory = $itemsToSellFactory;
+        $this->checkItemsQuantity = $checkItemsQuantity;
+        $this->stockByWebsiteIdResolver = $stockByWebsiteIdResolver;
         $this->getProductTypesBySkus = $getProductTypesBySkus;
         $this->isSourceItemManagementAllowedForProductType = $isSourceItemManagementAllowedForProductType;
-        $this->appendReservations = $appendReservations;
-        $this->reservationExecution = $reservationExecution;
+        $this->salesEventExtensionFactory = $salesEventExtensionFactory;
     }
 
     /**
-     * Add inventory reservation before placing synchronous order or if stock reservation is deferred.
+     * Add reservation before place order
+     *
+     * In case of error during order placement exception add compensation
      *
      * @param OrderManagementInterface $subject
      * @param callable $proceed
@@ -112,56 +142,55 @@ class AppendReservationsAfterOrderPlacementPlugin
         callable $proceed,
         OrderInterface $order
     ): OrderInterface {
-        if ($this->reservationExecution->isDeferred()) {
-            $itemsById = $itemsBySku = $itemsToSell = [];
-            foreach ($order->getItems() as $item) {
-                if (!isset($itemsById[$item->getProductId()])) {
-                    $itemsById[$item->getProductId()] = 0;
-                }
-                $itemsById[$item->getProductId()] += $item->getQtyOrdered();
+        $itemsById = $itemsBySku = $itemsToSell = [];
+        foreach ($order->getItems() as $item) {
+            if (!isset($itemsById[$item->getProductId()])) {
+                $itemsById[$item->getProductId()] = 0;
             }
-            $productSkus = $this->getSkusByProductIds->execute(array_keys($itemsById));
-            $productTypes = $this->getProductTypesBySkus->execute($productSkus);
-
-            foreach ($productSkus as $productId => $sku) {
-                if (false === $this->isSourceItemManagementAllowedForProductType->execute($productTypes[$sku])) {
-                    continue;
-                }
-
-                $itemsBySku[$sku] = (float)$itemsById[$productId];
-                $itemsToSell[] = $this->itemsToSellFactory->create([
-                    'sku' => $sku,
-                    'qty' => -(float)$itemsById[$productId]
-                ]);
-            }
-
-            $websiteId = (int)$order->getStore()->getWebsiteId();
-            [$salesChannel, $salesEventExtension]
-                = $this->appendReservations->reserve($websiteId, $itemsBySku, $order, $itemsToSell);
-            $order = $this->createOrder($proceed, $order, $itemsToSell, $salesChannel, $salesEventExtension);
-        } else {
-            $order = $proceed($order);
+            $itemsById[$item->getProductId()] += $item->getQtyOrdered();
         }
-        return $order;
-    }
+        $productSkus = $this->getSkusByProductIds->execute(array_keys($itemsById));
+        $productTypes = $this->getProductTypesBySkus->execute($productSkus);
 
-    /**
-     * Create new Order
-     *
-     * In case of error during order placement exception add compensation
-     *
-     * @param callable $proceed
-     * @param OrderInterface $order
-     * @param array $itemsToSell
-     * @param SalesChannelInterface $salesChannel
-     * @param SalesEventExtensionInterface $salesEventExtension
-     * @return OrderInterface
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\LocalizedException
-     */
-    private function createOrder($proceed, $order, $itemsToSell, $salesChannel, $salesEventExtension)
-    {
+        foreach ($productSkus as $productId => $sku) {
+            if (false === $this->isSourceItemManagementAllowedForProductType->execute($productTypes[$sku])) {
+                continue;
+            }
+
+            $itemsBySku[$sku] = (float)$itemsById[$productId];
+            $itemsToSell[] = $this->itemsToSellFactory->create([
+                'sku' => $sku,
+                'qty' => -(float)$itemsById[$productId]
+            ]);
+        }
+
+        $websiteId = (int)$order->getStore()->getWebsiteId();
+        $websiteCode = $this->websiteRepository->getById($websiteId)->getCode();
+        $stockId = (int)$this->stockByWebsiteIdResolver->execute((int)$websiteId)->getStockId();
+
+        $this->checkItemsQuantity->execute($itemsBySku, $stockId);
+
+        /** @var SalesEventExtensionInterface */
+        $salesEventExtension = $this->salesEventExtensionFactory->create([
+            'data' => ['objectIncrementId' => (string)$order->getIncrementId()]
+        ]);
+
+        /** @var SalesEventInterface $salesEvent */
+        $salesEvent = $this->salesEventFactory->create([
+            'type' => SalesEventInterface::EVENT_ORDER_PLACED,
+            'objectType' => SalesEventInterface::OBJECT_TYPE_ORDER,
+            'objectId' => (string)$order->getEntityId()
+        ]);
+        $salesEvent->setExtensionAttributes($salesEventExtension);
+        $salesChannel = $this->salesChannelFactory->create([
+            'data' => [
+                'type' => SalesChannelInterface::TYPE_WEBSITE,
+                'code' => $websiteCode
+            ]
+        ]);
+
+        $this->placeReservationsForSalesEvent->execute($itemsToSell, $salesChannel, $salesEvent);
+
         try {
             $order = $proceed($order);
         } catch (\Exception $e) {

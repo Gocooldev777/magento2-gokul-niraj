@@ -11,8 +11,6 @@ use Magento\Framework\GraphQl\Config\ConfigElementInterface;
 
 /**
  * Defines contracts for return type data as GraphQL objects.
- *
- * @api
  */
 interface TypeInterface extends ConfigElementInterface
 {
@@ -21,5 +19,5 @@ interface TypeInterface extends ConfigElementInterface
      *
      * @return Field[]
      */
-    public function getFields(): array;
+    public function getFields() : array;
 }

@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Integration\Test\Unit\Oauth;
 
-use Laminas\OAuth\Http\Utility;
 use Magento\Framework\DataObject;
 use Magento\Framework\Math\Random;
 use Magento\Framework\Oauth\Helper\Oauth;
@@ -32,8 +31,6 @@ use PHPUnit\Framework\MockObject\MockObject;
  */
 class OauthTest extends TestCase
 {
-    private const TIMESTAMP_STUB = 1657789046;
-
     /** @var ConsumerFactory */
     private $_consumerFactory;
 
@@ -148,11 +145,11 @@ class OauthTest extends TestCase
             )
             ->addMethods(
                 [
-                    'getType',
-                    'getToken',
-                    'getSecret',
-                    'getConsumerId',
-                    'getRevoked'
+                'getType',
+                'getToken',
+                'getSecret',
+                'getConsumerId',
+                'getRevoked'
                 ]
             )
             ->getMock();
@@ -160,14 +157,12 @@ class OauthTest extends TestCase
         $this->_oauthHelperMock = $this->getMockBuilder(Oauth::class)
             ->setConstructorArgs([new Random()])
             ->getMock();
-        $this->_httpUtilityMock = $this->getMockBuilder(Utility::class)
+        $this->_httpUtilityMock = $this->getMockBuilder(\Zend_Oauth_Http_Utility::class)
             ->onlyMethods(['sign'])
             ->getMock();
         $this->_dateMock = $this->getMockBuilder(DateTime::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $this->_dateMock->method('timestamp')
-            ->willReturn(self::TIMESTAMP_STUB);
         $this->_loggerMock = $this->getMockBuilder(LoggerInterface::class)
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
@@ -826,7 +821,7 @@ class OauthTest extends TestCase
         $oauthHeader = $this->_oauth->buildAuthorizationHeader($request, $requestUrl);
 
         $expectedHeader = 'OAuth oauth_nonce="tyukmnjhgfdcvxstyuioplkmnhtfvert",' .
-            'oauth_timestamp="' . self::TIMESTAMP_STUB . '",' .
+            'oauth_timestamp="",' .
             'oauth_version="1.0",oauth_consumer_key="edf957ef88492f0a32eb7e1731e85da2",' .
             'oauth_consumer_secret="asdawwewefrtyh2f0a32eb7e1731e85d",' .
             'oauth_token="7c0709f789e1f38a17aa4b9a28e1b06c",' .

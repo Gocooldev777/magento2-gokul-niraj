@@ -21,29 +21,38 @@ namespace PhpCsFixer\Cache;
  */
 final class Signature implements SignatureInterface
 {
-    private string $phpVersion;
-
-    private string $fixerVersion;
-
-    private string $indent;
-
-    private string $lineEnding;
+    /**
+     * @var string
+     */
+    private $phpVersion;
 
     /**
-     * @var array<string, array<string, mixed>|bool>
+     * @var string
      */
-    private array $rules;
+    private $fixerVersion;
 
     /**
-     * @param array<string, array<string, mixed>|bool> $rules
+     * @var string
      */
+    private $indent;
+
+    /**
+     * @var string
+     */
+    private $lineEnding;
+
+    /**
+     * @var array
+     */
+    private $rules;
+
     public function __construct(string $phpVersion, string $fixerVersion, string $indent, string $lineEnding, array $rules)
     {
         $this->phpVersion = $phpVersion;
         $this->fixerVersion = $fixerVersion;
         $this->indent = $indent;
         $this->lineEnding = $lineEnding;
-        $this->rules = self::makeJsonEncodable($rules);
+        $this->rules = self::utf8Encode($rules);
     }
 
     public function getPhpVersion(): string
@@ -80,16 +89,11 @@ final class Signature implements SignatureInterface
             && $this->rules === $signature->getRules();
     }
 
-    /**
-     * @param array<string, array<string, mixed>|bool> $data
-     *
-     * @return array<string, array<string, mixed>|bool>
-     */
-    private static function makeJsonEncodable(array $data): array
+    private static function utf8Encode(array $data): array
     {
         array_walk_recursive($data, static function (&$item): void {
             if (\is_string($item) && !mb_detect_encoding($item, 'utf-8', true)) {
-                $item = base64_encode($item);
+                $item = utf8_encode($item);
             }
         });
 

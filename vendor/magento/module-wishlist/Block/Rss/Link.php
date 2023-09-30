@@ -9,48 +9,42 @@
  */
 namespace Magento\Wishlist\Block\Rss;
 
-use Magento\Framework\App\Rss\UrlBuilderInterface;
-use Magento\Framework\Url\EncoderInterface;
-use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Element\Template\Context;
-use Magento\Wishlist\Helper\Data;
-
 /**
  * @api
  * @since 100.0.2
  */
-class Link extends Template
+class Link extends \Magento\Framework\View\Element\Template
 {
     /**
-     * @var Data
+     * @var \Magento\Wishlist\Helper\Data
      */
-    protected Data $wishlistHelper;
+    protected $wishlistHelper;
 
     /**
-     * @var UrlBuilderInterface
+     * @var \Magento\Framework\App\Rss\UrlBuilderInterface
      */
-    protected UrlBuilderInterface $rssUrlBuilder;
+    protected $rssUrlBuilder;
 
     /**
-     * @var EncoderInterface
+     * @var \Magento\Framework\Url\EncoderInterface
      */
-    protected EncoderInterface $urlEncoder;
+    protected $urlEncoder;
 
     /**
-     * @param Context $context
-     * @param Data $wishlistHelper
-     * @param UrlBuilderInterface $rssUrlBuilder
-     * @param EncoderInterface $urlEncoder
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param \Magento\Wishlist\Helper\Data $wishlistHelper
+     * @param \Magento\Framework\App\Rss\UrlBuilderInterface $rssUrlBuilder
+     * @param \Magento\Framework\Url\EncoderInterface $urlEncoder
      * @param array $data
      */
     public function __construct(
-        Context $context,
-        Data $wishlistHelper,
-        UrlBuilderInterface $rssUrlBuilder,
-        EncoderInterface $urlEncoder,
+        \Magento\Framework\View\Element\Template\Context $context,
+        \Magento\Wishlist\Helper\Data $wishlistHelper,
+        \Magento\Framework\App\Rss\UrlBuilderInterface $rssUrlBuilder,
+        \Magento\Framework\Url\EncoderInterface $urlEncoder,
         array $data = []
     ) {
-        $data['wishlistHelper'] = $wishlistHelper;
+        $data['wishlistHelper'] = $this->wishlistHelper;
         parent::__construct($context, $data);
         $this->wishlistHelper = $wishlistHelper;
         $this->rssUrlBuilder = $rssUrlBuilder;

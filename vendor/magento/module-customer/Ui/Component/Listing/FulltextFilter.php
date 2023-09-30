@@ -29,7 +29,6 @@ class FulltextFilter implements FilterApplierInterface
 
         /** @var GridCollection $gridCollection */
         $gridCollection = $collection;
-        $value = $filter->getValue() !== null ? trim($filter->getValue()) : '';
-        $gridCollection->addFullTextFilter($value);
+        $gridCollection->addFullTextFilter(trim($filter->getValue()));
     }
 }

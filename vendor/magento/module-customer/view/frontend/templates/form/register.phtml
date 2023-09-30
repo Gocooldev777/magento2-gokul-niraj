@@ -17,8 +17,6 @@ $directoryHelper = $block->getData('directoryHelper');
 /** @var \Magento\Customer\ViewModel\Address\RegionProvider $regionProvider */
 $regionProvider = $block->getRegionProvider();
 $formData = $block->getFormData();
-/** @var \Magento\Customer\ViewModel\CreateAccountButton $createAccountButtonViewModel */
-$createAccountButtonViewModel = $block->getData('create_account_button_view_model');
 ?>
 <?php $displayAll = $block->getConfig('general/region/display_all'); ?>
 <?= $block->getChildHtml('form_fields_before') ?>
@@ -106,15 +104,14 @@ $createAccountButtonViewModel = $block->getData('create_account_button_view_mode
                 </label>
                 <div class="control">
                     <input type="text"
-                           name="street[0]"
+                           name="street[]"
                            value="<?= $escaper->escapeHtmlAttr($formData->getStreet(0)) ?>"
                            title="<?= /* @noEscape */ $block->getAttributeData()->getFrontendLabel('street') ?>"
                            id="street_1"
                            class="input-text <?= $escaper->escapeHtmlAttr($_streetValidationClass) ?>">
                     <div class="nested">
                         <?php
-                            $_streetValidationClass = $_streetValidationClass !== null ?
-                                trim(str_replace('required-entry', '', $_streetValidationClass)) : '';
+                            $_streetValidationClass = trim(str_replace('required-entry', '', $_streetValidationClass));
                             $streetLines = $addressHelper->getStreetLines();
                         ?>
                         <?php for ($_i = 2, $_n = $streetLines; $_i <= $_n; $_i++): ?>
@@ -124,7 +121,7 @@ $createAccountButtonViewModel = $block->getData('create_account_button_view_mode
                                 </label>
                                 <div class="control">
                                     <input type="text"
-                                           name="street[<?= /* @noEscape */ $_i ?>]"
+                                           name="street[]"
                                            value="<?= $escaper->escapeHtml($formData->getStreetLine($_i - 1)) ?>"
                                            title="<?= $escaper->escapeHtmlAttr(__('Street Address %1', $_i)) ?>"
                                            id="street_<?= /* @noEscape */ $_i ?>"
@@ -294,9 +291,7 @@ $createAccountButtonViewModel = $block->getData('create_account_button_view_mode
         <div class="primary">
             <button type="submit"
                     class="action submit primary"
-                    title="<?= $escaper->escapeHtmlAttr(__('Create an Account')) ?>"
-                    id="send2"
-                    <?php if ($createAccountButtonViewModel->disabled()): ?> disabled="disabled" <?php endif; ?>>
+                    title="<?= $escaper->escapeHtmlAttr(__('Create an Account')) ?>">
                 <span><?= $escaper->escapeHtml(__('Create an Account')) ?></span>
             </button>
         </div>
@@ -353,7 +348,6 @@ script;
     $regionId = (int) $formData->getRegionId();
     $countriesWithOptionalZip = /* @noEscape */ $directoryHelper->getCountriesWithOptionalZip(true);
     ?>
-<?php // phpcs:ignore Magento2.Legacy.PhtmlTemplate ?>
 <script type="text/x-magento-init">
     {
         "#country": {
@@ -371,7 +365,7 @@ script;
     }
 </script>
 <?php endif; ?>
-<?php // phpcs:ignore Magento2.Legacy.PhtmlTemplate ?>
+
 <script type="text/x-magento-init">
     {
         ".field.password": {

@@ -8,7 +8,7 @@ use Rector\Php80\Enum\MatchKind;
 final class CondAndExpr
 {
     /**
-     * @var Expr[]|null
+     * @var \PhpParser\Node\Expr[]|null
      * @readonly
      */
     private $condExprs;
@@ -18,28 +18,27 @@ final class CondAndExpr
      */
     private $expr;
     /**
-     * @var MatchKind::*
      * @readonly
+     * @var \Rector\Php80\Enum\MatchKind
      */
     private $matchKind;
     /**
      * @param Expr[]|null $condExprs
-     * @param MatchKind::* $matchKind
      */
-    public function __construct(?array $condExprs, Expr $expr, string $matchKind)
+    public function __construct($condExprs, \PhpParser\Node\Expr $expr, \Rector\Php80\Enum\MatchKind $matchKind)
     {
         $this->condExprs = $condExprs;
         $this->expr = $expr;
         $this->matchKind = $matchKind;
     }
-    public function getExpr() : Expr
+    public function getExpr() : \PhpParser\Node\Expr
     {
         return $this->expr;
     }
     /**
-     * @return Expr[]|null
+     * @return mixed[]|null
      */
-    public function getCondExprs() : ?array
+    public function getCondExprs()
     {
         // internally checked by PHPStan, cannot be empty array
         if ($this->condExprs === []) {
@@ -47,18 +46,12 @@ final class CondAndExpr
         }
         return $this->condExprs;
     }
-    /**
-     * @return MatchKind::*
-     */
-    public function getMatchKind() : string
+    public function getMatchKind() : \Rector\Php80\Enum\MatchKind
     {
         return $this->matchKind;
     }
-    /**
-     * @param MatchKind::* $matchKind
-     */
-    public function equalsMatchKind(string $matchKind) : bool
+    public function equalsMatchKind(\Rector\Php80\Enum\MatchKind $matchKind) : bool
     {
-        return $this->matchKind === $matchKind;
+        return $this->matchKind->equals($matchKind);
     }
 }

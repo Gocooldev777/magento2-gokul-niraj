@@ -358,8 +358,7 @@ class Inline extends \Magento\Framework\View\Element\Template
      */
     public function isItemMessagesAvailable($item)
     {
-        $type = $this->getType() !== null && substr($this->getType(), 0, 5) === 'multi' ?
-            'address_item' : 'item';
+        $type = substr($this->getType(), 0, 5) == 'multi' ? 'address_item' : 'item';
         return $this->_giftMessageMessage->isMessagesAllowed($type, $item);
     }
 

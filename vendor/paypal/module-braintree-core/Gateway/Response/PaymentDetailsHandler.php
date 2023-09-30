@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
+ * Copyright © 2013-2017 Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 namespace PayPal\Braintree\Gateway\Response;
@@ -10,23 +10,29 @@ use PayPal\Braintree\Observer\DataAssignObserver;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Payment\Gateway\Helper\ContextHelper;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 
 class PaymentDetailsHandler implements HandlerInterface
 {
-    public const AVS_POSTAL_RESPONSE_CODE = 'avsPostalCodeResponseCode';
-    public const AVS_STREET_ADDRESS_RESPONSE_CODE = 'avsStreetAddressResponseCode';
-    public const CVV_RESPONSE_CODE = 'cvvResponseCode';
-    public const PROCESSOR_AUTHORIZATION_CODE = 'processorAuthorizationCode';
-    public const PROCESSOR_RESPONSE_CODE = 'processorResponseCode';
-    public const PROCESSOR_RESPONSE_TEXT = 'processorResponseText';
-    public const TRANSACTION_SOURCE = 'transactionSource';
+    const AVS_POSTAL_RESPONSE_CODE = 'avsPostalCodeResponseCode';
+
+    const AVS_STREET_ADDRESS_RESPONSE_CODE = 'avsStreetAddressResponseCode';
+
+    const CVV_RESPONSE_CODE = 'cvvResponseCode';
+
+    const PROCESSOR_AUTHORIZATION_CODE = 'processorAuthorizationCode';
+
+    const PROCESSOR_RESPONSE_CODE = 'processorResponseCode';
+
+    const PROCESSOR_RESPONSE_TEXT = 'processorResponseText';
+
+    const TRANSACTION_SOURCE = 'transactionSource';
 
     /**
      * List of additional details
-     *
      * @var array
      */
     protected $additionalInformationMapping = [
@@ -49,7 +55,7 @@ class PaymentDetailsHandler implements HandlerInterface
     private $state;
 
     /**
-     * PaymentDetailsHandler Constructor
+     * Constructor
      *
      * @param SubjectReader $subjectReader
      * @param State $state
@@ -90,7 +96,6 @@ class PaymentDetailsHandler implements HandlerInterface
 
     /**
      * When within admin area; assume MOTO transactionSource
-     *
      * @param OrderPaymentInterface $payment
      * @throws LocalizedException
      * @throws LocalizedException

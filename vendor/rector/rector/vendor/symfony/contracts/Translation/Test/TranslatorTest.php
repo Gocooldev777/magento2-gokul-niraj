@@ -8,11 +8,11 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Contracts\Translation\Test;
+namespace RectorPrefix20211221\Symfony\Contracts\Translation\Test;
 
-use PHPUnit\Framework\TestCase;
-use RectorPrefix202304\Symfony\Contracts\Translation\TranslatorInterface;
-use RectorPrefix202304\Symfony\Contracts\Translation\TranslatorTrait;
+use RectorPrefix20211221\PHPUnit\Framework\TestCase;
+use RectorPrefix20211221\Symfony\Contracts\Translation\TranslatorInterface;
+use RectorPrefix20211221\Symfony\Contracts\Translation\TranslatorTrait;
 /**
  * Test should cover all languages mentioned on http://translate.sourceforge.net/wiki/l10n/pluralforms
  * and Plural forms mentioned on http://www.gnu.org/software/gettext/manual/gettext.html#Plural-forms.
@@ -26,7 +26,7 @@ use RectorPrefix202304\Symfony\Contracts\Translation\TranslatorTrait;
  *
  * @author Clemens Tolboom clemens@build2be.nl
  */
-class TranslatorTest extends TestCase
+class TranslatorTest extends \RectorPrefix20211221\PHPUnit\Framework\TestCase
 {
     private $defaultLocale;
     protected function setUp() : void
@@ -38,9 +38,12 @@ class TranslatorTest extends TestCase
     {
         \Locale::setDefault($this->defaultLocale);
     }
-    public function getTranslator() : TranslatorInterface
+    /**
+     * @return TranslatorInterface
+     */
+    public function getTranslator()
     {
-        return new class implements TranslatorInterface
+        return new class implements \RectorPrefix20211221\Symfony\Contracts\Translation\TranslatorInterface
         {
             use TranslatorTrait;
         };
@@ -96,11 +99,11 @@ class TranslatorTest extends TestCase
         \Locale::setDefault('en');
         $this->assertEquals('en', $translator->getLocale());
     }
-    public static function getTransTests()
+    public function getTransTests()
     {
         return [['Symfony is great!', 'Symfony is great!', []], ['Symfony is awesome!', 'Symfony is %what%!', ['%what%' => 'awesome']]];
     }
-    public static function getTransChoiceTests()
+    public function getTransChoiceTests()
     {
         return [
             ['There are no apples', '{0} There are no apples|{1} There is one apple|]1,Inf] There are %count% apples', 0],
@@ -114,14 +117,14 @@ class TranslatorTest extends TestCase
         ];
     }
     /**
-     * @dataProvider getInterval
+     * @dataProvider getInternal
      */
     public function testInterval($expected, $number, $interval)
     {
         $translator = $this->getTranslator();
         $this->assertEquals($expected, $translator->trans($interval . ' foo|[1,Inf[ bar', ['%count%' => $number]));
     }
-    public static function getInterval()
+    public function getInternal()
     {
         return [['foo', 3, '{1,2, 3 ,4}'], ['bar', 10, '{1,2, 3 ,4}'], ['bar', 3, '[1,2]'], ['foo', 1, '[1,2]'], ['foo', 2, '[1,2]'], ['bar', 1, ']1,2['], ['bar', 2, ']1,2['], ['foo', \log(0), '[-Inf,2['], ['foo', -\log(0), '[-2,+Inf]']];
     }
@@ -147,11 +150,11 @@ class TranslatorTest extends TestCase
         $translator = $this->getTranslator();
         $translator->trans($id, ['%count%' => $number]);
     }
-    public static function getNonMatchingMessages()
+    public function getNonMatchingMessages()
     {
         return [['{0} There are no apples|{1} There is one apple', 2], ['{1} There is one apple|]1,Inf] There are %count% apples', 0], ['{1} There is one apple|]2,Inf] There are %count% apples', 2], ['{0} There are no apples|There is one apple', 2]];
     }
-    public static function getChooseTests()
+    public function getChooseTests()
     {
         return [
             ['There are no apples', '{0} There are no apples|{1} There is one apple|]1,Inf] There are %count% apples', 0],
@@ -214,7 +217,7 @@ class TranslatorTest extends TestCase
             ['This is a text with a\\nnew-line in it. Selector = 0.', '{0}This is a text with a\\nnew-line in it. Selector = 0.|{1}This is a text with a\\nnew-line in it. Selector = 1.|[1,Inf]This is a text with a\\nnew-line in it. Selector > 1.', 0],
             // with double-quotes and id split accros lines
             ["This is a text with a\nnew-line in it. Selector = 1.", "{0}This is a text with a\nnew-line in it. Selector = 0.|{1}This is a text with a\nnew-line in it. Selector = 1.|[1,Inf]This is a text with a\nnew-line in it. Selector > 1.", 1],
-            // escape pipe
+            // esacape pipe
             ['This is a text with | in it. Selector = 0.', '{0}This is a text with || in it. Selector = 0.|{1}This is a text with || in it. Selector = 1.', 0],
             // Empty plural set (2 plural forms) from a .PO file
             ['', '|', 1],
@@ -252,8 +255,10 @@ class TranslatorTest extends TestCase
      * This array should contain all currently known langcodes.
      *
      * As it is impossible to have this ever complete we should try as hard as possible to have it almost complete.
+     *
+     * @return array
      */
-    public static function successLangcodes() : array
+    public function successLangcodes()
     {
         return [['1', ['ay', 'bo', 'cgg', 'dz', 'id', 'ja', 'jbo', 'ka', 'kk', 'km', 'ko', 'ky']], ['2', ['nl', 'fr', 'en', 'de', 'de_GE', 'hy', 'hy_AM', 'en_US_POSIX']], ['3', ['be', 'bs', 'cs', 'hr']], ['4', ['cy', 'mt', 'sl']], ['6', ['ar']]];
     }
@@ -265,22 +270,23 @@ class TranslatorTest extends TestCase
      *
      * @return array with nplural together with langcodes
      */
-    public static function failingLangcodes() : array
+    public function failingLangcodes()
     {
         return [['1', ['fa']], ['2', ['jbo']], ['3', ['cbs']], ['4', ['gd', 'kw']], ['5', ['ga']]];
     }
     /**
      * We validate only on the plural coverage. Thus the real rules is not tested.
      *
-     * @param string $nplural Plural expected
-     * @param array  $matrix  Containing langcodes and their plural index values
+     * @param string $nplural       Plural expected
+     * @param array  $matrix        Containing langcodes and their plural index values
+     * @param bool   $expectSuccess
      */
-    protected function validateMatrix(string $nplural, array $matrix, bool $expectSuccess = \true)
+    protected function validateMatrix($nplural, $matrix, $expectSuccess = \true)
     {
         foreach ($matrix as $langCode => $data) {
             $indexes = \array_flip($data);
             if ($expectSuccess) {
-                $this->assertCount($nplural, $indexes, "Langcode '{$langCode}' has '{$nplural}' plural forms.");
+                $this->assertEquals($nplural, \count($indexes), "Langcode '{$langCode}' has '{$nplural}' plural forms.");
             } else {
                 $this->assertNotEquals((int) $nplural, \count($indexes), "Langcode '{$langCode}' has '{$nplural}' plural forms.");
             }

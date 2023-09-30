@@ -104,9 +104,8 @@ class Config implements ConfigInterface
     private function generateTopicsDataFromWebapiConfig()
     {
         $webApiConfig = $this->webApiConfig->getServices();
-        $webApiConfig = $webApiConfig[Converter::KEY_ROUTES] ?? [];
         $services = [];
-        foreach ($webApiConfig as $routeUrl => $routeData) {
+        foreach ($webApiConfig[Converter::KEY_ROUTES] as $routeUrl => $routeData) {
             foreach ($routeData as $httpMethod => $httpMethodData) {
                 if ($httpMethod !== \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_GET) {
                     $serviceInterface = $httpMethodData[Converter::KEY_SERVICE][Converter::KEY_SERVICE_CLASS];
@@ -179,7 +178,7 @@ class Config implements ConfigInterface
      */
     private function generateKey($typeName, $methodName, $delimiter = '\\', $lcfirst = true)
     {
-        $parts = explode($delimiter, trim($typeName ?: '', $delimiter));
+        $parts = explode($delimiter, trim($typeName, $delimiter));
         foreach ($parts as &$part) {
             $part = ltrim($part, ':');
             if ($lcfirst === true) {

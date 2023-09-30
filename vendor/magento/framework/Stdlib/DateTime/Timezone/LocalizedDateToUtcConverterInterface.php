@@ -9,8 +9,6 @@ namespace Magento\Framework\Stdlib\DateTime\Timezone;
 
 /*
  * Interface for converting localized date to UTC
- *
- * @api
  */
 interface LocalizedDateToUtcConverterInterface
 {

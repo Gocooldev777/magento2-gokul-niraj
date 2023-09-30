@@ -74,10 +74,7 @@ class MetadataLoader
             $fieldsData = $designConfig->getExtensionAttributes()->getDesignConfigData();
             foreach ($fieldsData as $fieldData) {
                 $element = &$data;
-                $fieldSets = isset($fieldData->getFieldConfig()['fieldset']) ?
-                    explode('/', $fieldData->getFieldConfig()['fieldset']) : [];
-                foreach ($fieldSets as $fieldset) {
-                    // @phpstan-ignore-next-line
+                foreach (explode('/', $fieldData->getFieldConfig()['fieldset']) as $fieldset) {
                     if (!isset($element[$fieldset]['children'])) {
                         $element[$fieldset]['children'] = [];
                     }

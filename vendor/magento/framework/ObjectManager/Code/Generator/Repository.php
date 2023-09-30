@@ -18,14 +18,13 @@ use Laminas\Code\Reflection\ParameterReflection;
  * Class Repository
  * @deprecated 101.0.0 As current implementation breaks Repository contract. Not removed from codebase to prevent
  * possible backward incompatibilities if this functionality being used by 3rd party developers.
- * @see https://jira.corp.adobe.com/browse/MAGETWO-70985
  */
 class Repository extends \Magento\Framework\Code\Generator\EntityAbstract
 {
     /**
      * Entity type repository
      */
-    public const ENTITY_TYPE = 'repository';
+    const ENTITY_TYPE = 'repository';
 
     /**
      * The namespace of repository interface
@@ -751,20 +750,6 @@ class Repository extends \Magento\Framework\Code\Generator\EntityAbstract
      */
     private function getTypeHintText($type)
     {
-        $returnTypeValue = $type instanceof \ReflectionType ? $type->getName() : $type;
-
-        if ($type instanceof \ReflectionUnionType || $type instanceof \ReflectionIntersectionType) {
-            $returnTypeValue = [];
-            foreach ($type->getTypes() as $type) {
-                $returnTypeValue[] =  $type->getName();
-            }
-
-            $returnTypeValue = implode(
-                $type instanceof \ReflectionUnionType ? '|' : '&',
-                $returnTypeValue
-            );
-        }
-
-        return $returnTypeValue;
+        return $type instanceof \ReflectionType ? $type->getName() : $type;
     }
 }

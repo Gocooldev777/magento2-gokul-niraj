@@ -9,17 +9,17 @@ declare (strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Evenement\Tests;
+namespace RectorPrefix20211221\Evenement\Tests;
 
-use RectorPrefix202304\Evenement\EventEmitter;
+use RectorPrefix20211221\Evenement\EventEmitter;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
-class EventEmitterTest extends TestCase
+use RectorPrefix20211221\PHPUnit\Framework\TestCase;
+class EventEmitterTest extends \RectorPrefix20211221\PHPUnit\Framework\TestCase
 {
     private $emitter;
     public function setUp()
     {
-        $this->emitter = new EventEmitter();
+        $this->emitter = new \RectorPrefix20211221\Evenement\EventEmitter();
     }
     public function testAddListenerWithLambda()
     {
@@ -28,12 +28,12 @@ class EventEmitterTest extends TestCase
     }
     public function testAddListenerWithMethod()
     {
-        $listener = new Listener();
+        $listener = new \RectorPrefix20211221\Evenement\Tests\Listener();
         $this->emitter->on('foo', [$listener, 'onFoo']);
     }
     public function testAddListenerWithStaticMethod()
     {
-        $this->emitter->on('bar', ['RectorPrefix202304\\Evenement\\Tests\\Listener', 'onBar']);
+        $this->emitter->on('bar', ['RectorPrefix20211221\\Evenement\\Tests\\Listener', 'onBar']);
     }
     public function testAddListenerWithInvalidListener()
     {
@@ -191,14 +191,14 @@ class EventEmitterTest extends TestCase
     }
     public function testCallablesClass()
     {
-        $listener = new Listener();
+        $listener = new \RectorPrefix20211221\Evenement\Tests\Listener();
         $this->emitter->on('foo', [$listener, 'onFoo']);
         $this->emitter->emit('foo', ['bar']);
         self::assertSame(['bar'], $listener->getData());
     }
     public function testCallablesClassInvoke()
     {
-        $listener = new Listener();
+        $listener = new \RectorPrefix20211221\Evenement\Tests\Listener();
         $this->emitter->on('foo', $listener);
         $this->emitter->emit('foo', ['bar']);
         self::assertSame(['bar'], $listener->getMagicData());
@@ -207,11 +207,11 @@ class EventEmitterTest extends TestCase
     {
         $this->emitter->on('foo', '\\Evenement\\Tests\\Listener::onBar');
         $this->emitter->emit('foo', ['bar']);
-        self::assertSame(['bar'], Listener::getStaticData());
+        self::assertSame(['bar'], \RectorPrefix20211221\Evenement\Tests\Listener::getStaticData());
     }
     public function testCallablesFunction()
     {
-        $this->emitter->on('foo', 'RectorPrefix202304\\Evenement\\Tests\\setGlobalTestData');
+        $this->emitter->on('foo', 'RectorPrefix20211221\\Evenement\\Tests\\setGlobalTestData');
         $this->emitter->emit('foo', ['bar']);
         self::assertSame('bar', $GLOBALS['evenement-evenement-test-data']);
         unset($GLOBALS['evenement-evenement-test-data']);
@@ -285,28 +285,28 @@ class EventEmitterTest extends TestCase
     }
     public function testEventNameMustBeStringOn()
     {
-        self::expectException(InvalidArgumentException::class);
+        self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('event name must not be null');
         $this->emitter->on(null, function () {
         });
     }
     public function testEventNameMustBeStringOnce()
     {
-        self::expectException(InvalidArgumentException::class);
+        self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('event name must not be null');
         $this->emitter->once(null, function () {
         });
     }
     public function testEventNameMustBeStringRemoveListener()
     {
-        self::expectException(InvalidArgumentException::class);
+        self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('event name must not be null');
         $this->emitter->removeListener(null, function () {
         });
     }
     public function testEventNameMustBeStringEmit()
     {
-        self::expectException(InvalidArgumentException::class);
+        self::expectException(\InvalidArgumentException::class);
         self::expectExceptionMessage('event name must not be null');
         $this->emitter->emit(null);
     }

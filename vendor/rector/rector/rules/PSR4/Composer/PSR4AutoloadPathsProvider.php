@@ -3,14 +3,23 @@
 declare (strict_types=1);
 namespace Rector\PSR4\Composer;
 
-use RectorPrefix202304\Nette\Utils\FileSystem;
-use RectorPrefix202304\Nette\Utils\Json;
+use RectorPrefix20211221\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonSection;
+use RectorPrefix20211221\Symplify\SmartFileSystem\Json\JsonFileSystem;
 final class PSR4AutoloadPathsProvider
 {
     /**
      * @var array<string, array<string, string>>
      */
     private $cachedComposerJsonPSR4AutoloadPaths = [];
+    /**
+     * @readonly
+     * @var \Symplify\SmartFileSystem\Json\JsonFileSystem
+     */
+    private $jsonFileSystem;
+    public function __construct(\RectorPrefix20211221\Symplify\SmartFileSystem\Json\JsonFileSystem $jsonFileSystem)
+    {
+        $this->jsonFileSystem = $jsonFileSystem;
+    }
     /**
      * @return array<string, string|string[]>
      */
@@ -19,9 +28,8 @@ final class PSR4AutoloadPathsProvider
         if ($this->cachedComposerJsonPSR4AutoloadPaths !== []) {
             return $this->cachedComposerJsonPSR4AutoloadPaths;
         }
-        $fileContents = FileSystem::read($this->getComposerJsonPath());
-        $composerJson = Json::decode($fileContents, Json::FORCE_ARRAY);
-        $psr4Autoloads = \array_merge($composerJson['autoload']['psr-4'] ?? [], $composerJson['autoload-dev']['psr-4'] ?? []);
+        $composerJson = $this->jsonFileSystem->loadFilePathToJson($this->getComposerJsonPath());
+        $psr4Autoloads = \array_merge($composerJson[\RectorPrefix20211221\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonSection::AUTOLOAD]['psr-4'] ?? [], $composerJson[\RectorPrefix20211221\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonSection::AUTOLOAD_DEV]['psr-4'] ?? []);
         $this->cachedComposerJsonPSR4AutoloadPaths = $this->removeEmptyNamespaces($psr4Autoloads);
         return $this->cachedComposerJsonPSR4AutoloadPaths;
     }
@@ -36,7 +44,7 @@ final class PSR4AutoloadPathsProvider
      */
     private function removeEmptyNamespaces(array $psr4Autoloads) : array
     {
-        return \array_filter($psr4Autoloads, static function (string $psr4Autoload) : bool {
+        return \array_filter($psr4Autoloads, function (string $psr4Autoload) : bool {
             return $psr4Autoload !== '';
         }, \ARRAY_FILTER_USE_KEY);
     }

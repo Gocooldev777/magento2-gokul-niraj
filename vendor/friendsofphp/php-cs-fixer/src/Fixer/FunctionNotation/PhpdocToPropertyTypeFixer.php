@@ -28,7 +28,7 @@ final class PhpdocToPropertyTypeFixer extends AbstractPhpdocToTypeDeclarationFix
     /**
      * @var array<string, true>
      */
-    private array $skippedTypes = [
+    private $skippedTypes = [
         'mixed' => true,
         'resource' => true,
         'null' => true,
@@ -76,7 +76,7 @@ class Foo {
      */
     public function isCandidate(Tokens $tokens): bool
     {
-        return $tokens->isTokenKindFound(T_DOC_COMMENT);
+        return \PHP_VERSION_ID >= 70400 && $tokens->isTokenKindFound(T_DOC_COMMENT);
     }
 
     /**
@@ -128,14 +128,14 @@ class Foo {
             }
 
             $docCommentIndex = $index;
-            $propertyIndices = $this->findNextUntypedPropertiesDeclaration($tokens, $docCommentIndex);
+            $propertyIndexes = $this->findNextUntypedPropertiesDeclaration($tokens, $docCommentIndex);
 
-            if ([] === $propertyIndices) {
+            if ([] === $propertyIndexes) {
                 continue;
             }
 
             $typeInfo = $this->resolveApplicableType(
-                $propertyIndices,
+                $propertyIndexes,
                 $this->getAnnotationsFromDocComment('var', $tokens, $docCommentIndex)
             );
 
@@ -154,9 +154,9 @@ class Foo {
                 [new Token([T_WHITESPACE, ' '])]
             );
 
-            $tokens->insertAt(current($propertyIndices), $newTokens);
+            $tokens->insertAt(current($propertyIndexes), $newTokens);
 
-            $index = max($propertyIndices) + \count($newTokens) + 1;
+            $index = max($propertyIndexes) + \count($newTokens) + 1;
             $classEndIndex += \count($newTokens);
         }
     }
@@ -194,10 +194,10 @@ class Foo {
     }
 
     /**
-     * @param array<string, int> $propertyIndices
+     * @param array<string, int> $propertyIndexes
      * @param Annotation[]       $annotations
      */
-    private function resolveApplicableType(array $propertyIndices, array $annotations): ?array
+    private function resolveApplicableType(array $propertyIndexes, array $annotations): ?array
     {
         $propertyTypes = [];
 
@@ -205,14 +205,14 @@ class Foo {
             $propertyName = $annotation->getVariableName();
 
             if (null === $propertyName) {
-                if (1 !== \count($propertyIndices)) {
+                if (1 !== \count($propertyIndexes)) {
                     continue;
                 }
 
-                $propertyName = key($propertyIndices);
+                $propertyName = key($propertyIndexes);
             }
 
-            if (!isset($propertyIndices[$propertyName])) {
+            if (!isset($propertyIndexes[$propertyName])) {
                 continue;
             }
 
@@ -227,7 +227,7 @@ class Foo {
             $propertyTypes[$propertyName] = $typeInfo;
         }
 
-        if (\count($propertyTypes) !== \count($propertyIndices)) {
+        if (\count($propertyTypes) !== \count($propertyIndexes)) {
             return null;
         }
 

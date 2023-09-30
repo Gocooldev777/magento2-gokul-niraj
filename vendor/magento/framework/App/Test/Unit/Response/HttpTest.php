@@ -112,6 +112,7 @@ class HttpTest extends TestCase
                 'sessionConfig' => $this->sessionConfigMock
             ]
         );
+        $this->model->headersSentThrowsException = false;
         $this->model->setHeader('Name', 'Value');
     }
 

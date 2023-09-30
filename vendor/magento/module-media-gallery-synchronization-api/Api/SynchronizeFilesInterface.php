@@ -11,7 +11,6 @@ use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Synchronize assets from the provided files information to database
- * @api
  */
 interface SynchronizeFilesInterface
 {

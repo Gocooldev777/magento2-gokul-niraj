@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Config\Loader;
+namespace RectorPrefix20211221\Symfony\Component\Config\Loader;
 
 /**
  * LoaderResolverInterface selects a loader for a given resource.
@@ -20,9 +20,10 @@ interface LoaderResolverInterface
     /**
      * Returns a loader able to load the resource.
      *
-     * @param string|null $type The resource type or null if unknown
-     * @return \Symfony\Component\Config\Loader\LoaderInterface|false
-     * @param mixed $resource
+     * @param mixed       $resource A resource
+     * @param string|null $type     The resource type or null if unknown
+     *
+     * @return LoaderInterface|false
      */
     public function resolve($resource, string $type = null);
 }

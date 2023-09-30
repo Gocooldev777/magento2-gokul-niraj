@@ -3,18 +3,26 @@
 declare (strict_types=1);
 namespace Rector\Core\Enum;
 
-final class ObjectReference
+use RectorPrefix20211221\MyCLabs\Enum\Enum;
+/**
+ * @see https://github.com/myclabs/php-enum
+ *
+ * @method static ObjectReference SELF()
+ * @method static ObjectReference STATIC()
+ * @method static ObjectReference PARENT()
+ */
+final class ObjectReference extends \RectorPrefix20211221\MyCLabs\Enum\Enum
 {
     /**
      * @var string
      */
-    public const SELF = 'self';
+    private const SELF = 'self';
     /**
      * @var string
      */
-    public const PARENT = 'parent';
+    private const PARENT = 'parent';
     /**
      * @var string
      */
-    public const STATIC = 'static';
+    private const STATIC = 'static';
 }

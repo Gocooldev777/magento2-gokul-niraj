@@ -8,16 +8,13 @@ declare(strict_types=1);
 namespace Magento\Wishlist\Controller\Index;
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\Catalog\Test\Fixture\Product as ProductFixture;
 use Magento\Checkout\Model\CartFactory;
 use Magento\Customer\Model\Session;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Escaper;
 use Magento\Framework\Message\MessageInterface;
-use Magento\TestFramework\Fixture\DataFixture;
 use Magento\TestFramework\TestCase\AbstractController;
 use Magento\TestFramework\Wishlist\Model\GetWishlistByCustomerId;
-use Magento\TestFramework\Fixture\DataFixtureStorageManager;
 
 /**
  * Test for add product to cart from wish list.
@@ -43,11 +40,6 @@ class CartTest extends AbstractController
     private $productRepository;
 
     /**
-     * @var \Magento\TestFramework\Fixture\DataFixtureStorage
-     */
-    private $fixtures;
-
-    /**
      * @inheritdoc
      */
     protected function setUp(): void
@@ -59,7 +51,6 @@ class CartTest extends AbstractController
         $this->cartFactory = $this->_objectManager->get(CartFactory::class);
         $this->escaper = $this->_objectManager->get(Escaper::class);
         $this->productRepository = $this->_objectManager->get(ProductRepositoryInterface::class);
-        $this->fixtures = $this->_objectManager->get(DataFixtureStorageManager::class)->getStorage();
     }
 
     /**
@@ -126,15 +117,12 @@ class CartTest extends AbstractController
      *
      * @return void
      * @magentoDataFixture Magento/Wishlist/_files/wishlist_with_simple_product.php
+     * @magentoDataFixture Magento/Catalog/_files/products.php
      */
-    #[
-        DataFixture(ProductFixture::class, as: 'product1'),
-        DataFixture(ProductFixture::class, as: 'product2'),
-    ]
     public function testAddItemWithRelatedProducts(): void
     {
-        $firstProductId = $this->fixtures->get('product1')->getId();
-        $secondProductID = $this->fixtures->get('product2')->getId();
+        $firstProductId = $this->productRepository->get('simple')->getId();
+        $secondProductID = $this->productRepository->get('custom-design-simple-product')->getId();
         $relatedIds = $expectedAddedIds = [$firstProductId, $secondProductID];
 
         $this->customerSession->setCustomerId(1);

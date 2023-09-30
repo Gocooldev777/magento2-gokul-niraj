@@ -162,30 +162,6 @@ class Proxy extends \Magento\Backend\Model\Auth\Session implements \Magento\Fram
     /**
      * {@inheritdoc}
      */
-    public function getAcl()
-    {
-        return $this->_getSubject()->getAcl();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setAcl(\Magento\Framework\Acl $acl)
-    {
-        return $this->_getSubject()->setAcl($acl);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getData($key = '', $clear = false)
-    {
-        return $this->_getSubject()->getData($key, $clear);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function writeClose()
     {
         return $this->_getSubject()->writeClose();
@@ -213,6 +189,14 @@ class Proxy extends \Magento\Backend\Model\Auth\Session implements \Magento\Fram
     public function isSessionExists()
     {
         return $this->_getSubject()->isSessionExists();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getData($key = '', $clear = false)
+    {
+        return $this->_getSubject()->getData($key, $clear);
     }
 
     /**

@@ -8,35 +8,33 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\DependencyInjection\Config;
+namespace RectorPrefix20211221\Symfony\Component\DependencyInjection\Config;
 
-use RectorPrefix202304\Symfony\Component\Config\Resource\ResourceInterface;
-use RectorPrefix202304\Symfony\Component\Config\ResourceCheckerInterface;
-use RectorPrefix202304\Symfony\Component\DependencyInjection\ContainerInterface;
+use RectorPrefix20211221\Symfony\Component\Config\Resource\ResourceInterface;
+use RectorPrefix20211221\Symfony\Component\Config\ResourceCheckerInterface;
+use RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * @author Maxime Steinhausser <maxime.steinhausser@gmail.com>
  */
-class ContainerParametersResourceChecker implements ResourceCheckerInterface
+class ContainerParametersResourceChecker implements \RectorPrefix20211221\Symfony\Component\Config\ResourceCheckerInterface
 {
-    /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
-     */
+    /** @var ContainerInterface */
     private $container;
-    public function __construct(ContainerInterface $container)
+    public function __construct(\RectorPrefix20211221\Symfony\Component\DependencyInjection\ContainerInterface $container)
     {
         $this->container = $container;
     }
     /**
      * {@inheritdoc}
      */
-    public function supports(ResourceInterface $metadata) : bool
+    public function supports(\RectorPrefix20211221\Symfony\Component\Config\Resource\ResourceInterface $metadata)
     {
-        return $metadata instanceof ContainerParametersResource;
+        return $metadata instanceof \RectorPrefix20211221\Symfony\Component\DependencyInjection\Config\ContainerParametersResource;
     }
     /**
      * {@inheritdoc}
      */
-    public function isFresh(ResourceInterface $resource, int $timestamp) : bool
+    public function isFresh(\RectorPrefix20211221\Symfony\Component\Config\Resource\ResourceInterface $resource, int $timestamp)
     {
         foreach ($resource->getParameters() as $key => $value) {
             if (!$this->container->hasParameter($key) || $this->container->getParameter($key) !== $value) {

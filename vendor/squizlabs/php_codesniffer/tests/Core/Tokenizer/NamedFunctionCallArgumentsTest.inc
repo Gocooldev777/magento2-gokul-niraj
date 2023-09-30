@@ -208,9 +208,6 @@ foobar(elseif: $value, /* testReservedKeywordElseif2 */ elseif: $value);
 /* testReservedKeywordEmpty1 */
 foobar(empty: $value, /* testReservedKeywordEmpty2 */ empty: $value);
 
-/* testReservedKeywordEnum1 */
-foobar(enum: $value, /* testReservedKeywordEnum2 */ enum: $value);
-
 /* testReservedKeywordEnddeclare1 */
 foobar(enddeclare: $value, /* testReservedKeywordEnddeclare2 */ enddeclare: $value);
 
@@ -313,9 +310,6 @@ foobar(protected: $value, /* testReservedKeywordProtected2 */ protected: $value)
 /* testReservedKeywordPublic1 */
 foobar(public: $value, /* testReservedKeywordPublic2 */ public: $value);
 
-/* testReservedKeywordReadonly1 */
-foobar(readonly: $value, /* testReservedKeywordReadonly2 */ readonly: $value);
-
 /* testReservedKeywordRequire1 */
 foobar(require: $value, /* testReservedKeywordRequire2 */ require: $value);
 
@@ -402,6 +396,3 @@ foobar(parent: $value, /* testReservedKeywordParent2 */ parent: $value);
 
 /* testReservedKeywordSelf1 */
 foobar(self: $value, /* testReservedKeywordSelf2 */ self: $value);
-
-/* testReservedKeywordNever1 */
-foobar(never: $value, /* testReservedKeywordNever2 */ never: $value);

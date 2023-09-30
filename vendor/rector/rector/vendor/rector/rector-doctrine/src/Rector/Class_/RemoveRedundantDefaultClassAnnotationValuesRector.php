@@ -13,20 +13,19 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Doctrine\Tests\Rector\Class_\RemoveRedundantDefaultClassAnnotationValuesRector\RemoveRedundantDefaultClassAnnotationValuesRectorTest
  */
-final class RemoveRedundantDefaultClassAnnotationValuesRector extends AbstractRector
+final class RemoveRedundantDefaultClassAnnotationValuesRector extends \Rector\Core\Rector\AbstractRector
 {
     /**
-     * @readonly
      * @var \Rector\Doctrine\NodeManipulator\DoctrineItemDefaultValueManipulator
      */
     private $doctrineItemDefaultValueManipulator;
-    public function __construct(DoctrineItemDefaultValueManipulator $doctrineItemDefaultValueManipulator)
+    public function __construct(\Rector\Doctrine\NodeManipulator\DoctrineItemDefaultValueManipulator $doctrineItemDefaultValueManipulator)
     {
         $this->doctrineItemDefaultValueManipulator = $doctrineItemDefaultValueManipulator;
     }
-    public function getRuleDefinition() : RuleDefinition
+    public function getRuleDefinition() : \Symplify\RuleDocGenerator\ValueObject\RuleDefinition
     {
-        return new RuleDefinition('Removes redundant default values from Doctrine ORM annotations on class level', [new CodeSample(<<<'CODE_SAMPLE'
+        return new \Symplify\RuleDocGenerator\ValueObject\RuleDefinition('Removes redundant default values from Doctrine ORM annotations on class level', [new \Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample(<<<'CODE_SAMPLE'
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -53,22 +52,27 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Class_::class];
+        return [\PhpParser\Node\Stmt\Class_::class];
     }
     /**
      * @param Class_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(\PhpParser\Node $node) : ?\PhpParser\Node
     {
-        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
-        $doctrineAnnotationTagValueNode = $phpDocInfo->getByAnnotationClass('Doctrine\\ORM\\Mapping\\Entity');
-        if (!$doctrineAnnotationTagValueNode instanceof DoctrineAnnotationTagValueNode) {
-            return null;
+        $this->refactorClassAnnotations($node);
+        return $node;
+    }
+    private function refactorClassAnnotations(\PhpParser\Node\Stmt\Class_ $class) : void
+    {
+        $this->refactorEntityAnnotation($class);
+    }
+    private function refactorEntityAnnotation(\PhpParser\Node\Stmt\Class_ $class) : void
+    {
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($class);
+        $doctrineTagValueNode = $phpDocInfo->getByAnnotationClass('Doctrine\\ORM\\Mapping\\Entity');
+        if (!$doctrineTagValueNode instanceof \Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode) {
+            return;
         }
-        $hasChanged = $this->doctrineItemDefaultValueManipulator->clearDoctrineAnnotationTagValueNode($phpDocInfo, $doctrineAnnotationTagValueNode, 'readOnly', \false);
-        if ($hasChanged) {
-            return $node;
-        }
-        return null;
+        $this->doctrineItemDefaultValueManipulator->remove($phpDocInfo, $doctrineTagValueNode, 'readOnly', \false);
     }
 }

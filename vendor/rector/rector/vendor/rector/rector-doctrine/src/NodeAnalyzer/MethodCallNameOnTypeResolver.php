@@ -5,29 +5,25 @@ namespace Rector\Doctrine\NodeAnalyzer;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Stmt\Class_;
 use PHPStan\Type\ObjectType;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
-use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
+use RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser;
 final class MethodCallNameOnTypeResolver
 {
     /**
-     * @readonly
      * @var \Rector\NodeNameResolver\NodeNameResolver
      */
     private $nodeNameResolver;
     /**
-     * @readonly
-     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
+     * @var \Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser
      */
     private $simpleCallableNodeTraverser;
     /**
-     * @readonly
      * @var \Rector\NodeTypeResolver\NodeTypeResolver
      */
     private $nodeTypeResolver;
-    public function __construct(NodeNameResolver $nodeNameResolver, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, NodeTypeResolver $nodeTypeResolver)
+    public function __construct(\Rector\NodeNameResolver\NodeNameResolver $nodeNameResolver, \RectorPrefix20211221\Symplify\Astral\NodeTraverser\SimpleCallableNodeTraverser $simpleCallableNodeTraverser, \Rector\NodeTypeResolver\NodeTypeResolver $nodeTypeResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
@@ -36,11 +32,11 @@ final class MethodCallNameOnTypeResolver
     /**
      * @return string[]
      */
-    public function resolve(Class_ $class, ObjectType $objectType) : array
+    public function resolve(\PhpParser\Node $node, \PHPStan\Type\ObjectType $objectType) : array
     {
         $methodNames = [];
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($class, function (Node $node) use(&$methodNames, $objectType) {
-            if (!$node instanceof MethodCall) {
+        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($node, function (\PhpParser\Node $node) use(&$methodNames, $objectType) {
+            if (!$node instanceof \PhpParser\Node\Expr\MethodCall) {
                 return null;
             }
             if (!$this->nodeTypeResolver->isObjectType($node->var, $objectType)) {

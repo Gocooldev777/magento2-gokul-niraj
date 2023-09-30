@@ -4,10 +4,18 @@ declare (strict_types=1);
 namespace Rector\Core\FileSystem;
 
 use Rector\Caching\UnchangedFilesFilter;
-use Rector\Core\Util\StringUtils;
-use Rector\Core\ValueObject\StaticNonPhpFileSuffixes;
+use Symplify\SmartFileSystem\SmartFileInfo;
 final class PhpFilesFinder
 {
+    /**
+     * @var string[]
+     */
+    private const NON_PHP_FILE_EXTENSIONS = [
+        // Laravel
+        '.blade.php',
+        // Smarty
+        '.tpl',
+    ];
     /**
      * @readonly
      * @var \Rector\Core\FileSystem\FilesFinder
@@ -18,42 +26,28 @@ final class PhpFilesFinder
      * @var \Rector\Caching\UnchangedFilesFilter
      */
     private $unchangedFilesFilter;
-    public function __construct(\Rector\Core\FileSystem\FilesFinder $filesFinder, UnchangedFilesFilter $unchangedFilesFilter)
+    public function __construct(\Rector\Core\FileSystem\FilesFinder $filesFinder, \Rector\Caching\UnchangedFilesFilter $unchangedFilesFilter)
     {
         $this->filesFinder = $filesFinder;
         $this->unchangedFilesFilter = $unchangedFilesFilter;
     }
     /**
      * @param string[] $paths
-     * @return string[]
+     * @return SmartFileInfo[]
      */
     public function findInPaths(array $paths) : array
     {
-        $filePaths = $this->filesFinder->findInDirectoriesAndFiles($paths);
-        $suffixRegexPattern = StaticNonPhpFileSuffixes::getSuffixRegexPattern();
+        $phpFileInfos = $this->filesFinder->findInDirectoriesAndFiles($paths);
         // filter out non-PHP files
-        foreach ($filePaths as $key => $filePath) {
-            //            $pathname = $filePath->getPathname();
-            /**
-             *  check .blade.php early so next .php check in next if can be skipped
-             */
-            if (\substr_compare($filePath, '.blade.php', -\strlen('.blade.php')) === 0) {
-                unset($filePaths[$key]);
-                continue;
-            }
-            /**
-             * obvious
-             */
-            if (\substr_compare($filePath, '.php', -\strlen('.php')) === 0) {
-                continue;
-            }
-            /**
-             * only check with regex when needed
-             */
-            if (StringUtils::isMatch($filePath, $suffixRegexPattern)) {
-                unset($filePaths[$key]);
+        foreach ($phpFileInfos as $key => $phpFileInfo) {
+            $pathName = $phpFileInfo->getPathname();
+            foreach (self::NON_PHP_FILE_EXTENSIONS as $nonPHPFileExtension) {
+                if (\substr_compare($pathName, $nonPHPFileExtension, -\strlen($nonPHPFileExtension)) === 0) {
+                    unset($phpFileInfos[$key]);
+                    continue 2;
+                }
             }
         }
-        return $this->unchangedFilesFilter->filterAndJoinWithDependentFileInfos($filePaths);
+        return $this->unchangedFilesFilter->filterAndJoinWithDependentFileInfos($phpFileInfos);
     }
 }

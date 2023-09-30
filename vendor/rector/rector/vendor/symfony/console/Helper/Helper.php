@@ -8,26 +8,29 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\Console\Helper;
+namespace RectorPrefix20211221\Symfony\Component\Console\Helper;
 
-use RectorPrefix202304\Symfony\Component\Console\Formatter\OutputFormatterInterface;
-use RectorPrefix202304\Symfony\Component\String\UnicodeString;
+use RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface;
+use RectorPrefix20211221\Symfony\Component\String\UnicodeString;
 /**
  * Helper is the base class for all helper classes.
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-abstract class Helper implements HelperInterface
+abstract class Helper implements \RectorPrefix20211221\Symfony\Component\Console\Helper\HelperInterface
 {
     protected $helperSet = null;
-    public function setHelperSet(HelperSet $helperSet = null)
+    /**
+     * {@inheritdoc}
+     */
+    public function setHelperSet(\RectorPrefix20211221\Symfony\Component\Console\Helper\HelperSet $helperSet = null)
     {
-        if (1 > \func_num_args()) {
-            \RectorPrefix202304\trigger_deprecation('symfony/console', '6.2', 'Calling "%s()" without any arguments is deprecated, pass null explicitly instead.', __METHOD__);
-        }
         $this->helperSet = $helperSet;
     }
-    public function getHelperSet() : ?HelperSet
+    /**
+     * {@inheritdoc}
+     */
+    public function getHelperSet() : ?\RectorPrefix20211221\Symfony\Component\Console\Helper\HelperSet
     {
         return $this->helperSet;
     }
@@ -37,9 +40,9 @@ abstract class Helper implements HelperInterface
      */
     public static function width(?string $string) : int
     {
-        $string = $string ?? '';
+        $string ?? ($string = '');
         if (\preg_match('//u', $string)) {
-            return (new UnicodeString($string))->width(\false);
+            return (new \RectorPrefix20211221\Symfony\Component\String\UnicodeString($string))->width(\false);
         }
         if (\false === ($encoding = \mb_detect_encoding($string, null, \true))) {
             return \strlen($string);
@@ -52,9 +55,9 @@ abstract class Helper implements HelperInterface
      */
     public static function length(?string $string) : int
     {
-        $string = $string ?? '';
+        $string ?? ($string = '');
         if (\preg_match('//u', $string)) {
-            return (new UnicodeString($string))->length();
+            return (new \RectorPrefix20211221\Symfony\Component\String\UnicodeString($string))->length();
         }
         if (\false === ($encoding = \mb_detect_encoding($string, null, \true))) {
             return \strlen($string);
@@ -66,14 +69,14 @@ abstract class Helper implements HelperInterface
      */
     public static function substr(?string $string, int $from, int $length = null) : string
     {
-        $string = $string ?? '';
+        $string ?? ($string = '');
         if (\false === ($encoding = \mb_detect_encoding($string, null, \true))) {
             return \substr($string, $from, $length);
         }
         return \mb_substr($string, $from, $length, $encoding);
     }
     /**
-     * @param int|float $secs
+     * @param float|int $secs
      */
     public static function formatTime($secs)
     {
@@ -102,16 +105,14 @@ abstract class Helper implements HelperInterface
         }
         return \sprintf('%d B', $memory);
     }
-    public static function removeDecoration(OutputFormatterInterface $formatter, ?string $string)
+    public static function removeDecoration(\RectorPrefix20211221\Symfony\Component\Console\Formatter\OutputFormatterInterface $formatter, ?string $string)
     {
         $isDecorated = $formatter->isDecorated();
         $formatter->setDecorated(\false);
         // remove <...> formatting
         $string = $formatter->format($string ?? '');
         // remove already formatted characters
-        $string = \preg_replace("/\x1b\\[[^m]*m/", '', $string ?? '');
-        // remove terminal hyperlinks
-        $string = \preg_replace('/\\033]8;[^;]*;[^\\033]*\\033\\\\/', '', $string ?? '');
+        $string = \preg_replace("/\33\\[[^m]*m/", '', $string ?? '');
         $formatter->setDecorated($isDecorated);
         return $string;
     }

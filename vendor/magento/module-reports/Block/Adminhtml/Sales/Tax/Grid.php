@@ -22,6 +22,8 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
     protected $_columnGroupBy = 'period';
 
     /**
+     * Config factory
+     *
      * @var \Magento\Sales\Model\Order\ConfigFactory
      */
     protected $_configFactory;
@@ -129,7 +131,9 @@ class Grid extends \Magento\Reports\Block\Adminhtml\Grid\AbstractGrid
             ]
         );
 
-        $this->setStoreIds($this->_getStoreIds());
+        if ($this->getFilterData()->getStoreIds()) {
+            $this->setStoreIds(explode(',', $this->getFilterData()->getStoreIds()));
+        }
         $currencyCode = $this->getCurrentCurrencyCode();
 
         $this->addColumn(

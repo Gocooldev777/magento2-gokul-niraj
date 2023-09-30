@@ -3,8 +3,6 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Framework\Search\Dynamic\Algorithm;
 
 use Magento\Framework\DB\Ddl\Table;
@@ -14,7 +12,6 @@ use Magento\Framework\Search\Request\BucketInterface;
 /**
  * Interface \Magento\Framework\Search\Dynamic\Algorithm\AlgorithmInterface
  *
- * @api
  */
 interface AlgorithmInterface
 {

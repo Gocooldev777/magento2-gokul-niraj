@@ -8,7 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202304\Symfony\Component\String;
+namespace RectorPrefix20211221\Symfony\Component\String;
 
 /**
  * A string whose value is computed lazily by a callback.
@@ -47,13 +47,13 @@ class LazyString implements \JsonSerializable
         return $lazyString;
     }
     /**
-     * @param string|int|float|bool|\Stringable $value
+     * @param bool|float|int|string|\Stringable $value
      * @return $this
      */
     public static function fromStringable($value)
     {
         if (\is_object($value)) {
-            return static::fromCallable(\Closure::fromCallable([$value, '__toString']));
+            return static::fromCallable([$value, '__toString']);
         }
         $lazyString = new static();
         $lazyString->value = (string) $value;
@@ -71,7 +71,7 @@ class LazyString implements \JsonSerializable
      * Casts scalars and stringable objects to strings.
      *
      * @throws \TypeError When the provided value is not stringable
-     * @param \Stringable|string|int|float|bool $value
+     * @param bool|float|int|string|\Stringable $value
      */
     public static final function resolve($value) : string
     {
@@ -117,7 +117,7 @@ class LazyString implements \JsonSerializable
             $method = $callback[1];
         } elseif ($callback instanceof \Closure) {
             $r = new \ReflectionFunction($callback);
-            if (\strpos($r->name, '{closure}') !== \false || !($class = \PHP_VERSION_ID >= 80111 ? $r->getClosureCalledClass() : $r->getClosureScopeClass())) {
+            if (\false !== \strpos($r->name, '{closure}') || !($class = $r->getClosureScopeClass())) {
                 return $r->name;
             }
             $class = $class->name;

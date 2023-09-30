@@ -34,10 +34,8 @@ class InterfaceGenerator extends ClassGenerator
         $cg->setSourceContent($cg->getSourceContent());
         $cg->setSourceDirty(false);
 
-        $docBlock = $classReflection->getDocBlock();
-
-        if ($docBlock) {
-            $cg->setDocBlock(DocBlockGenerator::fromReflection($docBlock));
+        if ($classReflection->getDocComment() != '') {
+            $cg->setDocBlock(DocBlockGenerator::fromReflection($classReflection->getDocBlock()));
         }
 
         // set the namespace
@@ -68,9 +66,6 @@ class InterfaceGenerator extends ClassGenerator
 
     /**
      * Generate from array
-     *
-     * @deprecated this API is deprecated, and will be removed in the next major release. Please
-     *             use the other constructors of this class instead.
      *
      * @configkey name           string        [required] Class Name
      * @configkey filegenerator  FileGenerator File generator that holds this class
@@ -116,13 +111,17 @@ class InterfaceGenerator extends ClassGenerator
         return $cg;
     }
 
-    /** @inheritDoc */
+    /**
+     * {@inheritDoc}
+     */
     public function addPropertyFromGenerator(PropertyGenerator $property)
     {
         return $this;
     }
 
-    /** @inheritDoc */
+    /**
+     * {@inheritDoc}
+     */
     public function addMethodFromGenerator(MethodGenerator $method)
     {
         $method->setInterface(true);
@@ -130,13 +129,17 @@ class InterfaceGenerator extends ClassGenerator
         return parent::addMethodFromGenerator($method);
     }
 
-    /** @inheritDoc */
+    /**
+     * {@inheritDoc}
+     */
     public function setExtendedClass($extendedClass)
     {
         return $this;
     }
 
-    /** @inheritDoc */
+    /**
+     * {@inheritDoc}
+     */
     public function setAbstract($isAbstract)
     {
         return $this;

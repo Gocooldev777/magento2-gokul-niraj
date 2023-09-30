@@ -20,7 +20,7 @@
         <fillField selector="{{AdminOrdersGridSection.idFilter}}" userInput="{{orderId}}" stepKey="fillOrderIdFilter"/>
         <selectOption selector="{{AdminOrdersGridSection.selectStatus}}" userInput="{{orderStatus}}" stepKey="selectOrderStatus"/>
         <click selector="{{AdminOrdersGridSection.applyFilters}}" stepKey="clickOrderApplyFilters"/>
-        <waitForPageLoad stepKey="waitForLoadingMask"/>
+        <waitForLoadingMaskToDisappear stepKey="waitForLoadingMask"/>
     </actionGroup>
 </actionGroups>
 

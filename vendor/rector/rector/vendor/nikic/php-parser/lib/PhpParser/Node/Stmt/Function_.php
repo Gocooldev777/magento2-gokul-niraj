@@ -5,8 +5,7 @@ namespace PhpParser\Node\Stmt;
 
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-class Function_ extends Node\Stmt implements FunctionLike, StmtsAwareInterface
+class Function_ extends \PhpParser\Node\Stmt implements \PhpParser\Node\FunctionLike
 {
     /** @var bool Whether function returns by reference */
     public $byRef;
@@ -20,7 +19,7 @@ class Function_ extends Node\Stmt implements FunctionLike, StmtsAwareInterface
     public $stmts;
     /** @var Node\AttributeGroup[] PHP attribute groups */
     public $attrGroups;
-    /** @var Node\Name|null Namespaced name (if using NameResolver) */
+    /** @var Node\Name Namespaced name (if using NameResolver) */
     public $namespacedName;
     /**
      * Constructs a function node.
@@ -38,10 +37,10 @@ class Function_ extends Node\Stmt implements FunctionLike, StmtsAwareInterface
     {
         $this->attributes = $attributes;
         $this->byRef = $subNodes['byRef'] ?? \false;
-        $this->name = \is_string($name) ? new Node\Identifier($name) : $name;
+        $this->name = \is_string($name) ? new \PhpParser\Node\Identifier($name) : $name;
         $this->params = $subNodes['params'] ?? [];
         $returnType = $subNodes['returnType'] ?? null;
-        $this->returnType = \is_string($returnType) ? new Node\Identifier($returnType) : $returnType;
+        $this->returnType = \is_string($returnType) ? new \PhpParser\Node\Identifier($returnType) : $returnType;
         $this->stmts = $subNodes['stmts'] ?? [];
         $this->attrGroups = $subNodes['attrGroups'] ?? [];
     }
@@ -66,7 +65,7 @@ class Function_ extends Node\Stmt implements FunctionLike, StmtsAwareInterface
         return $this->attrGroups;
     }
     /** @return Node\Stmt[] */
-    public function getStmts() : array
+    public function getStmts() : ?array
     {
         return $this->stmts;
     }

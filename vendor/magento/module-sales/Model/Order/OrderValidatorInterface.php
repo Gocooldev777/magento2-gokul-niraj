@@ -12,7 +12,6 @@ use Magento\Sales\Model\ValidatorResultInterface;
 
 /**
  * Interface OrderValidatorInterface
- * @api
  */
 interface OrderValidatorInterface
 {

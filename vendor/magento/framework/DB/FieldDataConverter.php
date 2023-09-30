@@ -21,12 +21,12 @@ class FieldDataConverter
     /**
      * Batch size env variable name
      */
-    public const BATCH_SIZE_VARIABLE_NAME = 'DATA_CONVERTER_BATCH_SIZE';
+    const BATCH_SIZE_VARIABLE_NAME = 'DATA_CONVERTER_BATCH_SIZE';
 
     /**
      * Default batch size for data converter
      */
-    public const DEFAULT_BATCH_SIZE = 50000;
+    const DEFAULT_BATCH_SIZE = 50000;
 
     /**
      * @var Generator
@@ -95,7 +95,7 @@ class FieldDataConverter
         $field,
         QueryModifierInterface $queryModifier = null
     ) {
-        $identifiers = explode(',', (string)$identifier);
+        $identifiers = explode(',', $identifier);
         if (count($identifiers) > 1) {
             $this->processTableWithCompositeIdentifier($connection, $table, $identifiers, $field, $queryModifier);
         } else {

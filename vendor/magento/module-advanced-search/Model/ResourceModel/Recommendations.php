@@ -5,37 +5,32 @@
  */
 namespace Magento\AdvancedSearch\Model\ResourceModel;
 
-use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
-use Magento\Search\Model\Query;
-use Magento\Search\Model\QueryFactory;
-use Magento\Framework\Model\ResourceModel\Db\Context as DbContext;
-use Magento\Framework\DB\Select;
-use Zend_Db_Expr;
-
 /**
  * Catalog search recommendations resource model
  *
  * @api
  * @since 100.0.2
  */
-class Recommendations extends AbstractDb
+class Recommendations extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
 {
 
     /**
-     * @var Query
+     * Search query model
+     *
+     * @var \Magento\Search\Model\Query
      */
     protected $_searchQueryModel;
 
     /**
      * Construct
      *
-     * @param DbContext $context
-     * @param QueryFactory $queryFactory
+     * @param \Magento\Framework\Model\ResourceModel\Db\Context $context
+     * @param \Magento\Search\Model\QueryFactory $queryFactory
      * @param string $connectionName
      */
     public function __construct(
-        DbContext $context,
-        QueryFactory $queryFactory,
+        \Magento\Framework\Model\ResourceModel\Db\Context $context,
+        \Magento\Search\Model\QueryFactory $queryFactory,
         $connectionName = null
     ) {
         parent::__construct($context, $connectionName);
@@ -112,7 +107,7 @@ class Recommendations extends AbstractDb
             ['sr' => $collection->getTable('catalogsearch_recommendations')],
             '(sr.query_id=main_table.query_id OR sr.relation_id=main_table.query_id) AND ' . $queryIdCond
         )->reset(
-            Select::COLUMNS
+            \Magento\Framework\DB\Select::COLUMNS
         )->columns(
             [
                 'rel_id' => $connection->getCheckSql(
@@ -185,7 +180,7 @@ class Recommendations extends AbstractDb
         }
 
         $queryWords = [$query];
-        if ($query !== null && strpos($query, ' ') !== false) {
+        if (strpos($query, ' ') !== false) {
             $queryWords = array_unique(array_merge($queryWords, explode(' ', $query)));
             foreach ($queryWords as $key => $word) {
                 $queryWords[$key] = trim($word);
@@ -205,7 +200,7 @@ class Recommendations extends AbstractDb
             $this->_searchQueryModel->getResource()->getMainTable(),
             ['query_id']
         )->where(
-            new Zend_Db_Expr($likeCondition)
+            new \Zend_Db_Expr($likeCondition)
         )->where(
             'store_id=?',
             $this->_searchQueryModel->getStoreId()

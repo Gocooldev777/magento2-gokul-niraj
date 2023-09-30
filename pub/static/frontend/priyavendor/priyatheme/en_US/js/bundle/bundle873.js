@@ -1,0 +1,3 @@
+require.config({"config": {
+        "jsbuild":{"PayPal_Braintree/js/applepay/implementations/core-checkout/method-applepay.js":"define([\n    'uiComponent',\n    'Magento_Checkout/js/model/payment/renderer-list'\n], function (Component, rendererList) {\n    'use strict';\n\n    let config = window.checkoutConfig.payment;\n\n    if (config['braintree_applepay'].clientToken) {\n        rendererList.push({\n            type: 'braintree_applepay',\n            component: 'PayPal_Braintree/js/applepay/implementations/core-checkout/method-renderer/applepay'\n        });\n    }\n\n    return Component.extend({});\n});\n"}
+}});

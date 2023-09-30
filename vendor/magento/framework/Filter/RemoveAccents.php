@@ -5,12 +5,10 @@
  */
 namespace Magento\Framework\Filter;
 
-use Laminas\Filter\FilterInterface;
-
 /**
  * Remove accents from string
  */
-class RemoveAccents implements FilterInterface
+class RemoveAccents implements \Zend_Filter_Interface
 {
     /**
      * @var bool
@@ -26,8 +24,6 @@ class RemoveAccents implements FilterInterface
     }
 
     /**
-     * Returns the result of filtering value
-     *
      * @param string $string
      * @return string
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
@@ -187,7 +183,7 @@ class RemoveAccents implements FilterInterface
             $string = $convertedString;
         }
         // Replace
-        $string = $string !== null ? strtr($string, $replacements[$this->german]) : '';
+        $string = strtr($string, $replacements[$this->german]);
         return $string;
     }
 }

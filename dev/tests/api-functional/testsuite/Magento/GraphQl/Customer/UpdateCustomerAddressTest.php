@@ -388,7 +388,7 @@ mutation {
 MUTATION;
 
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Int cannot represent non-integer value: ""');
+        $this->expectExceptionMessage('Field "updateCustomerAddress" argument "id" requires type Int!, found "".');
         $this->graphQlMutation($mutation, [], '', $this->getCustomerAuthHeaders($userName, $password));
     }
 
@@ -430,9 +430,9 @@ MUTATION;
             ['', '"input" value must be specified'],
             [
                 'input: ""',
-                'Expected value of type "CustomerAddressInput", found ""'
+                'Field "updateCustomerAddress" argument "input" requires type CustomerAddressInput, found ""'
             ],
-            ['input: "foo"', 'Expected value of type "CustomerAddressInput", found "foo"']
+            ['input: "foo"', 'requires type CustomerAddressInput, found "foo"']
         ];
     }
 
@@ -481,7 +481,7 @@ MUTATION;
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('The account is locked.');
 
-        $this->markTestSkipped('https://github.com/magento/graphql-ce/issues/750');
+        $this->markTestIncomplete('https://github.com/magento/graphql-ce/issues/750');
 
         $userName = 'customer@example.com';
         $password = 'password';

@@ -56,13 +56,11 @@ final class XmlReporter implements ReporterInterface
             $filesXML->appendChild($fileXML);
 
             if ($reportSummary->shouldAddAppliedFixers()) {
-                $fileXML->appendChild(
-                    $this->createAppliedFixersElement($dom, $fixResult['appliedFixers']),
-                );
+                $fileXML->appendChild($this->createAppliedFixersElement($dom, $fixResult));
             }
 
-            if ('' !== $fixResult['diff']) {
-                $fileXML->appendChild($this->createDiffElement($dom, $fixResult['diff']));
+            if (!empty($fixResult['diff'])) {
+                $fileXML->appendChild($this->createDiffElement($dom, $fixResult));
             }
         }
 
@@ -79,14 +77,11 @@ final class XmlReporter implements ReporterInterface
         return $reportSummary->isDecoratedOutput() ? OutputFormatter::escape($dom->saveXML()) : $dom->saveXML();
     }
 
-    /**
-     * @param list<string> $appliedFixers
-     */
-    private function createAppliedFixersElement(\DOMDocument $dom, array $appliedFixers): \DOMElement
+    private function createAppliedFixersElement(\DOMDocument $dom, array $fixResult): \DOMElement
     {
         $appliedFixersXML = $dom->createElement('applied_fixers');
 
-        foreach ($appliedFixers as $appliedFixer) {
+        foreach ($fixResult['appliedFixers'] as $appliedFixer) {
             $appliedFixerXML = $dom->createElement('applied_fixer');
             $appliedFixerXML->setAttribute('name', $appliedFixer);
             $appliedFixersXML->appendChild($appliedFixerXML);
@@ -95,10 +90,10 @@ final class XmlReporter implements ReporterInterface
         return $appliedFixersXML;
     }
 
-    private function createDiffElement(\DOMDocument $dom, string $diff): \DOMElement
+    private function createDiffElement(\DOMDocument $dom, array $fixResult): \DOMElement
     {
         $diffXML = $dom->createElement('diff');
-        $diffXML->appendChild($dom->createCDATASection($diff));
+        $diffXML->appendChild($dom->createCDATASection($fixResult['diff']));
 
         return $diffXML;
     }

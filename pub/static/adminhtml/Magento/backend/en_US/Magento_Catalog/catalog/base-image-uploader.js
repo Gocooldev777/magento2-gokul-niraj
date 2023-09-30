@@ -3,6 +3,7 @@
  * See COPYING.txt for license details.
  */
 
+/*global alert:true*/
 define([
     'jquery',
     'mage/template',

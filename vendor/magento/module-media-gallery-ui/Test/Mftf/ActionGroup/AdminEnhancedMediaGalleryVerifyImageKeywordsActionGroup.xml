@@ -16,7 +16,6 @@
             <argument name="keywords"/>
         </arguments>
 
-        <waitForElementVisible selector="{{AdminEnhancedMediaGalleryViewDetailsSection.keywords}}" stepKey="waitForKeywords"/>
         <grabTextFrom selector="{{AdminEnhancedMediaGalleryViewDetailsSection.keywords}}" stepKey="grabKeywords"/>
         <assertStringContainsString stepKey="verifyKeywords">
             <actualResult type="variable">grabKeywords</actualResult>

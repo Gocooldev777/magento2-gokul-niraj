@@ -16,9 +16,6 @@ use Magento\TestFramework\TestCase\HttpClient\CurlClientWithCookies;
  */
 class CookieManagerTest extends \Magento\TestFramework\TestCase\WebapiAbstract
 {
-    /**
-     * @var string
-     */
     private $cookieTesterUrl = 'testmoduleone/CookieTester';
 
     /** @var CurlClientWithCookies */
@@ -147,10 +144,7 @@ class CookieManagerTest extends \Magento\TestFramework\TestCase\WebapiAbstract
         if (isset($cookie['max-age'])) {
             $this->assertEquals(0, $cookie['max-age']);
         }
-        $this->assertEquals(
-            date('D, j-M-o H:i:s T', strtotime('Thu, 01-Jan-1970 00:00:01 GMT')),
-            date('D, j-M-o H:i:s T', strtotime($cookie['expires']))
-        );
+        $this->assertEquals('Thu, 01-Jan-1970 00:00:01 GMT', $cookie['expires']);
     }
 
     /**

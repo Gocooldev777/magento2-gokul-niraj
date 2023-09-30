@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Magento\Wishlist\Controller\Index;
 
-use Magento\Catalog\Model\Product\Type\AbstractType;
 use Magento\Framework\App\Action;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -70,9 +69,9 @@ class DownloadCustomOption extends \Magento\Wishlist\Controller\AbstractIndex im
         }
 
         $optionId = null;
-        if ($option->getCode() && strpos($option->getCode(), AbstractType::OPTION_PREFIX) === 0) {
+        if (strpos($option->getCode(), \Magento\Catalog\Model\Product\Type\AbstractType::OPTION_PREFIX) === 0) {
             $optionId = str_replace(
-                AbstractType::OPTION_PREFIX,
+                \Magento\Catalog\Model\Product\Type\AbstractType::OPTION_PREFIX,
                 '',
                 $option->getCode()
             );
@@ -108,7 +107,5 @@ class DownloadCustomOption extends \Magento\Wishlist\Controller\AbstractIndex im
             $resultForward->forward('noroute');
             return $resultForward;
         }
-
-        return $resultForward;
     }
 }

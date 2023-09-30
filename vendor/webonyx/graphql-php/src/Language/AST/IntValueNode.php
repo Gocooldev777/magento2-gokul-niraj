@@ -1,10 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Language\AST;
 
 class IntValueNode extends Node implements ValueNode
 {
-    public string $kind = NodeKind::INT;
+    /** @var string */
+    public $kind = NodeKind::INT;
 
-    public string $value;
+    /** @var string */
+    public $value;
 }

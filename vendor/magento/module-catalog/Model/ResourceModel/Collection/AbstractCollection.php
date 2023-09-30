@@ -5,9 +5,6 @@
  */
 namespace Magento\Catalog\Model\ResourceModel\Collection;
 
-use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
-use Magento\Framework\Exception\LocalizedException;
-
 /**
  * Catalog EAV collection resource abstract model
  *
@@ -28,7 +25,7 @@ class AbstractCollection extends \Magento\Eav\Model\Entity\Collection\AbstractCo
     protected $_storeId;
 
     /**
-     * Manager of store
+     * Store manager
      *
      * @var \Magento\Store\Model\StoreManagerInterface
      */
@@ -158,18 +155,6 @@ class AbstractCollection extends \Magento\Eav\Model\Entity\Collection\AbstractCo
         $entityIdField = $indexList[$connection->getPrimaryKeyName($entityTable)]['COLUMNS_LIST'][0];
 
         if ($storeId) {
-
-            foreach ($attributeIds as $id) {
-                $attribute = $this->_eavConfig->getAttribute(
-                    $this->getEntity()->getType(),
-                    $id
-                );
-
-                if ($attribute->getAttributeCode() === 'price' && (int)$attribute->getIsGlobal() === 1) {
-                    $storeId = $this->getDefaultStoreId();
-                }
-            }
-
             $joinCondition = [
                 't_s.attribute_id = t_d.attribute_id',
                 "t_s.{$entityIdField} = t_d.{$entityIdField}",

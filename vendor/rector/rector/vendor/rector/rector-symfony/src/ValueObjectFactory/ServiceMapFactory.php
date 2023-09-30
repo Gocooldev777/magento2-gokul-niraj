@@ -3,28 +3,36 @@
 declare (strict_types=1);
 namespace Rector\Symfony\ValueObjectFactory;
 
-use RectorPrefix202304\Nette\Utils\FileSystem;
-use RectorPrefix202304\Nette\Utils\Json;
-use RectorPrefix202304\Nette\Utils\Strings;
+use RectorPrefix20211221\Nette\Utils\Json;
+use RectorPrefix20211221\Nette\Utils\Strings;
 use Rector\Symfony\Exception\XmlContainerNotExistsException;
 use Rector\Symfony\ValueObject\ServiceDefinition;
 use Rector\Symfony\ValueObject\ServiceMap\ServiceMap;
 use Rector\Symfony\ValueObject\Tag;
 use Rector\Symfony\ValueObject\Tag\EventListenerTag;
 use SimpleXMLElement;
+use RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem;
 final class ServiceMapFactory
 {
     /**
      * @var string
      */
     private const TAG = 'tag';
-    public function createFromFileContent(string $configFilePath) : ServiceMap
+    /**
+     * @var \Symplify\SmartFileSystem\SmartFileSystem
+     */
+    private $smartFileSystem;
+    public function __construct(\RectorPrefix20211221\Symplify\SmartFileSystem\SmartFileSystem $smartFileSystem)
     {
-        $fileContents = FileSystem::read($configFilePath);
+        $this->smartFileSystem = $smartFileSystem;
+    }
+    public function createFromFileContent(string $configFilePath) : \Rector\Symfony\ValueObject\ServiceMap\ServiceMap
+    {
+        $fileContents = $this->smartFileSystem->readFile($configFilePath);
         // "@" intentionally
         $xml = @\simplexml_load_string($fileContents);
         if ($xml === \false) {
-            throw new XmlContainerNotExistsException(\sprintf('Container "%s" cannot be parsed', $configFilePath));
+            throw new \Rector\Symfony\Exception\XmlContainerNotExistsException(\sprintf('Container "%s" cannot be parsed', $configFilePath));
         }
         /** @var ServiceDefinition[] $services */
         $services = [];
@@ -33,7 +41,7 @@ final class ServiceMapFactory
         foreach ($xml->services->service as $def) {
             /** @var SimpleXMLElement $attrs */
             $attrs = $def->attributes();
-            if (!(\property_exists($attrs, 'id') && $attrs->id instanceof SimpleXMLElement)) {
+            if (!(\property_exists($attrs, 'id') && $attrs->id !== null)) {
                 continue;
             }
             $def = $this->convertXmlToArray($def);
@@ -46,11 +54,11 @@ final class ServiceMapFactory
             }
         }
         $services = $this->createAliasServiceDefinitions($aliases, $services);
-        return new ServiceMap($services);
+        return new \Rector\Symfony\ValueObject\ServiceMap\ServiceMap($services);
     }
-    public function createEmpty() : ServiceMap
+    public function createEmpty() : \Rector\Symfony\ValueObject\ServiceMap\ServiceMap
     {
-        return new ServiceMap([]);
+        return new \Rector\Symfony\ValueObject\ServiceMap\ServiceMap([]);
     }
     /**
      * @param mixed[] $def
@@ -63,7 +71,9 @@ final class ServiceMapFactory
         }
         $tags = [];
         if (\is_array($def[self::TAG])) {
-            $tags = $def[self::TAG];
+            foreach ($def[self::TAG] as $tag) {
+                $tags[] = $tag;
+            }
         } else {
             $tags[] = $def[self::TAG];
         }
@@ -72,10 +82,10 @@ final class ServiceMapFactory
     /**
      * @param mixed[] $tags
      */
-    private function createServiceFromXmlAndTagsData(SimpleXMLElement $attrs, array $tags) : ServiceDefinition
+    private function createServiceFromXmlAndTagsData(\SimpleXMLElement $attrs, array $tags) : \Rector\Symfony\ValueObject\ServiceDefinition
     {
         $tags = $this->createTagsFromData($tags);
-        return new ServiceDefinition(\strncmp((string) $attrs->id, '.', \strlen('.')) === 0 ? Strings::substring((string) $attrs->id, 1) : (string) $attrs->id, \property_exists($attrs, 'class') && $attrs->class instanceof SimpleXMLElement ? (string) $attrs->class : null, !(\property_exists($attrs, 'public') && $attrs->public instanceof SimpleXMLElement) || (string) $attrs->public !== 'false', \property_exists($attrs, 'synthetic') && $attrs->synthetic instanceof SimpleXMLElement && (string) $attrs->synthetic === 'true', \property_exists($attrs, 'alias') && $attrs->alias instanceof SimpleXMLElement ? (string) $attrs->alias : null, $tags);
+        return new \Rector\Symfony\ValueObject\ServiceDefinition(\strncmp((string) $attrs->id, '.', \strlen('.')) === 0 ? \RectorPrefix20211221\Nette\Utils\Strings::substring((string) $attrs->id, 1) : (string) $attrs->id, \property_exists($attrs, 'class') && $attrs->class !== null ? (string) $attrs->class : null, !(\property_exists($attrs, 'public') && $attrs->public !== null) || (string) $attrs->public !== 'false', \property_exists($attrs, 'synthetic') && $attrs->synthetic !== null && (string) $attrs->synthetic === 'true', \property_exists($attrs, 'alias') && $attrs->alias !== null ? (string) $attrs->alias : null, $tags);
     }
     /**
      * @param ServiceDefinition[] $aliases
@@ -93,7 +103,7 @@ final class ServiceMapFactory
                 continue;
             }
             $id = $service->getId();
-            $services[$id] = new ServiceDefinition($id, $services[$alias]->getClass(), $service->isPublic(), $service->isSynthetic(), $alias, []);
+            $services[$id] = new \Rector\Symfony\ValueObject\ServiceDefinition($id, $services[$alias]->getClass(), $service->isPublic(), $service->isSynthetic(), $alias, []);
         }
         return $services;
     }
@@ -106,16 +116,16 @@ final class ServiceMapFactory
         $tagValueObjects = [];
         foreach ($tagsData as $key => $tag) {
             if (\is_string($tag)) {
-                $tagValueObjects[$key] = new Tag($tag);
+                $tagValueObjects[$key] = new \Rector\Symfony\ValueObject\Tag($tag);
                 continue;
             }
             $data = $tag;
             $name = $data['name'] ?? '';
             if ($name === 'kernel.event_listener') {
-                $tagValueObjects[$key] = new EventListenerTag($data['event'] ?? '', $data['method'] ?? '', (int) ($data['priority'] ?? 0));
+                $tagValueObjects[$key] = new \Rector\Symfony\ValueObject\Tag\EventListenerTag($data['event'] ?? '', $data['method'] ?? '', (int) ($data['priority'] ?? 0));
             } else {
                 unset($data['name']);
-                $tagValueObjects[$key] = new Tag($name, $data ?? []);
+                $tagValueObjects[$key] = new \Rector\Symfony\ValueObject\Tag($name, $data ?? []);
             }
         }
         return $tagValueObjects;
@@ -123,14 +133,14 @@ final class ServiceMapFactory
     /**
      * @return mixed[]
      */
-    private function convertXmlToArray(SimpleXMLElement $simpleXMLElement) : array
+    private function convertXmlToArray(\SimpleXMLElement $simpleXMLElement) : array
     {
-        $data = Json::decode(Json::encode((array) $simpleXMLElement), Json::FORCE_ARRAY);
+        $data = \RectorPrefix20211221\Nette\Utils\Json::decode(\RectorPrefix20211221\Nette\Utils\Json::encode((array) $simpleXMLElement), \RectorPrefix20211221\Nette\Utils\Json::FORCE_ARRAY);
         $data = $this->unWrapAttributes($data);
         foreach ($data as $key => $value) {
             if (\is_array($value)) {
                 $data = $this->convertedNestedArrayOrXml($value, $data, $key);
-            } elseif ($value instanceof SimpleXMLElement) {
+            } elseif ($value instanceof \SimpleXMLElement) {
                 $data[$key] = $this->convertXmlToArray($value);
             }
         }
@@ -154,12 +164,12 @@ final class ServiceMapFactory
      * @param mixed[] $value
      * @param mixed[] $data
      * @return mixed[]
-     * @param string|int $key
+     * @param int|string $key
      */
     private function convertedNestedArrayOrXml(array $value, array $data, $key) : array
     {
         foreach ($value as $subKey => $subValue) {
-            if ($subValue instanceof SimpleXMLElement) {
+            if ($subValue instanceof \SimpleXMLElement) {
                 $data[$key][$subKey] = $this->convertXmlToArray($subValue);
             } elseif (\is_array($subValue)) {
                 $data[$key][$subKey] = $this->unWrapAttributes($subValue);
